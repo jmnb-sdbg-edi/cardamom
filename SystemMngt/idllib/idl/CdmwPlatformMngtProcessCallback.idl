@@ -1,0 +1,152 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_PROCESS_CALLBACK_IDL_
+#define CDMW_PLATFORM_MNGT_PROCESS_CALLBACK_IDL_
+
+
+#include <CdmwPlatformMngtBase.idl>
+#include <CdmwPlatformMngtServiceBroker.idl>
+#include <CdmwPlatformMngtEntityObserver.idl>
+
+#pragma prefix "thalesgroup.com"
+
+
+module CdmwPlatformMngt
+{
+
+    interface Process;
+    interface ProcessMessageBroker;
+
+
+    /**
+    * The callback used by a managed process to notify its creation
+    * or a fatal error during its creation to the application agent.
+    */
+    interface ProcessCallback
+    {
+
+        /**
+        * The acknowlegement of a managed process creation from the
+        * application agent. This acknowlegement contains information
+        * needed by the managed process.
+        */
+        struct ProcessAck
+        {
+            /**
+            * The name of the application owning the process.
+            */
+            string application_name;
+
+            /**
+            * The process name.
+            */
+            string process_name;
+
+            /**
+            * The observer used by the managed process to change the status
+            * of an entity.
+            */
+            CdmwPlatformMngtEntity::EntityObserver entity_observer;
+
+            /**
+            * The broker used by the managed process to access services
+            * that have been defined for it.
+            */
+            CdmwPlatformMngtService::ServiceBroker service_broker;
+
+            /**
+            * The broker used by the managed process to notify its
+            * applicative messages and fatal errors.
+            */
+            ProcessMessageBroker process_message_broker;
+        };
+
+        /**
+        * Notifies creation to the application agent.
+        *
+        * @param the_process the managed process notifying its creation.
+        * @return the acknowlegement from the application agent containing
+        * information needed by the process.
+        */
+        ProcessAck set_ready (in Process the_process);
+
+        /**
+        * Notifies a fatal error during the creation.
+        *
+        * @param issuer the issuer of the error.
+        * @param error_info the information about the error
+        */
+        void notify_error (in CdmwPlatformMngtBase::EventIssuer issuer,
+            in string error_info);
+
+    }; // End interface ProcessCallback
+
+
+    /**
+    * The interface used by a managed process to notify applicative
+    * messages and fatal errors once it has been created.
+    */
+    interface ProcessMessageBroker
+    {
+
+        /**
+        * Notifies a message.
+        *
+        * @param header the header of the message.
+        * @param issuer the issuer of the message.
+        * @param message the message to notify.
+        */
+        void notify_message(in CdmwPlatformMngtBase::EventHeader header,
+            in CdmwPlatformMngtBase::EventIssuer issuer,
+            in string message);
+
+        /**
+        * Notifies a fatal error.
+        *
+        * @param time_stamp the time stamp of the error.
+        * @param issuer the issuer of the error.
+        * @param error_info the information about the error.
+        */
+        void notify_error(in CdmwPlatformMngtBase::TimeStamp time_stamp,
+            in CdmwPlatformMngtBase::EventIssuer issuer,
+            in string error_info);
+
+        /**
+        * Notifies a user event.
+        *
+        * @param issuer the issuer of the event.
+        * @param data the data of the event.
+        */
+        void notify_user_event(in CdmwPlatformMngtBase::EventIssuer issuer,
+            in any data);
+
+    }; // End interface ProcessMessageBroker
+
+    
+}; // End Module CdmwPlatformMngt
+
+#endif // CDMW_PLATFORM_MNGT_PROCESS_CALLBACK_IDL
+

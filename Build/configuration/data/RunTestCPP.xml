@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<project name="RunTestCPP" default="-run" basedir=".">
+
+
+    <description>
+        Run the C++ test applications from the runtest directory.
+    </description>
+
+
+    <!-- =======================================================================
+        The "-run" target runs the test applications.
+    -->
+    <target name="-run">
+        <fail unless="runtest.dir"
+              message="This build file must be called from the master build."/>
+
+        <!-- CLASSPATH -->
+        <var name="cp" value="${neededjarfiles.classpath}${PS}"/>
+        <var name="cp" value="${cp}${tools.classpath}${PS}"/>
+        <var name="cp" value="${cp}${java.home}${FS}lib${FS}rt.jar"/>
+
+        <stringmanip action="removeduplicates" string="${cp}"
+                     delimiter="${PS}" property="all.classpath"/>
+
+        <!-- LD_LIBRARY_PATH -->
+        <var name="lp" value="${env.LD_LIBRARY_PATH}${PS}"/>
+        <var name="lp" value="${lp}${ld.library.path}${PS}"/>
+        <var name="lp" value="${lp}${jni.ld.library.path}${PS}"/>
+        <var name="lp" value="${lp}${procs.ld.library.path}${PS}"/>
+        <var name="lp" value="${lp}${csci.ld.library.path}${PS}"/>
+        <var name="lp" value="${lp}${tools.ld.library.path}${PS}"/>
+        <var name="lp" value="${lp}${FS}usr${FS}lib${PS}${FS}lib"/>
+
+        <stringmanip action="removeduplicates" string="${lp}"
+                     delimiter="${PS}" property="all.ld.library.path"/>
+
+        <!-- PATH -->
+        <var name="p" value="${runtest.dir}${PS}${env.PATH}${PS}"/>
+        <var name="p" value="${p}${naming.service.dir}${PS}"/>
+        <if>
+            <isset property="config.TAO.install.dir" />
+            <then>
+                <var name="p" value="${p}${env.TAO_ROOT}${FS}orbsvcs${FS}" />
+                <var name="p" value="${p}Naming_Service${PS}" />
+                <var name="p" value="${p}${env.TAO_ROOT}${FS}orbsvcs${FS}" />
+                <var name="p" value="${p}IFR_Service${PS}" />
+            </then>
+        </if>
+        <var name="p" value="${p}${procs.path}"/>
+
+        <stringmanip action="removeduplicates" string="${p}"
+                     delimiter="${PS}" property="all.path"/>
+
+        <!-- test attributes -->
+        <var name="rt.attribs" value=""/>
+        <if>
+            <isset property="rt.testattributes"/>
+            <then>
+                <var name="rt.attribs" value="${rt.testattributes}"/>
+            </then>
+        </if>
+
+        <!-- run -->
+        <basename file="${rt.test}" suffix=".xml" property="test.basename"/>
+        <if>
+            <equals arg1="${rt.test}" arg2="${test.basename}" trim="true"/>
+            <then>
+                <exec executable="${runtest.dir}${FS}${rt.test}">
+                    <env key="PATH"            path="${all.path}"/>
+                    <env key="LD_LIBRARY_PATH" path="${all.ld.library.path}"/>
+                    <env key="CLASSPATH"       path="${all.classpath}"/>
+                    <env key="CDMW_TIMESCALE"       value="${rt.timescale.value}"/>
+
+                    <arg line="${rt.attribs}"/>
+                </exec>
+            </then>
+            <else>
+                <ant dir="${runtest.dir}" antfile="${rt.test}"
+                     target="-start-test">
+
+                    <property name="rt.testattributes" value="${rt.attribs}"/>
+                </ant>
+            </else>
+        </if>
+    </target>
+</project>

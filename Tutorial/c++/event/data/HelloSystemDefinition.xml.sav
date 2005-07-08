@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI.
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * =========================================================================== *
+-->
+
+
+<!DOCTYPE System SYSTEM "/.automount/orion/root/volumes/users/users/gomez/CARDAMOM_install_dir/share/CdmwPlatformMngtSystem.dtd">
+
+<!-- ***************** -->
+<!-- System definition -->
+<!--                   -->
+<!-- ***************** -->
+
+<System Name="TutorialSystem" Port="21869">
+
+	<!-- Default timeouts for processes of the entire system -->
+	<Timeout Init="20000" Run="20000" Stop="20000"/>
+	<!-- Default monitorings for the entire system -->
+	<Host-monitoring Pull-interval="1000" Pull-timeout="1500"/>
+	<App-monitoring Pull-interval="060" Pull-timeout="070"/>
+	<Proc-monitoring Model="NO_MONITORING" 
+	                 Pull-interval="021" Pull-timeout="031" 
+	                 Push-interval="041" Push-timeout="051"/>
+	
+	<!-- Services of the system -->
+	<Service Name="NamingAndRepositoryService" 
+	         App-name="CardamomServices" 
+	         Process-name="Repository"/>
+	
+	<!-- Hosts of the system -->
+	<Host Name="localhost" 
+	      App-exec-path="/.automount/orion/root/volumes/users/users/gomez/CARDAMOM_install_dir/bin/cdmw_platform_application" 
+	      Agent-exec-path="/.automount/orion/root/volumes/users/users/gomez/CARDAMOM_install_dir/bin/cdmw_platform_agent" 
+	      Probe-exec-path="/.automount/orion/root/volumes/users/users/gomez/CARDAMOM_install_dir/bin/cdmw_host_probe">
+	      
+		<Host-monitoring Pull-interval="2000" Pull-timeout="2500"/>
+	</Host>
+	
+	<!-- ********************** -->
+	<!-- Application definition -->
+	<!--                        -->
+	<!-- ********************** -->
+	<Application Name="CardamomServices" 
+	             Host-name="localhost" 
+	             Agent-port="-1" 
+	             App-port="-1">
+	             
+		<!-- Default timeouts for processes of this application -->
+		<Timeout Init="20000" Run="20000" Stop="20000"/>
+		
+		<!-- Monitoring of this application -->
+		<App-monitoring Pull-interval="021" Pull-timeout="031"/>
+		
+		<!-- ******************* -->
+		<!-- Process definitions -->
+		<!--                     -->
+		<!-- ******************* -->
+		<Managed-process Name="Repository" 
+		         Host-name="localhost" 
+		         Type="SERVICE-PROVIDER" 
+		         Autoended="FALSE" 
+		         Exec-path="/.automount/orion/root/volumes/users/users/gomez/CARDAMOM_install_dir/bin/cdmw_naming_and_repository" 
+		         Args="--CdmwProcessPort=42561 --CdmwLocalisationService=42562 --id=GlobalRepository --conf=/home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/Cdmw_nar.xml" 
+		         Port="-1">
+			
+			<Init-step Name="initialisation" Timeout="10000"/>
+			<Run-timeout Timeout="10000"/>
+			<Stop-timeout Timeout="10000"/>
+		</Managed-process>
+		
+		<Managed-process Name="TraceCollector" 
+		         Host-name="localhost" 
+		         Type="MANAGED-PROCESS" 
+		         Autoended="TRUE" 
+		         Exec-path="./launchTraceCollector.sh" 
+		         Args="--collector-name=the_collector" 
+		         Port="-1">
+		         
+			<Init-step Name="step0" Timeout="10000"/>
+		</Managed-process>
+		
+		<!-- ************************** -->
+		<!--                            -->
+		<!-- End of process definitions -->
+		<!-- ************************** -->
+		
+		<!-- Init graph of processes of this application -->
+		<Init-graph>
+			<Graph-element Name="Repository">
+				<Graph-element-successor Name="TraceCollector"/>
+			</Graph-element>
+			<Graph-element-root Name="Repository"/>
+		</Init-graph>
+		
+		<!-- ***************************** -->
+		<!--                               -->
+		<!-- End of application definition -->
+		<!-- ***************************** -->
+	</Application>
+	
+	<!-- ********************** -->
+	<!-- Application definition -->
+	<!--                        -->
+	<!-- ********************** -->
+	<Application Name="EventChannelManager" 
+	             Host-name="localhost" 
+	             Agent-port="-1" 
+	             App-port="-1">
+	             
+		<!-- Default timeouts for processes of this application -->
+		<Timeout Init="20000" Run="20000" Stop="20000"/>
+		
+		<!-- Monitoring of this application -->
+		<App-monitoring Pull-interval="021" Pull-timeout="031"/>
+		
+		<!-- ******************* -->
+		<!-- Process definitions -->
+		<!--                     -->
+		<!-- ******************* -->
+		
+		<!-- ..ORBACUS..
+		<Unmanaged-process Name="OBEventService" 
+		              Host-name="localhost" 
+		              Autoended="FALSE" 
+		              Exec-path="@ORB_BIN_PATH@/eventserv" 
+		              Args="-OAport 21410 -ORBconfig /home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/ob_event.conf">
+		</Unmanaged-process>
+		              
+		<Managed-process Name="EventChannelManager" 
+		              Host-name="localhost" 
+		              Type="MANAGED-PROCESS" 
+		              Autoended="TRUE" 
+		              Exec-path="/.automount/orion/root/volumes/users/users/gomez/CARDAMOM_install_dir/bin/cdmw_event_channel_manager" 
+		              Args="-ORBconfig /home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/ob_event.conf @-x-@ProfileXMLFile=/home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/EventChannelConf.xml @-x-@CdmwXMLFile=/home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/EventChannelManager.xml @-x-@validateXML"
+		              Port="-1">
+			
+			<Init-step Name="step0" Timeout="10000"/>
+		</Managed-process>
+		..ORBACUS.. -->
+		
+		
+		<!-- ..TAO.. -->            
+		<Managed-process Name="EventChannelManager" 
+		              Host-name="localhost" 
+		              Type="MANAGED-PROCESS" 
+		              Autoended="TRUE" 
+		              Exec-path="/.automount/orion/root/volumes/users/users/gomez/CARDAMOM_install_dir/bin/cdmw_event_channel_manager" 
+		              Args="--ProfileXMLFile=/home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/EventChannelConf.xml --CdmwXMLFile=/home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/EventChannelManager.xml --validateXML"
+		              Port="-1">
+			<Init-step Name="step0" Timeout="10000"/>
+		</Managed-process>
+		<!-- ..TAO.. -->
+		
+		
+		<!-- ************************** -->
+		<!--                            -->
+		<!-- End of process definitions -->
+		<!-- ************************** -->
+		
+		<!-- Init graph of processes of this application -->
+		<!-- ..ORBACUS..
+		<Init-graph>
+			<Graph-element Name="OBEventService">
+				<Graph-element-successor Name="EventChannelManager"/>
+			</Graph-element>
+			<Graph-element-root Name="OBEventService"/>
+		</Init-graph>
+		..ORBACUS.. -->
+		
+		<!-- ..TAO.. -->
+		<Init-graph>
+			<Graph-element Name="EventChannelManager">
+			</Graph-element>
+			<Graph-element-root Name="EventChannelManager"/>
+		</Init-graph>
+		<!-- ..TAO.. -->
+		
+		<!-- ***************************** -->
+		<!--                               -->
+		<!-- End of application definition -->
+		<!-- ***************************** -->
+		
+	</Application>
+	
+	
+	<!-- ********************** -->
+	<!-- Application definition -->
+	<!--                        -->
+	<!-- ********************** -->
+	<Application Name="TutorialApplication" 
+	             Host-name="localhost" 
+	             Agent-port="-1" 
+	             App-port="-1">
+	             
+		<!-- Default timeouts for processes of this application -->
+		<Timeout Init="20000" Run="20000" Stop="20000"/>
+		
+		<!-- Monitoring of this application -->
+		<App-monitoring Pull-interval="021" Pull-timeout="031"/>
+		
+		<!-- ******************* -->
+		<!-- Process definitions -->
+		<!--                     -->
+		<!-- ******************* -->
+		<Managed-process Name="TutorialServer" 
+		         Host-name="localhost" 
+		         Type="MANAGED-PROCESS" 
+		         Autoended="FALSE" 
+		         Exec-path="./helloServer.sh"
+		         Args="--CdmwXMLFile=/home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/HelloServer.xml --validateXML"
+		         Port="-1">
+		         
+			<Init-step Name="step0" Timeout="10000"/>
+		</Managed-process>
+		
+		<Managed-process Name="TutorialClient" 
+		         Host-name="localhost" 
+		         Type="MANAGED-PROCESS" 
+		         Autoended="FALSE" 
+		         Exec-path="./helloClient.sh"
+		         Args="--CdmwXMLFile=/home/Perco/Users/Gomez/CARDAMOM/tutorial/c++/event/data/HelloClient.xml --validateXML"
+		         Port="-1">
+		         
+			<Init-step Name="step0" Timeout="10000"/>
+		</Managed-process>
+		
+		
+		<!-- ************************** -->
+		<!--                            -->
+		<!-- End of process definitions -->
+		<!-- ************************** -->
+		
+		<!-- Init graph of processes of this application -->
+		<Init-graph>
+			<Graph-element Name="TutorialServer">
+			    <Graph-element-successor Name="TutorialClient"/>
+			</Graph-element>
+			<Graph-element-root Name="TutorialServer"/>
+		</Init-graph>
+		
+		
+		<!-- ***************************** -->
+		<!--                               -->
+		<!-- End of application definition -->
+		<!-- ***************************** -->
+	</Application>
+	
+	
+	<!-- Init graph of applications of the system-->
+	<Init-graph>
+	    <Graph-element Name="CardamomServices">
+			<Graph-element-successor Name="EventChannelManager"/>
+		</Graph-element>
+		<Graph-element Name="EventChannelManager">
+			<Graph-element-successor Name="TutorialApplication"/>
+		</Graph-element>
+		<Graph-element-root Name="CardamomServices"/>
+	</Init-graph>
+	
+	<!-- Stop graph of applications of the system-->
+	<Stop-graph>
+		<Graph-element Name="TutorialApplication">
+		    <Graph-element-successor Name="EventChannelManager"/>
+		</Graph-element>
+		<Graph-element Name="EventChannelManager">
+			<Graph-element-successor Name="CardamomServices"/>
+		</Graph-element>
+		<Graph-element-root Name="TutorialApplication"/>
+	</Stop-graph>
+	
+	
+</System>
+
+<!-- ************************ -->
+<!--                          -->
+<!-- End of system definition -->
+<!-- ************************ -->

@@ -1,0 +1,7 @@
+destroy_assembly myAssembly
+remove_assembly DinnerAssembly
+remove_component Observer 1,0,0,0
+remove_component Philosopher 1,0,0,0
+remove_component ForkManager 1,0,0,0
+remove_component Registrator 1,0,0,0
+exit

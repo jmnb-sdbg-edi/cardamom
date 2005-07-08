@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI.
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * =========================================================================== *
+-->
+<!DOCTYPE CdmwFaultToleranceManager SYSTEM "@cdmw_home@/share/CdmwFaultToleranceManager.dtd">
+
+
+<CdmwFaultToleranceManager>
+    <!--
+    Port of the process
+    -->
+	<SystemPort>4600</SystemPort>
+
+    <!--
+    Request Duration Time : time interval over which a client's request
+    to a server remains valid
+    -->
+    <RequestDurationTime>20000000</RequestDurationTime>
+    
+    <!--
+    Fault Tolerance Domain
+    -->
+    <FaultToleranceDomainID>CDMW_FaultToleranceDomain</FaultToleranceDomainID>
+
+    <!--
+    Multicast adress for the pull simple monitoring
+    -->
+    <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-1/@Monitoring_addr@:4556</SimplePullCorbaloc>
+
+    <!--
+    Multicast adress for the push simple monitoring
+    -->    
+    <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-2/@Monitoring_addr@:4557</SimplePushCorbaloc>
+
+    <!--
+    Multicast adress for the pull mutual monitoring
+    -->    
+    <MutualPullCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-3/@Monitoring_addr@:4558</MutualPullCorbaloc>
+
+    <!--
+    Multicast adress for the push mutual monitoring
+    -->    
+    <MutualPushCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-4/@Monitoring_addr@:4559</MutualPushCorbaloc>
+
+    <!--
+      Mutual monitoring : MasterInterrogationTime
+      Timeout in the slave to declare that the master has not interrogated.
+      After this timeout there is an election phase.
+    -->
+    <MasterInterrogationTime>900</MasterInterrogationTime>
+    <!--
+      Mutual monitoring : MasterElectionTime
+      Timeout used in election phase : after this timeout the decision
+      to take the mastership is done and we go in confirmation phase. 
+    -->
+    <MasterElectionTime>600</MasterElectionTime>
+    <!--
+      Mutual monitoring : MasterConfirmationTime
+      Timeout before declaration of the on_switch_to_primary.
+      Used to handle possible double master election.
+    -->
+    <MasterConfirmationTime>700</MasterConfirmationTime>
+    <!--
+      Mutual monitoring : SlaveAcknowledgementTime
+      Timeout in the master to declare that a slave has not answered to
+      an interrogation.
+      This is the nominal period of interrogation in the master. 
+    -->
+    <SlaveAcknowledgementTime>800</SlaveAcknowledgementTime>
+    <!--
+      Simple monitoring : DaemonAcknowledgementTime
+      Timeout in the interrogating mode to declare a daemon has not
+      answered to an interrogation. This is the period of interrogation.
+    -->
+    <DaemonAcknowledgementTime>500</DaemonAcknowledgementTime>
+    
+    <!--
+    Domain used for the mutlicast address for the state transfert
+    -->
+    <StateTransfertDomain>ftdomain</StateTransfertDomain>
+    
+    <!--
+    Address used for the mutlicast address for the state transfert
+    -->
+    <StateTransfertIPAddress>@StateTransfert_addr@</StateTransfertIPAddress>
+
+    <!--
+    Cohort timeout : max time between the reception of a prepared operation and
+    the commit operation
+    -->
+    <CohortTimeOut>2000</CohortTimeOut>
+
+    <!--
+    Coordinator timeout : max time between the send of a prepared operation (or a commit) 
+    and the answer of all the cohort
+    -->
+    <CoordinatorTimeOut>2000</CoordinatorTimeOut>
+
+    <!--
+    Max transaction in progress : max transaction treated by the coordinator in the same time
+    -->
+    <MaxTransactionInProgress>100</MaxTransactionInProgress>
+    
+    <!--
+    Max transaction done : max transaction done and save by the coordinator to preserve the history
+    -->
+    <MaxTransactionDone>100</MaxTransactionDone>
+    
+    <!--
+    The Security level of the replication manager :
+    SAFE_SECURITY_LEVEL : the verification of the type_id of the object is realised all the time 
+    with a call to the is_a method
+    MEDIUM_SECURITY_LEVEL : a first verification is realised by the verification of the type_id 
+    from the IOR => if the type_id is equal, the is_a is not called if not, the is_a is called
+    TRUST_USER_SECURITY_LEVEL : the replication manager don't check the type_id of the object
+    -->
+    <SecurityLevel>SAFE_SECURITY_LEVEL</SecurityLevel>
+
+    <!--
+    The Replication level :
+    STRICT : the replication manager doesn't allow the two replicas in the same host
+    LOOSE : the replication manager allows two replicas in the same host
+    -->
+    <ReplicationLevel>STRICT</ReplicationLevel>
+</CdmwFaultToleranceManager>
+

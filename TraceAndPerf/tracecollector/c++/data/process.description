@@ -1,0 +1,7 @@
+PROCESS_NAME=TraceCollector
+XML_FILE=
+LOCALISATION_SERVICE_PORT=5051
+PROCESS_PORT=5052
+PROGRAM=cdmw_trace_collector
+#ADD_ARGS=--interactive
+ADD_ARGS="--interactive --collector-name=collector_0 --traceFile-name=tracelog"
