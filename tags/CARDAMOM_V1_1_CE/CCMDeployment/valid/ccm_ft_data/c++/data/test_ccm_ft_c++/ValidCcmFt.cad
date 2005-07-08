@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<!DOCTYPE componentassembly SYSTEM "componentassembly.dtd">
+
+<componentassembly id="CcmFtAssembly">
+    <description>CCM with FT validation</description>
+
+    <componentfiles>
+        <componentfile id="Client">
+            <fileinarchive name="Client.csd"/>
+        </componentfile>
+        <componentfile id="ServerWithFacet">
+            <fileinarchive name="ServerWithFacet.csd"/>
+        </componentfile>
+        <componentfile id="ServerWithEvents">
+            <fileinarchive name="ServerWithEvents.csd"/>
+        </componentfile>
+    </componentfiles>
+
+    <partitioning>
+        
+        <hostcollocation id="Host2">
+
+            <processcollocation id="Server2">
+                <faulttolerant ftprimary="false"/>
+                <homeplacement id="ServerWithFacetHome2">
+                    <componentfileref idref="ServerWithFacet"/>
+                    <componentinstantiation id="ServerWithFacet2"/>
+                </homeplacement>
+                <homeplacement id="ServerWithEventsHome2">
+                    <componentfileref idref="ServerWithEvents"/>
+                    <componentinstantiation id="ServerWithEvents2"/>            
+                </homeplacement>
+                <destination>ServerProcess2@CcmFtApplication</destination>
+            </processcollocation>
+            
+            <destination>@hostname2val@</destination> 
+        </hostcollocation> 
+            
+        <hostcollocation id="Host3">
+
+            <processcollocation id="Server3">
+                <faulttolerant ftprimary="false"/>
+                <homeplacement id="ServerWithFacetHome3">
+                    <componentfileref idref="ServerWithFacet"/>
+                    <componentinstantiation id="ServerWithFacet3"/>            
+                </homeplacement>
+                <homeplacement id="ServerWithEventsHome3">
+                    <componentfileref idref="ServerWithEvents"/>
+                    <componentinstantiation id="ServerWithEvents3"/>            
+                </homeplacement>
+                <destination>ServerProcess3@CcmFtApplication</destination>
+            </processcollocation>
+            
+            <destination>@hostname3val@</destination> 
+        </hostcollocation> 
+
+        <hostcollocation id="Host1">
+            <processcollocation id="Server1">
+                <faulttolerant ftprimary="true"/>
+                <homeplacement id="ServerWithFacetHome1">
+                    <componentfileref idref="ServerWithFacet"/>
+                    <componentinstantiation id="ServerWithFacet1"/>
+                </homeplacement>
+                <homeplacement id="ServerWithEventsHome1">
+                    <componentfileref idref="ServerWithEvents"/>
+                    <componentinstantiation id="ServerWithEvents1"/>
+                </homeplacement>
+                <destination>ServerProcess1@CcmFtApplication</destination>
+            </processcollocation>
+            
+            <processcollocation id="ClientProcess">
+                <homeplacement id="ClientHome">
+                    <componentfileref idref="Client"/>
+                    <componentinstantiation id="Client1">
+                        <componentproperties>
+                            <fileinarchive name="Client.cpf"/>
+                        </componentproperties>
+                    </componentinstantiation>
+                </homeplacement>
+                <destination>ClientProcess@CcmFtApplication</destination>
+            </processcollocation>
+
+            <destination>@hostname1val@</destination> 
+        </hostcollocation> 
+
+    </partitioning>
+    
+
+    <faulttolerance>
+        <ftcomponentgroup id="ServerWithFacetGroup">
+            <componentinstantiationlist>
+                <componentinstantiationref idref="ServerWithFacet1"/>
+                <componentinstantiationref idref="ServerWithFacet2"/>
+                <componentinstantiationref idref="ServerWithFacet3"/>
+            </componentinstantiationlist>
+            <groupproperties>
+                <fileinarchive name="ServerWithFacet.cpf"/>
+            </groupproperties>
+            <destination>file://@config.install.dir@/share/ServerWithFacet.ior</destination>
+        </ftcomponentgroup>
+        <ftcomponentgroup id="ServerWithEventsGroup">
+            <componentinstantiationlist>
+                <componentinstantiationref idref="ServerWithEvents1"/>
+                <componentinstantiationref idref="ServerWithEvents2"/>
+                <componentinstantiationref idref="ServerWithEvents3"/>
+            </componentinstantiationlist>
+            <destination>file://@config.install.dir@/share/ServerWithEvents.ior</destination>
+        </ftcomponentgroup>
+    </faulttolerance>
+
+    
+    <connections>
+        <connectinterface id="client_receptacle">
+            <usesport>
+                <usesidentifier>serverHostInfo</usesidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>serverHostInfo</providesidentifier>
+                <componentinstantiationref idref="ServerWithFacetGroup"/>
+            </providesport>
+        </connectinterface>
+
+         <connectinterface id="server_receptacle">
+            <usesport>
+                <usesidentifier>clientHostInfo</usesidentifier>
+                <componentinstantiationref idref="ServerWithFacetGroup"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>clientHostInfo</providesidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </providesport>
+        </connectinterface>
+
+        <connectevent id="client_consumer_to_emits">
+            <consumesport>
+                <consumesidentifier>hostnameResults</consumesidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </consumesport>
+            <emitsport>
+                <emitsidentifier>hostnameEmits</emitsidentifier>
+                <componentinstantiationref idref="ServerWithEventsGroup"/>
+            </emitsport>
+        </connectevent>
+        
+        <connectevent id="client_consumer_to_publishes">
+            <consumesport>
+                <consumesidentifier>hostnameResults</consumesidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>hostnamePublishes</publishesidentifier>
+                <componentinstantiationref idref="ServerWithEventsGroup"/>
+            </publishesport>
+        </connectevent>
+        
+        <connectevent id="server_consumer_to_emits">
+            <consumesport>
+                <consumesidentifier>commands</consumesidentifier>
+                <componentinstantiationref idref="ServerWithEventsGroup"/>
+            </consumesport>
+            <emitsport>
+                <emitsidentifier>commandEmits</emitsidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </emitsport>
+        </connectevent>
+        
+        <connectevent id="server_consumer_to_publishes">
+            <consumesport>
+                <consumesidentifier>commands</consumesidentifier>
+                <componentinstantiationref idref="ServerWithEventsGroup"/>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>commandPublishes</publishesidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </publishesport>
+        </connectevent>
+        
+    </connections>
+
+</componentassembly>
+

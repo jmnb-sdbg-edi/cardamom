@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI.
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * =========================================================================== *
+-->
+
+<cdmw>
+
+    <factories>
+        <factory kind="HOME" 
+            idl-interface="CcmFtTest.ServerWithFacetHome"
+            idl-filename="ccm_ft_ds.idl">
+            <idl-search-dir>@CSCI_IDL_PATH@</idl-search-dir>
+            <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+        </factory>
+        <factory kind="HOME" 
+            idl-interface="CcmFtTest.ServerWithEventsHome"
+            idl-filename="ccm_ft_ds.idl">
+            <idl-search-dir>@CSCI_IDL_PATH@</idl-search-dir>
+            <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+        </factory>
+    </factories>
+    
+    <lifecycle-frameworks>
+        <lifecycle-framework id="serverwithfacet.framework"
+            factory-idref="CcmFtTest.ServerWithFacetHome">
+            <home-impl category="SESSION" threading="MULTITHREAD" segmented="no"/>
+        </lifecycle-framework>
+        <lifecycle-framework id="serverwithevents.framework"
+            factory-idref="CcmFtTest.ServerWithEventsHome">
+            <home-impl category="SESSION" threading="MULTITHREAD" segmented="no"/>
+        </lifecycle-framework>
+    </lifecycle-frameworks>
+    
+	<datastore-types>
+		<datastore-type typename="STdata" oid-type="CcmFtTestData.oid_datastore" data-type="CcmFtTestData.oid_datastore" idl-filename="ccm_ft_datastore.idl">
+            <idl-search-dir>@CSCI_IDL_PATH@</idl-search-dir>
+            <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+		</datastore-type>
+	</datastore-types>
+
+
+
+    <programs>
+        <program filename="ServerCdmwInterface"
+            init-dtd="ServerComponentDatastoreServer.dtd">
+            <services>
+                <repository-interface/>
+                <lifecycle>
+                    <framework idref="serverwithfacet.framework" occurrences="1"/>
+                    <framework idref="serverwithevents.framework" occurrences="1"/>
+                </lifecycle>
+                <fault-tolerance server="yes">
+                    <datastores kind="IIOP">
+						<datastore idref="STdata" occurrences="1"/>
+					</datastores>
+                </fault-tolerance>
+            </services>
+        </program>
+    </programs>
+</cdmw>
+

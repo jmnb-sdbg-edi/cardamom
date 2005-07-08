@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<!DOCTYPE properties SYSTEM "properties.dtd">
+
+<properties>
+   <simple name="attrib1" type="short">
+      <value>2</value>
+   </simple>
+   <simple name="attrib2" type="ulong">
+      <value>14</value>
+   </simple>
+   <struct name="attrib3" type="Struct1">
+      <simple name="long1" type="long">
+         <value>250</value>
+      </simple>
+      <simple name="string1" type="string">
+         <value>coucou</value>
+      </simple>
+   </struct>
+   <sequence name="attrib4" type="sequence&lt;Struct1,5&gt;">
+      <struct type="Struct1">
+         <simple name="long1" type="long">
+            <value>686</value>
+         </simple>
+         <simple name="string1" type="string">
+            <value>youpi</value>
+         </simple>
+      </struct>
+      <struct type="Struct1">
+         <simple name="long1" type="long">
+            <value>687</value>
+         </simple>
+         <simple name="string1" type="string">
+            <value>youpa</value>
+         </simple>
+      </struct>
+   </sequence>
+   <simple name="attrib8" type="string">
+      <value>B</value>
+   </simple>
+   <sequence name="attrib9" type="sequence&lt;TestEnum&gt;">
+      <simple type="string">
+         <value>A</value>
+      </simple>
+      <simple type="string">
+         <value>C</value>
+      </simple>
+   </sequence>
+</properties>
+

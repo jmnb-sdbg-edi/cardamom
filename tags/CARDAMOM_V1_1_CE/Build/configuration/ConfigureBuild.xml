@@ -1,0 +1,1821 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_config_targets
+             SYSTEM "file:../data/CommonConfigTargets.xml">
+    <!ENTITY save_tokens_target
+             SYSTEM "file:data/SaveTokensTarget.xml">
+]>
+
+
+<project name="ConfigureBuild" default="-configure" basedir=".">
+ 
+   <if>
+    <not> <isset property="is.needed.tools"/> </not>
+    <then>
+    <echo>===================================================</echo>
+    </then>
+   </if>
+
+    <description>
+        This build file asks the user about the CSCIs that are available on his
+        environment, the packages that he wants to compile and the location of
+        the various tools. The relevant information gathered during the
+        configuration process will be saved into the site properties file.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_config_targets;
+    &save_tokens_target;
+
+
+    <!-- =======================================================================
+        The "-configure" target runs the interactive configurator. This is the
+        default target and it is set to private so that the user has no
+        possiblity to run this build but to call it from MasterBuild.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-run-package-selection"
+            + "-configure-interfaces"
+            + "-configure-install-dir"
+            + "-locate-cscis"
+            + "-check-csci-versions"
+            + "-configure-tools"
+            + "-configure-dcps"
+            + "-create-lowercase-product-name"
+            + "-create-tokens-properties"
+            + "-save-configuration"
+            + "-save-tokens"
+            + "-dispatch-build-files"
+            + "-cleanup-incomplete-config-files"
+    -->
+    <target name="-configure"
+            depends="-initialize, -run-package-selection,
+                     -configure-interfaces, -configure-install-dir,
+                     -locate-cscis, -check-csci-versions, -configure-tools,
+                     -configure-dcps, -create-lowercase-product-name,
+                     -create-tokens-properties, -save-configuration,
+                     -save-tokens, -dispatch-build-files">
+
+        <cleanupincompletecfgfiles configfiles.dir="${mb.site.properties.dir}"/>
+
+        <var name="s" value="The new settings are saved into"/>
+        <var name="s" value="${s} ${mb.new.site.props}"/>
+        <echo>${s}</echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-reconfigure" target reconfigures the build environment with the
+        settings saved into the site configuration file.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-create-tokens-properties"
+            + "-generate-OpenCCM-scripts"
+            + "-dispatch-build-files"
+    -->
+    <target name="-reconfigure"
+            depends="-initialize, -create-tokens-properties,
+                    -generate-OpenCCM-scripts, -dispatch-build-files">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target loads the CSC properties and ensures that the
+        package description file exists.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+            + "-define-macros"
+            + "-load-configuration-csc-properties"
+            + "-check-description-file"
+    -->
+    <target name="-initialize"
+            depends="-check-global-aliases, -define-macros,
+                     -load-configuration-csc-properties,
+                     -check-description-file">
+
+        <property name="passive.mode" value="false"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-generate-OpenCCM-scripts" target generates the customized OpenCCM
+        scripts into the CodeGen CSCI directory.
+    -->
+    <target name="-generate-OpenCCM-scripts" if="config.OpenCCM_HOMEDIR">
+        <ant antfile="${config.csc.data.dir}${FS}ConfigureOpenCCM.xml"
+             target="-customize-OpenCCM-scripts">
+
+            <property name="tool.name"       value="OpenCCM"/>
+            <property name="openccm.bin.dir" value="${config.OpenCCM.bin.dir}"/>
+        </ant>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-define-macros" target defines ANT macros to speed up the build.
+    -->
+    <target name="-define-macros" unless="cb.macros.defined">
+        <!--
+            The "loadcsciproperties" macro loads the CSCI properties file.
+        -->
+        <macrodef name="loadcsciproperties">
+            <attribute name="csci.name"/>
+
+            <sequential>
+                <checkcsciproperties csci.name="@{csci.name}"/>
+
+                <xmlproperty file="${cb.check.csci.properties}" keepRoot="false"
+                             collapseAttributes="true" prefix="cb.check"/>
+
+                <!-- unset properties -->
+                <xvar name="cb.check.csci.properties" unset="true"/>
+            </sequential>
+        </macrodef>
+
+        <!--
+            The "checkcsciproperties" macro checks if the CSCI properties file
+            exists and validates it against its XML schema.
+        -->
+        <macrodef name="checkcsciproperties">
+            <attribute name="csci.name"/>
+
+            <sequential>
+                <!-- look for the CSCI properties file -->
+                <propertycopy override="true" property="cb.csci.location"
+                              from="config.@{csci.name}.location"/>
+
+                <var name="p" value="${cb.csci.location}${FS}"/>
+                <var name="p" value="${p}${config.csci.data.dir}${FS}"/>
+                <var name="p" value="${p}${config.csci.properties.file}"/>
+                <var name="cb.check.csci.properties" value="${p}"/>
+
+                <!-- check -->
+                <checkxmlpropertiesfile
+                    my.properties.file="${cb.check.csci.properties}"
+                    my.xsd.dir="${xsd.dir}"
+                    require.validation="${config.csci.properties.validate}"/>
+
+                <!-- unset properties -->
+                <xvar name="cb.csci.location" unset="true"/>
+            </sequential>
+        </macrodef>
+
+        <!--
+            The "loadtargetcscproperties" macro loads the CSC properties file.
+        -->
+        <macrodef name="loadtargetcscproperties">
+            <attribute name="csc.dir"/>
+
+            <sequential>
+                <checkcscproperties csc.dir="@{csc.dir}"/>
+
+                <xmlproperty file="${cb.target.csc.properties}" prefix="target"
+                             keepRoot="false" collapseAttributes="true"/>
+
+                <!-- unset properties -->
+                <xvar name="cb.target.csc.properties" unset="true"/>
+            </sequential>
+        </macrodef>
+
+        <!--
+            The "checkcscproperties" macro checks if the CSC properties file
+            exists and validates it against its XML schema.
+        -->
+        <macrodef name="checkcscproperties">
+            <attribute name="csc.dir"/>
+
+            <sequential>
+                <!-- look for the CSC properties file -->
+                <var name="p" value="@{csc.dir}${FS}${config.csc.data.dir}"/>
+                <var name="p" value="${p}${FS}${config.csc.properties.file}"/>
+                <var name="cb.target.csc.properties" value="${p}"/>
+
+                <!-- check -->
+                <checkxmlpropertiesfile
+                    my.properties.file="${cb.target.csc.properties}"
+                    my.xsd.dir="${xsd.dir}"
+                    require.validation="${config.csc.properties.validate}"/>
+            </sequential>
+        </macrodef>
+
+        <!--
+            The "configuretools" macro performs the specified action on every
+            tool of the list.
+        -->
+        <macrodef name="configuretools">
+            <attribute name="my.tool.list"/>
+            <attribute name="action"/>
+
+            <sequential>
+                <for list="@{my.tool.list}" delimiter=" " param="cb.tool.name">
+                    <sequential>
+                        <ant dir="${config.csc.data.dir}"
+                             antfile="Configure@{cb.tool.name}.xml"
+                             target="-@{action}-@{cb.tool.name}">
+
+                            <property name="tool.name" value="@{cb.tool.name}"/>
+                        </ant>
+                        <callgc/>
+                    </sequential>
+                </for>
+            </sequential>
+        </macrodef>
+
+        <property name="cb.macros.defined" value="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-load-configuration-csc-properties" target loads this CSC
+        properties file.
+
+        It depends on the following targets:
+            + "-check-configuration-csc-properties"
+    -->
+    <target name="-load-configuration-csc-properties"
+            depends="-check-configuration-csc-properties">
+
+        <xmlproperty file="${cb.csc.properties}" prefix="cb" keepRoot="false"
+                     collapseAttributes="true"/>
+
+        <!-- check the attributes -->
+        <checkcscattributes
+            my.csc.dir="${basedir}"
+            my.csc.name="${cb.csc.name}"
+            my.csc.owner="${cb.csc.owner}"
+            my.csc.lang="${cb.csc.lang}"
+            my.csc.properties="${cb.csc.properties}"/>
+
+        <!-- unset properties -->
+        <xvar name="cb.csc.properties" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-configuration-csc-properties" target checks if this CSC
+        properties file exists and validates it against its XML schema.
+    -->
+    <target name="-check-configuration-csc-properties">
+        <!-- set the file name -->
+        <var name="my.var" value="${config.csc.data.dir}"/>
+        <property name="cb.csc.properties"
+                  location="${my.var}${FS}${config.csc.properties.file}"/>
+
+        <!-- check -->
+        <checkxmlpropertiesfile
+            my.properties.file="${cb.csc.properties}"
+            my.xsd.dir="${xsd.dir}"
+            require.validation="${config.csc.properties.validate}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-description-file" target checks if the package description
+        file exists and validates it against its XML schema.
+    -->
+    <target name="-check-description-file">
+        <!-- set the file name -->
+        <property name="cb.pkg.desc"
+                  location="${config.csc.data.dir}${FS}PkgDesc.xml"/>
+
+        <!-- check -->
+        <checkxmlpropertiesfile
+            my.properties.file="${cb.pkg.desc}"
+            my.xsd.dir="${xsd.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-run-package-selection" target runs the interactive package
+        selection.
+
+        It depends on the following targets:
+            + "-run-csci-selection"
+    -->
+    <target name="-run-package-selection" depends="-run-csci-selection">
+        <!--
+            the "selectpackages" task will ask the user to select the packages
+            that he wants to build and will create the following properties:
+                + "config.sel.packages": list of selected packages,
+                + "config.sel.interfaces": list of selected interfaces,
+                + "config.sel.min.cscis": minimum list of CSCIs required to
+                    build the selected packages.
+        -->
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <echo>Which packages do you want to build ?</echo>
+            </then>
+        </if>
+
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.cfg.sel.pkgs" silent="true"
+                      from="${mb.prev}.config.sel.packages"/>
+
+        <propertycopy property="cb.prev.cfg.sel.itfs" silent="true"
+                      from="${mb.prev}.config.sel.interfaces"/>
+
+        <propertycopy property="cb.prev.cfg.sel.min.cscis" silent="true"
+                      from="${mb.prev}.config.sel.min.cscis"/>
+
+        <if>
+            <and>
+                <isset property="cb.prev.cfg.sel.pkgs"/>
+                <isset property="cb.prev.cfg.sel.itfs"/>
+                <isset property="cb.prev.cfg.sel.min.cscis"/>
+                <not>
+                    <!--
+                        the list of available CSCIs were updated, therefore we
+                        cannot assume that the packages available for selection
+                        are still identical to the previous configuration.
+                    -->
+                    <isset property="cb.available.cscis.updated"/>
+                </not>
+            </and>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <selectpackages
+                            pkgDesc="${cb.pkg.desc}"
+                            osFamily="${my.os.name}"
+                            availableCscis="${config.available.cscis}"
+                            defaultPkgs="${cb.prev.cfg.sel.pkgs}"
+                            defaultItfs="${cb.prev.cfg.sel.itfs}"
+                            defaultCscis="${cb.prev.cfg.sel.min.cscis}"/>
+
+                        <!-- unset properties -->
+                        <xvar name="cb.prev.cfg.sel.pkgs"      unset="true"/>
+                        <xvar name="cb.prev.cfg.sel.itfs"      unset="true"/>
+                        <xvar name="cb.prev.cfg.sel.min.cscis" unset="true"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.sel.packages"
+                                      from="cb.prev.cfg.sel.pkgs"/>
+                        <propertycopy property="config.sel.interfaces"
+                                      from="cb.prev.cfg.sel.itfs"/>
+                        <propertycopy property="config.sel.min.cscis"
+                                      from="cb.prev.cfg.sel.min.cscis"/>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- no default values -->
+                <selectpackages pkgdesc="${cb.pkg.desc}"
+                                osFamily="${my.os.name}"
+                                availableCscis="${config.available.cscis}"/>
+            </else>
+        </if>
+
+        <!-- stop condition -->
+        <fail unless="config.sel.packages"
+              message="You have not selected any packages."/>
+
+        <if>
+            <not><isset property="no.site.props"/></not>
+            <then>
+                <!-- save some properties temporarily -->
+              <if>
+              <not> <isset property="is.needed.tools"/> </not>
+                <then>
+                <propertyfile file="${tmpconfig.cache}">
+                    <entry key="config.sel.packages"
+                           value="${config.sel.packages}"/>
+                    <entry key="config.sel.interfaces"
+                           value="${config.sel.interfaces}"/>
+                    <entry key="config.sel.min.cscis"
+                           value="${config.sel.min.cscis}"/>
+                </propertyfile>
+               </then>
+               </if>
+
+                <!-- check if the C++ interface was selected -->
+                <condition property="cb.has.cpp.interface">
+                    <contains string="${config.sel.interfaces}"
+                              substring="c++"/>
+                </condition>
+
+                <!-- check if the ADA interface was selected -->
+                <condition property="cb.has.ada.interface">
+                    <contains string="${config.sel.interfaces}"
+                              substring="ada"/>
+                </condition>
+
+                <!-- unset properties -->
+                <xvar name="cb.available.cscis.updated" unset="true"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-run-csci-selection" target asks the user about the CSCIs that are
+        available on his system.
+    -->
+    <target name="-run-csci-selection">
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <echo>Which CSCIs are available on your system ?</echo>
+            </then>
+        </if>
+
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.cfg.avail.cscis" silent="true"
+                      from="${mb.prev}.config.available.cscis"/>
+
+        <if>
+            <isset property="cb.prev.cfg.avail.cscis"/>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <selectcscis pkgdesc="${cb.pkg.desc}"
+                                     default="${cb.prev.cfg.avail.cscis}"
+                                     property="config.available.cscis"/>
+
+                        <!-- has the list of available cscis changed ? -->
+                        <if>
+                            <not>
+                                <equals arg1="${config.available.cscis}"
+                                        arg2="${cb.prev.cfg.avail.cscis}"
+                                        trim="true"/>
+                            </not>
+                            <then>
+                                <!-- it has -->
+                                <property name="cb.available.cscis.updated"
+                                          value="true"/>
+                            </then>
+                        </if>
+                    </then>
+                    <else>
+                        <propertycopy property="config.available.cscis"
+                                      from="cb.prev.cfg.avail.cscis"/>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- no default values -->
+                <selectcscis pkgdesc="${cb.pkg.desc}"
+                             property="config.available.cscis"/>
+            </else>
+        </if>
+
+        <!-- save some properties temporarily -->
+        <if>
+         <not> <isset property="is.needed.tools"/> </not>
+          <then>
+             <propertyfile file="${tmpconfig.cache}">
+                 <entry key="config.available.cscis"
+                        value="${config.available.cscis}"/>
+             </propertyfile>
+          </then>
+        </if>
+        <!-- unset properties -->
+        <xvar name="cb.prev.cfg.avail.cscis" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-configure-interfaces" target asks the user to answer specific
+        questions about the interfaces he has selected.
+
+        It depends on the following targets:
+            + "-configure-cpp-interface"
+            + "-configure-ada-interface"
+    -->
+    <target name="-configure-interfaces"
+            depends="-configure-cpp-interface,
+                     -configure-java-interface,
+                     -configure-ada-interface">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-configure-cpp-interface" target asks the user if he wants to
+        compile the C++ interface in debug mode and with/without shared
+        libraries.
+    -->
+    <target name="-configure-cpp-interface" if="cb.has.cpp.interface">
+        <!-- ask about the debug mode -->
+
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.cfg.cpp.debug" silent="true"
+                      from="${mb.prev}.config.cpp.debug"/>
+
+        <var name="s" value="Do you want to compile the C++ interface in"/>
+        <var name="s" value="${s} DEBUG mode ? "/>
+
+        <if>
+            <isset property="cb.prev.cfg.cpp.debug"/>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${s}" validargs="y,n"
+                                addproperty="config.cpp.debug"
+                                default="${cb.prev.cfg.cpp.debug}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.cpp.debug"
+                                      from="cb.prev.cfg.cpp.debug"/>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- no default values -->
+                <input message="${s}" validargs="y,n"
+                       addproperty="config.cpp.debug"/>
+            </else>
+        </if>
+
+        <!-- save some properties temporarily -->
+    <if>
+     <not> <isset property="is.needed.tools"/> </not>
+       <then>
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.cpp.debug" value="${config.cpp.debug}"/>
+        </propertyfile>
+       </then>
+    </if>
+
+        <!-- ask about the shared libraries -->
+
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.cfg.cpp.shared" silent="true"
+                      from="${mb.prev}.config.cpp.shared"/>
+
+        <var name="s" value="Do you want to compile SHARED libraries ? "/>
+
+        <if>
+            <isset property="cb.prev.cfg.cpp.shared"/>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${s}" validargs="y,n"
+                                addproperty="config.cpp.shared"
+                                default="${cb.prev.cfg.cpp.shared}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.cpp.shared"
+                                      from="cb.prev.cfg.cpp.shared"/>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- no default values -->
+                <input message="${s}" validargs="y,n"
+                       addproperty="config.cpp.shared"/>
+            </else>
+        </if>
+
+        <!-- save some properties temporarily -->
+     <if>
+     <not> <isset property="is.needed.tools"/> </not>
+       <then>
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.cpp.shared" value="${config.cpp.shared}"/>
+        </propertyfile>
+       </then>
+     </if>
+
+        <!-- ask about the optimisation flags -->
+
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.cfg.cpp.optim" silent="true"
+                      from="${mb.prev}.config.cpp.optim"/>
+
+        <var name="s" value="Do you want to compile with the optimisation flags? "/>
+
+        <if>
+            <isset property="cb.prev.cfg.cpp.optim"/>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${s}" validargs="y,n"
+                                addproperty="config.cpp.optim"
+                                default="${cb.prev.cfg.cpp.optim}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.cpp.optim"
+                                      from="cb.prev.cfg.cpp.optim"/>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- no default values -->
+                <input message="${s}" validargs="y,n"
+                       addproperty="config.cpp.optim"/>
+            </else>
+        </if>
+
+        <!-- save some properties temporarily -->
+     <if>
+     <not> <isset property="is.needed.tools"/> </not>
+       <then>
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.cpp.optim" value="${config.cpp.optim}"/>
+        </propertyfile>
+       </then>
+     </if>
+
+        <!-- unset properties -->
+        <xvar name="cb.has.cpp.interface"   unset="true"/>
+        <xvar name="cb.prev.cfg.cpp.debug"  unset="true"/>
+        <xvar name="cb.prev.cfg.cpp.shared" unset="true"/>
+        <xvar name="cb.prev.cfg.cpp.optim" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-configure-java-interface" target sets the C/C++ compiler
+        properties for the compilation of C/C++ source code wherever JNI is
+        used. This target is run only if the C++ interface was not selected.
+    -->
+    <target name="-configure-java-interface" unless="cb.has.cpp.interface">
+        <property name="config.cpp.shared" value="yes" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-configure-ada-interface" target asks the user if he wants to
+        compile the ADA interface in debug mode.
+    -->
+    <target name="-configure-ada-interface" if="cb.has.ada.interface">
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.cfg.ada.debug" silent="true"
+                      from="${mb.prev}.config.ada.debug"/>
+
+        <var name="s" value="Do you want to compile the ADA interface in"/>
+        <var name="s" value="${s} DEBUG mode ? "/>
+
+        <if>
+            <isset property="cb.prev.cfg.ada.debug"/>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${s}" validargs="y,n"
+                                addproperty="config.ada.debug"
+                                default="${cb.prev.cfg.ada.debug}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.ada.debug"
+                                      from="cb.prev.cfg.ada.debug"/>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- no default values -->
+                <input message="${s}" validargs="y,n"
+                       addproperty="config.ada.debug"/>
+            </else>
+        </if>
+
+        <!-- save some properties temporarily -->
+     <if>
+      <not> <isset property="is.needed.tools"/> </not>
+      <then>
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.ada.debug" value="${config.ada.debug}"/>
+        </propertyfile>
+      </then>
+     </if>
+
+        <!-- unset properties -->
+        <xvar name="cb.has.ada.interface"  unset="true"/>
+        <xvar name="cb.prev.cfg.ada.debug" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-configure-install-dir" target asks the user about the installation
+        directory.
+    -->
+    <target name="-configure-install-dir">
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.install.dir" silent="true"
+                      from="${mb.prev}.config.install.dir"/>
+
+        <var name="s" value="Where should this product be installed ?"/>
+
+        <if>
+            <isset property="cb.prev.install.dir"/>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${s}" dirPathOnly="true"
+                                addProperty="config.install.dir"
+                                default="${cb.prev.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.install.dir"
+                                      from="cb.prev.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- no default values -->
+                <xinput message="${s}" dirPathOnly="true"
+                        addProperty="config.install.dir"/>
+            </else>
+        </if>
+
+        <!-- save some properties temporarily -->
+    <if>
+     <not> <isset property="is.needed.tools"/> </not>
+       <then>
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.install.dir" value="${config.install.dir}"/>
+        </propertyfile>
+       </then>
+     </if>
+
+        <!-- unset properties -->
+        <xvar name="cb.prev.install.dir" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-cscis" target asks the user about the location of the
+        CSCIs on his system.
+    -->
+    <target name="-locate-cscis" if="config.sel.min.cscis">
+        <stringmanip string="${config.sel.min.cscis}" action="counttokens"
+                     property="cb.sel.min.cscis.count"/>
+
+        <!-- find out how many locations we already know -->
+        <var name="cb.csci.loc.count" value="0"/>
+
+        <for list="${config.sel.min.cscis}" delimiter=" " param="cb.csci.name">
+            <sequential>
+                <if>
+                    <isset
+                        property="${mb.prev}.config.@{cb.csci.name}.location"/>
+                    <then>
+                        <math result="cb.csci.loc.count" operation="+"
+                              operand1="${cb.csci.loc.count}"
+                              operand2="1" datatype="int"/>
+                    </then>
+                </if>
+            </sequential>
+        </for>
+
+        <!--
+            try to ease the input of the CSCI locations in the case where
+            all the CSCI directories are stored into a single directory.
+        -->
+        <if>
+            <not>
+                <equals arg1="${cb.sel.min.cscis.count}"
+                        arg2="${cb.csci.loc.count}"/>
+            </not>
+            <then>
+                <var name="s" value="Are all the CSCI directories children"/>
+                <var name="s" value="${s} of a common directory ? "/>
+
+                <xinput message="${s}" validargs="y,n"
+                        addproperty="cb.cscis.have.common.path"/>
+
+                <if>
+                    <equals arg1="${cb.cscis.have.common.path}" arg2="y"/>
+                    <then>
+                        <xinput message="Enter the path to that directory"
+                                dirPathOnly="true"
+                                addProperty="cb.cscis.common.path"/>
+                    </then>
+                </if>
+            </then>
+        </if>
+
+        <!-- ask the location of each selected CSCI -->
+        <for list="${config.sel.min.cscis}" delimiter=" " param="cb.param.csci">
+            <sequential>
+                <!-- find out if the default values are available -->
+                <propertycopy property="cb.csci.default.location" silent="true"
+                              from="${mb.prev}.config.@{cb.param.csci}.location"
+                              override="true"/>
+
+                <!--
+                    the common path input overrides the default path from
+                    the properties file.
+                -->
+                <if>
+                    <isset property="cb.cscis.common.path"/>
+                    <then>
+                        <var name="cb.csci.default.location"
+                          value="${cb.cscis.common.path}${FS}@{cb.param.csci}"/>
+                    </then>
+                </if>
+
+                <var name="s"
+                     value="Enter the location of the @{cb.param.csci} CSCI"/>
+
+                <if>
+                    <isset property="cb.csci.default.location"/>
+                    <then>
+                        <!-- we have default values -->
+                        <if>
+                            <isfalse value="${passive.mode}"/>
+                            <then>
+                                <xinput message="${s}" dirPathOnly="true"
+                                addProperty="config.@{cb.param.csci}.location"
+                                default="${cb.csci.default.location}"/>
+                            </then>
+                            <else>
+                                <propertycopy
+                                    property="config.@{cb.param.csci}.location"
+                                    from="cb.csci.default.location"/>
+                            </else>
+                        </if>
+                    </then>
+                    <else> <!-- no default values -->
+                        <xinput message="${s}" dirPathOnly="true"
+                                addProperty="config.@{cb.param.csci}.location"/>
+                    </else>
+                </if>
+
+                <!-- save some properties temporarily -->
+                <propertycopy override="true" property="cb.csci.loc"
+                              from="config.@{cb.param.csci}.location"/>
+
+            <if>
+             <not> <isset property="is.needed.tools"/> </not>
+              <then>
+                <propertyfile file="${tmpconfig.cache}">
+                    <entry key="config.@{cb.param.csci}.location"
+                           value="${cb.csci.loc}"/>
+                </propertyfile>
+              </then>
+            </if>
+    
+                <!-- unset properties -->
+                <xvar name="cb.csci.default.location" unset="true"/>
+                <xvar name="cb.csci.loc"              unset="true"/>
+                <callgc/>
+            </sequential>
+        </for>
+
+        <!-- unset properties -->
+        <xvar name="cb.sel.min.cscis.count"    unset="true"/>
+        <xvar name="cb.csci.loc.count"         unset="true"/>
+        <xvar name="cb.cscis.have.common.path" unset="true"/>
+        <xvar name="cb.cscis.common.path"      unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-csci-versions" target ensures that the version of each
+        selected CSCI matches the versions stated in the release properties
+        file.
+    -->
+    <target name="-check-csci-versions" if="config.sel.min.cscis">
+        <if>
+            <istrue value="${require.csci.version.checking}"/>
+            <then>
+                <echo>Checking all CSCIs properties...</echo>
+
+                <for list="${config.sel.min.cscis}" delimiter=" "
+                     param="cb.param.csci">
+
+                    <sequential>
+                        <!-- load the CSCI properties -->
+                        <loadcsciproperties csci.name="@{cb.param.csci}"/>
+
+                        <propertycopy property="cb.required.csci.version"
+                                      from="require.@{cb.param.csci}.version"/>
+
+                        <!-- check -->
+                        <checkcsciattributes
+                            my.csci.name="${cb.check.csci.name}"
+                            my.req.csci.name="@{cb.param.csci}"
+                            my.csci.version="${cb.check.csci.version}"
+                            my.req.csci.ver="${cb.required.csci.version}"
+                            my.csci.properties="${cb.check.csci.properties}"
+                            require.csci.version.checking=
+                                "${require.csci.version.checking}"/>
+
+                        <!-- unset properties -->
+                        <propertyselector property="cb.check.props"
+                                          match="^cb\.check\.(.*)" select="\1"/>
+
+                        <for list="${cb.check.props}" param="p">
+                            <sequential>
+                                <xvar name="cb.check.@{p}" unset="true"/>
+                            </sequential>
+                        </for>
+
+                        <xvar name="cb.required.csci.version" unset="true"/>
+                        <xvar name="cb.check.props"           unset="true"/>
+                        <callgc/>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-tokens-properties" target create properties files which
+        contains tokens for parametrized data files.
+    -->
+    <target name="-create-tokens-properties" if="config.sel.min.cscis">
+        <!-- clean up -->
+        <delete file="${mb.dev.tokens.properties}"     quiet="true"/>
+        <delete file="${mb.install.tokens.properties}" quiet="true"/>
+
+        <!-- create -->
+        <for list="${config.sel.min.cscis}" delimiter=" " param="cb.param.csci">
+            <sequential>
+                <!-- look for ExportTokens.xml -->
+                <propertycopy override="true" property="cb.csci.loc"
+                              from="config.@{cb.param.csci}.location"/>
+
+                <var name="p" value="${cb.csci.loc}${FS}"/>
+                <var name="p" value="${p}${config.csci.data.dir}"/>
+
+                <var name="cb.csci.exporttokens.file"
+                     value="${p}${FS}${config.csci.exporttokens.file}"/>
+
+                <if>
+                    <available file="${cb.csci.exporttokens.file}" type="file"/>
+                    <then>
+                        <ant dir="${p}"
+                             antfile="${config.csci.exporttokens.file}"
+                             target="-export-tokens"/>
+                    </then>
+                </if>
+
+                <!-- unset properties -->
+                <xvar name="cb.csci.loc"               unset="true"/>
+                <xvar name="cb.csci.exporttokens.file" unset="true"/>
+                <callgc/>
+            </sequential>
+        </for>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-configure-tools" target asks the user about the location of the
+        tools required by the selected packages, checks if the tool is found at
+        that location and is suitable for the build.
+
+        It depends on the following targets:
+            + "-construct-tool-lists"
+            + "-setup-configure-tools-persistence"
+            + "-locate-tools"
+            + "-load-compiler-properties"
+            + "-load-orb-properties"
+            + "-check-other-tools"
+    -->
+    <target name="-configure-tools"
+            depends="-construct-tool-lists, -setup-configure-tools-persistence,
+                     -locate-tools, -load-compiler-properties,
+                     -load-orb-properties, -check-other-tools">
+
+        <!-- clean up -->
+        <delete file="${cb.tools.conf}" quiet="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-tool-lists" target parses the package description file
+        and creates lists of tools (compilers, ORBs and other COTS).
+    -->
+    <target name="-construct-tool-lists" if="config.sel.min.cscis">
+        <echo>Starting the tool configuration...</echo>
+
+        <!--
+            the "toollist" task will build the list of tools to configure and
+            will create the following properties:
+                + "config.sel.min.tools": list of tools to configure,
+                + "config.sel.min.compilers": list of compilers to configure,
+                + "config.sel.min.orbs": list of ORBs to configure,
+                + "config.${csci.name}.tools": list of tools for each CSCI,
+                + "config.${csci.name}.${lang}.compiler": the compiler for
+                  each CSCI,
+                + "config.${csci.name}.${lang}.orb": the ORB for each CSCI.
+        -->
+
+        <toollist pkgdesc="${cb.pkg.desc}" osFamily="${my.os.name}"
+                  cscis="${config.sel.min.cscis}"
+                  interfaces="${config.sel.interfaces}"
+                  packages="${config.sel.packages}"/>
+
+        <!-- save some properties temporarily -->
+        <if>
+         <not> <isset property="is.needed.tools"/> </not>
+          <then>
+                <propertyfile file="${tmpconfig.cache}">
+                  <entry key="config.sel.min.compilers"
+                     value="${config.sel.min.compilers}"/>
+                </propertyfile>
+          </then>
+        </if>
+
+        <if>
+            <isset property="config.sel.min.tools"/>
+            <then>
+             <if>
+             <not> <isset property="is.needed.tools"/> </not>
+              <then>
+                <propertyfile file="${tmpconfig.cache}">
+                    <entry key="config.sel.min.tools"
+                           value="${config.sel.min.tools}"/>
+                </propertyfile>
+              </then>
+             </if>
+            </then>
+        </if>
+
+        <if>
+            <isset property="config.sel.min.orbs"/>
+            <then>
+              <if>
+               <not> <isset property="is.needed.tools"/> </not>
+               <then>
+                 <propertyfile file="${tmpconfig.cache}">
+                    <entry key="config.sel.min.orbs"
+                           value="${config.sel.min.orbs}"/>
+                 </propertyfile>
+               </then>
+               </if>
+            </then>
+        </if>
+
+        <for list="${config.sel.min.cscis}" delimiter=" " param="cb.csci.name">
+            <sequential>
+                <propertycopy override="true" property="cb.csci.tools"
+                              from="config.@{cb.csci.name}.tools"/>
+
+           <if>
+            <not> <isset property="is.needed.tools"/> </not>
+             <then>
+                <propertyfile file="${tmpconfig.cache}">
+                    <entry key="config.@{cb.csci.name}.tools"
+                           value="${cb.csci.tools}"/>
+                </propertyfile>
+             </then>
+           </if>
+
+                <!-- unset properties -->
+                <xvar name="cb.csci.tools" unset="true"/>
+                <callgc/>
+            </sequential>
+        </for>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-setup-configure-tools-persistence" target defines a file into
+        which properties created during the configuration of the tool will be
+        stored.
+    -->
+    <target name="-setup-configure-tools-persistence">
+        <tempfile property="cb.tools.conf" destdir="${TMP}"
+                  prefix="${tmpfile.prefix}_tools_conf"
+                  suffix="#${site.id}.properties"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-tools" target asks the user about the location of the
+        various tools required for the build.
+
+        It depends on the following targets:
+            + "-require-locate-tools"
+    -->
+    <target name="-locate-tools" depends="-require-locate-tools"
+            if="require.locate.tools">
+
+        <!-- list of tools to be located -->
+        <var name="my.tool.list" value=""/>
+
+        <if>
+            <isset property="config.sel.min.compilers"/>
+            <then>
+                <var name="my.tool.list" value="${config.sel.min.compilers}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="config.sel.min.orbs"/>
+            <then>
+                <var name="my.tool.list"
+                     value="${my.tool.list} ${config.sel.min.orbs}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="config.sel.min.tools"/>
+            <then>
+                <var name="my.tool.list"
+                     value="${my.tool.list} ${config.sel.min.tools}"/>
+            </then>
+        </if>
+
+        <!-- locate each tool-->
+        <configuretools my.tool.list="${my.tool.list}" action="locate"/>
+
+        <property file="${cb.tools.conf}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-require-locate-tools" target checks if there are any tools that
+        need to be located.
+    -->
+    <target name="-require-locate-tools">
+        <condition property="require.locate.tools">
+            <or>
+                <isset property="config.sel.min.compilers"/>
+                <isset property="config.sel.min.orbs"/>
+                <isset property="config.sel.min.tools"/>
+            </or>
+        </condition>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-load-compiler-properties" target loads the compiler properties.
+
+        It depends on the following targets:
+            + "-check-compiler-properties"
+            + "-check-compilers"
+    -->
+    <target name="-load-compiler-properties" if="config.sel.min.compilers"
+            depends="-check-compiler-properties, -check-compilers">
+
+        <loadcompilerproperties file="${cb.compiler.properties}"
+                                osFamily="${my.os.name}"
+                                tools="${config.sel.min.compilers}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-compiler-properties" target checks if the compiler
+        properties file exists and validates it against its XML schema.
+    -->
+    <target name="-check-compiler-properties">
+        <!-- set the file name -->
+        <property name="cb.compiler.properties"
+                  location="${xml.dir}${FS}CompilerProperties.xml"/>
+
+        <!-- check -->
+        <checkxmlpropertiesfile
+            my.properties.file="${cb.compiler.properties}"
+            my.xsd.dir="${xsd.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-compilers" target checks if the compilers can be found and
+        are suitable for the build.
+    -->
+    <target name="-check-compilers" if="config.sel.min.compilers">
+        <configuretools my.tool.list="${config.sel.min.compilers}"
+                        action="check"/>
+
+        <property file="${cb.tools.conf}"/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-load-orb-properties" target loads the ORB properties.
+
+        It depends on the following targets:
+            + "-check-orb-properties"
+            + "-check-orbs"
+    -->
+    <target name="-load-orb-properties" if="config.sel.min.orbs"
+            depends="-check-orb-properties, -check-orbs">
+
+        <loadorbproperties file="${cb.orb.properties}" osFamily="${my.os.name}"
+                           tools="${config.sel.min.orbs}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-orb-properties" target checks if the ORB properties file
+        exists and validates it against its XML schema.
+    -->
+    <target name="-check-orb-properties">
+        <!-- set the file name -->
+        <property name="cb.orb.properties"
+                  location="${xml.dir}${FS}ORBProperties.xml"/>
+
+        <!-- check -->
+        <checkxmlpropertiesfile
+            my.properties.file="${cb.orb.properties}"
+            my.xsd.dir="${xsd.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-orbs" target checks if the ORBs can be found and are
+        suitable for the build.
+    -->
+    <target name="-check-orbs" if="config.sel.min.orbs">
+        <configuretools my.tool.list="${config.sel.min.orbs}" action="check"/>
+        <property file="${cb.tools.conf}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-other-tools" target checks if the COTS (that are neither
+        compilers nor ORBs) can be found and are suitable for the build.
+    -->
+    <target name="-check-other-tools" if="config.sel.min.tools">
+        <configuretools my.tool.list="${config.sel.min.tools}" action="check"/>
+        <property file="${cb.tools.conf}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-configure-dcps" target performs checkings on Splice.
+    -->
+    <target name="-configure-dcps">
+        <!-- find out if the default values are available -->
+        <propertycopy name="cb.prev.cfg.use.splice" silent="true"
+                      from="${mb.prev}.config.use.Splice"/>
+
+        <var name="s" value="Do you want to use Splice ? "/>
+
+        <if>
+            <isset property="cb.prev.cfg.use.splice"/>
+            <then>
+                <!-- we have default values -->
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${s}" validargs="y,n"
+                                addproperty="config.use.Splice"
+                                default="${cb.prev.cfg.use.splice}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.use.Splice"
+                                      from="cb.prev.cfg.use.splice"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <input message="${s}" validargs="y,n"
+                       addproperty="config.use.Splice"/>
+            </else>
+        </if>
+
+        <if>
+            <equals arg1="${config.use.Splice}" arg2="y"/>
+            <then>
+                <!-- locate and check -->
+                <configuretools my.tool.list="Splice" action="locate"/>
+                <configuretools my.tool.list="Splice" action="check"/>
+            </then>
+        </if>
+
+        <property file="${cb.tools.conf}"/>
+
+        <!-- clean up -->
+        <delete file="${cb.tools.conf}"/>
+
+        <!-- unset properties -->
+        <xvar name="cb.prev.cfg.use.splice" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-lowercase-product-name" target create a lowercase property
+        of the product name
+    -->
+    <target name="-create-lowercase-product-name">
+        <stringmanip string="${config.product.name}" action="lowercase"
+                     property="config.lowercase.product.name"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-save-configuration" target saves all the properties prefixed with
+        "config." into the site properties file.
+    -->
+    <target name="-save-configuration">
+        <property name="config.completed" value="true"/>
+
+        <!-- create the time stamp for the configuration file -->
+        <tstamp>
+            <format property="config.tstamp" pattern="dd-MMM-yyyy HH:mm:ss"/>
+        </tstamp>
+
+        <!-- create an empty file in case it does not exist -->
+        <touch file="${mb.new.site.props}"/>
+
+        <echoproperties prefix="config." destfile="${mb.new.site.props}"/>
+
+        <!-- delete the cache file -->
+        <delete file="${tmpconfig.cache}" quiet="true"/>
+
+        <!--
+            save the location of all the available CSCIs so that the "distclean"
+            target can work.
+        -->
+        <for list="Build ${config.sel.min.cscis}" delimiter=" " trim="true"
+             param="cb.csci.name">
+
+            <sequential>
+                <propertycopy override="true" property="cb.csci.loc"
+                              from="config.@{cb.csci.name}.location"/>
+
+                <!--
+                    propertyfile does not remove entries from the properties
+                    file and therefore this is exactly what we need as from
+                    one configuration to another the list of available CSCIs
+                    may vary.
+                -->
+                <propertyfile file="${mb.cscis.list.file}">
+                    <entry key="config.@{cb.csci.name}.location"
+                           value="${cb.csci.loc}"/>
+                </propertyfile>
+
+                <!-- unset properties -->
+                <xvar name="cb.csci.loc" unset="true"/>
+                <callgc/>
+            </sequential>
+        </for>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-dispatch-build-files" target determines all the CSCs to be built
+        and copies the appropriate build file into each of them.
+
+        It depends on the following targets:
+            + "-find-target-cscs"
+    -->
+    <target name="-dispatch-build-files" depends="-find-target-cscs"
+            if="cb.target.cscs">
+
+        <echo>Dispatching build files...</echo>
+
+        <property name="cb.commonbuildtargets.xml"
+                  location="${config.csc.data.dir}${FS}CommonBuildTargets.xml"/>
+
+        <property name="d" value="${config.csc.data.dir}"/>
+
+        <for list="${cb.target.cscs}" delimiter=" " param="cb.csc.dir">
+            <sequential>
+                <loadtargetcscproperties csc.dir="@{cb.csc.dir}"/>
+
+                <if>
+                    <and>
+                        <not>
+                            <equals arg1="${target.csc.type}" arg2="demo"
+                                    trim="true"/>
+                        </not>
+                        <not>
+                            <equals arg1="${target.csc.type}" arg2="perftest"
+                                    trim="true"/>
+                        </not>
+                    </and>
+                    <then>
+                        <!-- determine the build file to copy -->
+                        <if>
+                            <equals arg1="${target.csc.lang}" arg2="c++"/>
+                            <then>
+                                <property name="cb.build.lang" value="CPP"/>
+                            </then>
+                            <else>
+                                <stringmanip property="cb.build.lang"
+                                             string="${target.csc.lang}"
+                                             action="uppercase"/>
+                            </else>
+                        </if>
+
+                        <property name="cb.build.file.to.copy"
+                            location="${d}${FS}Build${cb.build.lang}.xml"/>
+
+                        <!-- the target directory -->
+                        <property name="cb.target.copy.dir"
+                                  location="@{cb.csc.dir}"/>
+
+                        <if>
+                            <isset property="mb.new.site.props"/>
+                            <then>
+                                <propertycopy property="site.properties"
+                                              from="mb.new.site.props"/>
+                            </then>
+                            <else>
+                                <propertycopy property="site.properties"
+                                              from="mb.site.properties"/>
+                            </else>
+                        </if>
+
+                        <!-- dispatch the build file -->
+                        <copy overwrite="true" file="${cb.build.file.to.copy}"
+                              todir="${cb.target.copy.dir}" verbose="false">
+
+                            <!-- replace tokens on the fly -->
+                            <filterset>
+                                <filter token="CDMWTASKS_JAR"
+                                        value="${cdmwtasks.jar.location}"/>
+                                <filter token="SITE_PROPERTIES_LOC"
+                                        value="${site.properties}"/>
+                                <filter token="DEV_TOKENS_PROPERTIES_LOC"
+                                        value="${mb.dev.tokens.properties}"/>
+                                <filter token="INSTALL_TOKENS_PROPERTIES_LOC"
+                                value="${mb.install.tokens.properties}"/>
+                                <filter token="COMMON_CONFIG_TARGETS_XML"
+                                value="${xml.dir}${FS}CommonConfigTargets.xml"/>
+                                <filter token="COMMON_BUILD_TARGETS_XML"
+                                        value="${cb.commonbuildtargets.xml}"/>
+                                <filter token="XSD_DIR" value="${xsd.dir}"/>
+                            </filterset>
+                        </copy>
+
+                        <!-- dispatch the build launcher script -->
+                        <copy file="${d}${FS}compileCSC.sh"
+                              todir="${cb.target.copy.dir}"
+                              verbose="false">
+
+                            <filterset>
+                                <filter token="CDMWTASKS_JAR"
+                                        value="${cdmwtasks.jar.location}"/>
+                            </filterset>
+                        </copy>
+
+                        <chmod file="${cb.target.copy.dir}${FS}compileCSC.sh"
+                               perm="ugo+x"/>
+                    </then>
+                </if>
+
+                <!-- unset properties -->
+                <propertyselector property="target.props"
+                                  match="^target\.(.*)" select="\1"/>
+
+                <for list="${target.props}" param="p">
+                    <sequential>
+                        <xvar name="target.@{p}" unset="true"/>
+                    </sequential>
+                </for>
+
+                <xvar name="target.props"          unset="true"/>
+                <xvar name="cb.build.lang"         unset="true"/>
+                <xvar name="cb.build.file.to.copy" unset="true"/>
+                <xvar name="cb.target.copy.dir"    unset="true"/>
+                <callgc/>
+            </sequential>
+        </for>
+
+        <!-- unset properties -->
+        <xvar name="cb.commonbuildtargets.xml" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-find-target-cscs" target returns the list of all the CSCs into
+        which the build file must be copied to.
+    -->
+    <target name="-find-target-cscs">
+        <if>
+            <and>
+                <isset property="config.sel.min.cscis"/>
+                <isset property="config.sel.interfaces"/>
+                <isset property="config.sel.packages"/>
+            </and>
+            <then>
+                <findcscs pkgdesc="${cb.pkg.desc}"
+                          addProperty="cb.target.cscs"
+                          cscis="${config.sel.min.cscis}"
+                          interfaces="${config.sel.interfaces}"
+                          packages="${config.sel.packages}"
+                          validationtests="${has.validation}"
+                          integrationtests="${has.integration}"
+                          qualificationtests="${has.qualification}"
+                />
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-make-all-deliveries" target calls the "make-deliveries" target in
+        the build file found in each target CSC.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-find-target-cscs"
+    -->
+    <target name="-make-all-deliveries" depends="-initialize, -find-target-cscs"
+            if="cb.target.cscs">
+
+        <property file="${mb.site.properties}"/>
+
+        <loadproperties srcFile="${config.csc.data.dir}${FS}DepsInfo.properties">
+            <filterchain>
+                <expandproperties/>
+            </filterchain>
+        </loadproperties>
+
+        <tempfile property="cb.compile.antfile"
+                  destdir="${TMP}"
+                  prefix="${tmpfile.prefix}_build_"
+                  suffix="#${site.id}.xml"
+        />
+
+        <property name="my.ccache.dir"
+                  location="${user.home}${FS}.ccache"/>
+        <mkdir dir="${my.ccache.dir}"/>
+
+        <property name="my.ccache"
+                  location="${my.ccache.dir}${FS}cc#${site.id}.properties"/>
+
+        <if>
+            <and>
+                <available file="${my.ccache}"/>
+                <isfalse value="${ignore.ccache}"/>
+            </and>
+            <then>
+                <property file="${my.ccache}"/>
+            </then>
+        </if>
+
+        <!--
+            whenever all the deliveries of a CSC are built, the path of the
+            given CSC is stored into a file so that to ensure that its
+            deliveries are not built a second time.
+        -->
+        <!--
+        <property name="my.already.built.cscs"
+            location="${TMP}${FS}${tmpfile.prefix}_already_built_gr#${site.id}"/>
+        -->
+
+        <!-- keep track of the dependencies of each CSCI -->
+        <property name="csci.global.dependencies"
+                  location="${TMP}${FS}${tmpfile.prefix}_csci_deps#${site.id}"/>
+
+        <!-- start with an empty file -->
+        <!--
+        <delete file="${my.already.built.cscs}"    quiet="true"/>
+        -->
+        <delete file="${csci.global.dependencies}" quiet="true"/>
+
+        <!--
+        <touch file="${my.already.built.cscs}"/>
+        -->
+        <touch file="${csci.global.dependencies}"/>
+
+        <!-- compile the CSCs -->
+        <createbuildfile file="${cb.compile.antfile}"
+                         cscs="${cb.target.cscs}"
+                         compiledcscs="${compiled.cscs}"
+                         siteproperties="${mb.site.properties}"
+                         devtokens="${mb.dev.tokens.properties}"
+                         instokens="${mb.install.tokens.properties}"
+                         globaldeps="${csci.global.dependencies}"
+                         ignoreccache="${ignore.ccache}"
+                         quiet="true"
+        />
+
+        <basename property="cb.compile.antfile.basename"
+                  file="${cb.compile.antfile}"/>
+
+        <ant inheritAll="false"
+             antfile="${cb.compile.antfile.basename}"
+             dir="${TMP}"
+        />
+
+        <delete file="${cb.compile.antfile}" quiet="true"/>
+
+        <!-- clean up -->
+        <!--
+        <delete file="${my.already.built.cscs}"    quiet="true"/>
+        -->
+        <delete file="${csci.global.dependencies}" quiet="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-needed-tools" target prints the list of tools needed by the build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-run-package-selection"
+            + "-fake-configure-tools"
+    -->
+    <target name="-needed-tools"
+            depends="-initialize, -run-package-selection,
+                     -fake-configure-tools">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-fake-configure-tools" target determines the tools required by each
+        selected CSCI. It will not perform any checks.
+
+        It depends on the following targets:
+            + "-construct-tool-lists"
+            + "-require-fake-configure-tools"
+            + "-check-tools-info-properties"
+    -->
+    <target name="-fake-configure-tools" if="require.fake.configure.tools"
+            depends="-construct-tool-lists, -require-fake-configure-tools,
+                     -check-tools-info-properties">
+
+        <var name="my.list" value=""/>
+
+        <!-- build the list of needed tools -->
+        <if>
+            <isset property="config.sel.min.compilers"/>
+            <then>
+                <var name="my.list" value="${config.sel.min.compilers}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="config.sel.min.orbs"/>
+            <then>
+                <if>
+                    <equals arg1="${my.list}" arg2=""/>
+                    <then>
+                        <var name="my.list" value="${config.sel.min.orbs}"/>
+                    </then>
+                    <else>
+                        <var name="my.list"
+                             value="${my.list} ${config.sel.min.orbs}"/>
+                    </else>
+                </if>
+            </then>
+        </if>
+
+        <if>
+            <isset property="config.sel.min.tools"/>
+            <then>
+                <if>
+                    <equals arg1="${my.list}" arg2=""/>
+                    <then>
+                        <var name="my.list" value="${config.sel.min.tools}"/>
+                    </then>
+                    <else>
+                        <var name="my.list"
+                             value="${my.list} ${config.sel.min.tools}"/>
+                    </else>
+                </if>
+            </then>
+        </if>
+
+        <printtoolsinfo file="${cb.tools.info.properties}"
+                        osfamily="${my.os.name}" tools="${my.list}"
+                        pkgdesc="${cb.pkg.desc}">
+
+            <filterset>
+                <filter token="config.product.name" value="CARDAMOM"/>
+            </filterset>
+        </printtoolsinfo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-require-fake-configure-tools" target checks if any tools (orbs,
+        compilers or others) are selected.
+    -->
+    <target name="-require-fake-configure-tools">
+        <condition property="require.fake.configure.tools">
+            <or>
+                <isset property="config.sel.min.compilers"/>
+                <isset property="config.sel.min.orbs"/>
+                <isset property="config.sel.min.tools"/>
+            </or>
+        </condition>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-tools-info-properties" target checks if the tools info
+        properties file exists and validates it against its XML schema.
+    -->
+    <target name="-check-tools-info-properties">
+        <!-- set the file name -->
+        <property name="cb.tools.info.properties"
+                  location="${config.csc.data.dir}${FS}ToolsInfo.xml"/>
+
+        <!-- check -->
+        <checkxmlpropertiesfile
+            my.properties.file="${cb.tools.info.properties}"
+            my.xsd.dir="${xsd.dir}"
+            require.validation="${config.csci.properties.validate}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-new-csc" target creates a new CSC into an existing CSCI.
+    -->
+    <target name="-create-new-csc">
+        <input message="Enter the name of the new CSC"
+               addproperty="cb.new.csc.name"/>
+
+        <input message="Enter the name of the CSCI"
+               addproperty="cb.new.csc.owner"/>
+
+        <propertycopy property="cb.new.csc.owner.loc" silent="true"
+                      from="config.${cb.new.csc.owner}.location"/>
+
+        <fail unless="cb.new.csc.owner.loc"
+              message="Unknown ${cb.new.csc.owner} CSCI"/>
+
+        <input message="Enter the programming language to be used "
+               validargs="c++,java,ada" addproperty="cb.new.csc.lang"/>
+
+        <!-- create the directory structure -->
+        <property name="cb.root.dir"
+                  location="${cb.new.csc.owner.loc}${FS}${cb.new.csc.name}"/>
+
+        <property name="cb.template.dir"
+                  location="${config.csc.data.dir}${FS}templates"/>
+
+        <mkdir dir="${cb.root.dir}"/>
+
+        <property name="cb.new.csc.data.dir"
+                  location="${cb.root.dir}${FS}${config.csc.data.dir}"/>
+        <mkdir dir="${cb.new.csc.data.dir}"/>
+
+        <!-- provide a basic CSC properties file -->
+        <copy file="${cb.template.dir}${FS}CSCPropertiesTmpl.xml"
+              tofile="${cb.new.csc.data.dir}${FS}CSCProperties.xml">
+
+            <filterset>
+                <filter token="csc.name"  value="${cb.new.csc.name}"/>
+                <filter token="csci.name" value="${cb.new.csc.owner}"/>
+                <filter token="csc.lang"  value="${cb.new.csc.lang}"/>
+            </filterset>
+        </copy>
+             
+        <mkdir dir="${cb.root.dir}${FS}${config.csc.idl.dir}"/>
+
+        <switch value="${cb.new.csc.lang}">
+            <!-- C++ -->
+            <case value="c++">
+                <var name="p" value="${config.csc.cpp.include.local.dir}"/>
+                <mkdir dir="${cb.root.dir}${FS}c++${FS}${p}"/>
+                
+                <var name="p" value="${config.csc.cpp.include.public.dir}"/>
+                <mkdir dir="${cb.root.dir}${FS}c++${FS}${p}"/>
+
+                <var name="p" value="${config.csc.cpp.src.dir}"/>
+                <mkdir dir="${cb.root.dir}${FS}c++${FS}${p}"/>
+            </case>
+
+            <!-- JAVA -->
+            <case value="java">
+                <var name="p" value="${config.csc.java.src.dir}"/>
+                <mkdir dir="${cb.root.dir}${FS}java${FS}${p}"/>
+            </case>
+
+            <!-- ADA -->
+            <case value="ada">
+                <var name="p" value="${config.csc.ada.include.local.dir}"/>
+                <mkdir dir="${cb.root.dir}${FS}ada${FS}${p}"/>
+                
+                <var name="p" value="${config.csc.ada.include.public.dir}"/>
+                <mkdir dir="${cb.root.dir}${FS}ada${FS}${p}"/>
+
+                <var name="p" value="${config.csc.ada.src.dir}"/>
+                <mkdir dir="${cb.root.dir}${FS}ada${FS}${p}"/>
+            </case>
+        </switch>
+    </target>
+
+
+</project>
+
+

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<config>
+    <csc name="testeventsupport" owner="Event" lang="c++" type="unit-test">
+        <deliveries>
+            <delivery basename="testeventsupport" type="exe" visibility="private">
+                <prerequisites>
+                    <libraries>
+                        Foundation/common
+                        Foundation/testutils
+                        Foundation/commonidl
+                        Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/orbsupport
+                        Repository/repositoryidl
+                        Repository/repositoryinterface
+                        Repository/naminginterface
+                        SystemMngt/systemmngtidl
+                        SystemMngt/platforminterface
+                        SystemMngt/platformlibrary
+                        SystemMngt/platformvaluetypes
+                        SystemMngt/platformidl
+                        SystemMngt/processadmintools
+                        LifeCycle/lifecycleidl
+                        LifeCycle/lifecycle
+                        LifeCycle/lifecycleinit   
+                        ConfAndPlug/cdmwinit
+                        idllib/eventidl
+                        eventinterface/eventinterface
+                        eventsupport/eventsupport
+                    </libraries>
+                     <generatedfilesfrom>
+                        CodegenConf.xml
+                    </generatedfilesfrom>
+                </prerequisites>
+                <sourcefiles>
+                    *
+                </sourcefiles>
+                <idlfiles>
+                    <server>
+                        Echo.idl
+                    </server>
+                    <client/>
+                    <requireidlsfrom>
+                        Foundation
+                        LifeCycle
+                        Event
+                    </requireidlsfrom>
+                </idlfiles>
+                <addldflags>
+                    -l@config.Repository.ORB.Lib.Prefix@CosEvent -l@config.Repository.ORB.Lib.Prefix@CosProperty
+                </addldflags>
+            </delivery>
+        </deliveries>
+        <runtest>
+            <test name="start_event_support_test_cpp.xml" nbtestable="2">
+                <neededfiles>
+                    Event/eventsupport/test/testeventsupport/c++/start_event_support_test_cpp.xml
+                    Event/eventsupport/test/testeventsupport/c++/start_event_support_test_cpp.sh
+                    Event/eventsupport/test/testeventsupport/c++/EventChannelConf1.xml
+                    Event/eventsupport/test/testeventsupport/c++/EventChannel_Desc.dtd
+                    Event/eventsupport/test/testeventsupport/c++/obtest.conf
+                    Event/eventchannelmanager/EventChannelManager_Desc.dtd
+                    Event/eventchannelmanager/EventChannelManager.xml
+                </neededfiles>
+                <neededprocesses>
+                    Event/eventsupport/test/testeventsupport/testeventsupport
+                    Repository/simrepository/cdmw_simulated_repository
+                    Event/eventchannelmanager/cdmw_event_channel_manager
+                    Event/eventadmin/cdmw_event_admin
+                </neededprocesses>
+            </test>
+        </runtest>
+    </csc>
+</config>
+
+

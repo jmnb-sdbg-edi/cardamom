@@ -1,0 +1,122 @@
+/* =========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI.
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * =========================================================================== */
+
+#ifndef  TEST_HELLO_IDL_
+#define  TEST_HELLO_IDL_
+//#include <FT.idl>
+#include <CdmwFTCommon.idl>
+#include "tao/PortableInterceptor.pidl"
+
+#pragma prefix "thalesgroup.com"
+
+module Cdmw {    
+
+
+module Test {    
+  
+  struct process_info
+  {
+    string name;
+    long processID;
+  };
+
+  local interface ServerRequestInterceptor
+  : PortableInterceptor::ServerRequestInterceptor
+  {
+    
+    /// Set the references to which requests will be forwarded.
+void forward_references (in Object obj1);
+    
+  };
+  
+  /** 
+   * Hello interface
+   */
+  interface HelloInterface1 {
+    /**
+     * hello  
+     */ 
+    void hello();
+
+    /**
+     * who_is_called
+     */
+    process_info who_is_called();
+
+    /*
+     * send_exception
+     */
+    long send_exception(in long exception_number);
+
+    /*
+     * request_identification
+     */
+    ::FT::FTRequestServiceContext request_identification();
+    
+    /*
+     * group_version
+     */    
+    long group_version_identification();
+    
+    /*
+     * get_objectgroup
+     */    
+    Object get_objectgroup(in unsigned long long id);
+
+  };
+
+  /** 
+   * Hello interface
+   */
+  interface HelloInterface2 {
+    /**
+     * hello  
+     */ 
+    void hello();
+
+    /**
+     * who_is_called
+     */
+    process_info who_is_called();
+  };
+
+  /** 
+   * Hello interface
+   */
+  interface HelloInterface3 {
+    /**
+     * hello  
+     */ 
+    void hello();
+
+    /**
+     * who_is_called
+     */
+    process_info who_is_called();
+  };
+
+}; 
+
+}; 
+
+#endif // TEST_HELLO_IDL_
+

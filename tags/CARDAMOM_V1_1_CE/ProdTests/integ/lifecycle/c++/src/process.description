@@ -1,0 +1,5 @@
+PROCESS_NAME=PROCESS
+XML_FILE=Process_Gen.xml
+PROCESS_PORT=5025
+PROGRAM=main
+#ADD_ARGS=--interactive

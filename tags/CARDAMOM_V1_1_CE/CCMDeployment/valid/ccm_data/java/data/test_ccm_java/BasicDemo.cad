@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<!DOCTYPE componentassembly SYSTEM "componentassembly.dtd">
+<componentassembly id="BasicAssembly">
+    <description>BasicDemo</description>
+
+    <componentfiles>
+        <componentfile id="Client">
+            <fileinarchive name="Client.csd"/>
+        </componentfile>
+        <componentfile id="Server">
+            <fileinarchive name="Server.csd"/>
+        </componentfile>
+    </componentfiles>
+
+    <partitioning>
+        
+        <hostcollocation id="@hostname2val@">
+
+            <processcollocation id="ServerProcess"> 
+                <homeplacement id="ServerHome">
+                    <componentfileref idref="Server"/>
+                    <componentproperties>
+                        <fileinarchive name="DefaultServer.cpf"/>
+                    </componentproperties>
+                    
+                    <registerwithnaming name="UserNaming/BasicDemo/Homes/server_home"/>
+                    
+                    <componentinstantiation id="Server1">
+                         <componentproperties>
+                            <fileinarchive name="Server1.cpf"/>
+                        </componentproperties>                        
+
+                           <registercomponent>
+                            <registerwithnaming name="UserNaming/BasicDemo/Servers/default_server"/>
+                            <registerwithnaming name="UserNaming/BasicDemo/Servers/server1"/>
+                        </registercomponent>
+                        
+                        <registercomponent>
+                            <providesidentifier>for_clients</providesidentifier>
+                            <registerwithnaming name="UserNaming/BasicDemo/Displays/default_for_clients"/>
+                            <registerwithnaming name="UserNaming/BasicDemo/Displays/for_clients1"/>
+                        </registercomponent>
+                    </componentinstantiation>
+                    
+                    <componentinstantiation id="Server2">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/BasicDemo/Servers/server2"/>
+                        </registercomponent>
+                        
+                        <registercomponent>
+                            <providesidentifier>for_clients</providesidentifier>
+                            <registerwithnaming name="UserNaming/BasicDemo/Displays/for_clients2"/>
+                        </registercomponent>
+                    </componentinstantiation>
+                    
+                    
+                    <destination>ServerProcess@TestApplication</destination>
+                </homeplacement>
+
+                <homeplacement id="ClientHome1">
+                    <componentfileref idref="Client"/>
+                    <componentinstantiation id="Client1"/>
+                    <destination>ServerProcess@TestApplication</destination>
+                </homeplacement>
+            </processcollocation>
+
+            <destination>@hostname2val@</destination> 
+        </hostcollocation>
+        
+        <hostcollocation id="@hostname1val@">
+
+            <processcollocation id="ClientProcess">  
+                <homeplacement id="ClientHome2">
+                    <componentfileref idref="Client"/>
+                    <componentproperties>
+                        <fileinarchive name="DefaultClient.cpf"/>
+                    </componentproperties>
+
+                    <componentinstantiation id="Client2"/>
+                    
+                    <componentinstantiation id="Client3">
+                         <componentproperties>
+                            <fileinarchive name="Client3.cpf"/>
+                        </componentproperties>                        
+                    </componentinstantiation>
+                    
+                    <destination>ClientProcess@TestApplication</destination>
+                </homeplacement>
+            </processcollocation> 
+
+            <destination>@hostname1val@</destination> 
+        </hostcollocation> 
+
+    </partitioning>
+    
+    
+    <connections>
+        <connectinterface id="connect_client1_register">
+            <usesport>
+                <usesidentifier>to_register</usesidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </usesport>
+            <componentsupportedinterface>
+                <componentinstantiationref idref="Server1"/>
+            </componentsupportedinterface>
+        </connectinterface>
+
+         <connectinterface id="connect_client1_display">
+            <usesport>
+                <usesidentifier>to_server</usesidentifier>
+                <componentinstantiationref idref="Client1"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>for_clients</providesidentifier>
+                <componentinstantiationref idref="Server1"/>
+            </providesport>
+        </connectinterface>
+
+        <connectinterface id="connect_client2_register">
+            <usesport>
+                <usesidentifier>to_register</usesidentifier>
+                <componentinstantiationref idref="Client2"/>
+            </usesport>
+            <componentsupportedinterface>
+                <findby>
+                    <namingservice name="UserNaming/BasicDemo/Servers/default_server"/>
+                </findby>
+            </componentsupportedinterface>
+        </connectinterface>
+
+         <connectinterface id="connect_client2_display">
+            <usesport>
+                <usesidentifier>to_server</usesidentifier>
+                <componentinstantiationref idref="Client2"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>for_clients</providesidentifier>
+                <findby>
+                    <namingservice name="UserNaming/BasicDemo/Servers/server1"/>
+                </findby>
+            </providesport>
+        </connectinterface>
+
+        <connectinterface id="connect_client3_register">
+            <usesport>
+                <usesidentifier>to_register</usesidentifier>
+                <componentinstantiationref idref="Client3"/>
+            </usesport>
+            <componentsupportedinterface>
+                <findby>
+                    <namingservice name="UserNaming/BasicDemo/Servers/server2"/>
+                </findby>
+            </componentsupportedinterface>
+        </connectinterface>
+
+         <connectinterface id="connect_client3_display">
+            <usesport>
+                <usesidentifier>to_server</usesidentifier>
+                <componentinstantiationref idref="Client3"/>
+            </usesport>
+            <existinginterface>
+                <findby>
+                    <namingservice name="UserNaming/BasicDemo/Displays/for_clients1"/>
+                </findby>
+            </existinginterface>
+        </connectinterface>
+
+    </connections>
+
+</componentassembly>
+

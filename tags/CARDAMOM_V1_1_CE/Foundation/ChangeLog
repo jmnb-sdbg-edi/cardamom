@@ -1,0 +1,89 @@
+Mon Feb  7 11:55:20 2005  Angelo Corsaro  <corsaro@cse.wustl.edu>
+
+	* orbsupport/c++/src/OrbTaoImpl.cpp: Replaced locking strategy for
+	  POA and Profile from "null" to "thread". This should fix the
+	  PCR-201.
+
+Mon Feb  7 11:53:32 2005  Angelo Corsaro  <corsaro@cse.wustl.edu>
+
+	* commonsvcs: Added new CSC that curently contains a federation
+	  framework based on CORBA MIOP.  
+
+	  This CSC is supposed to contain all the common services that are
+	  either used or extended by other CARDAMOM services.
+
+	  In upcoming CARDAMOM releases, the data store implementation
+	  as well as the naming will be moved here.
+
+
+	* commonsvcs/c++/incl/UpdateProtocolHandler.hpp:
+	* commonsvcs/c++/src/UpdateProtocolHandler.cpp:
+
+	  The interface that defines the basic protocol that has to be
+	  supported protocol handlers. The user of the framework can
+	  define its own protocol handler so to implement different
+	  distribution algorithms.
+
+	* commonsvcs/c++/incl/SimpleMiopUpdateProtocolHandler.hpp: 
+	* commonsvcs/c++/src/SimpleMiopUpdateProtocolHandler.cpp:
+
+	  A simple protocol handler implementation based on CORBA MIOP,
+	  which increase the probability of delivering an update by
+	  retransmitting the same update up to N times, where N can be
+	  configured by the user. 
+ 
+	* commonsvcs/c++/incl/TopicWriter.hpp: A draft interface of a
+	  DDS-like writer for the federation framework. 
+
+	* commonsvcs/c++/incl/TopicUpdateHandler.hpp:
+	* commonsvcs/c++/src/TopicUpdateHandler.cpp:
+
+	  This interface defines the abstract protocol that has to be
+	  implemented by update handlers, i.e., the handler that are
+	  invoked each time the federation framework receives an update
+	  for a given topic. 
+	
+	* commonsvcs/c++/incl/TopicEncoder.hpp: 
+	* commonsvcs/c++/src/TopicEncoder.cpp:
+
+	  This interface defines the abstract protocol that has to be
+	  implemented by the encoders that have the responsibility of
+	  producing an octect sequence that encapsulate a Topic.
+	  
+
+	* commonsvcs/c++/incl/MiopTopicUpdateManager_impl.hpp: 
+	* commonsvcs/c++/src/MiopTopicUpdateManager_impl.cpp:
+
+	  CORBA MIOP based implementation of the update manager. The
+	  update manager takes care of phisically distribute update to the
+	  member of the federation. Since this implementation is based on
+	  MIOP, the delivery of message is based on multicast-IP, thus it
+	  is not reliable. Notice that reliability can be added by the
+	  ProtocolHanlder.
+
+	* commonsvcs/c++/incl/LocalTopicUpdateManager.hpp: 
+	* commonsvcs/c++/src/LocalTopicUpdateManager.cpp:
+
+	  This class defines the API available locally to the application
+	  for defining topic, registering handlers and distributing
+	  updates.
+
+	* commonsvcs/idl/TopicUpdateManager.idl: IDL file containing the
+	  basic IDL types used by the federation framework.
+
+	* commonsvcs/c++/data/CSCProperties.xml: Added file that contains
+	  commonsvcs CSC build properties.
+
+Mon Feb  7 11:53:08 2005  Angelo Corsaro  <corsaro@cse.wustl.edu>
+
+	* ChangeLog.txt: Replaced with this file. 
+
+
+
+Mon Jan  31 11:04:58 2005  THALES 
+
+	* The version provided below are related to the product version
+	  and not to the CSCI version.
+
+	  PatchV0p5 : PCR-0032 exit the child process in case of exception
+	  during chdir

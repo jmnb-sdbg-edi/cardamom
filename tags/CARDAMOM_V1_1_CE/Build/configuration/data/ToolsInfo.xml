@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<config>
+    <tool name="GCC" version="any" depends="Binutils">
+        <os family="any" version="any">
+            <notes>
+                License: GPL 2
+                URL: http://gcc.gnu.org
+            </notes>
+            <hints>
+                use the Entreprise Linux GCC rpm package
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="Binutils" version="any">
+        <os family="any" version="any">
+            <notes>
+                License: GPL 2
+                URL: http://www.gnu.org
+            </notes>
+            <hints>
+                use the Entreprise Linux Binutils rpm package
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="J2SDK" version="any">
+        <os family="any" version="any">
+            <notes>
+                The SUN Java 2 SDK is not bundled with @config.product.name@.
+
+                License: Sun Community Source License
+                URL: http://java.sun.com
+            </notes>
+        </os>
+    </tool>
+
+    <tool name="OpenCCM" version="any" depends="JavaCC">
+        <os family="any" version="any">
+            <notes>
+                The @config.product.name@ CDROM provides a patched version of
+                OpenCCM. It requires JavaCC in order to compile.
+
+                License: LGPL 2.1
+                URL: http://openccm.objectweb.org
+            </notes>
+            <hints>
+                1) tar zxf &lt;OpenCCM-version.tar.gz&gt; -C &lt;tmp.dir&gt;
+                2) cd &lt;tmp.dir&gt;
+                3) ./build.sh
+                4) edit &lt;tmp.dir&gt;/build.properties
+                5) ./build.sh
+                6) ./build.sh install
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="JavaCC" version="2.1">
+        <os family="any" version="any">
+            <notes>
+                JavaCC is a JAVA compiler compiler. It is not required by
+                @config.product.name@ but is necessary for OpenCCM to compile.
+
+                License: Java Compiler Compiler License
+                URL: http://javacc.dev.java.net
+            </notes>
+            <hints>
+                1) unzip JavaCC2_1.zip
+                2) java -cp . JavaCC2_1
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="ORBacusCPP" version="4.1.0">
+        <os family="any" version="any">
+            <notes>
+                @config.product.name@ CDROM contains one patch file for ORBacus C++.
+                It must be applied to the vanilla ORBacus C++ sources before
+                compilation.
+            </notes>
+            <hints>
+                1) cd OB-4.1.0
+                2) cat OB-4.1.0.patch | patch -p2
+                3) ./runconfig
+                        b                       (bourne shell)
+                        gcc2.95.3
+                        yes                     (shared library)
+                        no                      (debug info)
+                        yes                     (extra preprocessor flags)
+                        /tools/exec/0B-4.1.0    (installation directory)
+                4) . ./go
+                5) make
+                6) mkdir /tools/exec/OB-4.1.0
+                7) make install
+                8) export PATH=/tools/exec/OB-4.1.0/bin:$PATH
+                9) export LD_LIBRARY_PATH=/tools/exec/OB-4.1.0/lib:$LD_LIBRARY_PATH
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="TAO" version="any">
+        <os family="any" version="any">
+            <notes>
+                @config.product.name@ CDROM contains one patch file for both ACE
+                and TAO. It must be applied to the vanilla ACE+TAO sources before
+                compilation.
+
+                License: ACE+TAO License
+                URL: http://www.cs.wustl.edu/~schmidt/TAO.html
+            </notes>
+            <hints>
+                0) Uncompress the TAO archive file into /tools/exec/ACE-5.3.1+TAO-1.3.1/ACE_wrappers
+                1) export ACE_ROOT=/tools/exec/ACE-5.3.1+TAO-1.3.1/ACE_wrappers
+                2) cd $ACE_ROOT/ace
+                3) ln -s config-linux.h config.h
+                4) cd $ACE_ROOT/include/makeinclude
+                5) ln -s platform_linux.GNU platform_macros.GNU
+                6) export LD_LIBRARY_PATH=$ACE_ROOT/ace:$LD_LIBRARY_PATH
+                7) cd $ACE_ROOT/ace
+                8) make
+                9) cd $ACE_ROOT/apps/gperf
+                10) make
+                11) cd $ACE_ROOT/ACEXML
+                12) make
+                13) export TAO_ROOT=$ACE_ROOT/TAO
+                14) cd $TAO_ROOT/tao
+                15) make
+                16) cd $TAO_ROOT/TAO_IDL
+                17) make
+                18) cd $TAO_ROOT/orbsvcs
+                19) make
+                20) export PATH=$TAO_ROOT/TAO_IDL:$TAO_ROOT/orbsvcs/Naming_Service:$PATH
+                21) export LD_LIBRARY_PATH=$ACE_ROOT/ace:$LD_LIBRARY_PATH
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="TAOOpenFusion" version="any">
+        <os family="any" version="any">
+            <notes>
+                License: ACE+TAO License
+                URL: ftp://user:passwd@ftp-eu.prismtechnologies.com
+            </notes>
+            <hints>
+                Refer to the SCOM for the installation
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="ORBacusJAVA" version="4.1.0" depends="ORBacusCPP">
+        <os family="any" version="any">
+            <notes>
+                @config.product.name@ CDROM contains one patch file for ORBacus JAVA.
+                It must be applied to the vanilla ORBacus C++ sources before
+                compilation.
+            </notes>
+            <hints>
+                1) cd JOB-4.1.0
+                2) cat JOB-4.1.0.patch | patch -p2
+                3) Edit JOB-4.1.0/config/Make.rules
+                   Set prefix=/tools/exec/JOB-4.1.0
+                   Set JIDL=/tools/exec/OB-4.1.0/bin/jidl
+                   Uncomment the line #BOOTCLASSPATH=...
+                4) make
+                5) mkdir /tools/exec/JOB-4.1.0
+                6) make install
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="JacORB" version="2.0">
+        <os family="any" version="any">
+            <notes>
+                @config.product.name@ CDROM provides a binary version of patched version of JacORB.
+
+                License: LGPL 2 (June 1991)
+                URL: http://www.jacorb.org
+            </notes>
+            <hints>
+                1) Uncompress the archive file into /tools/exec.
+                2) export CLASSPATH=$CLASSPATH:&lt;JacORB directory&gt;:&lt;all the jar files from JacORB&gt;
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="JacORB" version="2.1.3">
+        <os family="any" version="any">
+            <notes>
+                @config.product.name@ JacORB PrismTech version.
+                License: LGPL 2 (June 1991)
+                URL: ftp://user:passwd@ftp-eu.prismtechnologies.com
+            </notes>
+            <hints>
+                Refer to the SCOM for the installation
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="CPPUnit" version="1.10.2">
+        <os family="any" version="any">
+            <notes>
+                @config.product.name@ CDROM provides the CPPUnit tool, a framework for unit test.
+                License: LGPL 2.1 (Feb 1999)
+                URL: cppunit.sourceforge.net
+            </notes>
+            <hints>
+                Refer to the SCOM for the installation
+            </hints>
+        </os>
+    </tool>
+    
+    <tool name="XercesCPP" version="1.3.0">
+        <os family="any" version="any">
+            <notes>
+                License: Apache Software License v1.1
+                URL: http://xml.apache.org/xerces-c
+            </notes>
+            <hints>
+                0) Uncompress the archive file into /tools/src/xerces-c-src1_3_0
+                1) export XERCESCROOT=/tools/src/xerces-c-src1_3_0
+                2) Remove the '-instances=static' in Makefile.incl before compilation.
+                3) cd $XERCESCROOT/src
+                4) chmod +x ./configure
+                5) . ./runConfigure -plinux -cgcc -xg++ -P/tools/exec/xerces-c-src1_3_0 \
+                    -C-exec-prefix=/tools/exec/xerces-c-src1_3_0/i686-pc-linux-gnu
+                6) make
+                7) make install
+                8) export LD_LIBRARY_PATH=/tools/exec/xerces-c-src1_3_0/i686-pc-linux-gnu/lib:$LD_LIBRARY_PATH
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="Charles" version="any">
+        <os family="any" version="any">
+            <notes>
+                ADA Standard Library, see
+                http://home.earthlink.net/~matthewjheaney
+            </notes>
+        </os>
+    </tool>
+
+    <tool name="OpenORB" version="1.3.0">
+        <os family="any" version="any">
+            <notes>
+                Required by OpenCCM.
+
+                License: Exolab License (BSD-like)
+                URL: http://openorb.sourceforge.net
+            </notes>
+            <hints>
+                1) Uncompress OpenORB archive file.
+                2) Copy the directory OpenORB-1.3.0 in the directory /tools/exec.
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="Zip" version="2.3">
+        <os family="any" version="any">
+            <notes>
+                Required by the @config.product.name@ CCM deployment tools.
+
+                License: Info-Zip License 2003-May-08 (BSD-like)
+                URL: http://www.info-zip.org
+            </notes>
+            <hints>
+                1) Uncompress zip23.tar into /tools/src/zip23
+                2) mkdir -p /tools/exec/zip-2.3
+                3) Edit /tools/src/zip23/unix/Makefile
+                   Set prefix=/tools/exec/zip-2.3
+                4) cd /tools/src/zip23
+                5) make -f unix/Makefile generic
+                6) make -f unix/Makefile install
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="Splice" version="any">
+        <os family="any" version="any">
+            <notes>
+                THALES Naval Netherlands's Data Distribution.
+            </notes>
+        </os>
+    </tool>
+
+    <tool name="FtpJAVA" version="any">
+        <os family="any" version="any">
+            <notes>
+                Depracated.
+                Wiil be removed in future release  
+            </notes>
+        </os>
+    </tool>
+
+    <tool name="XalanJAVA" version="2.3.1">
+        <os family="any" version="any">
+            <notes>
+                License: Apache Software License 1.1
+                URL: http://xml.apache.org/xalan-j
+            </notes>
+            <hints>
+                1) Uncompress the archive file.
+                2) Copy the directory xalan-j_2_3_1 into /tools/exec
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="XercesJAVA" version="2.0.1">
+        <os family="any" version="any">
+            <notes>
+                License: Apache Software License 1.1
+                URL: http://xml.apache.org/xerces2-j
+            </notes>
+            <hints>
+                1) Uncompress the archive file.
+                2) Copy the directory xerces-2.0.1 into /tools/exec
+            </hints>
+        </os>
+    </tool>
+
+    <tool name="Saxon" version="6.5.3">
+        <os family="any" version="any">
+            <notes>
+                License: Mozilla PL
+                URL: http://saxon.sourceforge.net
+            </notes>
+            <hints>
+                1) Uncompress the archive file.
+                2) mkdir -p /tools/exec/saxon-6.5.3
+                3) Copy all the jar files into /tools/exec/saxon-6.5.3
+            </hints>
+        </os>
+    </tool>
+</config>
+
