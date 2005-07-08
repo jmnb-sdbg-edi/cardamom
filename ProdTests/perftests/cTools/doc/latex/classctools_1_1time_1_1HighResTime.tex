@@ -1,0 +1,239 @@
+\section{ctools::time::High\-Res\-Time Class Reference}
+\label{classctools_1_1time_1_1HighResTime}\index{ctools::time::HighResTime@{ctools::time::HighResTime}}
+{\tt \#include $<$High\-Res\-Time.h$>$}
+
+\subsection*{Public Types}
+\begin{CompactItemize}
+\item 
+typedef unsigned long long {\bf time\_\-t}
+\end{CompactItemize}
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf High\-Res\-Time} ({\bf time\_\-t} clock\-Ticks=0)
+\begin{CompactList}\small\item\em Creates a {\tt {\bf High\-Res\-Time}{\rm (p.\,\pageref{classctools_1_1time_1_1HighResTime})}} and initializes it with the time represented by the clock\-Ticks times the machine clock period. \item\end{CompactList}\item 
+{\bf High\-Res\-Time} ({\bf time\_\-t} msec, {\bf time\_\-t} nsec)
+\begin{CompactList}\small\item\em Creates a {\bf High\-Res\-Time}{\rm (p.\,\pageref{classctools_1_1time_1_1HighResTime})} object and initializes it with a given time expressed in milliseconds and nanoseconds. \item\end{CompactList}\item 
+{\bf High\-Res\-Time} (const {\bf High\-Res\-Time} \&time)
+\begin{CompactList}\small\item\em Creates a {\bf High\-Res\-Time}{\rm (p.\,\pageref{classctools_1_1time_1_1HighResTime})} object and initializes it with a given time object;. \item\end{CompactList}\item 
+{\bf $\sim$High\-Res\-Time} ()
+\item 
+{\bf time\_\-t} {\bf millisec} () const 
+\item 
+void {\bf millisec} ({\bf time\_\-t} msec)
+\item 
+{\bf time\_\-t} {\bf nanosec} () const 
+\item 
+void {\bf nanosec} ({\bf time\_\-t} nsec)
+\item 
+void {\bf set} ({\bf time\_\-t} msec, {\bf time\_\-t} nsec)
+\item 
+void {\bf set} ({\bf time\_\-t} clock\-Ticks)
+\item 
+void {\bf reset} ()
+\item 
+long double {\bf to\-Millisec} () const 
+\item 
+long double {\bf to\-Microsec} () const 
+\item 
+long double {\bf to\-Nanosec} () const 
+\item 
+{\bf High\-Res\-Time} {\bf operator+} (const {\bf High\-Res\-Time} \&rhs)
+\item 
+{\bf High\-Res\-Time} {\bf operator-} (const {\bf High\-Res\-Time} \&rhs)
+\item 
+const {\bf High\-Res\-Time} \& {\bf operator=} (const {\bf High\-Res\-Time} \&rhs)
+\end{CompactItemize}
+
+
+\subsection{Member Typedef Documentation}
+\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!time_t@{time\_\-t}}
+\index{time_t@{time\_\-t}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}typedef unsigned long long {\bf ctools::time::High\-Res\-Time::time\_\-t}}\label{classctools_1_1time_1_1HighResTime_w0}
+
+
+
+
+Definition at line 33 of file High\-Res\-Time.h.
+
+Referenced by High\-Res\-Time(), millisec(), nanosec(), and set().
+
+\subsection{Constructor \& Destructor Documentation}
+\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!HighResTime@{HighResTime}}
+\index{HighResTime@{HighResTime}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ctools::time::High\-Res\-Time::High\-Res\-Time ({\bf time\_\-t} {\em clock\-Ticks} = 0)\hspace{0.3cm}{\tt  [explicit]}}\label{classctools_1_1time_1_1HighResTime_a0}
+
+
+Creates a {\tt {\bf High\-Res\-Time}{\rm (p.\,\pageref{classctools_1_1time_1_1HighResTime})}} and initializes it with the time represented by the clock\-Ticks times the machine clock period. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em clock\-Ticks}]the number of hardware clock tics that have to be used in order to initialize the timer. \end{description}
+\end{Desc}
+
+
+Definition at line 6 of file High\-Res\-Time.cc.
+
+References set(), and time\_\-t.
+
+Referenced by operator+(), and operator-().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!HighResTime@{HighResTime}}
+\index{HighResTime@{HighResTime}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ctools::time::High\-Res\-Time::High\-Res\-Time ({\bf time\_\-t} {\em msec}, {\bf time\_\-t} {\em nsec})}\label{classctools_1_1time_1_1HighResTime_a1}
+
+
+Creates a {\bf High\-Res\-Time}{\rm (p.\,\pageref{classctools_1_1time_1_1HighResTime})} object and initializes it with a given time expressed in milliseconds and nanoseconds. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em msec}]the millisecond component of the time. \item[{\em nsec}]the nanosecond compomnent of the time. \end{description}
+\end{Desc}
+
+
+Definition at line 11 of file High\-Res\-Time.cc.
+
+References set(), and time\_\-t.\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!HighResTime@{HighResTime}}
+\index{HighResTime@{HighResTime}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ctools::time::High\-Res\-Time::High\-Res\-Time (const {\bf High\-Res\-Time} \& {\em time})}\label{classctools_1_1time_1_1HighResTime_a2}
+
+
+Creates a {\bf High\-Res\-Time}{\rm (p.\,\pageref{classctools_1_1time_1_1HighResTime})} object and initializes it with a given time object;. 
+
+
+
+Definition at line 16 of file High\-Res\-Time.cc.\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!~HighResTime@{$\sim$HighResTime}}
+\index{~HighResTime@{$\sim$HighResTime}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ctools::time::High\-Res\-Time::$\sim${\bf High\-Res\-Time} ()}\label{classctools_1_1time_1_1HighResTime_a3}
+
+
+
+
+Definition at line 21 of file High\-Res\-Time.cc.
+
+\subsection{Member Function Documentation}
+\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!millisec@{millisec}}
+\index{millisec@{millisec}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Time::millisec ({\bf time\_\-t} {\em msec})}\label{classctools_1_1time_1_1HighResTime_a5}
+
+
+
+
+Definition at line 30 of file High\-Res\-Time.cc.
+
+References time\_\-t.\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!millisec@{millisec}}
+\index{millisec@{millisec}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf ctools::time::High\-Res\-Time::time\_\-t} ctools::time::High\-Res\-Time::millisec () const}\label{classctools_1_1time_1_1HighResTime_a4}
+
+
+
+
+Definition at line 24 of file High\-Res\-Time.cc.
+
+Referenced by operator+(), operator-(), operator$<$$<$(), and operator=().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!nanosec@{nanosec}}
+\index{nanosec@{nanosec}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Time::nanosec ({\bf time\_\-t} {\em nsec})}\label{classctools_1_1time_1_1HighResTime_a7}
+
+
+
+
+Definition at line 42 of file High\-Res\-Time.cc.
+
+References time\_\-t.\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!nanosec@{nanosec}}
+\index{nanosec@{nanosec}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf ctools::time::High\-Res\-Time::time\_\-t} ctools::time::High\-Res\-Time::nanosec () const}\label{classctools_1_1time_1_1HighResTime_a6}
+
+
+
+
+Definition at line 36 of file High\-Res\-Time.cc.
+
+Referenced by operator+(), operator-(), operator$<$$<$(), and operator=().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!operator+@{operator+}}
+\index{operator+@{operator+}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf ctools::time::High\-Res\-Time} ctools::time::High\-Res\-Time::operator+ (const {\bf High\-Res\-Time} \& {\em rhs})}\label{classctools_1_1time_1_1HighResTime_a14}
+
+
+
+
+Definition at line 97 of file High\-Res\-Time.cc.
+
+References High\-Res\-Time(), millisec(), and nanosec().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!operator-@{operator-}}
+\index{operator-@{operator-}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf ctools::time::High\-Res\-Time} ctools::time::High\-Res\-Time::operator- (const {\bf High\-Res\-Time} \& {\em rhs})}\label{classctools_1_1time_1_1HighResTime_a15}
+
+
+
+
+Definition at line 104 of file High\-Res\-Time.cc.
+
+References High\-Res\-Time(), millisec(), and nanosec().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!operator=@{operator=}}
+\index{operator=@{operator=}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}const {\bf ctools::time::High\-Res\-Time} \& ctools::time::High\-Res\-Time::operator= (const {\bf High\-Res\-Time} \& {\em rhs})}\label{classctools_1_1time_1_1HighResTime_a16}
+
+
+
+
+Definition at line 111 of file High\-Res\-Time.cc.
+
+References millisec(), nanosec(), and set().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!reset@{reset}}
+\index{reset@{reset}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Time::reset ()}\label{classctools_1_1time_1_1HighResTime_a10}
+
+
+
+
+Definition at line 72 of file High\-Res\-Time.cc.
+
+References set().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!set@{set}}
+\index{set@{set}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Time::set ({\bf time\_\-t} {\em clock\-Ticks})}\label{classctools_1_1time_1_1HighResTime_a9}
+
+
+
+
+Definition at line 48 of file High\-Res\-Time.cc.
+
+References CLOCK\_\-PERIOD\_\-NS, POW\_\-6\_\-TEN, set(), and time\_\-t.\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!set@{set}}
+\index{set@{set}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Time::set ({\bf time\_\-t} {\em msec}, {\bf time\_\-t} {\em nsec})}\label{classctools_1_1time_1_1HighResTime_a8}
+
+
+
+
+Definition at line 59 of file High\-Res\-Time.cc.
+
+References POW\_\-6\_\-TEN, and time\_\-t.
+
+Referenced by ctools::time::High\-Res\-Timer::get\-Elapsed\-Time(), ctools::time::High\-Res\-Clock::get\-Time(), High\-Res\-Time(), operator=(), reset(), and set().\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!toMicrosec@{toMicrosec}}
+\index{toMicrosec@{toMicrosec}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}long double ctools::time::High\-Res\-Time::to\-Microsec () const}\label{classctools_1_1time_1_1HighResTime_a12}
+
+
+
+
+Definition at line 84 of file High\-Res\-Time.cc.
+
+References POW\_\-3\_\-TEN.\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!toMillisec@{toMillisec}}
+\index{toMillisec@{toMillisec}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}long double ctools::time::High\-Res\-Time::to\-Millisec () const}\label{classctools_1_1time_1_1HighResTime_a11}
+
+
+
+
+Definition at line 78 of file High\-Res\-Time.cc.
+
+References POW\_\-6\_\-TEN.\index{ctools::time::HighResTime@{ctools::time::High\-Res\-Time}!toNanosec@{toNanosec}}
+\index{toNanosec@{toNanosec}!ctools::time::HighResTime@{ctools::time::High\-Res\-Time}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}long double ctools::time::High\-Res\-Time::to\-Nanosec () const}\label{classctools_1_1time_1_1HighResTime_a13}
+
+
+
+
+Definition at line 90 of file High\-Res\-Time.cc.
+
+References POW\_\-6\_\-TEN.
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+{\bf High\-Res\-Time.h}\item 
+{\bf High\-Res\-Time.cc}\end{CompactItemize}

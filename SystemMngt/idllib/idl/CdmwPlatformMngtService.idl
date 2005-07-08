@@ -1,0 +1,102 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_SERVICE_IDL_
+#define CDMW_PLATFORM_MNGT_SERVICE_IDL_
+
+
+#pragma prefix "thalesgroup.com"
+
+/**
+ * Module defining the service concept of the CDMW Platform Management service.
+ */
+module CdmwPlatformMngtService
+{
+
+    /**
+    * The service name type.
+    */
+    typedef string ServiceName;
+
+    /**
+    * The specified service has not been found.
+    */
+    exception ServiceNotFound {};
+
+    /**
+    * The specified service already exists.
+    */
+    exception ServiceAlreadyExists {};
+
+    /**
+     * The identifier of a service provider.
+     */
+    struct ServiceProviderID
+    {
+        /**
+         * The name of the application owning the service provider.
+         */
+        string application_name;
+
+        /**
+         * The name of the service provider.
+         */
+        string process_name;
+    };
+
+    /**
+    * The specified service provider has not been found.
+    */
+    exception ServiceProviderNotFound {};
+
+    /**
+    * The definition of a service
+    */
+    struct ServiceDef
+    {
+        /**
+         * The name of the service.
+         */
+        ServiceName service_name;
+
+        /**
+         * The service provider that embeds the service.
+         */
+        ServiceProviderID service_provider;
+    };
+
+    typedef sequence<ServiceDef> ServiceDefs;
+
+    
+    /**
+    * The requested service is unavailable.
+    */
+    exception ServiceUnavailable {};
+
+
+}; // End Module CdmwPlatformMngtService
+
+#endif // CDMW_PLATFORM_MNGT_SERVICE_IDL_
+

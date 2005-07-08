@@ -1,0 +1,4 @@
+CosLifeCycle:org.omg.CosLifeCycle
+CdmwLifeCycle:com.thalesgroup.CdmwLifeCycle
+PolynomeModule:com.thalesgroup.PolynomeModule
+PolynomeFactories:com.thalesgroup.PolynomeFactories

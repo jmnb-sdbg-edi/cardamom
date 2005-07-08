@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='iso-8859-1' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.3.5">
+  <compounddef id="HighResClock_8cc" kind="file">
+    <compoundname>HighResClock.cc</compoundname>
+    <includes refid="HighResClock_8h" local="yes">ctools/time/HighResClock.h</includes>
+    <includes refid="HighResTime_8h" local="yes">ctools/time/HighResTime.h</includes>
+    <includes local="no">sys/time.h</includes>
+    <includes refid="SysInfo_8h" local="yes">SysInfo.h</includes>
+    <incdepgraph>
+      <node id="0">
+        <label>HighResClock.cc</label>
+        <link refid="HighResClock.cc"/>
+        <childnode refid="1" relation="include">
+        </childnode>
+        <childnode refid="2" relation="include">
+        </childnode>
+        <childnode refid="5" relation="include">
+        </childnode>
+        <childnode refid="3" relation="include">
+        </childnode>
+      </node>
+      <node id="1">
+        <label>ctools/time/HighResClock.h</label>
+        <link refid="HighResClock_8h"/>
+        <childnode refid="2" relation="include">
+        </childnode>
+      </node>
+      <node id="3">
+        <label>ctools/time/SysInfo.h</label>
+        <link refid="SysInfo_8h"/>
+      </node>
+      <node id="2">
+        <label>ctools/time/HighResTime.h</label>
+        <link refid="HighResTime_8h"/>
+        <childnode refid="3" relation="include">
+        </childnode>
+        <childnode refid="4" relation="include">
+        </childnode>
+      </node>
+      <node id="5">
+        <label>sys/time.h</label>
+      </node>
+      <node id="4">
+        <label>iostream</label>
+      </node>
+    </incdepgraph>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <programlisting>
+<codeline lineno="1"><highlight class="comment">/*<sp/>-*-<sp/>C++<sp/>-*-</highlight></codeline>
+<codeline lineno="2"><highlight class="comment"><sp/>*<sp/>$Id: HighResClock_8cc.xml,v 1.1.1.1 2005-07-08 14:31:04 moghrabi Exp $</highlight></codeline>
+<codeline lineno="3"><highlight class="comment"><sp/>*/</highlight><highlight class="normal"><sp/></highlight></codeline>
+<codeline lineno="4"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="HighResClock_8h" kindref="compound">ctools/time/HighResClock.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="5"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="HighResTime_8h" kindref="compound">ctools/time/HighResTime.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="6"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;sys/time.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="7"><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;<ref refid="SysInfo_8h" kindref="compound">SysInfo.h</ref>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="8"><highlight class="normal"></highlight></codeline>
+<codeline lineno="9"><highlight class="normal"><ref refid="classctools_1_1time_1_1HighResTime" kindref="compound">ctools::time::HighResTime</ref></highlight></codeline>
+<codeline lineno="10" refid="classctools_1_1time_1_1HighResClock_1e0" refkind="member"><highlight class="normal"><ref refid="classctools_1_1time_1_1HighResClock_1e0" kindref="member">ctools::time::HighResClock::getTime</ref>()<sp/></highlight></codeline>
+<codeline lineno="11"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="12"><highlight class="normal"><sp/><sp/><sp/><sp/><ref refid="classctools_1_1time_1_1HighResTime" kindref="compound">ctools::time::HighResTime</ref><sp/>time;</highlight></codeline>
+<codeline lineno="13"><highlight class="normal"><sp/><sp/><sp/><sp/>HighResClock::getTime(time);</highlight></codeline>
+<codeline lineno="14"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>time;</highlight></codeline>
+<codeline lineno="15"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="16"><highlight class="normal"></highlight></codeline>
+<codeline lineno="17"><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="18" refid="classctools_1_1time_1_1HighResClock_1e1" refkind="member"><highlight class="normal"><ref refid="classctools_1_1time_1_1HighResClock_1e0" kindref="member">ctools::time::HighResClock::getTime</ref>(::<ref refid="classctools_1_1time_1_1HighResTime" kindref="compound">ctools::time::HighResTime</ref>&amp;<sp/>hrtime)</highlight></codeline>
+<codeline lineno="19"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="20"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Here<sp/>I<sp/>use<sp/>the<sp/>RDTSC<sp/>instruction<sp/>provided<sp/>by<sp/>the<sp/>Pentium</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="21"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Processor<sp/>family<sp/>to<sp/>access<sp/>the<sp/>clock<sp/>counter.<sp/>To<sp/>avoid<sp/>problem</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="22"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>with<sp/>out<sp/>of<sp/>order<sp/>execution,<sp/>and<sp/>to<sp/>make<sp/>sure<sp/>that<sp/>the<sp/>clock</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="23"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>cycle<sp/>number<sp/>is<sp/>accessed<sp/>really<sp/>where<sp/>the<sp/>call<sp/>appears<sp/>in<sp/>the</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="24"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>source<sp/>code<sp/>a<sp/>cpuid<sp/>instruction<sp/>is<sp/>added.<sp/></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="25"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/><sp/><sp/><sp/></highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="26"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/><sp/><sp/>unsigned<sp/>long<sp/>cpuid;</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="27"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>rdtsc;</highlight></codeline>
+<codeline lineno="28"><highlight class="normal"><sp/><sp/><sp/><sp/>__asm__<sp/></highlight><highlight class="keyword">volatile</highlight><highlight class="normal"><sp/>(</highlight><highlight class="stringliteral">&quot;.byte<sp/>0x0f,<sp/>0x31&quot;</highlight><highlight class="normal"><sp/>:<sp/></highlight><highlight class="stringliteral">&quot;=A&quot;</highlight><highlight class="normal"><sp/>(rdtsc));</highlight></codeline>
+<codeline lineno="29"><highlight class="normal"></highlight></codeline>
+<codeline lineno="30"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">//<sp/>Convert<sp/>clock<sp/>number<sp/>into<sp/>nano<sp/>seconds</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="31"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>timeNS<sp/>=<sp/>rdtsc<sp/>*<sp/><ref refid="SysInfo_8h_1a1" kindref="member">CLOCK_PERIOD_NS</ref>;</highlight></codeline>
+<codeline lineno="32"><highlight class="normal"></highlight></codeline>
+<codeline lineno="33"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>cMilliSec<sp/>=<sp/>static_cast&lt;long&gt;(timeNS/<ref refid="SysInfo_8h_1a7" kindref="member">POW_6_TEN</ref>);</highlight></codeline>
+<codeline lineno="34"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/>cNanoSec<sp/>=<sp/>static_cast&lt;long&gt;(timeNS<sp/>-<sp/>(cMilliSec*<ref refid="SysInfo_8h_1a7" kindref="member">POW_6_TEN</ref>));</highlight></codeline>
+<codeline lineno="35"><highlight class="normal"></highlight></codeline>
+<codeline lineno="36"><highlight class="normal"><sp/><sp/><sp/><sp/>hrtime.<ref refid="classctools_1_1time_1_1HighResTime_1a8" kindref="member">set</ref>(cMilliSec,<sp/>cNanoSec);</highlight></codeline>
+<codeline lineno="37"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="38"><highlight class="normal"></highlight></codeline>
+<codeline lineno="39"><highlight class="normal"></highlight></codeline>
+<codeline lineno="40"><highlight class="normal"></highlight></codeline>
+<codeline lineno="41"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="42" refid="classctools_1_1time_1_1HighResClock_1e3" refkind="member"><highlight class="normal"><ref refid="classctools_1_1time_1_1HighResClock_1e3" kindref="member">ctools::time::HighResClock::getClockFrequency</ref><sp/>()</highlight></codeline>
+<codeline lineno="43"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="44"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>clockFreq<sp/>=<sp/><ref refid="SysInfo_8h_1a0" kindref="member">CLOCK_FREQUENCY</ref>;</highlight></codeline>
+<codeline lineno="45"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>freq<sp/>=<sp/>static_cast&lt;double&gt;(clockFreq);</highlight></codeline>
+<codeline lineno="46"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline lineno="47"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>freq;</highlight></codeline>
+<codeline lineno="48"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="49"><highlight class="normal"></highlight></codeline>
+<codeline lineno="50"><highlight class="normal"></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="51" refid="classctools_1_1time_1_1HighResClock_1e4" refkind="member"><highlight class="normal"><ref refid="classctools_1_1time_1_1HighResClock_1e4" kindref="member">ctools::time::HighResClock::getClockPeriod</ref><sp/>()</highlight></codeline>
+<codeline lineno="52"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="53"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>period<sp/>=<sp/><ref refid="SysInfo_8h_1a1" kindref="member">CLOCK_PERIOD_NS</ref>;</highlight></codeline>
+<codeline lineno="54"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordtype">double</highlight><highlight class="normal"><sp/>jp<sp/>=<sp/>static_cast&lt;double&gt;(period);</highlight></codeline>
+<codeline lineno="55"><highlight class="normal"><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>jp;</highlight></codeline>
+<codeline lineno="56"><highlight class="normal">}</highlight></codeline>
+<codeline lineno="57"><highlight class="normal"></highlight></codeline>
+<codeline lineno="58"><highlight class="normal"></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"></highlight></codeline>
+<codeline lineno="59" refid="classctools_1_1time_1_1HighResClock_1e2" refkind="member"><highlight class="normal"><ref refid="classctools_1_1time_1_1HighResClock_1e2" kindref="member">ctools::time::HighResClock::getClockTickCount</ref><sp/>()</highlight></codeline>
+<codeline lineno="60"><highlight class="normal">{</highlight></codeline>
+<codeline lineno="61"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>cpuid;</highlight></codeline>
+<codeline lineno="62"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">unsigned</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">long</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>rdtsc;</highlight></codeline>
+<codeline lineno="63"><highlight class="normal"><sp/><sp/><sp/><sp/>__asm__<sp/></highlight><highlight class="keyword">volatile</highlight><highlight class="normal"><sp/>(</highlight><highlight class="stringliteral">&quot;cpuid&quot;</highlight><highlight class="normal"><sp/>:<sp/></highlight><highlight class="stringliteral">&quot;=A&quot;</highlight><highlight class="normal"><sp/>(cpuid));</highlight></codeline>
+<codeline lineno="64"><highlight class="normal"><sp/><sp/><sp/><sp/>__asm__<sp/></highlight><highlight class="keyword">volatile</highlight><highlight class="normal"><sp/>(</highlight><highlight class="stringliteral">&quot;.byte<sp/>0x0f,<sp/>0x31&quot;</highlight><highlight class="normal"><sp/>:<sp/></highlight><highlight class="stringliteral">&quot;=A&quot;</highlight><highlight class="normal"><sp/>(rdtsc));</highlight></codeline>
+<codeline lineno="65"><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/>rdtsc;</highlight></codeline>
+<codeline lineno="66"><highlight class="normal">}</highlight></codeline>
+    </programlisting>
+    <location file="/home/akim/Devel/eFDP/cTools/src/ctools/time/HighResClock.cc"/>
+  </compounddef>
+</doxygen>

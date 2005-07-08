@@ -1,0 +1,162 @@
+#!/bin/sh
+#* =========================================================================== *
+#* This file is part of CARDAMOM (R) which is jointly developed by THALES
+#* and SELEX-SI.
+#* 
+#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+#* All rights reserved.
+#* 
+#* CARDAMOM is free software; you can redistribute it and/or modify it under
+#* the terms of the GNU Library General Public License as published by the
+#* Free Software Foundation; either version 2 of the License, or (at your
+#* option) any later version.
+#* 
+#* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+#* License for more details.
+#* 
+#* You should have received a copy of the GNU Library General
+#* Public License along with CARDAMOM; see the file COPYING. If not, write to
+#* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#* =========================================================================== *
+
+if test "`echo -e xxx`" = "xxx"
+then
+    echo="echo -e"
+else
+    echo=echo
+fi
+
+SCENARII="@cdmw_home@/demos/demo_ccm/c++/data/integ_deployment.xml"
+LD_LIBRARY_PATH=@cdmw_home@/lib/c++:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
+PATH=@cdmw_home@/bin:$PATH
+export PATH
+
+# Temporary files where to store results
+RESULTS_FILE="CdmwIntegrationTests.results"
+TESTS_FILE="CdmwIntegrationTests.output"
+
+# Log files
+RESULTS_LOG="CdmwIntegrationTests.results_log"
+EXEC_LOG="CdmwIntegrationTests.execution_log"
+
+START_TIMEOUT=50
+CLEANUP_TIMEOUT=5
+
+if test ! -x `which $TERM`
+then
+    TERM=xterm
+fi
+
+INIT_TIMEOUT=15
+FT_MANAGER_TIMEOUT=30
+EXEC_TIMEOUT=60
+CLEANUP_TIMEOUT=9
+CORE="no"
+ADMIN_ERROR="no"
+
+
+echo "========================================================================="
+echo "=                      CDMW Demo CCM                                   ="
+echo "========================================================================="
+echo ""
+
+# We clean any previous tests check files
+rm -f $RESULTS_FILE
+
+# We run the test in each ready CSC
+for scenario in $SCENARII; do
+
+
+    # We clean any previous core files and workDir
+    rm -f core
+    rm -fr ../workDir
+
+# 1) Start daemon 
+echo "Starting the Platform Management Daemon..."
+DAEMON_COMMAND="@cdmw_home@/bin/cdmw_platform_daemon.sh --CdmwXMLFile=@cdmw_home@/share/CdmwPlatformMngtDaemon_conf.xml"
+$TERM -ls -sb -sl 500 -e  $DAEMON_COMMAND &
+
+
+trap '$DAEMON_COMMAND stop; exit' 2
+    
+sleep $INIT_TIMEOUT
+
+if test -x "@cdmw_home@/bin/cdmw_ft_manager"
+then
+    $echo Starting the FT Manager...
+    @cdmw_home@/bin/cdmw_ft_manager --CdmwXMLFile=@cdmw_home@/share/CdmwFaultToleranceManager_conf.xml &
+    FT_MANAGER_PID=$!
+    sleep $FT_MANAGER_TIMEOUT
+    $echo Starting the Platform Management Supervision...
+    SUPERVISION_COMMAND="@cdmw_home@/bin/cdmw_platform_supervision --CdmwLocalisationService=21882 --FaultManagerRegistration=corbaloc::$HOSTNAME:@FtManager_port@/fault_manager --RequestDurationTime=20000000"
+    $TERM -ls -sb -sl 500 -e $SUPERVISION_COMMAND &
+else
+    $echo Starting the Platform Management Supervision...
+    SUPERVISION_COMMAND="@cdmw_home@/bin/cdmw_platform_supervision --CdmwLocalisationService=21882"
+    $TERM -ls -sb -sl 500 -e $SUPERVISION_COMMAND &
+fi
+SUPERVISION_PID=$!
+sleep $INIT_TIMEOUT
+
+# 3) Define system
+
+
+    echo "Define system $scenario"
+    ./define_system.sh $scenario
+
+    echo "Start system"
+    ./start_system.sh
+
+    if [ $? -eq "0" ];
+    then
+	echo ""
+	echo "========================================================================================="
+        echo "Waiting a while for the starting of the system"
+	echo "Hit a key when the cdmw_platform_daemon display \"NamingAndRepository : Run requested.\""
+	echo "========================================================================================="
+
+#        sleep $START_TIMEOUT
+    read FOO
+        
+        echo "execute deployment commands"
+        @cdmw_home@/bin/cdmw_deployment_tool.sh --repositoryPort=22456 < @cdmw_home@/demos/demo_ccm/c++/run/ccm_integration_commands.txt
+
+    else
+        ADMIN_ERROR="yes"
+        echo "### the platform admin has reported an error for scenario $scenario ###" >> $RESULTS_FILE
+    fi
+
+    # We check if the test has not produced a core dump
+    if [ -f core ]; then
+        CORE="yes"
+        echo "### the scenario $scenario has produced a core dump ###" >> $RESULTS_FILE
+        rm -f core
+    fi
+
+    echo "Stop system"
+    ./stop_system.sh
+
+    sleep $CLEANUP_TIMEOUT
+
+done
+
+
+
+# Now we can display all the results
+echo "==========================================================="
+echo "=                     end                                 ="
+echo "==========================================================="
+
+$DAEMON_COMMAND stop
+
+kill $SUPERVISION_PID
+if test -x "@cdmw_home@/bin/cdmw_ft_manager"
+then
+    kill $FT_MANAGER_PID
+fi
+rm -rf @FTP_DIR@/cdmw_demo_ccm
+echo "done."
+

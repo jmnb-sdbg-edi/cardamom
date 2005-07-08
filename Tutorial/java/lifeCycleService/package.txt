@@ -1,0 +1,3 @@
+CdmwLifeCycle:com.thalesgroup.CdmwLifeCycle
+Hello:com.thalesgroup.Hello
+HelloServiceFactoryModule:com.thalesgroup.HelloServiceFactoryModule

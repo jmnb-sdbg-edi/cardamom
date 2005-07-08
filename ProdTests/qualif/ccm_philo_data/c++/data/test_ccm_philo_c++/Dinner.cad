@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI.
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * =========================================================================== *
+-->
+
+<!DOCTYPE componentassembly SYSTEM "componentassembly.dtd">
+<componentassembly id="DinnerAssembly">
+    <description>Philosopher Dinner</description>
+
+    <componentfiles>
+        <componentfile id="ForkManager">
+            <fileinarchive name="Fork.csd"/>
+        </componentfile>
+        <componentfile id="Observer">
+            <fileinarchive name="Observer.csd"/>
+        </componentfile>
+        <componentfile id="Philosopher">
+            <fileinarchive name="Philosopher.csd"/>
+        </componentfile>
+        <componentfile id="RegistratorComponent">
+            <fileinarchive name="Registrator.csd"/>
+        </componentfile>
+    </componentfiles>
+
+    <partitioning>
+        
+        <hostcollocation id="@hostname1val@">
+
+            <!-- ***************** -->
+            <!-- Process Observers -->
+            <!-- ***************** -->
+            <processcollocation id="Observers">  
+                <homeplacement id="ObserversHome">
+                    <componentfileref idref="Observer"/>
+                    <registerwithnaming name="UserNaming/Dinner/Homes/ObserversHome"/>
+
+                    <!-- Observer1 -->
+                    <componentinstantiation id="Observer1">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/Dinner/Observers/Observer1"/>
+                        </registercomponent>                    
+                     </componentinstantiation>
+
+                    <!-- Observer2 -->
+                    <componentinstantiation id="Observer2">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/Dinner/Observers/Observer2"/>
+                        </registercomponent>                    
+                     </componentinstantiation>
+
+                    <destination>ObserverProcess@DinnerApplication</destination>
+                </homeplacement>
+            </processcollocation> 
+
+            <!-- ******************* -->
+            <!-- Process GreekSchool -->
+            <!-- ******************* -->
+            <processcollocation id="GreekSchool">
+
+                <homeplacement id="GreekPhilosophersHome">
+                    <componentfileref idref="Philosopher"/>
+                    <registerwithnaming name="UserNaming/Dinner/Homes/GreekPhilosophersHome"/>
+                    
+                    <!-- Plato -->
+                    <componentinstantiation id="Plato">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/Dinner/Philosophers/Plato"/>
+                        </registercomponent>
+                    </componentinstantiation>
+                    
+                    <!-- Socrates -->
+                    <componentinstantiation id="Socrates">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/Dinner/Philosophers/Socrates"/>
+                        </registercomponent>
+                    </componentinstantiation>
+                    
+                    <destination>GreekSchoolProcess@DinnerApplication</destination>
+                </homeplacement>
+
+                <homeplacement id="GreekForksHome">
+                    <componentfileref idref="ForkManager"/>
+                    <registerwithnaming name="UserNaming/Dinner/Homes/GreekForksHome"/>
+
+                    <!-- Fork1 -->
+                    <componentinstantiation id="Fork1">
+                        <registercomponent>
+                            <providesidentifier>the_fork</providesidentifier>
+                            <registerwithnaming name="UserNaming/Dinner/Forks/Fork1"/>
+                        </registercomponent>                    
+                     </componentinstantiation>
+
+                    <!-- Fork2 -->
+                    <componentinstantiation id="Fork2">
+                        <registercomponent>
+                            <providesidentifier>the_fork</providesidentifier>
+                            <registerwithnaming name="UserNaming/Dinner/Forks/Fork2"/>
+                        </registercomponent>                    
+                     </componentinstantiation>
+
+                    <destination>GreekSchoolProcess@DinnerApplication</destination>
+                </homeplacement>
+                
+            </processcollocation>
+
+            <destination>@hostname1val@</destination> 
+        </hostcollocation>
+
+        <hostcollocation id="@hostname2val@">
+
+            <!-- ******************** -->
+            <!-- Process FrenchSchool -->
+            <!-- ******************** -->
+            <processcollocation id="FrenchSchool">  
+
+                <homeplacement id="FrenchPhilosophersHome">
+                    <componentfileref idref="Philosopher"/>
+                    <registerwithnaming name="UserNaming/Dinner/Homes/FrenchPhilosophersHome"/>
+                    
+                    <!-- Descartes -->
+                    <componentinstantiation id="Descartes">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/Dinner/Philosophers/Descartes"/>
+                        </registercomponent>
+                    </componentinstantiation>
+                    
+                    <!-- Pascal -->
+                    <componentinstantiation id="Pascal">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/Dinner/Philosophers/Pascal"/>
+                        </registercomponent>
+                    </componentinstantiation>
+                    
+                    <destination>FrenchSchoolProcess@DinnerApplication</destination>
+                </homeplacement>
+
+                <homeplacement id="FrenchForksHome">
+                    <componentfileref idref="ForkManager"/>
+                    <registerwithnaming name="UserNaming/Dinner/Homes/FrenchForksHome"/>
+                    
+                    <!-- Fork3 -->
+                    <componentinstantiation id="Fork3">
+                        <registercomponent>
+                            <providesidentifier>the_fork</providesidentifier>
+                            <registerwithnaming name="UserNaming/Dinner/Forks/Fork3"/>
+                        </registercomponent>                    
+                    </componentinstantiation>
+
+                    <!-- Fork4 -->
+                    <componentinstantiation id="Fork4">
+                        <registercomponent>
+                            <providesidentifier>the_fork</providesidentifier>
+                            <registerwithnaming name="UserNaming/Dinner/Forks/Fork4"/>
+                        </registercomponent>                    
+                     </componentinstantiation>
+
+                    <destination>FrenchSchoolProcess@DinnerApplication</destination>
+                </homeplacement>
+
+                <homeplacement id="RegistratorHome">
+                    <componentfileref idref="RegistratorComponent"/>
+                    <registerwithnaming name="UserNaming/Dinner/Homes/RegistratorHome"/>
+
+                    <!-- Registrator -->
+                    <componentinstantiation id="Registrator">
+                        <registercomponent>
+                            <registerwithnaming name="UserNaming/Dinner/Registrator"/>
+                        </registercomponent>                    
+                     </componentinstantiation>
+
+                    <destination>FrenchSchoolProcess@DinnerApplication</destination>
+                </homeplacement>
+                
+            </processcollocation> 
+
+            <destination>@hostname2val@</destination> 
+        </hostcollocation> 
+
+    </partitioning>
+    
+    
+    <connections>
+    
+        <!-- connection Registrator - Plato -->
+        <connectinterface id="connect_Registrator_Plato">
+            <usesport>
+                <usesidentifier>register</usesidentifier>
+                <componentinstantiationref idref="Plato"/>
+            </usesport>
+            <componentsupportedinterface>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Registrator"/>
+                </findby>
+            </componentsupportedinterface>
+        </connectinterface>
+
+        <!-- connection Registrator - Socrates -->
+        <connectinterface id="connect_Registrator_Socrates">
+            <usesport>
+                <usesidentifier>register</usesidentifier>
+                <componentinstantiationref idref="Socrates"/>
+            </usesport>
+            <existinginterface>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Registrator"/>
+                </findby>
+            </existinginterface>
+        </connectinterface>
+
+        <!-- connection Registrator - Descartes -->
+        <connectinterface id="connect_Registrator_Descartes">
+            <usesport>
+                <usesidentifier>register</usesidentifier>
+                <componentinstantiationref idref="Descartes"/>
+            </usesport>
+            <componentsupportedinterface>
+                <componentinstantiationref idref="Registrator"/>
+            </componentsupportedinterface>
+        </connectinterface>
+
+        <!-- connection Registrator - Pascal -->
+        <connectinterface id="connect_Registrator_Pascal">
+            <usesport>
+                <usesidentifier>register</usesidentifier>
+                <componentinstantiationref idref="Pascal"/>
+            </usesport>
+            <componentsupportedinterface>
+                <componentinstantiationref idref="Registrator"/>
+            </componentsupportedinterface>
+        </connectinterface>
+
+
+        <!-- connection Plato right fork - Fork4 -->
+        <connectinterface id="connect_PlatoRight_Fork4">
+            <usesport>
+                <usesidentifier>right</usesidentifier>
+                <componentinstantiationref idref="Plato"/>
+            </usesport>
+            <existinginterface>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Forks/Fork4"/>
+                </findby>
+            </existinginterface>
+        </connectinterface>
+        
+        <!-- connection Plato left fork - Fork1 -->
+        <connectinterface id="connect_PlatoLeft_Fork1">
+            <usesport>
+                <usesidentifier>left</usesidentifier>
+                <componentinstantiationref idref="Plato"/>
+            </usesport>
+            <existinginterface>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Forks/Fork1"/>
+                </findby>
+            </existinginterface>
+        </connectinterface>
+        
+        <!-- connection Socrates right fork - Fork1 -->
+        <connectinterface id="connect_SocratesRight_Fork1">
+            <usesport>
+                <usesidentifier>right</usesidentifier>
+                <componentinstantiationref idref="Socrates"/>
+            </usesport>
+            <existinginterface>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Forks/Fork1"/>
+                </findby>
+            </existinginterface>
+        </connectinterface>
+        
+        <!-- connection Socrates left fork - Fork2 -->
+        <connectinterface id="connect_SocratesLeft_Fork2">
+            <usesport>
+                <usesidentifier>left</usesidentifier>
+                <componentinstantiationref idref="Socrates"/>
+            </usesport>
+            <existinginterface>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Forks/Fork2"/>
+                </findby>
+            </existinginterface>
+        </connectinterface>
+        
+        <!-- connection Descartes right fork - Fork2 -->
+        <connectinterface id="connect_DescartesRight_Fork2">
+            <usesport>
+                <usesidentifier>right</usesidentifier>
+                <componentinstantiationref idref="Descartes"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>the_fork</providesidentifier>
+                <componentinstantiationref idref="Fork2"/>
+            </providesport>
+        </connectinterface>
+        
+        <!-- connection Descartes left fork - Fork3 -->
+        <connectinterface id="connect_DescartesLeft_Fork3">
+            <usesport>
+                <usesidentifier>left</usesidentifier>
+                <componentinstantiationref idref="Descartes"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>the_fork</providesidentifier>
+                <componentinstantiationref idref="Fork3"/>
+            </providesport>
+        </connectinterface>
+        
+        <!-- connection Pascal right fork - Fork3 -->
+        <connectinterface id="connect_PascalRight_Fork3">
+            <usesport>
+                <usesidentifier>right</usesidentifier>
+                <componentinstantiationref idref="Pascal"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>the_fork</providesidentifier>
+                <componentinstantiationref idref="Fork3"/>
+            </providesport>
+        </connectinterface>
+        
+        <!-- connection Pascal left fork - Fork4 -->
+        <connectinterface id="connect_PascalLeft_Fork4">
+            <usesport>
+                <usesidentifier>left</usesidentifier>
+                <componentinstantiationref idref="Pascal"/>
+            </usesport>
+            <providesport>
+                <providesidentifier>the_fork</providesidentifier>
+                <componentinstantiationref idref="Fork4"/>
+            </providesport>
+        </connectinterface>
+        
+
+        <!-- connection Observer2 - Plato info -->
+        <connectevent id="connect_Observer2_PlatoInfo">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <componentinstantiationref idref="Observer2"/>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>info</publishesidentifier>
+                <componentinstantiationref idref="Plato"/>
+            </publishesport>
+        </connectevent>
+
+        <!-- connection Observer2 - Socrates info -->
+        <connectevent id="connect_Observer2_SocratesInfo">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <componentinstantiationref idref="Observer2"/>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>info</publishesidentifier>
+                <componentinstantiationref idref="Socrates"/>
+            </publishesport>
+        </connectevent>
+
+        <!-- connection Observer2 - Descartes info -->
+        <connectevent id="connect_Observer2_DescartesInfo">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <componentinstantiationref idref="Observer2"/>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>info</publishesidentifier>
+                <componentinstantiationref idref="Descartes"/>
+            </publishesport>
+        </connectevent>
+
+        <!-- connection Observer2 - Pascal info -->
+        <connectevent id="connect_Observer2_PascalInfo">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <componentinstantiationref idref="Observer2"/>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>info</publishesidentifier>
+                <componentinstantiationref idref="Pascal"/>
+            </publishesport>
+        </connectevent>
+
+        <!-- connection Observer1 - Plato info -->
+        <connectevent id="connect_Observer1_PlatoInfo">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <componentinstantiationref idref="Observer1"/>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>info</publishesidentifier>
+                <componentinstantiationref idref="Plato"/>
+            </publishesport>
+        </connectevent>
+
+        <!-- connection Observer1 - Socrates info -->
+        <connectevent id="connect_Observer1_SocratesInfo">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Observers/Observer1"/>
+                </findby>
+            </consumesport>
+            <publishesport>
+                <publishesidentifier>info</publishesidentifier>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Philosophers/Socrates"/>
+                </findby>
+            </publishesport>
+        </connectevent>
+
+        <!-- connection Observer1 - Plato config -->
+        <connectevent id="connect_Observer1_PlatoConfig">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Observers/Observer1"/>
+                </findby>
+            </consumesport>
+            <emitsport>
+                <emitsidentifier>config</emitsidentifier>
+                <findby>
+                    <namingservice name="UserNaming/Dinner/Philosophers/Plato"/>
+                </findby>
+            </emitsport>
+        </connectevent>
+
+        <!-- connection Observer1 - Socrates config -->
+        <connectevent id="connect_Observer1_SocratesConfig">
+            <consumesport>
+                <consumesidentifier>info</consumesidentifier>
+                <componentinstantiationref idref="Observer1"/>
+            </consumesport>
+            <emitsport>
+                <emitsidentifier>config</emitsidentifier>
+                <componentinstantiationref idref="Socrates"/>
+            </emitsport>
+        </connectevent>
+
+    </connections>
+
+</componentassembly>
+

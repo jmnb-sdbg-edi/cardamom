@@ -1,0 +1,100 @@
+\section{ctools::time::High\-Res\-Timer Class Reference}
+\label{classctools_1_1time_1_1HighResTimer}\index{ctools::time::HighResTimer@{ctools::time::HighResTimer}}
+This class provide a way of performing high resolution of the time spent performing something.  
+
+
+{\tt \#include $<$High\-Res\-Timer.h$>$}
+
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf High\-Res\-Timer} ()
+\item 
+void {\bf start} ()
+\begin{CompactList}\small\item\em Starts measuring the elapsed time. \item\end{CompactList}\item 
+void {\bf stop} ()
+\begin{CompactList}\small\item\em Stops the time measurement. \item\end{CompactList}\item 
+void {\bf reset} ()
+\begin{CompactList}\small\item\em Resets the timer. \item\end{CompactList}\item 
+{\bf ctools::time::High\-Res\-Time} {\bf get\-Elapsed\-Time} ()
+\item 
+void {\bf get\-Elapsed\-Time} ({\bf ctools::time::High\-Res\-Time} \&time)
+\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+This class provide a way of performing high resolution of the time spent performing something. 
+
+\begin{Desc}
+\item[Author:]{\tt Angelo Corsaro} \end{Desc}
+\begin{Desc}
+\item[Version:]1.0 \end{Desc}
+
+
+
+
+Definition at line 38 of file High\-Res\-Timer.h.
+
+\subsection{Constructor \& Destructor Documentation}
+\index{ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}!HighResTimer@{HighResTimer}}
+\index{HighResTimer@{HighResTimer}!ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ctools::time::High\-Res\-Timer::High\-Res\-Timer ()\hspace{0.3cm}{\tt  [inline]}}\label{classctools_1_1time_1_1HighResTimer_a0}
+
+
+
+
+Definition at line 41 of file High\-Res\-Timer.h.
+
+\subsection{Member Function Documentation}
+\index{ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}!getElapsedTime@{getElapsedTime}}
+\index{getElapsedTime@{getElapsedTime}!ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Timer::get\-Elapsed\-Time ({\bf ctools::time::High\-Res\-Time} \& {\em time})\hspace{0.3cm}{\tt  [inline]}}\label{classctools_1_1time_1_1HighResTimer_a5}
+
+
+
+
+Definition at line 71 of file High\-Res\-Timer.h.
+
+References ctools::time::High\-Res\-Time::set().\index{ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}!getElapsedTime@{getElapsedTime}}
+\index{getElapsedTime@{getElapsedTime}!ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf ctools::time::High\-Res\-Time} ctools::time::High\-Res\-Timer::get\-Elapsed\-Time ()\hspace{0.3cm}{\tt  [inline]}}\label{classctools_1_1time_1_1HighResTimer_a4}
+
+
+
+
+Definition at line 67 of file High\-Res\-Timer.h.\index{ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}!reset@{reset}}
+\index{reset@{reset}!ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Timer::reset ()\hspace{0.3cm}{\tt  [inline]}}\label{classctools_1_1time_1_1HighResTimer_a3}
+
+
+Resets the timer. 
+
+
+
+Definition at line 63 of file High\-Res\-Timer.h.\index{ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}!start@{start}}
+\index{start@{start}!ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Timer::start ()\hspace{0.3cm}{\tt  [inline]}}\label{classctools_1_1time_1_1HighResTimer_a1}
+
+
+Starts measuring the elapsed time. 
+
+
+
+Definition at line 47 of file High\-Res\-Timer.h.
+
+References ctools::time::High\-Res\-Clock::get\-Clock\-Tick\-Count().\index{ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}!stop@{stop}}
+\index{stop@{stop}!ctools::time::HighResTimer@{ctools::time::High\-Res\-Timer}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ctools::time::High\-Res\-Timer::stop ()\hspace{0.3cm}{\tt  [inline]}}\label{classctools_1_1time_1_1HighResTimer_a2}
+
+
+Stops the time measurement. 
+
+
+
+Definition at line 55 of file High\-Res\-Timer.h.
+
+References ctools::time::High\-Res\-Clock::get\-Clock\-Tick\-Count().
+
+The documentation for this class was generated from the following file:\begin{CompactItemize}
+\item 
+{\bf High\-Res\-Timer.h}\end{CompactItemize}

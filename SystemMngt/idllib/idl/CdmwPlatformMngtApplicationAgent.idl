@@ -1,0 +1,160 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_APPLICATION_AGENT_IDL_
+#define CDMW_PLATFORM_MNGT_APPLICATION_AGENT_IDL_
+
+
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwPlatformMngtMonitoring.idl>
+#include <CdmwPlatformMngtServiceBroker.idl>
+#include <CdmwPlatformMngtEntityObserver.idl>
+
+#pragma prefix "thalesgroup.com"
+
+
+module CdmwPlatformMngt
+{
+
+    interface Process;
+
+
+    /**
+    * The agent of an application.
+    */
+    interface ApplicationAgent : PullMonitorable
+    {
+
+        /**
+        * Creates an unmanaged process.
+        *
+        * @param process_name the name identifying the process.
+        * @param process_info the information needed for creating the process.
+        *
+        * @exception ProcessAlreadyExists if process_name is already used
+        * for an existing process.
+        * @exception InvalidInfo if process_info contains invalid information.
+        */
+        void create_process (in ProcessName process_name,
+            in ProcessInfo process_info) 
+            raises (ProcessAlreadyExists, InvalidInfo);
+
+
+        /**
+        * Creates a managed process.
+        *
+        * @param process_name the name identifying the process.
+        * @param process_info the information needed for creating the process.
+        * @param creation_timeout the timeout allowed for the creation.
+        * @param entity_observer the entity observer specific to the
+        * managed process. This observer is transmitted to the managed
+        * process via the ProcessAck.
+        * @param service_broker the service broker specific to
+        * the managed process. This broker is transmitted to the managed
+        * process via the ProcessAck.
+        * @return the reference to the managed process
+        *
+        * @exception CreationErrorExt if the process returned a fatal error
+        * and aborts its creation.
+        * @exception ProcessAlreadyExists if process_name is already used
+        * for an existing process.
+        * @exception InvalidInfo if process_info contains invalid information.
+        * @exception CreationTimeout if the process has not acknowledged
+        * its creation during the allowed timeout.
+        */
+        Process create_managed_process (in ProcessName process_name,
+            in ProcessInfo process_info, in Timeout creation_timeout,
+            in CdmwPlatformMngtEntity::EntityObserver entity_observer, 
+            in CdmwPlatformMngtService::ServiceBroker service_broker)
+            raises (CreationErrorExt, ProcessAlreadyExists, InvalidInfo,
+            CreationTimeout);
+
+
+        /**
+        * Kills a process created by the agent.
+        *
+        * @param process_name the name identifying the process.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote an
+        * existing process.
+        */
+        void kill_process (in ProcessName process_name) 
+                raises (ProcessNotFound);
+
+
+        /**
+        * Starts the monitoring of a managed process.
+        *
+        * @param process_name the name identifying the process.
+        * @param process_monitoring_info the information for monitoring
+        * the process.
+        * @param activity_point_monitoring_infos the information for monitoring
+        * the activity points of the process.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote an
+        * existing process.
+        * @exception UnsupportedMonitoringModel if the monitoring model is
+        * not actually supported by the managed process.
+        * @exception OutOfActivityPoints if the requested number of
+        * activity points exceeds the actual number of activity points.
+        * @exception IncompatibleType if process_name doesn't denote a
+        * managed process.
+        */
+        void start_process_monitoring (in ProcessName process_name,
+            in CompleteMonitoringInfo process_monitoring_info,
+            in MonitoringInfos activity_point_monitoring_infos) 
+                raises (ProcessNotFound, UnsupportedMonitoringModel,
+                OutOfActivityPoints, IncompatibleType);
+
+
+        /**
+        * Stops the monitoring of a managed process.
+        *
+        * @param process_name the name identifying the process.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote an
+        * existing process.
+        * @exception IncompatibleType if process_name doesn't denote a
+        * managed process.
+        */
+        void stop_process_monitoring (in ProcessName process_name)
+                raises (ProcessNotFound, IncompatibleType);
+
+
+        /**
+        * Requests the application agent to terminate.
+        * This will result in the kill of processes created by the application
+        * agent.
+        */
+        void destroy ();
+
+
+    }; // End interface ApplicationAgent
+
+    
+}; // End Module CdmwPlatformMngt
+
+#endif // CDMW_PLATFORM_MNGT_APPLICATION_AGENT_IDL
+

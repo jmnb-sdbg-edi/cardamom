@@ -1,0 +1,391 @@
+# =====================================================================
+# This file is part of CARDAMOM (R) which is jointly developed by THALES 
+# and SELEX-SI. 
+# 
+# It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+# All rights reserved.
+# 
+# CARDAMOM is free software; you can redistribute it and/or modify it under 
+# the terms of the GNU Library General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your 
+# option) any later version. 
+# 
+# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+# License for more details. 
+# 
+# You should have received a copy of the GNU Library General 
+# Public License along with CARDAMOM; see the file COPYING. If not, write to 
+# the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# =====================================================================
+
+
+##
+##  This file contains the OMG IDL3 mappings for OMG IDL3 declarations
+##
+##  Note: end of line are NOT relevant !
+##        spaces ARE relevant !
+##  Note: for evaluated strings, "generator" to refer to the generator class
+##        and "self" to refer to the printer class.
+##  Note: this file needs '$' as call character and '#' as comment character
+##
+
+
+##
+##  Definition of the mapping for an object.
+##
+#id OBJECT
+$self.open(generator.getFilename())$
+/* ===================================================================== */\n
+/*\n
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES\n
+ * and SELEX-SI\n
+ *\n
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.\n
+ * All rights reserved.\n
+ *\n
+ * CARDAMOM is free software; you can redistribute it and/or modify it under\n
+ * the terms of the GNU Library General Public License as published by the\n
+ * Free Software Foundation; either version 2 of the License, or (at your\n
+ * option) any later version.\n
+ *\n
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT\n
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or\n
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public\n
+ * License for more details.\n
+ *\n
+ * You should have received a copy of the GNU Library General\n
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to\n
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\n
+*/\n
+/* ===================================================================== */\n\n
+$self.visit(obj)$
+$self.close()$
+
+
+##
+##  Definition of the mapping for a module.
+##
+#id MODULE
+$self.cdmwPragmaPrefix()$
+\n
+module $cdmwPrefix = self.addCdmwPrefix(obj); cdmwPrefix$$moduleName = obj.getName(); moduleName$\n
+{\n
+$self.contents(obj, org.objectweb.ccm.IDL3.DeclarationKind._dk_all)$
+}; // end of module $cdmwPrefix$$moduleName$\n
+
+
+##
+##  Mapping for a module with not all contents generated
+##  in the case of dependency checking.
+##
+#id MODULE_WITH_DEPENDENCIES
+$self.visit(vect)$
+
+
+##
+##  Definition of the mapping for a component.
+##
+#id COMPONENT
+local interface CCM_$obj.getName()$_SessionContext : $moduleName$::CCM_$obj.getName()$_Context,\n
+                                                     Components::SessionContext\n
+{\n
+};\n
+\n
+interface $obj.getName()$ : $moduleName$::$obj.getName()$\n
+$self.contents(obj, org.objectweb.ccm.IDL3.DeclarationKind._dk_all)$
+{\n
+};\n
+
+
+##
+##  Definition of the mapping for a component when forwarded.
+##
+#id COMPONENT_FORWARD
+
+
+##
+##  Definition of the mapping for a home.
+##
+#id HOME
+interface $obj.getName()$ : $moduleName$::$obj.getName()$,\n
+                            Components::HomeConfiguration,\n
+                            CdmwCcmCif::CCMHome,\n
+                            CdmwCcmCif::KeylessCCMHome\n
+{\n
+};\n
+
+
+##
+##  Definition of the mapping for an attribute.
+##
+#id ATTRIBUTE
+\n
+
+
+##
+##  Definition of the mapping for an interface.
+##
+#id INTERFACE
+interface $obj.getName()$ : $moduleName$::$obj.getName()$,\n
+                            CosLifeCycle::LifeCycleObject\n
+{\n
+$self.contents(obj, self.interface_check())$
+};\n
+
+
+##
+##  Definition of the mapping for an interface when forwarded.
+##
+#id INTERFACE_FORWARD
+\n
+
+
+##
+##  Definition of the mapping for an abstract interface.
+##
+#id ABSTRACT_INTERFACE
+\n
+
+
+##
+##  Definition of the mapping for an abstract interface when forwarded.
+##
+#id ABSTRACT_INTERFACE_FORWARD
+\n
+
+
+##
+##  Definition of the mapping for an local interface.
+##
+#id LOCAL_INTERFACE
+\n
+
+
+##
+##  Definition of the mapping for an local interface when forwarded.
+##
+#id LOCAL_INTERFACE_FORWARD
+\n
+
+
+##
+##  Definition of the mapping for an operation.
+##
+#id OPERATION
+\n
+
+
+##
+##  Definition of the mapping for a constant.
+##
+#id CONSTANT
+\n
+
+
+##
+##  Definition of the mapping for an exception.
+##
+#id EXCEPTION
+\n
+
+
+##
+##  Definition of the mapping for an alias.
+##
+#id ALIAS
+\n
+
+
+##
+##  Definition of the mapping for a struct.
+##
+#id STRUCT
+\n
+
+
+##
+##  Definition of the mapping for a inlined struct
+##  i.e. defined in a struct, union or exception.
+##
+#id STRUCT_INLINED
+\n
+
+
+##
+##  Definition of the mapping for a struct member,
+##  except in the case of struct, union or enum members.
+##
+#id STRUCT_MEMBER
+\n
+
+
+##
+##  Definition of the mapping for a struct when forwarded.
+##
+#id STRUCT_FORWARD
+\n
+
+
+##
+##  Definition of the mapping for an union.
+##
+#id UNION
+\n
+
+
+##
+##  Definition of the mapping for an inlined union
+##  i.e. defined in a struct, union or exception.
+##
+#id UNION_INLINED
+\n
+
+
+##
+##  Definition of the mapping for an union member,
+##  except in the case of struct, union or enum members.
+##
+#id UNION_MEMBER
+\n
+
+
+##
+##  Definition of the mapping for an union member,
+##  except in the case of struct, union or enum members.
+##
+#id UNION_DEFAULT_MEMBER
+\n
+
+
+##
+##  Definition of the mapping for an union when forwarded.
+##
+#id UNION_FORWARD
+\n
+
+
+##
+##  Definition of the mapping for an enum.
+##
+#id ENUM
+\n
+
+
+##
+##  Definition of the mapping for an inlined enum
+##  i.e. defined in a struct, union or exception.
+##
+#id ENUM_INLINED
+\n
+
+
+##
+##  Definition of the mapping for a valuetype.
+##
+#id VALUE
+\n
+
+##
+##  Definition of the mapping for a valuetype when forwarded.
+##
+#id VALUE_FORWARD
+\n
+
+
+##
+##  Definition of the mapping for a valuebox.
+##
+#id VALUE_BOX
+\n
+
+
+##
+##  Definition of the mapping for a valuetype member.
+##
+#id VALUE_MEMBER
+\n
+
+
+##
+##  Definition of the mapping for a native.
+##
+#id NATIVE
+\n
+
+
+##
+##  Definition of the mapping for a factory.
+##
+#id FACTORY
+\n
+
+
+##
+##  Definition of the mapping for a finder.
+##
+#id FINDER
+\n
+
+
+##
+##  Definition of the mapping for a emits.
+##
+#id EMITS
+\n
+
+
+##
+##  Definition of the mapping for a publishes.
+##
+#id PUBLISHES
+\n
+
+
+##
+##  Definition of the mapping for a consumes
+##
+#id CONSUMES
+								  , $obj.getType().getAbsoluteName()$Consumer\n
+
+
+##
+##  Definition of the mapping for a provides
+##
+#id PROVIDES
+								  , $obj.getType().getAbsoluteName()$\n
+
+
+##
+##  Definition of the mapping for a uses
+##
+#id USES
+\n
+
+
+##
+##  Definition of the mapping for an eventtype.
+##
+#id EVENT
+interface $obj.getName()$Consumer : $moduleName$::$obj.getName()$Consumer,\n
+                            CosEventComm::PushConsumer,\n
+                            CosLifeCycle::LifeCycleObject\n
+{\n
+};\n
+\n
+
+
+##
+##  Definition of the mapping for a eventtype when forwarded.
+##
+#id EVENT_FORWARD
+\n
+
+
+##
+##  Definition of the mapping for an unknown.
+##
+#id NULL
+\n
+

@@ -1,0 +1,4 @@
+destroy_assembly myAssembly
+remove_assembly CcmPerfAssembly
+remove_component Server 1,0,1,0
+exit

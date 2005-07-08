@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureSTLPort" default="-check-STLPort" basedir=".">
+
+
+    <description>
+        This build file locates and checks the STLPort.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-STLPort" target checks if STLPort is suitable for the build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-check-STLPort-linux"
+            + "-check-STLPort-sunos"
+            + "-check-STLPort-windows"
+            + "-check-STLPort-aix"
+            + "-set-STLPort-properties"
+    -->
+    <target name="-check-STLPort"
+            depends="-initialize, -check-STLPort-linux, -check-STLPort-sunos,
+                     -check-STLPort-windows, -check-STLPort-aix,
+                     -set-STLPort-properties">
+
+        <!-- save STLPort properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-STLPort-linux" target checks if STLPort is suitable for the
+        build on a Linux platform.
+    -->
+    <target name="-check-STLPort-linux" if="is.linux">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-STLPort-sunos" target checks if STLPort is suitable for the
+        build on a SUN Solaris platform.
+    -->
+    <target name="-check-STLPort-sunos" if="is.sunos">
+        <antcallback target="-test1-sunos"
+                     return="stlport.include.dir, stlport.config.h"/>
+        <antcallback target="-test2-sunos" return="stlport.lib.dir"/>
+        <antcallback target="-test3-sunos"/>
+        <antcallback target="-test4-sunos"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-STLPort-aix" target checks if STLPort is suitable for the
+        build on an IBM AIX platform.
+    -->
+    <target name="-check-STLPort-aix" if="is.aix">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-STLPort-windows" target checks if STLPort is suitable for
+        the build on a Windows platform.
+    -->
+    <target name="-check-STLPort-windows" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-STLPort" target determines the installation directory of
+        STLPort.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-STLPort" depends="-initialize">
+        <!-- determine the STLPort installation directory -->
+        <var name="my.var"
+             value="Enter the ${tool.fullname} installation directory"/>
+
+        <propertycopy property="stlport.default.install.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.install.dir"/>
+
+        <if>
+            <isset property="stlport.default.install.dir"/>
+            <then>
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${my.var}" dirPathOnly="true"
+                                addproperty="config.${tool.name}.install.dir"
+                                default="${stlport.default.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.install.dir"
+                                      from="stlport.default.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirPathOnly="true"
+                        addproperty="config.${tool.name}.install.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="stlport.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.install.dir"
+                   value="${stlport.install.dir}"/>
+        </propertyfile>
+
+        <!-- determine the include directory -->
+        <propertycopy property="stlport.default.include.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.include.dir"/>
+
+        <if>
+            <not>
+                <isset property="stlport.default.include.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the bin directory -->
+                <findfile file="stdlib.h" dir="${stlport.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="stlport.stdlib.h"/>
+
+                <!--
+                    we need to run the "dirname" task twice because the STLPort
+                    include files are stored in .../include/stlport/
+                -->
+                <dirname property="stlport.stlport.include.dir"
+                         file="${stlport.stdlib.h}"/>
+                <dirname property="stlport.default.include.dir"
+                         file="${stlport.stlport.include.dir}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} include directory"
+                        addproperty="config.${tool.name}.include.dir"
+                        default="${stlport.default.include.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.include.dir"
+                              from="stlport.default.include.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="stlport.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.include.dir"
+                   value="${stlport.include.dir}"/>
+        </propertyfile>
+
+        <!-- determine the lib directory -->
+        <propertycopy property="stlport.default.lib.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.dir"/>
+
+        <if>
+            <not>
+                <isset property="stlport.default.lib.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the lib directory -->
+                <findfile file="libstlport_gcc.*" dir="${stlport.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="stlport.libstlport_gcc.file"/>
+
+                <dirname property="stlport.default.lib.dir"
+                         file="${stlport.libstlport_gcc.file}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} lib directory"
+                        addproperty="config.${tool.name}.lib.dir"
+                        default="${stlport.default.lib.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.lib.dir"
+                              from="stlport.default.lib.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="stlport.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.lib.dir"
+                   value="${stlport.lib.dir}"/>
+        </propertyfile>
+
+        <!-- save the properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for STLPort -->
+        <propertycopy property="stlport.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="STLPort"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-sunos" target checks whether the STLPort include files can
+        be found.
+    -->
+    <target name="-test1-sunos">
+        <echo message="Checking the ${tool.fullname} include directory"/>
+
+        <!--
+            the test is successful if stlport/stl/_config.h is found in that
+            directory
+        -->
+        <propertycopy property="stlport.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <var name="my.var" value="${stlport.include.dir}${FS}stlport"/>
+        <var name="my.var" value="${my.var}${FS}stl${FS}_config.h"/>
+
+        <property name="stlport.config.h" location="${my.var}"/>
+
+        <available file="${stlport.config.h}"
+                   property="stlport.include.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find ${tool.fullname} include"/>
+        <var name="my.var" value="${my.var} files in the directory"/>
+        <var name="my.var" value="${my.var} ${stlport.include.dir}."/>
+        <fail unless="stlport.include.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test2-sunos" target checks whether the STLPort libraries can be
+        found.
+    -->
+    <target name="-test2-sunos">
+        <echo message="Checking the ${tool.fullname} lib directory"/>
+
+        <!-- the test is successful if libstlport_gcc${.a,.so} is found -->
+        <propertycopy property="stlport.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <var name="my.var" value="${stlport.lib.dir}${FS}libstlport_gcc"/>
+
+        <condition property="stlport.lib.dir.is.ok">
+            <or>
+                <available file="${my.var}.a"/>
+                <available file="${my.var}.so"/>
+            </or>
+        </condition>
+
+        <!-- stop checking if the library was not found -->
+        <var name="my.var" value="Could not find ${tool.fullname} libraries"/>
+        <var name="my.var" value="${my.var} in the directory"/>
+        <var name="my.var" value="${my.var} ${stlport.lib.dir}."/>
+        <fail unless="stlport.lib.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test3-sunos" target checks if library path has been set.
+    -->
+    <target name="-test3-sunos">
+        <echo>Checking whether the library path has been set.</echo>
+
+        <!--
+            the test is successful if LD_LIBRARY_PATH contains the path to
+            the STLPort library directory.
+        -->
+        <condition property="stlport.ld_library.path.is.ok">
+            <contains string="${env.LD_LIBRARY_PATH}"
+                      substring="${stlport.lib.dir}"/>
+        </condition>
+
+        <!-- stop checking if LD_LIBRARY_PATH was not ok -->
+        <fail unless="stlport.ld_library.path.is.ok"
+              message="${stlport.lib.dir} is missing in LD_LIBRARY_PATH"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test4-sunos" target checks the STLPort version.
+    -->
+    <target name="-test4-sunos">
+        <echo>Checking the ${tool.fullname} version</echo>
+
+        <!-- the file to read to check the STLPort version -->
+        <loadfile srcFile="${stlport.config.h}"
+                  property="stlport.config.h.content">
+
+            <filterchain>
+                <linecontains>
+                    <contains value="__SGI_STL_PORT"/>
+                </linecontains>
+            </filterchain>
+        </loadfile>
+
+        <!--
+            the test is successful if _config.h contains the required version
+            or the version checking is disabled.
+        -->
+        <selecttoken string="${stlport.config.h.content}" tokenNumber="1"
+                     delimiter="0x" property="tmp.t4l1"/>
+
+        <condition property="stlport.version.is.ok">
+            <equals arg1="0x${tmp.t4l1}" arg2="${stlport.required.version}"/>
+        </condition>
+
+        <!-- stop checking if the version is not ok -->
+        <!-- TODO: details the error -->
+        <fail unless="stlport.version.is.ok" message="Incorrect version."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-set-STLPort-properties" target defines properties that will be
+        saved into the site configuration file.
+    -->
+    <target name="-set-STLPort-properties">
+        <!-- cflags -->
+        <property name="config.${tool.name}.cflags"
+                  value="-I${stlport.include.dir}"/>
+
+        <!-- ldflags -->
+        <var name="my.var" value="-L${stlport.lib.dir}"/>
+        <var name="my.var" value="${my.var} -lstlport_gcc_debug"/>
+        <var name="my.var" value="${my.var} -lstlport_gcc_stldebug"/>
+
+        <property name="config.${tool.name}.ldflags" value="${my.var}"/>
+    </target>
+
+
+</project>
+

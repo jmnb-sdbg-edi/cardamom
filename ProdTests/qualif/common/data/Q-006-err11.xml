@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI.
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * =========================================================================== *
+-->
+
+
+<!DOCTYPE System SYSTEM "CdmwPlatformMngtSystem.dtd">
+
+<!-- ***************** -->
+<!-- System definition -->
+<!--                   -->
+<!-- ***************** -->
+<System Name="S1" Port="21869">
+
+    <!-- Default timeouts for processes of the entire system -->
+	<Timeout Init="20000" Run="20000" Stop="20000"/>
+
+    <!-- Default monitorings for the entire system -->
+	<Host-monitoring Pull-interval="1000" Pull-timeout="1500"/>
+	<App-monitoring  Pull-interval="060" Pull-timeout="070"/>
+    <Proc-monitoring Model="NO_MONITORING"
+                     Pull-interval="021" Pull-timeout="031"
+                     Push-interval="041" Push-timeout="051"/>
+
+    <!-- Application definitions -->
+    <Application Name="A1"
+                 Host-name="H1"
+                 Agent-port="21970"
+                 App-port="-1"/>
+
+    <Application Name="A2"
+                 Host-name="H1"
+                 Agent-port="21970"
+                 App-port="-1"/>
+
+    <Application Name="A3"
+                 Host-name="H1"
+                 Agent-port="21970"
+                 App-port="-1"/>
+
+    <!-- Init graph of applications of the system-->
+    <Init-graph>
+
+        <Graph-element Name="A1">
+            <Graph-element-successor Name="A2"/>
+        </Graph-element>
+        
+        <Graph-element Name="A3">
+            <Graph-element-successor Name="A2"/>
+        </Graph-element>
+        
+        <Graph-element Name="A2">
+            <Graph-element-successor Name="A1"/>
+        </Graph-element>
+
+        <Graph-element-root Name="A1"/>
+        <Graph-element-root Name="A3"/>
+
+    </Init-graph>
+
+<!-- ************************ -->
+<!--                          -->
+<!-- End of system definition -->
+<!-- ************************ -->
+</System>
+

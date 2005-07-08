@@ -1,0 +1,86 @@
+2005/04/22 16:33:56 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:33:56 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:33:56 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:33:56 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:33:56 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:36:16 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:36:16 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:36:16 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:36:16 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:36:16 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:36:36 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 16:36:36 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 16:36:37 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 16:36:37 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 16:39:59 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:39:59 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:39:59 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:39:59 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:39:59 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:40:15 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 16:40:16 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 16:40:16 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 16:40:17 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 16:44:33 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:44:33 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:44:33 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:44:33 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:44:33 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:44:49 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 16:44:49 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 16:44:50 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 16:44:51 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 16:46:15 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:46:15 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:46:15 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:46:15 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:46:15 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:46:40 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 16:46:41 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 16:46:41 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 16:46:42 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 16:55:27 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:55:27 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:55:27 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:55:27 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:55:27 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:55:45 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 16:55:46 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 16:55:46 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 16:55:47 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 16:56:47 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:56:47 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:56:47 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:56:47 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:56:47 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:57:02 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 16:57:03 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 16:57:03 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 16:57:04 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 16:59:43 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 16:59:43 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 16:59:43 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 16:59:43 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 16:59:43 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 16:59:58 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 16:59:58 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 16:59:59 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 16:59:59 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 17:01:34 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 17:01:34 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 17:01:34 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 17:01:34 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 17:01:34 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 17:01:49 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 17:01:50 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 17:01:50 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 17:01:51 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
+2005/04/22 17:03:21 INF CDMW_PFMDMN vador :Event notifier is running
+2005/04/22 17:03:21 INF CDMW_PFMDMN vador :Daemon started on port 21376 with a timeout for notification call of 10000 ms
+2005/04/22 17:03:21 INF CDMW_PFMDMN vador :Reference published with 'corbaloc::vador:21376/CdmwPlatformMngtDaemon'
+2005/04/22 17:03:21 INF CDMW_PFMDMN vador :IOR written in file 'CdmwDaemon.ior'
+2005/04/22 17:03:21 INF CDMW_PFMDMN vador :PIDs of launched processes will be saved into "/tmp/CdmwDaemon_21376" directory
+2005/04/22 17:03:35 INF CDMW_PFMDMN vador :Creating agent for application 'CdmwServices'
+2005/04/22 17:03:36 INF CDMW_PFMDMN vador :Agent for application 'CdmwServices' created
+2005/04/22 17:03:36 INF CDMW_PFMDMN vador :Creating agent for application 'FTApplication'
+2005/04/22 17:03:37 INF CDMW_PFMDMN vador :Agent for application 'FTApplication' created
