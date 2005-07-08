@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<taskdef name="xsdvalidate" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.XSDValidateTask"/>
+
+<taskdef name="xdelete" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.Delete"/>
+
+<taskdef name="dependencytopath" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.DependencyToPath"/>
+
+<taskdef name="xexec" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.ExecTask"/>
+
+<taskdef name="findcscs" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.FindCscs"/>
+
+<taskdef name="findfile" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.FindFile"/>
+
+<taskdef name="xinput" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.Input"/>
+
+<taskdef name="listtofileset" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.ListToFileSet"/>
+
+<taskdef name="listtopath" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.ListToPath"/>
+
+<taskdef name="mkidlinclude" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.MakeIdlInclude"/>
+
+<taskdef name="pathtolist" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.PathToList"/>
+
+<taskdef name="stringmanip" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.StringManipulation"/>
+
+<taskdef name="toollist" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.ToolList"/>
+
+<taskdef name="selectcscis" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.SelectCscis"/>
+
+<taskdef name="selectpackages" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.SelectPackages"/>
+
+<taskdef name="loadcompilerproperties" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.LoadCompilerProperties"/>
+
+<taskdef name="loadorbproperties" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.LoadOrbProperties"/>
+
+<taskdef name="loadreleaseproperties" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.LoadReleaseProperties"/>
+
+<taskdef name="loadcscproperties" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.LoadCscProperties"/>
+
+<taskdef name="selecttoken" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.SelectToken"/>
+
+<taskdef name="stripfileext" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.StripFileExt"/>
+
+<taskdef name="printtoolsinfo" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.PrintToolsInfo"/>
+
+<taskdef name="loadcodegenconf" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.LoadCodeGenConf"/>
+
+<taskdef name="updatedependencies" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.UpdateDependencies"/>
+
+<taskdef name="xloadproperties" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.LoadProperties"/>
+
+<taskdef name="isbinary" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.IsBinary"/>
+
+<taskdef name="xbasename" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.Basename"/>
+
+<taskdef name="xdirname" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.Dirname"/>
+
+<taskdef name="xvar" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.Variable"/>
+
+<taskdef name="findconfigfile" classpath="${cdmwtasks.jar.location}"
+         classname="${my.taskdefs.classpath}.FindConfigFile"/>

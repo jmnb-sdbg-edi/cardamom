@@ -1,0 +1,1 @@
+Foo file for test of FileReference.java

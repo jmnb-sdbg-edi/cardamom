@@ -1,0 +1,10 @@
+verbose
+install_assembly @config.install.dir@/share/SimpleCcmServer.aar
+create_assembly SimpleCcmAssembly myAssembly
+build_assembly myAssembly
+sleep 20000
+tear_assembly_down myAssembly
+destroy_assembly myAssembly
+remove_assembly SimpleCcmAssembly
+remove_component Server 1,0,0,0
+exit

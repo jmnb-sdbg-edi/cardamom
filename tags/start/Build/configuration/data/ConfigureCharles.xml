@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureCharles" default="-check-Charles" basedir=".">
+
+
+    <description>
+        This build file locates and checks the Charles ADA library.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-Charles" target checks if the Charles ADA library is
+        suitable for the build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-check-Charles-linux"
+            + "-check-Charles-sunos"
+            + "-check-Charles-windows"
+            + "-check-Charles-aix"
+    -->
+    <target name="-check-Charles"
+            depends="-initialize, -check-Charles-linux, -check-Charles-sunos,
+                     -check-Charles-windows, -check-Charles-aix">
+
+        <!-- save Charles properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Charles-linux" target checks if the Charles ADA library is
+        suitable for the build on a Linux platform.
+    -->
+    <target name="-check-Charles-linux" if="is.linux">
+        <antcallback target="-test1-linux"/>
+        <antcallback target="-test2-linux"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Charles-sunos" target checks if the Charles ADA library is
+        suitable for the build on a SUN Solaris platform.
+
+        It depends on the following targets:
+            + "-test1-sunos"
+    -->
+    <target name="-check-Charles-sunos" if="is.sunos">
+        <antcallback target="-test1-sunos"/>
+        <antcallback target="-test2-sunos"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Charles-aix" target checks if the Charles ADA library is
+        suitable for the build on an IBM AIX platform.
+    -->
+    <target name="-check-Charles-aix" if="is.aix">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Charles-windows" target checks if the Charles ADA library is
+        suitable for the build on a Windows platform.
+    -->
+    <target name="-check-Charles-windows" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-Charles" target determines the installation directory of
+        the Charles ADA library
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-Charles" depends="-initialize">
+        <!-- determine the Charles ADA installation directory -->
+        <var name="my.var"
+             value="Enter the ${tool.fullname} installation directory"/>
+
+        <propertycopy name="charles.default.install.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.install.dir"/>
+
+        <if>
+            <isset property="charles.default.install.dir"/>
+            <then>
+                <if>
+                    <isfalse value="passive.mode"/>
+                    <then>
+                        <xinput message="${my.var}" dirpathonly="true"
+                                addproperty="config.${tool.name}.install.dir"
+                                default="${charles.default.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.install.dir"
+                                      from="charles.default.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirpathonly="true"
+                        addproperty="config.${tool.name}.install.dir"/>
+            </else>
+        </if>
+
+        <propertycopy name="charles.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.install.dir"
+                   value="${charles.install.dir}"/>
+        </propertyfile>
+
+        <!-- determine the Charles include directory -->
+        <propertycopy name="charles.default.include.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.include.dir"/>
+
+        <if>
+            <not>
+                <isset property="charles.default.include.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the include directory -->
+                <findfile file="charles.ads" dir="${charles.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="charles.include.file"/>
+
+                <dirname property="charles.default.include.dir"
+                         file="${charles.include.file}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} include directory"
+                        addproperty="config.${tool.name}.include.dir"
+                        default="${charles.default.include.dir}"
+                        dirpathonly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.include.dir"
+                              from="charles.default.include.dir"/>
+            </else>
+        </if>
+
+        <propertycopy name="charles.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.include.dir"
+                   value="${charles.include.dir}"/>
+        </propertyfile>
+
+        <!-- determine the Charles lib directory -->
+        <propertycopy name="charles.default.lib.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.dir"/>
+
+        <if>
+            <not>
+                <isset property="charles.default.lib.dir"/>
+            </not>
+            <then>
+                <findfile file="lib*.a" dir="${charles.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="charles.lib.file.1"/>
+
+                <dirname property="charles.default.lib.dir"
+                         file="${charles.lib.file.1}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} lib directory"
+                        addproperty="config.${tool.name}.lib.dir"
+                        default="${charles.default.lib.dir}"
+                        dirpathonly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.lib.dir"
+                              from="charles.default.lib.dir"/>
+            </else>
+        </if>
+
+        <propertycopy name="charles.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.lib.dir"
+                   value="${charles.lib.dir}"/>
+        </propertyfile>
+
+        <!-- determine the Charles lib name -->
+        <!-- TODO: try to find out why do we need to know about the lib name.
+        <propertycopy name="charles.default.lib.name" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.name"/>
+
+        <if>
+            <isset property="charles.default.lib.name"/>
+            <then>
+                <xinput message="Enter the name to the Charles lib files"
+                addproperty="config.${tool.name}.lib.name"
+                default="${charles.default.lib.name}"
+                dirpathonly="false"/>
+            </then>
+            <else>
+                <xinput message="Enter the name to the Charles lib files"
+                addproperty="config.${tool.name}.lib.name"
+                dirpathonly="false"/>
+            </else>
+        </if>
+        -->
+
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+    -->
+    <target name="-initialize">
+        <!-- the required version for charles -->
+        <propertycopy name="charles.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="Charles"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-linux" target checks whether the charles include files can
+        be found.
+    -->
+    <target name="-test1-linux">
+        <echo message="Checking ${tool.fullname} include directory"/>
+
+        <!--
+            the test is successful if charles.ads is found in that directory.
+        -->
+        <propertycopy name="charles.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <available file="${charles.include.dir}${FS}charles.ads" type="file"
+                   property="charles.include.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find Charles include files"/>
+        <var name="my.var" value="${my.var} in${charles.include.dir}."/>
+        <fail unless="charles.include.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-sunos" target checks whether the Charles include files can
+        be found.
+    -->
+    <target name="-test1-sunos" depends="-test1-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test2-linux" target checks if the Charles libraries can be found.
+    -->
+    <target name="-test2-linux">
+        <echo message="Checking ${tool.fullname} lib directory"/>
+
+        <!-- TODO: this is connected to the previous TODO in -locate-Charles -->
+        <!--
+        <propertycopy name="lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+        <propertycopy name="lib.name"
+                      from="config.${tool.name}.lib.name"/>
+
+        <available file="${lib.dir}${FS}${lib.name}" type="file"
+                   property="charles.lib.dir.is.ok"/>
+
+        <property name="charles.failmsg1-2"
+                  value="Could not find Charles lib files"/>
+        <property name="charles.failmsg2-2"
+                  value="in the directory ${lib.dir}."/>
+        <fail unless="charles.lib.dir.is.ok"
+              message="${charles.failmsg1-2} ${charles.failmsg2-2}"/>
+        -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test2-sunos" target checks if the Charles libraries can be found.
+    -->
+    <target name="-test2-sunos" depends="-test2-linux"/>
+
+
+</project>
+

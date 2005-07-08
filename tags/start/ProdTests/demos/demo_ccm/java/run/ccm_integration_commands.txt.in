@@ -1,0 +1,11 @@
+verbose
+install_assembly @cdmw_home@/demos/demo_ccm/java/@cdmw_platform@/BasicDemo.aar
+create_assembly BasicAssembly myAssembly
+build_assembly myAssembly
+sleep 5000
+tear_assembly_down myAssembly
+destroy_assembly myAssembly
+remove_assembly BasicAssembly
+remove_component Client 1,0,1,0
+remove_component Server 1,0,1,0
+exit

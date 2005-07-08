@@ -1,0 +1,13 @@
+verbose
+install_assembly @config.install.dir@/share/Dinner.aar
+create_assembly DinnerAssembly myAssembly
+build_assembly myAssembly
+sleep 20000
+tear_assembly_down myAssembly
+destroy_assembly myAssembly
+remove_assembly DinnerAssembly
+remove_component Philosopher 1,0,0,0
+remove_component ForkManager 1,0,0,0
+remove_component Registrator 1,0,0,0
+remove_component Observer 1,0,0,0
+exit

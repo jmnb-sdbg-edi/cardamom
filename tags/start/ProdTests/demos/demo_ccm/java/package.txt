@@ -1,0 +1,5 @@
+BasicDemo:com.acme.BasicDemo
+UserBasicDemo:com.thalesgroup.UserBasicDemo
+Cdmw_BasicDemo:com.thalesgroup.Cdmw_BasicDemo
+CdmwCcmCif:com.thalesgroup.CdmwCcmCif
+CdmwLifeCycle:com.thalesgroup.CdmwLifeCycle

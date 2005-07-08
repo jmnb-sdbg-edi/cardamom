@@ -1,0 +1,4 @@
+install_assembly @prefix@/@cdmw_platform@/CcmPerf_2hosts.aar
+create_assembly CcmPerfAssembly myAssembly
+build_assembly myAssembly
+exit
