@@ -1,0 +1,169 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_LIFE_CYCLE_IDL_
+#define CDMW_LIFE_CYCLE_IDL_
+
+
+#ifdef __OpenCCM__
+
+#ifndef __CORBA_Imported__
+#define __CORBA_Imported__
+import CORBA;
+#endif
+
+#elif defined(ORBACUS)
+#include <OB/orb.idl>
+#else
+#include <orb.idl>
+#endif
+
+#include <CosLifeCycle.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW
+* Life Cycle service.
+*/
+module CdmwLifeCycle {    
+    /**
+    * Key type is a name conforming to the Interoperable Naming Specification
+    * for stringified names.
+    */
+    typedef CosNaming::NamingContextExt::StringName Key;
+
+    /**
+    * Sequence CORBA Repository IDs to be used by the FactoryBase interface.
+    */
+    typedef sequence<CORBA::RepositoryId> RepositoryIdSeq;
+
+    /**
+    * Exception to be raised whenever a name is not valid (is not
+    * what expected).
+    */
+    exception InvalidName {
+        /**
+        * The reason of the exception (may give more information).
+        */
+        string reason;
+    };
+
+    /**
+    * Exception to be raised whenever there is a query to create an object
+    * using a name that is already used for another object.
+    */
+    exception AlreadyExistant{
+        /**
+        * The reason of the exception (may give more information).
+        */
+        Key name;
+    };
+
+    local interface ObjectRegistration
+    {
+        /**
+        * This operation registers a LifeCycle object with the specified name.
+        *
+        * @param object_ref The reference of the LifeCycle object
+        * @param object_name The name of the LifeCycle object
+        *
+        * @exception InvalidName if the name has an illegal form
+        * @exception AlreadyBound If the name has already been registered
+        * @exception CORBA::BAD_PARAM If there is an attempt to register
+        * a nil object.
+        */
+        void register_object (in Object object_ref,
+                              in string object_name)
+             raises (CosNaming::NamingContext::InvalidName,
+		     CosNaming::NamingContext::AlreadyBound);
+
+        /**
+        * This operation unregister a LifeCycle object with the specified name.
+        *
+        * @param object_name The name of the LifeCycle object
+        *
+        * @exception NotFound if the name is not registered within the
+        * name domain.
+        * @exception InvalidName if the name has an illegal form
+        * @exception CORBA::NO_PERMISSION If there is an attempt to unregister
+        * a name domain managed by the Cdmw NamingAndRepository.
+        */
+        void unregister_object (in string object_name)
+             raises (CosNaming::NamingContext::NotFound,
+                     CosNaming::NamingContext::InvalidName);
+    };
+
+    /** 
+    * Base interface for all CDMW factories
+    */
+    interface FactoryBase {
+        /**
+        * This operation returns whether the CDMW factory supports the 
+        * creation of objects supporting the specified repository Id.
+        *
+        * @param repository_id The Repository Id of the desired interface.
+        *
+        * @return <B>true</B> if the factory supports/creates objects of 
+        * <I>repository_id</I> type or of derived types. Otherwise it returns
+        * <B>false</B>.
+        */ 
+        boolean _supports (in CORBA::RepositoryId repository_id);
+
+        /**
+        * This operation returns a sequence of CORBA Repository IDs of CDMW 
+        * objects that can be created by the factory.
+        *
+        * @param repository_id The Repository Id of the desired interface.
+        *
+        * @return A sequence of CORBA Repository IDs of CDMW objects that 
+        * can be created by the factory.
+        */ 
+        RepositoryIdSeq get_supported_objects();
+    };
+    /** 
+    * The FactoryFinder interface supports operations to find one or more 
+    * CDMW factories according to selection criteria (name, creating a certain
+    * type of CORBA object ... etc.) 
+    */
+    interface FactoryFinder : CosLifeCycle::FactoryFinder {
+        /**
+        * This operation selects a factory given its name as <I>factory_key</I>.
+        *
+        * @param factory_key The name of the CDMW factory (absolute name
+        * containing the name domain).
+        *
+        * @return A reference to a CDMW factory.
+        *
+        * @exception CosLifeCycle::NoFactory If there is no CDMW factory
+        * with the given name. 
+        */
+        FactoryBase find_factory (in Key factory_key)
+            raises (CosLifeCycle::NoFactory);
+    };
+}; 
+
+#endif // CDMW_LIFE_CYCLE_IDL_
+

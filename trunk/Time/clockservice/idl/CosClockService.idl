@@ -1,0 +1,335 @@
+/* ========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * ========================================================================= */
+
+//Enhanced View of Time, v1.0 - OMG IDL Summary File
+//Object Management Group, Inc.
+//
+//Copyright 1999, Objective Interface Systems, Inc.
+//Copyright 2001, Object Management Group, Inc.
+
+//The companies listed above have granted to the Object Management Group, Inc.
+//(OMG) a nonexclusive, royalty-free, paid up, worldwide license to copy and
+//distribute this document and to modify this document and distribute copies of
+//the modified version. Each of the copyright holders listed above has agreed
+//that no person shall be deemed to have infringed the copyright in the included
+//material of any such copyright holder by reason of having used the
+//specification set forth herein or having conformed any computer software to
+//the specification.
+//
+//This file contains OMG IDL from the Enhanced View of Time, v1.0 specification.
+//OMG regularly publishes a summary file that contains all the "code" parts of
+//an OMG formal document. Every formal document line that is IDL, PIDL, or
+//language code is included in the summary file. The reason for such a listing
+//is to give readers an electronic version of the "code" so that they can
+//extract pieces of it. Readers might want to test an example, include it in
+//their own code, or use it for documentation purposes. Having the code lines
+//available electronically means there is less likelihood of a transcription
+//error.
+
+
+//File: CosClockService.idl
+#ifndef _CosClockService_IDL_
+#define _CosClockService_IDL_
+
+// This module comprises the COS Clock service
+
+#include <TimeBase.idl>
+#include <CosPropertyService.idl>
+
+#pragma prefix "omg.org"
+module CosClockService
+{
+
+
+    interface Clock;
+
+    module ClockProperty {// the minimum set of properties to be supported for a clock
+        typedef unsigned long Resolution; // units = nanoseconds
+        typedef short Precision; // ceiling of log_2(seconds signified by least
+        // significant bit of time readout)
+        typedef unsigned short Width; // no. of bits in readout - usually <= 64
+        typedef string Stability_Description;
+
+        typedef short Coordination;
+        const Coordination Uncoordinated = 0; // only static characterization
+        // is available
+        const Coordination Coordinated   = 1; // measured against another
+        // source
+        const Coordination Faulty        = 2; // e.g., there is a bit stuck
+
+        // the following are only applicable for coordinated clocks
+        struct Offset
+        {
+            long long measured;   // units = 100 nanoseconds
+            long long deliberate; // units = 100 nanoseconds
+        };
+
+        typedef short Measurement;
+        const Measurement Not_Determined = 0; // has not been measured
+        const Measurement Discontinuous  = 1; // e.g., one clock is paused
+        const Measurement Available      = 2; // has been measured
+
+        typedef float Hz;
+        struct Skew
+        {
+            Measurement available;
+            Hz measured;   // only meaningful if available = Available - in Hz
+            Hz deliberate; // in Hz
+        };
+        typedef float HzPerSec;
+        struct Drift
+        {
+            Measurement available;
+            HzPerSec measured;  // meaningful if available = Available
+            // in Hz/sec
+            HzPerSec deliberate; // in Hz/sec
+        };
+
+        typedef short TimeScale;
+        const TimeScale Unknown  = -1;
+        const TimeScale TAI      = 0;  // International Atomic Time
+        const TimeScale UT0      = 1;  // diurnal day
+        const TimeScale UT1      = 2;  // + polar wander
+        const TimeScale UTC      = 3;  // TAI + leap seconds
+        const TimeScale TT       = 4;  // terrestrial time
+        const TimeScale TDB      = 5;  // Barycentric Dynamical Time
+        const TimeScale TCG      = 6;  // Geocentric Coordinate Time
+        const TimeScale TCB      = 7;  // Barycentric Coordinate Time
+        const TimeScale Sidereal = 8;  // hour angle of vernal equinox
+        const TimeScale Local_   = 9;  // UTC + time zone
+        const TimeScale GPS      = 10; // Global Positioning System
+        const TimeScale Other    = 0x7fff; // e.g. mission
+
+        typedef short Stratum;
+        const Stratum unspecified = 0;
+        const Stratum primary_reference = 1;
+        const Stratum secondary_reference_base = 2;
+
+        typedef Clock CoordinationSource; // what clock is coordinating with
+        typedef string Comments;
+    };
+
+    exception TimeUnavailable {};
+
+    // the basic clock interface
+    interface Clock // a source of time readings
+        {
+            readonly attribute CosPropertyService::PropertySet properties;
+            readonly attribute TimeBase::TimeT current_time
+                raises(TimeUnavailable);
+        };
+
+    enum TimeComparison
+        {
+            TCEqualTo,
+            TCLessThan,
+            TCGreaterThan,
+            TCIndeterminate
+        };
+
+    enum ComparisonType
+        {
+            IntervalC,
+            MidC
+        };
+
+    enum OverlapType
+        {
+            OTContainer,
+            OTContained,
+            OTOverlap,
+            OTNoOverlap
+        };
+
+    valuetype TimeSpan;
+
+    // replaces UTO from CosTime
+    valuetype UTC
+        {
+            factory init(in TimeBase::UtcT from);
+            factory compose(in TimeBase::TimeT time,
+                            in unsigned long   inacclo,
+                            in unsigned short  inacchi,
+                            in TimeBase::TdfT  tdf);
+
+  public TimeBase::TimeT time;
+public unsigned long   inacclo;
+public unsigned short  inacchi;
+  public TimeBase::TdfT  tdf;
+
+  TimeBase::InaccuracyT  inaccuracy();
+  TimeBase::UtcT         utc_time();
+
+  TimeComparison compare_time(in ComparisonType comparison_type,
+                              in UTC with_utc);
+  TimeSpan interval();
+        };
+
+    // replaces TIO from CosTime
+    valuetype TimeSpan
+        {
+            factory init   (in TimeBase::IntervalT from);
+            factory compose(in TimeBase::TimeT lower_bound,
+                            in TimeBase::TimeT upper_bound);
+
+  public TimeBase::TimeT lower_bound;
+  public TimeBase::TimeT upper_bound;
+  TimeBase::IntervalT time_interval();
+  OverlapType spans (
+      in  UTC      time,
+      out TimeSpan overlap
+      );
+  OverlapType overlaps (
+      in TimeSpan  other,
+      out TimeSpan overlap
+      );
+  UTC time ();
+        };
+
+    // replaces \ from CosTime
+    interface UtcTimeService : Clock
+        {
+            UTC universal_time() raises(TimeUnavailable);
+            UTC secure_universal_time() raises(TimeUnavailable);
+            UTC absolute_time(in UTC with_offset) raises(TimeUnavailable);
+        };
+
+    // alternative to Trader service (e.g., for embedded systems)
+    interface ClockCatalog
+        {
+            struct ClockEntry
+            {
+                Clock         subject;
+                string        name;
+            };
+            typedef sequence<ClockEntry> ClockEntries;
+            exception UnknownEntry {};
+
+            ClockEntry get_entry(in string with_name) raises (UnknownEntry);
+            ClockEntries available_entries();
+            void register(in ClockEntry entry);
+            void delete_entry(in string with_name) raises (UnknownEntry);
+        };
+
+    // a controllable clock
+    interface ControlledClock: Clock
+        {
+            exception NotSupported {};
+            void set(in TimeBase::TimeT to)  raises (NotSupported);
+            void set_rate(in float ratio)    raises (NotSupported);
+            void pause()                       raises (NotSupported);
+            void resume()                    raises (NotSupported);
+            void terminate()                 raises (NotSupported);
+        };
+
+    // useful for building user synchronized clocks
+    interface SynchronizeBase : Clock
+        {
+            struct SyncReading
+            {
+                TimeBase::TimeT local_send;
+                TimeBase::TimeT local_receive;
+                TimeBase::TimeT remote_reading;
+            };
+
+            SyncReading synchronize_poll(in Clock with_master);
+        };
+#ifndef __OpenCCM__
+           
+          //  limitation in the using of SynchronizedClock for CCM components.
+
+    interface SynchronizedClock;
+
+    exception UnableToSynchronize
+        {
+            TimeBase::InaccuracyT minimum_error;
+        };
+
+
+
+    // allows definition of a new clock that uses the underlying hardware source
+    // of the existing clock but adjusts to synchronize with a master clock
+    interface Synchronizable : SynchronizeBase
+        {
+
+            const TimeBase::TimeT Forever = 0xFFFFFFFFFFFFFFFF;
+
+            SynchronizedClock new_slave
+                (in Clock                  to_master,
+                 in TimeBase::InaccuracyT   to_within,
+                 // synchronization envelope
+                 in short                   retry_limit,
+                 // if unable to attain accuracy
+                 in TimeBase::TimeT         minimum_delay_between_syncs,
+                 // limits network traffic,
+                 // Forever precludes auto resync
+                 in CosPropertyService::Properties properties
+                 // if null list, then inherit
+                 // properties of self
+                    ) raises (UnableToSynchronize);
+        };
+
+    // able to explicitly control synchronization
+    interface SynchronizedClock : Clock
+        {
+            void resynch_now() raises (UnableToSynchronize);
+        };
+#endif
+    module PeriodicExecution
+        {
+
+            // (conceptually abstract) base for objects that can be invoked periodically
+            interface Periodic
+                {
+                    boolean do_work(in any params);
+                    // return FALSE terminates periodic execution
+                };
+
+           // control object for periodic execution
+            interface Controller
+                {
+                    exception TimePast {};
+                    void start
+                        (in TimeBase::TimeT period,
+                         in TimeBase::TimeT with_offset,
+                         in unsigned long   execution_limit, // 0 = no limit
+                         in any             params);
+                    void start_at
+                        (in TimeBase::TimeT period,
+                         in TimeBase::TimeT at_time,
+                         in unsigned long   execution_limit, // 0 = no limit
+                         in any             params)
+                        raises (TimePast);
+                    void pause();
+                    void resume();
+                    void resume_at(in TimeBase::TimeT at_time) raises(TimePast);
+                    void terminate();
+                    unsigned long executions();
+                };
+
+            // factory clock for periodic execution
+            interface Executor : Clock {
+                Controller enable_periodic_execution(in Periodic on);
+            };
+        };
+
+};
+#endif // _CosClockService_IDL_
+
+

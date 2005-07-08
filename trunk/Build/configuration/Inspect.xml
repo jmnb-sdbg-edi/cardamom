@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_config_targets
+             SYSTEM "file:../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="Inspect" default="-inspect-valid" basedir=".">
+
+
+    <description>
+        This build file installs the files to inspect into the installation
+        directory.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_config_targets;
+
+
+    <!-- =======================================================================
+        The "-inspect-valid" target installs the files to inspect for the
+        validation process.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-inspect-valid" depends="-initialize-valid, -initialize">
+        <runtarget target="-install-files-to-inspect"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize-valid" target sets the "is.inspect.valid" property.
+    -->
+    <target name="-initialize-valid">
+        <property name="is.inspect.valid" value="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-Q009-data" target creates files to be inspected during
+        Q009.
+    -->
+    <target name="-create-Q009-data">
+        <property name="Q009scriptdir" location="${config.ProdTests.location}${FS}qualif${FS}common${FS}data${FS}Q-009-data"/>
+        <pathconvert pathSep="," property="scriptfiles">
+            <path>
+                <fileset dir="${Q009scriptdir}">
+                    <include name="*.sh"/>
+                </fileset>
+            </path>
+        </pathconvert>
+        <for list="${scriptfiles}" param="script">
+            <sequential>
+                <exec executable="@{script}" dir="${Q009scriptdir}"/>
+            </sequential>
+        </for>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-install-Q009-data" copy the created files into the inspection
+        directory.
+    -->
+    <target name="-install-Q009-data">
+        <copy todir="${inspect.rootdir}${FS}Q-009-inspected-data">
+            <fileset dir="${Q009scriptdir}">
+                <include name="*.txt"/>
+            </fileset>
+        </copy>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-inspect-qualif" target installs the files to inspect for the
+        qualification process.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-inspect-qualif"
+            depends="-initialize-qualif,
+                     -initialize,
+                     -create-Q009-data">
+        <runtarget target="-install-files-to-inspect"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize-qualif" target set the "is.inspect.qualif" property.
+    -->
+    <target name="-initialize-qualif">
+        <property name="is.inspect.qualif" value="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target makes the root directory.
+
+        It depends on the following targets:
+            + "-define-inspect-macros"
+    -->
+    <target name="-initialize" depends="-define-inspect-macros">
+        <!-- create the inspect root directory -->
+        <if>
+            <isset property="is.inspect.qualif"/>
+            <then>
+                <property name="install.dir"
+                          value="${config.install.dir}-qualif"/>
+            </then>
+            <elseif>
+                <isset property="is.inspect.valid"/>
+                <then>
+                    <property name="install.dir"
+                              value="${config.install.dir}-valid"/>
+                </then>
+            </elseif>
+            <else>
+                <property name="install.dir" value="${config.install.dir}"/>
+            </else>
+        </if>
+        <property name="inspect.rootdir"
+                  location="${install.dir}${FS}inspection"/>
+        <mkdir dir="${inspect.rootdir}"/>
+
+        <property name="sloppy.check" value="false"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-define-inspect-macros" target defines macros for this build.
+    -->
+    <target name="-define-inspect-macros" unless="inspect.macros.defined">
+        <!--
+            The "copyfilesforinspect" macro copies the files to inspect.
+        -->
+        <macrodef name="copyfilestoinspect">
+            <attribute name="ids"/>
+            <attribute name="todir"/>
+
+            <sequential>
+                <property name="dir" value="@{todir}"/>
+
+                <for list="@{ids}" delimiter=" " param="i">
+                    <sequential>
+                        <property name="iid" value="@{i}"/>
+
+                        <propertycopy property="list"
+                                      from="ins.csc.${iid}.files"/>
+
+                        <property name="fulldestdir"
+                                  location="${dir}${FS}${iid}-inspected-data"/>
+                        <mkdir dir="${fulldestdir}"/>
+
+                        <for list="${list}" delimiter=" " param="f">
+                            <sequential>
+                                <copy file="@{f}" todir="${fulldestdir}"/>
+                            </sequential>
+                        </for>
+
+                        <xvar name="iid"  unset="true"/>
+                        <xvar name="list" unset="true"/>
+                        <xvar name="fulldestdir" unset="true"/>
+                    </sequential>
+                </for>
+
+                <!-- clean up -->
+                <xvar name="dir" unset="true"/>
+            </sequential>
+        </macrodef>
+
+        <property name="inspect.macros.defined" value="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-install-files-to-inspect" installs the files to inspect.
+
+        It depends on the following targets:
+            + "-find-cscs"
+    -->
+    <target name="-install-files-to-inspect" depends="-find-cscs"
+            if="inspect.target.cscs">
+
+        <for list="${inspect.target.cscs}" delimiter=" " param="csc">
+            <sequential>
+
+                <var name="p" value="@{csc}${FS}${config.csc.data.dir}${FS}"/>
+                <var name="p" value="${p}${config.csc.properties.file}"/>
+
+                <if>
+                    <available file="${p}" type="file"/>
+                    <then>
+                        <loadcscproperties
+                            file="${p}"
+                            prefix="ins"
+                            includeDeliveries="false"
+                            includeInspection="true">
+
+                            <filterset>
+                                <filtersfile file="${site.properties}"/>
+                            </filterset>
+                        </loadcscproperties>
+
+                        <if>
+                            <and>
+                                <isset property="is.inspect.valid"/>
+                                <not>
+                                    <equals
+                                        arg1="${ins.csc.inspect.validation.ids}"
+                                        arg2=""
+                                        trim="true"
+                                    />
+                                </not>
+                            </and>
+                            <then>
+                                <copyfilestoinspect
+                                    ids="${ins.csc.inspect.validation.ids}"
+                                    todir="${inspect.rootdir}"
+                                />
+                            </then>
+                        </if>
+
+                        <if>
+                            <and>
+                                <isset property="is.inspect.qualif"/>
+                                <not>
+                                    <equals
+                                        arg1="${ins.csc.inspect.qualification.ids}"
+                                        arg2=""
+                                        trim="true"
+                                    />
+                                </not>
+                            </and>
+                            <then>
+                                <copyfilestoinspect
+                                    ids="${ins.csc.inspect.qualification.ids}"
+                                    todir="${inspect.rootdir}"
+                                />
+                            </then>
+                        </if>
+                    </then>
+                </if>
+
+                <!-- clean up -->
+                <propertyselector property="ins.props"
+                                  delimiter=","
+                                  match="^ins\.(.*)"
+                                  select="\1"
+                                  casesensitive="true"
+                />
+
+                <for list="${ins.props}" param="ins.prop">
+                    <sequential>
+                        <xvar name="ins.@{ins.prop}" unset="true"/>
+                    </sequential>
+                </for>
+
+                <xvar name="ins.props" unset="true"/>
+            </sequential>
+        </for>
+        <if>
+            <isset property="is.inspect.qualif"/>
+            <then>
+                <runtarget target="-install-Q009-data"/>
+            </then>
+        </if>
+
+        <!-- parse Data4Inspection.xml and installs the required files -->
+
+        <!-- first, validate the file -->
+        <property
+            name="data4inspection.xml"
+            location="data${FS}Data4Inspection.xml"
+            />
+
+        <xsdvalidate
+            file="${data4inspection.xml}"
+            xsd="${config.Build.location}${FS}data${FS}Data4Inspection.xsd"
+            />
+
+        <if>
+            <isset property="is.inspect.valid" />
+            <then>
+                <var name="test.type" value="validation" />
+            </then>
+            <else>
+                <var name="test.type" value="qualification" />
+            </else>
+        </if>
+
+        <!-- parse it and get the properties created during the parsing -->
+        <data4inspection file="${data4inspection.xml}" type="${test.type}" />
+
+        <var name="pattern" value="^${test.type}\.(.*)\.files" />
+
+        <propertyselector
+            property="ins.test.ids"
+            delimiter=","
+            match="${pattern}"
+            select="\1"
+            casesensitive="true"
+            />
+
+        <!--
+            for each validation/qualification test, create a directory and
+            copy the required files for the inspection into it.
+        -->
+        <for list="${ins.test.ids}" param="test.id">
+            <sequential>
+                <propertycopy
+                    property="files"
+                    from="${test.type}.@{test.id}.files"
+                    />
+
+                <property
+                    name="target.dir"
+                    location="${inspect.rootdir}${FS}@{test.id}-inspected-data"
+                    />
+                <mkdir dir="${target.dir}" />
+
+                <for list="${files}" delimiter=" " param="f">
+                    <sequential>
+                        <copy file="@{f}" todir="${target.dir}" />
+                    </sequential>
+                </for>
+
+                <!-- clean up properties for the next iteration -->
+                <xvar name="files" unset="true" />
+                <xvar name="target.dir" unset="true" />
+            </sequential>
+        </for>
+
+        <!-- clean up -->
+        <xvar name="ins.test.ids" unset="true" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-find-cscs" target returns the list of all the CSCs to visit.
+    -->
+    <target name="-find-cscs">
+        <!-- location of the package description file -->
+        <property name="inspect.pkg.desc"
+                  location="${config.csc.data.dir}${FS}PkgDesc.xml"/>
+
+        <property file="${config.csc.data.dir}${FS}DepsInfo.properties"/>
+
+        <if>
+            <and>
+                <isset property="config.sel.min.cscis"/>
+                <isset property="config.sel.interfaces"/>
+                <isset property="config.sel.packages"/>
+            </and>
+            <then>
+                <findcscs
+                    pkgdesc="${inspect.pkg.desc}" 
+                    addProperty="inspect.target.cscs"
+                    cscis="${config.sel.min.cscis}"
+                    interfaces="${config.sel.interfaces}"
+                    packages="${config.sel.packages}"
+                    cscType="all"
+                />
+            </then>
+        </if>
+    </target>
+
+
+</project>

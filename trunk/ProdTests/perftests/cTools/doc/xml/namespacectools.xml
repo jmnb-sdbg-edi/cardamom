@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='iso-8859-1' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.3.5">
+  <compounddef id="namespacectools" kind="namespace">
+    <compoundname>ctools</compoundname>
+    <innernamespace refid="namespacectools_1_1time">ctools::time</innernamespace>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/home/akim/Devel/eFDP/cTools/src/ctools/time/HighResClock.h" line="28"/>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,5 @@
+verbose
+install_assembly @config.install.dir@/share/QualifCcmLb_1.aar
+create_assembly CcmLbAssembly1 myAssembly1
+build_assembly myAssembly1
+exit

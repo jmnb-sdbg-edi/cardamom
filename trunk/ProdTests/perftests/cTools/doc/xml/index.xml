@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='iso-8859-1' standalone='no'?>
+<doxygenindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="index.xsd" version="1.3.5">
+  <compound refid="classctools_1_1time_1_1HighResClock" kind="class"><name>ctools::time::HighResClock</name>
+    <member refid="classctools_1_1time_1_1HighResClock_1e0" kind="function"><name>getTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResClock_1e1" kind="function"><name>getTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResClock_1e2" kind="function"><name>getClockTickCount</name></member>
+    <member refid="classctools_1_1time_1_1HighResClock_1e3" kind="function"><name>getClockFrequency</name></member>
+    <member refid="classctools_1_1time_1_1HighResClock_1e4" kind="function"><name>getClockPeriod</name></member>
+    <member refid="classctools_1_1time_1_1HighResClock_1d0" kind="function"><name>HighResClock</name></member>
+    <member refid="classctools_1_1time_1_1HighResClock_1d1" kind="function"><name>HighResClock</name></member>
+    <member refid="classctools_1_1time_1_1HighResClock_1d2" kind="function"><name>operator=</name></member>
+  </compound>
+  <compound refid="classctools_1_1time_1_1HighResTime" kind="class"><name>ctools::time::HighResTime</name>
+    <member refid="classctools_1_1time_1_1HighResTime_1w0" kind="typedef"><name>time_t</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a0" kind="function"><name>HighResTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a1" kind="function"><name>HighResTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a2" kind="function"><name>HighResTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a3" kind="function"><name>~HighResTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a4" kind="function"><name>millisec</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a5" kind="function"><name>millisec</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a6" kind="function"><name>nanosec</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a7" kind="function"><name>nanosec</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a8" kind="function"><name>set</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a9" kind="function"><name>set</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a10" kind="function"><name>reset</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a11" kind="function"><name>toMillisec</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a12" kind="function"><name>toMicrosec</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a13" kind="function"><name>toNanosec</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a14" kind="function"><name>operator+</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a15" kind="function"><name>operator-</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1a16" kind="function"><name>operator=</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1r0" kind="variable"><name>msec_</name></member>
+    <member refid="classctools_1_1time_1_1HighResTime_1r1" kind="variable"><name>nsec_</name></member>
+  </compound>
+  <compound refid="classctools_1_1time_1_1HighResTimer" kind="class"><name>ctools::time::HighResTimer</name>
+    <member refid="classctools_1_1time_1_1HighResTimer_1a0" kind="function"><name>HighResTimer</name></member>
+    <member refid="classctools_1_1time_1_1HighResTimer_1a1" kind="function"><name>start</name></member>
+    <member refid="classctools_1_1time_1_1HighResTimer_1a2" kind="function"><name>stop</name></member>
+    <member refid="classctools_1_1time_1_1HighResTimer_1a3" kind="function"><name>reset</name></member>
+    <member refid="classctools_1_1time_1_1HighResTimer_1a4" kind="function"><name>getElapsedTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResTimer_1a5" kind="function"><name>getElapsedTime</name></member>
+    <member refid="classctools_1_1time_1_1HighResTimer_1r0" kind="variable"><name>startClockTick_</name></member>
+    <member refid="classctools_1_1time_1_1HighResTimer_1r1" kind="variable"><name>stopClockTick_</name></member>
+  </compound>
+  <compound refid="namespacectools" kind="namespace"><name>ctools</name>
+  </compound>
+  <compound refid="namespacectools_1_1time" kind="namespace"><name>ctools::time</name>
+  </compound>
+  <compound refid="HighResClock_8cc" kind="file"><name>HighResClock.cc</name>
+  </compound>
+  <compound refid="HighResClock_8h" kind="file"><name>HighResClock.h</name>
+  </compound>
+  <compound refid="HighResTime_8cc" kind="file"><name>HighResTime.cc</name>
+    <member refid="HighResTime_8cc_1a0" kind="function"><name>operator&lt;&lt;</name></member>
+  </compound>
+  <compound refid="HighResTime_8h" kind="file"><name>HighResTime.h</name>
+    <member refid="HighResTime_8h_1a0" kind="function"><name>operator&lt;&lt;</name></member>
+  </compound>
+  <compound refid="HighResTimer_8h" kind="file"><name>HighResTimer.h</name>
+  </compound>
+  <compound refid="SysInfo_8h" kind="file"><name>SysInfo.h</name>
+    <member refid="SysInfo_8h_1a0" kind="define"><name>CLOCK_FREQUENCY</name></member>
+    <member refid="SysInfo_8h_1a1" kind="define"><name>CLOCK_PERIOD_NS</name></member>
+    <member refid="SysInfo_8h_1a2" kind="define"><name>CLOCK_PERIOD_US</name></member>
+    <member refid="SysInfo_8h_1a3" kind="define"><name>PROC_NUM</name></member>
+    <member refid="SysInfo_8h_1a4" kind="define"><name>THREAD_MAX</name></member>
+    <member refid="SysInfo_8h_1a5" kind="define"><name>JRATE_PAGE_SIZE</name></member>
+    <member refid="SysInfo_8h_1a6" kind="define"><name>POW_3_TEN</name></member>
+    <member refid="SysInfo_8h_1a7" kind="define"><name>POW_6_TEN</name></member>
+    <member refid="SysInfo_8h_1a8" kind="define"><name>POW_9_TEN</name></member>
+    <member refid="SysInfo_8h_1a9" kind="define"><name>TIMER_SLACK_NS</name></member>
+  </compound>
+</doxygenindex>

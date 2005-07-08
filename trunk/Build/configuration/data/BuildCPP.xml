@@ -1,0 +1,1968 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_config_targets SYSTEM "file:@COMMON_CONFIG_TARGETS_XML@">
+    <!ENTITY common_build_targets SYSTEM "file:@COMMON_BUILD_TARGETS_XML@">
+]>
+
+
+<project name="BuildCPP" default="make-deliveries" basedir=".">
+
+
+    <description>
+        This build file compiles the C++ source files and make the deliveries.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_config_targets;
+    &common_build_targets;
+
+
+    <!-- =======================================================================
+        The "-set-local-aliases" target defines some global aliases unless they
+        are already set by the master build.
+
+        It depends on the following targets:
+            + "-set-aliases"
+    -->
+    <target name="-set-local-aliases" depends="-set-aliases">
+        <echo>=&gt;   [CSC] ${basedir}</echo>
+
+        <!--
+            the token XSD_DIR will be replaced with the appropriate path during
+            the configuration.
+        -->
+        <property name="xsd.dir" location="@XSD_DIR@"/>
+
+        <!--
+            the cdmwtasks jar file: the token CDMWTASKS_JAR will be replaced
+            with the appropriate path during the configuration.
+        -->
+        <property name="cdmwtasks.jar.location" location="@CDMWTASKS_JAR@"/>
+
+        <property name="start.compilation" value="true"/>
+
+        <!-- make the CDMW tasks available -->
+        <typedef resource="cdmwtasks.properties"
+                 classpath="${cdmwtasks.jar.location}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-site-properties" target checks if the site properties file
+        is present.
+    -->
+    <target name="-check-site-properties">
+        <!--
+            the site properties file: the token SITE_PROPERTIES_LOC will be
+            replaced with the appropriate path during the configuration.
+        -->
+        <property name="build.site.properties"
+                  location="@SITE_PROPERTIES_LOC@"/>
+
+        <property name="build.dev.tokens.properties"
+                  location="@DEV_TOKENS_PROPERTIES_LOC@"/>
+
+        <property name="build.install.tokens.properties"
+                  location="@INSTALL_TOKENS_PROPERTIES_LOC@"/>
+
+        <available file="${build.site.properties}"
+                   property="build.site.properties.present"/>
+
+        <fail unless="build.site.properties.present"
+              message="Could not find ${build.site.properties}."/>
+
+        <if>
+            <not><isset property="site.id"/></not>
+            <then>
+                <getcounter file="${build.site.properties}" property="site.id"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-load-csc-properties" target loads the CSC properties file and
+        ensures that it belongs to this CSC.
+
+        It depends on the following targets:
+            + "-check-csc-properties"
+    -->
+    <target name="-load-csc-properties" depends="-check-csc-properties">
+        <!-- load the CSCI global dependencies -->
+        <property file="${csci.global.dependencies}" prefix="deps"/>
+
+        <property name="cscproperties.cache"
+                  location="${basedir}${FS}.cache#${site.id}"/>
+
+        <if>
+            <and>
+                <available file="${cscproperties.cache}"/>
+                <uptodate targetfile="${cscproperties.cache}"
+                          srcfile="${my.csc.properties}"/>
+            </and>
+            <then>
+                <property file="${cscproperties.cache}"/>
+            </then>
+            <else>
+                <loadcscproperties file="${my.csc.properties}">
+                    <filterset>
+                        <filtersfile file="${build.site.properties}"/>
+                        <filter token="this.csc.data.dir"
+                            value="${basedir}${FS}${config.csc.data.dir}${FS}"/>
+                    </filterset>
+                </loadcscproperties>
+
+                <!-- cache the results -->
+                <propertyselector property="cscprops"
+                                  match="^csc\.(.*)" select="\1"/>
+
+                <for list="${cscprops}" param="p">
+                    <sequential>
+                        <propertycopy property="cb.prop" from="csc.@{p}"/>
+
+                        <propertyfile file="${cscproperties.cache}">
+                            <entry key="csc.@{p}" value="${cb.prop}"/>
+                        </propertyfile>
+
+                        <!-- clean up -->
+                        <xvar name="cb.prop" unset="true"/>
+                    </sequential>
+                </for>
+
+                <!-- clean up -->
+                <xvar name="cscprops" unset="true"/>
+            </else>
+        </if>
+
+        <!-- check the attributes -->
+        <checkcscattributes
+            my.csc.dir="${basedir}"
+            my.csc.name="${csc.name}"
+            my.csc.owner="${csc.owner}"
+            my.csc.lang="c++"
+            my.csc.properties="${my.csc.properties}"/>
+
+        <!-- unset properties -->
+        <propertyselector property="deps.props"
+                          match="^deps\.(.*)" select="\1"/>
+
+        <for list="${deps.props}" param="p">
+            <sequential>
+                <xvar name="deps.@{p}" unset="true"/>
+            </sequential>
+        </for>
+
+        <xvar name="deps.props" unset="true"/>
+        <callgc/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-build-key-string" target constructs a string that will be used
+        when creating directories to allow the same source tree to be compiled
+        on various OSes and with different tools configurations.
+
+        It depends on the following targets:
+            + "-build-compiler-key-string"
+            + "-build-orb-key-string"
+    -->
+    <target name="-build-key-string"
+            depends="-build-compiler-key-string, -build-orb-key-string">
+
+        <var name="s" value="${config.site.csn}"/>
+        <var name="s" value="${s}-${bcpp.compiler.key.string}"/>
+        
+        <if>
+            <isset property="bcpp.orb.key.string"/>
+            <then>
+                <var name="s" value="${s}-${bcpp.orb.key.string}"/>
+            </then>
+        </if>
+
+        <property name="my.key.string" value="${s}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-build-compiler-key-string" target constructs a compound string
+        with the compiler name and the compiler version.
+    -->
+    <target name="-build-compiler-key-string">
+        <!-- get the compiler name and version -->
+        <propertycopy property="bcpp.csci.compiler"
+                      from="config.${csc.owner}.cpp.compiler"/>
+
+        <propertycopy property="bcpp.csci.compiler.ver"
+                      from="config.${csc.owner}.cpp.compiler.ver"/>
+
+        <!-- construct the compound string -->
+        <property name="bcpp.compiler.key.string"
+                  value="${bcpp.csci.compiler}-${bcpp.csci.compiler.ver}"/>
+
+        <!-- unset properties -->
+        <xvar name="bcpp.csci.compiler.ver" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-build-orb-key-string" target constructs a compound string with the
+        orb name and the orb version.
+    -->
+    <target name="-build-orb-key-string">
+        <!-- get the orb name and version -->
+        <propertycopy property="my.csci.orb" silent="true"
+                      from="config.${csc.owner}.cpp.orb"/>
+
+        <if>
+            <isset property="my.csci.orb"/>
+            <then>
+                <propertycopy property="bcpp.csci.orb.ver"
+                              from="config.${csc.owner}.cpp.orb.ver"/>
+
+                <!-- construct the second part of the key -->
+                <property name="bcpp.orb.key.string"
+                          value="${my.csci.orb}-${bcpp.csci.orb.ver}"/>
+
+                <!-- unset properties -->
+                <xvar name="bcpp.csci.orb.ver" unset="true"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-get-orb-settings" target gets the ORB settings from the site
+        properties file.
+    -->
+    <target name="-get-orb-settings" if="my.csci.orb">
+        <!-- idl.compiler -->
+        <propertycopy property="bcpp.idl.compiler"
+                      from="config.${my.csci.orb}.idlcompiler"/>
+
+        <!-- idl.compiler.dir -->
+        <propertycopy property="bcpp.idl.compiler.dir"
+                      from="config.${my.csci.orb}.idlcompiler.dir"/>
+
+        <!-- idl.opt.output.dir -->
+        <propertycopy property="bcpp.idl.opt.output.dir"
+                      from="config.${my.csci.orb}.idlcompiler.opt.outputdir"/>
+
+        <!-- orb.cflags -->
+        <propertycopy property="bcpp.orb.cflags"
+                      from="config.${my.csci.orb}.cflags"/>
+
+        <if>
+            <isset property="config.${my.csci.orb}.cflags.incl.dirs"/>
+            <then>
+                <propertycopy property="bcpp.orb.cflags.incl.dirs"
+                              from="config.${my.csci.orb}.cflags.incl.dirs"/>
+                
+                <var name="bcpp.orb.cflags"
+                     value="${bcpp.orb.cflags} ${bcpp.orb.cflags.incl.dirs}"/>
+
+                <!-- unset properties -->
+                <xvar name="bcpp.orb.cflags.incl.dirs" unset="true"/>
+            </then>
+        </if>
+
+        <!-- orb.ldflags -->
+        <propertycopy property="bcpp.orb.ldflags"
+                      from="config.${my.csci.orb}.ldflags"/>
+
+        <if>
+            <isset property="config.${my.csci.orb}.ldflags.lib.dirs"/>
+            <then>
+                <propertycopy property="bcpp.orb.ldflags.lib.dirs"
+                              from="config.${my.csci.orb}.ldflags.lib.dirs"/>
+
+                <var name="bcpp.orb.ldflags"
+                     value="${bcpp.orb.ldflags} ${bcpp.orb.ldflags.lib.dirs}"/>
+
+                <!-- unset properties -->
+                <xvar name="bcpp.orb.ldflags.lib.dirs" unset="true"/>
+            </then>
+        </if>
+
+        <propertycopy property="bcpp.incl.dirs" silent="true"
+                      from="config.${my.csci.orb}.idlflags.incl.dirs"/>
+
+        <!-- orb.idlflags.svr -->
+        <var name="bcpp.orb.idlflags.svr" value=""/>
+        <if>
+            <isset property="config.${my.csci.orb}.idlflags.svr"/>
+            <then>
+                <propertycopy override="true" property="bcpp.orb.idlflags.svr"
+                              from="config.${my.csci.orb}.idlflags.svr"/>
+
+                <if>
+                    <isset property="bcpp.incl.dirs"/>
+                    <then>
+                        <var name="bcpp.orb.idlflags.svr"
+                        value="${bcpp.orb.idlflags.svr} ${bcpp.incl.dirs}"/>
+                    </then>
+                </if>
+            </then>
+        </if>
+
+        <!-- orb.idlflags.clt -->
+        <var name="bcpp.orb.idlflags.clt" value=""/>
+        <if>
+            <isset property="config.${my.csci.orb}.idlflags.clt"/>
+            <then>
+                <propertycopy override="true" property="bcpp.orb.idlflags.clt"
+                              from="config.${my.csci.orb}.idlflags.clt"/>
+
+                <if>
+                    <isset property="bcpp.incl.dirs"/>
+                    <then>
+                        <var name="bcpp.orb.idlflags.clt"
+                        value="${bcpp.orb.idlflags.clt} ${bcpp.incl.dirs}"/>
+                    </then>
+                </if>
+            </then>
+        </if>
+
+        <!-- orb.idlflags.tie -->
+        <var name="bcpp.orb.idlflags.tie" value=""/>
+        <if>
+            <isset property="config.${my.csci.orb}.idlflags.tie"/>
+            <then>
+                <propertycopy override="true" property="bcpp.orb.idlflags.tie"
+                              from="config.${my.csci.orb}.idlflags.tie"/>
+
+                <if>
+                    <isset property="bcpp.incl.dirs"/>
+                    <then>
+                        <var name="bcpp.orb.idlflags.tie"
+                        value="${bcpp.orb.idlflags.tie} ${bcpp.incl.dirs}"/>
+                    </then>
+                </if>
+            </then>
+        </if>
+
+        <!-- unset properties -->
+        <xvar name="bcpp.incl.dirs" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-get-compiler-settings" target gets the compiler settings from the
+        site properties file.
+    -->
+    <target name="-get-compiler-settings">
+        <!-- cpp.debug.flags -->
+        <var name="bcpp.cpp.debug.flags" value=""/>
+        <if>
+            <equals arg1="${config.cpp.debug}" arg2="y"/>
+            <then>
+                <propertycopy override="true" property="bcpp.cpp.debug.flags"
+                    from="config.${bcpp.csci.compiler}.cxx.debugflags"/>
+            </then>
+        </if>
+
+         <!-- cpp.optim.flags -->
+        <var name="bcpp.cpp.optim.flags" value=""/>
+        <if>
+            <equals arg1="${config.cpp.optim}" arg2="y"/>
+            <then>
+                <propertycopy override="true" property="bcpp.cpp.optim.flags"
+                    from="config.${bcpp.csci.compiler}.cxx.optimflags"/>
+            </then>
+        </if>
+       <!--
+            cpp.shared.flags
+            ar
+            ar.flags
+            ld
+            ld.flags
+        -->
+        <if>
+            <equals arg1="${config.cpp.shared}" arg2="y"/>
+            <then>
+                <!-- cpp.shared.flags -->
+                <propertycopy property="bcpp.cpp.shared.flags"
+                    from="config.${bcpp.csci.compiler}.cxx.sharedflags"/>
+
+                <!-- ar -->
+                <propertycopy property="bcpp.ar"
+                              from="config.${bcpp.csci.compiler}.ar.shared"/>
+
+                <!-- ar.flags -->
+                <var name="bcpp.ar.flags"
+                     value="${bcpp.cpp.debug.flags} ${bcpp.cpp.optim.flags} ${bcpp.cpp.shared.flags}"/>
+
+                <propertycopy property="bcpp.ar.shared.flags"
+                    from="config.${bcpp.csci.compiler}.ar.shared.flags"/>
+
+                <var name="bcpp.ar.flags"
+                     value="${bcpp.ar.flags} ${bcpp.ar.shared.flags}"/>
+
+                <!-- ld -->
+                <propertycopy property="bcpp.ld"
+                              from="config.${bcpp.csci.compiler}.ld.shared"/>
+
+                <!-- ld.flags -->
+                <propertycopy property="bcpp.ld.flags"
+                    from="config.${bcpp.csci.compiler}.ld.shared.flags"/>
+            </then>
+            <else> <!-- static -->
+                <!-- cpp.shared.flags -->
+                <property name="bcpp.cpp.shared.flags" value=""/>
+
+                <!-- ar -->
+                <propertycopy property="bcpp.ar"
+                              from="config.${bcpp.csci.compiler}.ar.static"/>
+
+                <!-- ar.flags -->
+                <propertycopy property="bcpp.ar.flags"
+                    from="config.${bcpp.csci.compiler}.ar.static.flags"/>
+
+                <!-- ld -->
+                <propertycopy property="bcpp.ld"
+                              from="config.${bcpp.csci.compiler}.ld.static"/>
+
+                <!-- ld.flags -->
+                <propertycopy property="bcpp.ld.flags"
+                    from="config.${bcpp.csci.compiler}.ld.static.flags"/>
+            </else>
+        </if>
+
+        <!-- cxx -->
+        <propertycopy property="bcpp.cxx"
+                      from="config.${bcpp.csci.compiler}.cxx"/>
+
+        <!-- cxx.compiler.flags -->
+        <propertycopy property="bcpp.cxx.compiler.flags"
+                      from="config.${bcpp.csci.compiler}.cxx.compilerflags"/>
+
+        <!-- cxx.compiler.dependency.flags -->
+        <propertycopy property="bcpp.cxx.dependency.flags"
+                      from="config.${bcpp.csci.compiler}.cxx.dependencyflags"/>
+
+        <!-- cxx.dependency.ext -->
+        <propertycopy property="bcpp.cxx.depfile.ext"
+                      from="config.${bcpp.csci.compiler}.cxx.depfileext"/>
+
+        <!-- cpp.flags -->
+        <var name="bcpp.cpp.flags"
+             value="${bcpp.cpp.debug.flags} ${bcpp.cpp.optim.flags} ${bcpp.cpp.shared.flags}"/>
+        <var name="bcpp.cpp.flags"
+             value="${bcpp.cpp.flags} ${bcpp.cxx.compiler.flags}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-get-tools-settings" target gets the cflags and ldflags from all
+        the tools that this CSCI needs.
+    -->
+    <target name="-get-tools-settings">
+        <propertycopy property="bcpp.csci.tools.list"
+                      from="config.${csc.owner}.tools"/>
+
+        <!--
+            construct the list of C++ tools this CSCI needs, the compiler and
+            ORB will be removed from the list as they are handled separately.
+        -->
+        <var name="bcpp.csci.tools.cflags" value=""/>
+        <var name="bcpp.csci.tools.ldflags" value=""/>
+
+        <for list="${bcpp.csci.tools.list}" delimiter=" " param="bcpp.tool">
+            <sequential>
+                <if>
+                    <!-- discard compilers and ORBs -->
+                    <not>
+                        <or>
+                            <equals arg1="${bcpp.csci.compiler}"
+                                    arg2="@{bcpp.tool}" trim="true"/>
+                            <equals arg1="${my.csci.orb}" arg2="@{bcpp.tool}"
+                                    trim="true"/>
+                        </or>
+                    </not>
+                    <then>
+                        <!-- check cflags and ldflags -->
+                        <propertycopy property="bcpp.tool.cflags" silent="true"
+                                      from="config.@{bcpp.tool}.cflags"/>
+
+                        <propertycopy property="bcpp.tool.ldflags" silent="true"
+                                      from="config.@{bcpp.tool}.ldflags"/>
+
+                        <if>
+                            <isset property="bcpp.tool.cflags"/>
+                            <then>
+                                <var name="s" value="${bcpp.tool.cflags}"/>
+                                <var name="bcpp.csci.tools.cflags"
+                                     value="${bcpp.csci.tools.cflags} ${s}"/>
+                            </then>
+                        </if>
+
+                        <if>
+                            <isset property="bcpp.tool.ldflags"/>
+                            <then>
+                                <var name="s" value="${bcpp.tool.ldflags}"/>
+                                <var name="bcpp.csci.tools.ldflags"
+                                     value="${bcpp.csci.tools.ldflags} ${s}"/>
+                            </then>
+                        </if>
+
+                        <!-- unset properties -->
+                        <xvar name="bcpp.tool.cflags"  unset="true"/>
+                        <xvar name="bcpp.tool.ldflags" unset="true"/>
+                    </then>
+                </if>
+            </sequential>
+        </for>
+
+        <!-- unset properties -->
+        <xvar name="bcpp.csci.tools.list" unset="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-linux-delivery-name" target constructs the delivery
+        file name on the Linux platform.
+    -->
+    <target name="-construct-linux-delivery-name" if="is.linux">
+        <switch value="${my.delivery.type}">
+            <case value="exe">
+                <!-- no need to do anything on the basename -->
+                <property name="my.delivery.name"
+                          value="${my.delivery.basename}"/>
+            </case>
+
+            <case value="lib">
+                <!-- determine the filename extension -->
+                <if>
+                    <equals arg1="${config.cpp.shared}" arg2="y"/>
+                    <then>
+                        <property name="bcpp.delivery.name.suffix" value=".so"/>
+                    </then>
+                    <else>
+                        <property name="bcpp.delivery.name.suffix" value=".a"/>
+                    </else>
+                </if>
+
+                <!-- construct the name -->
+                <var name="s" value="${my.delivery.basename}"/>
+                <var name="s" value="${s}${bcpp.delivery.name.suffix}"/>
+                <property name="my.delivery.name"
+                          value="lib${config.lowercase.product.name}${s}"/>
+            </case>
+
+            <case value="data">
+                <!-- no need to do anything on the basename -->
+                <property name="my.delivery.name"
+                          value="${my.delivery.basename}"/>
+            </case>
+
+            <default>
+                <!-- should never happen -->
+                <fail>unknown delivery type '${my.delivery.type}'.</fail>
+            </default>
+        </switch>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-sunos-delivery-name" target constructs the delivery
+        file name on the SUN Solaris platform.
+    -->
+    <target name="-construct-sunos-delivery-name" if="is.sunos">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-aix-delivery-name" target constructs the delivery file
+        name on the IBM AIX platform.
+    -->
+    <target name="-construct-aix-delivery-name" if="is.aix">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-windows-delivery-name" target constructs the delivery
+        file name on the Windows platform.
+    -->
+    <target name="-construct-windows-delivery-name" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-generated-files" target compiles the source files that
+        have been generated from the XSLT templates.
+
+        It depends on the following targets:
+            + "-run-code-generation"
+            + "-export-generated-files"
+            + "-export-header-files"
+    -->
+    <target name="-compile-generated-files"
+            depends="-run-code-generation, -export-generated-files,
+                     -export-header-files">
+
+        <runtarget target="-compile-idl-files"/>
+
+        <if>
+            <isset property="my.codegen.generated.dir"/>
+            <then>
+                <foreach param="my.source.file"
+                         target="-compile-source-file"
+                         inheritall="true">
+
+                    <path>
+                        <fileset dir="${my.codegen.generated.dir}">
+                            <include name="*.c"/>
+                            <include name="*.cpp"/>
+                        </fileset>
+                    </path>
+                </foreach>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-idl-files" target compiles the IDL files required by the
+        specified delivery.
+
+        It depends on the following targets:
+            + "-require-idl-compilation"
+            + "-generate-stubs-and-skels"
+            + "-export-idl-files"
+            + "-export-stubskel-header-files"
+            + "-compile-stubs-and-skels"
+    -->
+    <target name="-compile-idl-files"
+            depends="-require-idl-compilation, -generate-stubs-and-skels,
+                     -export-idl-files, -export-stubskel-header-files,
+                     -compile-stubs-and-skels">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-generate-stubs-and-skels" target runs the IDL compiler to generate
+        the stubs and skels.
+
+        It depends on the following targets:
+            + "-make-csc-stubskel-dir"
+    -->
+    <target name="-generate-stubs-and-skels" if="my.csc.stubskel.dir"
+            depends="-make-csc-stubskel-dir">
+
+        <!-- server -->
+        <if>
+            <isset property="my.idl.server"/>
+            <then>
+                <!-- fix invalid path for generated IDL files -->
+                <stringmanip property="my.idl.server.copy" action="replace"
+                             string="${my.idl.server}" substring="@GENERATED@"
+                             replaceWith="${my.codegen.generated.dir}"/>
+                <var name="my.idl.server" value="${my.idl.server.copy}"/>
+
+                <foreach list="${my.idl.server}" target="-compile-idl-file"
+                         param="my.idl.file" inheritall="true" delimiter=" ">
+
+                    <param name="bcpp.orb.idlflags"
+                           value="${bcpp.orb.idlflags.svr}"/>
+                    <param name="bcpp.idl.tstamp.suffix" value=".server"/>
+                </foreach>
+            </then>
+        </if>
+
+        <!-- client -->
+        <if>
+            <isset property="my.idl.client"/>
+            <then>
+                <!-- fix invalid path for generated IDL files -->
+                <stringmanip property="my.idl.client.copy" action="replace"
+                             string="${my.idl.client}" substring="@GENERATED@"
+                             replaceWith="${my.codegen.generated.dir}"/>
+                <var name="my.idl.client" value="${my.idl.client.copy}"/>
+
+                <foreach list="${my.idl.client}" target="-compile-idl-file"
+                         param="my.idl.file" inheritall="true" delimiter=" ">
+
+                    <param name="bcpp.orb.idlflags"
+                           value="${bcpp.orb.idlflags.clt}"/>
+                    <param name="bcpp.idl.tstamp.suffix" value=".client"/>
+                </foreach>
+            </then>
+        </if>
+
+        <!-- tie -->
+        <if>
+            <isset property="my.idl.tie"/>
+            <then>
+                <!-- fix invalid path for generated IDL files -->
+                <stringmanip property="my.idl.tie.copy" action="replace"
+                             string="${my.idl.tie}" substring="@GENERATED@"
+                             replaceWith="${my.codegen.generated.dir}"/>
+                <var name="my.idl.tie" value="${my.idl.tie.copy}"/>
+
+                <foreach list="${my.idl.tie}" target="-compile-idl-file"
+                         param="my.idl.file" inheritall="true" delimiter=" ">
+
+                    <param name="bcpp.orb.idlflags"
+                           value="${bcpp.orb.idlflags.tie}"/>
+                    <param name="bcpp.idl.tstamp.suffix" value=".tie"/>
+                </foreach>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-csc-stubskel-dir-path" target constructs the path to the
+        directories in which the generated stubs and skels are stored.
+    -->
+    <target name="-construct-csc-stubskel-dir-path"
+            if="require.idl.compilation">
+
+        <!--
+            set the name of the directory which will contain the stubs and
+            skels generated by the IDL compiler.
+        -->
+        <var name="my.var" value="${config.csc.generated.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${my.delivery.name}${FS}"/>
+        <var name="my.var" value="${my.var}${my.stubskel.dirname}"/>
+        <var name="my.var" value="${my.var}${FS}${bcpp.orb.key.string}"/>
+
+        <property name="my.csc.stubskel.dir" location="${my.var}"/>
+
+        <!--
+            set the name of the directory which will contain the unified stubs
+            and skels generated by the "mkidlinclude" task.
+        -->
+        <var name="my.var" value="${config.csc.generated.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${my.delivery.name}${FS}"/>
+        <var name="my.var" value="${my.var}${my.unified.stubskel.dirname}"/>
+        <var name="my.var" value="${my.var}${FS}${bcpp.orb.key.string}"/>
+
+        <property name="my.csc.unified.stubskel.dir" location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-idl-file" target compiles the specified IDL file.
+
+        It depends on the following targets:
+            + "-check-tstamp-file"
+            + "-construct-idl-compilation-flags"
+    -->
+    <target name="-compile-idl-file"
+            depends="-check-tstamp-file, -construct-idl-compilation-flags"
+            if="my.tstamp.file.outdated">
+
+        <if>
+            <isset property="my.tstamp.file.outdated"/>
+            <then>
+                <if>
+                    <and>
+                        <isset property="require.code.generation"/>
+                        <isset property="codegen.idl2.filename"/>
+                    </and>
+                    <then>
+                        <var name="my.var"
+                             value="${bcpp.idl.compilation.flags}"/>
+                        <var name="my.var"
+                             value="${my.var} ${codegen.idlflags.incl.dirs}"/>
+                        <var name="my.var"
+                             value="${my.var} -I${my.csc.delivery.idl.dir}"/>
+                        <var name="bcpp.idl.compilation.flags"
+                             value="${my.var}"/>
+                    </then>
+                </if>
+
+                <stringmanip property="bcpp.reduce.idl.compilation.flags" 
+                             action="removeduplicates"
+                             string="${bcpp.idl.compilation.flags}"
+                             delimiter=" "/>
+                
+                <!-- run the IDL compiler -->
+                <xexec executable="${bcpp.idl.compiler}" showCmd="true"
+                       dir="${my.csc.stubskel.dir}" failonerror="true"
+                       resolveExecutable="true" vmlauncher="false">
+
+                    <env key="PATH"
+                         path="${bcpp.idl.compiler.dir}:${env.PATH}"/>
+                    <arg line="${bcpp.reduce.idl.compilation.flags}"/>
+                    <arg value="${my.idl.file}"/>
+                </xexec>
+
+                <!-- generate the unified stubs and skels header files -->
+                <var name="my.var"
+                     value="${csc.name}${FS}${bcpp.orb.key.string}"/>
+
+                <mkidlinclude outputDir="${my.csc.unified.stubskel.dir}"
+                              orb="${my.csci.orb}" file="${my.idl.file}"
+                              headerInclDir="${my.var}"/>
+
+                <basename property="my.idl.basename" file="${my.idl.file}"/>
+                <selecttoken string="${my.idl.basename}" delimiter="idl"
+                             tokenNumber="0" 
+                             property="my.idl.basename.without.ext"/>
+
+                <var name="my.var"
+                     value="${my.csc.unified.stubskel.dir}${FS}..${FS}"/>
+                <var name="my.var"
+                     value="${my.var}${my.idl.basename.without.ext}"/>
+                <property name="unified.stub.file"
+                          value="${my.var}stub.hpp"/>
+                <property name="unified.skel.file"
+                          value="${my.var}skel.hpp"/>
+                
+                <!-- find file and concatenate there to generate 
+                     only one file for the stub-->
+                <findfile dir="${my.csc.unified.stubskel.dir}${FS}.."
+                          file="${my.idl.basename.without.ext}stub.hpp.*" 
+                          recursive="true" separator=","
+                          property="my.stub.list"/>
+
+                <concat destfile="${unified.stub.file}">
+                    <filelist dir="${FS}"
+                              files="${my.stub.list}"/>
+                </concat>
+                
+                <!-- find file and concatenate there to generate 
+                     only one file for the skel-->
+                <findfile dir="${my.csc.unified.stubskel.dir}${FS}.."
+                          file="${my.idl.basename.without.ext}skel.hpp.*" 
+                          recursive="true" separator=","
+                          property="my.skel.list"/>               
+
+                <concat destfile="${unified.skel.file}">
+                    <filelist dir="${FS}"
+                              files="${my.skel.list}"/>
+                </concat>
+
+                <!-- update the tstamp file -->
+                <touch file="${my.idl.tstamp.file}"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-tstamp-file-path" target constructs the path to the time
+        stamp file associated with the specified IDL file.
+    -->
+    <target name="-construct-tstamp-file-path">
+        <basename property="bcpp.idl.file.basename" file="${my.idl.file}"/>
+
+        <var name="my.var" value="${my.csc.stubskel.dir}"/>
+        <var name="my.var" value="${my.var}${FS}${bcpp.idl.file.basename}"/>
+        <var name="my.var" value="${my.var}${bcpp.idl.tstamp.suffix}"/>
+
+        <property name="my.idl.tstamp.file" location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-idl-compilation-flags" target constructs the IDL
+        compilation flags.
+    -->
+    <target name="-construct-idl-compilation-flags">
+        <!--
+            list of directories which may contains IDL files that this CSC
+            depends on.
+        -->
+        <propertycopy property="bcpp.dep.idl.incl.dirs" silent="true"
+                      from="csc.${my.delivery.basename}.idl.incl.dirs"/>
+
+        <var name="my.var" value=" "/>
+
+        <if>
+            <isset property="bcpp.dep.idl.incl.dirs"/>
+            <then>
+                <var name="my.var" value="${my.var} ${bcpp.dep.idl.incl.dirs}"/>
+            </then>
+        </if>
+
+        <!-- include the directory where the specified IDL file is stored -->
+        <dirname property="bcpp.idl.file.dirname" file="${my.idl.file}"/>
+
+        <var name="my.var_" value="${my.var} -I${bcpp.idl.file.dirname}"/>
+
+        <!-- include the delivery idl directory -->
+        <antcallback target="-construct-csc-delivery-idl-dir-path"
+                     return="my.csc.delivery.idl.dir"/>
+
+        <var name="my.var" value="${my.var_} -I${my.csc.delivery.idl.dir}"/>
+
+        <var name="my.var" value="${my.var} ${bcpp.orb.idlflags}"/>
+
+        <!-- add flags from the CSC properties file -->
+        <propertycopy property="bcpp.delivery.addidlflags" silent="true"
+                      from="csc.${my.delivery.basename}.addidlflags"/>
+
+        <if>
+            <isset property="bcpp.delivery.addidlflags"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.delivery.addidlflags}"/>
+            </then>
+        </if>
+
+        <!-- add any extra idlflags -->
+        <propertycopy property="bcpp.orb.idlflags.extra" silent="true"
+                      from="csc.${my.csci.orb}.idlflags.extra"/>
+
+        <if>
+            <isset property="bcpp.orb.idlflags.extra"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.orb.idlflags.extra}"/>
+            </then>
+        </if>
+
+        <property name="bcpp.idl.compilation.flags" value="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-stubskel-header-files" target copies the generated stubs
+        and skels header files into the delivery directories.
+
+        It depends on the following targets:
+            + "-export-local-stubskel-headers"
+            + "-export-public-stubskel-headers"
+    -->
+    <target name="-export-stubskel-header-files"
+            depends="-export-local-stubskel-headers,
+                     -export-public-stubskel-headers">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-local-stubskel-headers" target copies the generated stubs
+        and skels header files into the CSC's delivery directory.
+
+        It depends on the following targets:
+            + "-make-csc-delivery-stubskel-incl-dir"
+    -->
+    <target name="-export-local-stubskel-headers"
+            depends="-make-csc-delivery-stubskel-incl-dir"
+            if="bcpp.csc.delivery.stubskel.incl.dir">
+
+        <!-- get the list of stubs and skels header files -->
+        <findfile dir="${my.csc.stubskel.dir}" file="*.h*"
+            property="bcpp.stubskels.to.export.h"/>
+        <findfile dir="${my.csc.stubskel.dir}" file="*.i"
+            property="bcpp.stubskels.to.export.i"/>
+
+        <if>
+            <or>
+                <isset property="bcpp.stubskels.to.export.h"/>
+                <isset property="bcpp.stubskels.to.export.i"/>
+            </or>
+            <then>
+                <var name="bcpp.stubskels.to.export" 
+                    value="${bcpp.stubskels.to.export.h} ${bcpp.stubskels.to.export.i}"/>
+            </then>
+        </if>
+        
+        <findfile dir="${my.csc.unified.stubskel.dir}${FS}.." file="*.hpp"
+                  property="bcpp.unified.stubskels.to.export"/>
+        
+        <if>
+            <isset property="build.use.symbolic.link"/>
+            <then>
+                <if>
+                    <isset property="bcpp.stubskels.to.export"/>
+                    <then>
+                        <var name="my.var"
+                             value="${bcpp.csc.delivery.stubskel.incl.dir}"/>
+                         
+                        <xexec executable="ln" failonerror="true"
+                               showCmd="false" outputproperty="dummy"
+                               vmlauncher="false">
+
+                            <arg line="-sf ${bcpp.stubskels.to.export}"/>
+                            <arg value="${my.var}"/>
+                        </xexec>
+                    </then>
+                </if>
+
+                <if>
+                    <isset property="bcpp.unified.stubskels.to.export"/>
+                    <then>
+                        <var name="my.var"
+                             value="${bcpp.csc.delivery.stubskel.incl.dir}"/>
+                        <var name="my.var" value="${my.var}${FS}.."/>
+
+                        <xexec executable="ln" failonerror="true"
+                               showCmd="false" outputproperty="dummy"
+                               vmlauncher="false">
+
+                            <arg line="-sf ${bcpp.unified.stubskels.to.export}"/>
+                            <arg value="${my.var}"/>
+                        </xexec>
+                    </then>
+                </if>
+            </then>
+            <else> <!-- copy -->
+                <copy todir="${bcpp.csc.delivery.stubskel.incl.dir}${FS}..">
+                    <fileset dir="${my.csc.unified.stubskel.dir}">
+                        <include name="*.hpp"/>
+                    </fileset>
+                </copy>
+                <copy todir="${bcpp.csc.delivery.stubskel.incl.dir}">
+                    <fileset dir="${my.csc.stubskel.dir}">
+                        <include name="*.hpp"/>
+                    </fileset>
+                </copy>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-make-csc-delivery-stubskel-incl-dir" target creates a directory in
+        the CSC delivery tree to store the files generated by the IDL compiler.
+
+        It depends on the following targets:
+            + "-construct-csc-delivery-stubskel-incl-dir-path"
+    -->
+    <target name="-make-csc-delivery-stubskel-incl-dir"
+            depends="-construct-csc-delivery-stubskel-incl-dir-path"
+            if="bcpp.csc.delivery.stubskel.incl.dir">
+
+        <mkdir dir="${bcpp.csc.delivery.stubskel.incl.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-csc-delivery-stubskel-incl-dir-path" target constructs
+        the path to the directory in the CSC delivery tree which stores the
+        files generated by the IDL compiler.
+    -->
+    <target name="-construct-csc-delivery-stubskel-incl-dir-path"
+            if="require.idl.compilation">
+
+        <var name="my.var" value="${config.delivery.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.include.dir}"/>
+        <var name="my.var" value="${my.var}${FS}${csc.name}"/>
+        <var name="my.var" value="${my.var}${FS}${bcpp.orb.key.string}"/>
+
+        <property name="bcpp.csc.delivery.stubskel.incl.dir"
+                  location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-public-stubskel-headers" target copies the generated stubs
+        and skels header files into the CSCI's delivery directory.
+
+        It depends on the following targets:
+            + "-make-csci-delivery-stubskel-incl-dir"
+    -->
+    <target name="-export-public-stubskel-headers"
+            depends="-make-csci-delivery-stubskel-incl-dir"
+            if="bcpp.csci.delivery.stubskel.incl.dir">
+
+        <if>
+            <isset property="build.use.symbolic.link"/>
+            <then>
+                <if>
+                    <isset property="bcpp.stubskels.to.export"/>
+                    <then>
+                        <var name="my.var"
+                             value="${bcpp.csci.delivery.stubskel.incl.dir}"/>
+
+                        <xexec executable="ln" failonerror="true"
+                               showCmd="false" outputproperty="dummy"
+                               vmlauncher="false">
+
+                            <arg line="-sf ${bcpp.stubskels.to.export}"/>
+                            <arg value="${my.var}"/>
+                        </xexec>
+                    </then>
+                </if>
+
+                <if>
+                    <isset property="bcpp.unified.stubskels.to.export"/>
+                    <then>
+                        <var name="my.var"
+                             value="${bcpp.csci.delivery.stubskel.incl.dir}"/>
+                        <var name="my.var" value="${my.var}${FS}.."/>
+
+                        <xexec executable="ln" failonerror="true"
+                               showCmd="false" outputproperty="dummy"
+                               vmlauncher="false">
+
+                            <arg line="-sf ${bcpp.unified.stubskels.to.export}"/>
+                            <arg value="${my.var}"/>
+                        </xexec>
+                    </then>
+                </if>
+            </then>
+
+            <else> <!-- copy -->
+                <copy todir="${bcpp.csci.delivery.stubskel.incl.dir}${FS}..">
+                    <fileset dir="${my.csc.unified.stubskel.dir}"/>
+                </copy>
+                <copy todir="${bcpp.csci.delivery.stubskel.incl.dir}">
+                    <fileset dir="${my.csc.stubskel.dir}">
+                        <include name="*.h*"/>
+                        <include name="*.i"/>
+                    </fileset>
+                </copy>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-make-csci-delivery-stubskel-incl-dir" target creates a directory
+        in the CSCI delivery tree to store the files generated by the IDL
+        compiler.
+
+        It depends on the following targets:
+            + "-construct-csci-delivery-stubskel-incl-dir-path"
+    -->
+    <target name="-make-csci-delivery-stubskel-incl-dir"
+            depends="-construct-csci-delivery-stubskel-incl-dir-path"
+            if="bcpp.csci.delivery.stubskel.incl.dir">
+
+        <mkdir dir="${bcpp.csci.delivery.stubskel.incl.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-csci-delivery-stubskel-incl-dir-path" target constructs
+        the path to the directory in the CSCI delivery tree which stores the
+        files generated by the IDL compiler.
+    -->
+    <target name="-construct-csci-delivery-stubskel-incl-dir-path"
+            if="require.csci.delivery.idl.dir">
+
+        <var name="my.var" value="${my.csci.location}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.include.dir}"/>
+        <var name="my.var" value="${my.var}${FS}${FS}${csc.lang}"/>
+        <var name="my.var" value="${my.var}${FS}${csc.owner}"/>
+        <var name="my.var" value="${my.var}${FS}${csc.name}"/>
+        <var name="my.var" value="${my.var}${FS}${bcpp.orb.key.string}"/>
+
+        <property name="bcpp.csci.delivery.stubskel.incl.dir"
+                  location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-stubs-and-skels" target compiles the generated stubs and
+        skels files.
+    -->
+    <target name="-compile-stubs-and-skels" if="require.idl.compilation">
+        <foreach param="my.source.file" target="-compile-source-file"
+                 inheritall="true">
+
+            <path>
+                <fileset dir="${my.csc.stubskel.dir}">
+                    <include name="*.c*"/>
+                    <include name="*.C*"/>
+
+                    <!-- exclude the timestamps file from the fileset -->
+                    <exclude name="*.server"/>
+                    <exclude name="*.client"/>
+                    <exclude name="*.tie"/>
+                </fileset>
+            </path>
+        </foreach>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-source-files" target compiles all the source files
+        required by the specified delivery.
+
+        It depends on the following targets:
+            + "-export-header-files"
+            + "-generate-object-files"
+            + "-link-object-files"
+    -->
+    <target name="-compile-source-files"
+            depends="-export-header-files, -generate-object-files,
+                     -link-object-files">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-header-files" target copies the local and public header
+        files into their respective delivery directory.
+
+        It depends on the following targets:
+            + "-export-local-headers"
+            + "-export-public-headers"
+    -->
+    <target name="-export-header-files"
+            depends="-export-local-headers, -export-public-headers">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-local-headers" target copies the local header files into
+        the CSC's delivery directory.
+
+        It depends on the following targets:
+            + "-make-csc-delivery-incl-dir"
+    -->
+    <target name="-export-local-headers" depends="-make-csc-delivery-incl-dir"
+            if="bcpp.csc.delivery.incl.dir">
+
+        <if>
+            <isset property="build.use.symbolic.link"/>
+            <then>
+                <xexec executable="ln" failonerror="true" showCmd="false"
+                       outputproperty="dummy" vmlauncher="false">
+
+                    <arg line="-sf ${bcpp.csc.local.incl.files}"/>
+                    <arg value="${bcpp.csc.delivery.incl.dir}"/>
+                </xexec>
+            </then>
+            <else> <!-- copy -->
+                <copy todir="${bcpp.csc.delivery.incl.dir}">
+                    <fileset dir="${config.csc.cpp.include.local.dir}">
+                        <include name="*.h*"/>
+                    </fileset>
+                </copy>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-make-csc-delivery-incl-dir" target creates a directory in the CSC
+        delivery tree to store to local headers.
+
+        It depends on the following targets:
+            + "-construct-csc-delivery-incl-dir-path"
+    -->
+    <target name="-make-csc-delivery-incl-dir"
+            depends="-construct-csc-delivery-incl-dir-path"
+            if="bcpp.csc.delivery.incl.dir">
+
+        <mkdir dir="${bcpp.csc.delivery.incl.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-csc-delivery-incl-dir-path" target constructs the path
+        to the directory in the CSC delivery tree which stores the local
+        headers.
+    -->
+    <target name="-construct-csc-delivery-incl-dir-path">
+        <!--
+            there may be no local headers at all in this CSC, in that case
+            there is no need to create such a directory.
+        -->
+        <available file="${config.csc.cpp.include.local.dir}" type="dir"
+                   property="bcpp.csc.has.local.incl.dir"/>
+
+        <if>
+            <isset property="my.codegen.generated.dir"/>
+            <then>
+                <available file="${my.codegen.generated.dir}" type="dir"
+                    property="bcpp.csc.has.generated.incl.dir"/>
+            </then>
+        </if>
+
+        <if>
+            <or>
+                <isset property="bcpp.csc.has.local.incl.dir"/>
+                <isset property="bcpp.csc.has.generated.incl.dir"/>
+            </or>
+            <then>
+                <!-- ok, the directory exists but may be there are no files -->
+                <if>
+                    <isset property="bcpp.csc.has.local.incl.dir"/>
+                    <then>
+                        <findfile dir="${config.csc.cpp.include.local.dir}" file="*.h*"
+                            property="bcpp.csc.local.incl.files"/>
+                    </then>
+                </if>
+                <if>
+                    <isset property="bcpp.csc.has.generated.incl.dir"/>
+                    <then>
+                        <findfile dir="${my.codegen.generated.dir}" file="*.h*"
+                            property="bcpp.csc.generated.incl.files"/>
+                    </then>
+                </if>
+                <if>
+                    <or>
+                        <isset property="bcpp.csc.local.incl.files"/>
+                        <isset property="bcpp.csc.generated.incl.files"/>
+                    </or>
+                    <then>
+                        <!-- set the directory path -->
+                        <var name="my.var" value="${config.delivery.dir}"/>
+                        <var name="my.var"
+                        value="${my.var}${FS}${config.delivery.include.dir}"/>
+                        <var name="my.var" value="${my.var}${FS}${csc.name}"/>
+
+                        <property name="bcpp.csc.delivery.incl.dir"
+                                  location="${my.var}"/>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-public-headers" target copies the public header files into
+        the CSCI's delivery directory.
+
+        It depends on the following targets:
+            + "-make-csci-delivery-incl-dir"
+    -->
+    <target name="-export-public-headers" depends="-make-csci-delivery-incl-dir"
+            if="bcpp.csci.delivery.incl.dir">
+
+        <if>
+            <isset property="build.use.symbolic.link"/>
+            <then>
+                <xexec executable="ln" failonerror="true" showCmd="false"
+                       outputproperty="dummy" vmlauncher="false">
+
+                    <arg line="-sf ${bcpp.csc.public.incl.files}"/>
+                    <arg value="${bcpp.csci.delivery.incl.dir}"/>
+                </xexec>
+            </then>
+            <else> <!-- copy -->
+                <copy todir="${bcpp.csci.delivery.incl.dir}">
+                    <fileset dir="${config.csc.cpp.include.public.dir}">
+                        <include name="*.h*"/>
+                    </fileset>
+                </copy>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-make-csci-delivery-incl-dir" target creates a directory in the
+        CSCI delivery directory to store to public headers.
+
+        It depends on the following targets:
+            + "-construct-csci-delivery-incl-dir-path"
+    -->
+    <target name="-make-csci-delivery-incl-dir"
+            depends="-construct-csci-delivery-incl-dir-path"
+            if="bcpp.csci.delivery.incl.dir">
+            
+        <mkdir dir="${bcpp.csci.delivery.incl.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-csci-delivery-incl-dir-path" target constructs the path
+        to the directory in the CSCI delivery tree which stores the public
+        headers.
+    -->
+    <target name="-construct-csci-delivery-incl-dir-path">
+        <!--
+            there may be no public headers at all in this CSC, in that case
+            there is no need to create such a directory.
+        -->
+        <available file="${config.csc.cpp.include.public.dir}" type="dir"
+                   property="bcpp.csc.has.public.incl.dir"/>
+
+        <if>
+            <isset property="bcpp.csc.has.public.incl.dir"/>
+            <then>
+                <!-- ok, the directory exists but may be there are no files -->
+                <findfile dir="${config.csc.cpp.include.public.dir}" file="*.h*"
+                          property="bcpp.csc.public.incl.files"/>
+
+                <if>
+                    <isset property="bcpp.csc.public.incl.files"/>
+                    <then>
+                        <!-- set the directory path -->
+                        <var name="my.var" value="${my.csci.location}${FS}"/>
+                        <var name="my.var"
+                             value="${my.var}${config.delivery.dir}"/>
+                        <var name="my.var"
+                        value="${my.var}${FS}${config.delivery.include.dir}"/>
+                        <var name="my.var" value="${my.var}${FS}${csc.lang}"/>
+                        <var name="my.var" value="${my.var}${FS}${csc.owner}"/>
+                        <var name="my.var" value="${my.var}${FS}${csc.name}"/>
+
+                        <property name="bcpp.csci.delivery.incl.dir"
+                                  location="${my.var}"/>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-generate-object-files" target compiles the source files into
+        object files.
+    -->
+    <target name="-generate-object-files">
+        <!-- get the list of source files to compile -->
+        <propertycopy property="bcpp.source.files" silent="true"
+                      from="csc.${my.delivery.basename}.sourcefiles"/>
+
+        <!-- compile -->
+        <if>
+            <isset property="bcpp.source.files"/>
+            <then>
+                <foreach list="${bcpp.source.files}" param="my.source.file"
+                         target="-compile-source-file" inheritall="true"
+                         delimiter=" "/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-source-file" target compiles the specified source file.
+
+        It depends on the following targets:
+            + "-check-source-file"
+            + "-construct-compilation-cflags"
+            + "-create-dependency-file"
+            + "-create-object-file"
+    -->
+    <target name="-compile-source-file"
+            depends="-check-source-file, -construct-compilation-cflags,
+                     -create-dependency-file, -create-object-file">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-compilation-cflags" target creates the property
+        bcpp.cpp.cflags.
+    -->
+    <target name="-construct-compilation-cflags">
+        <!-- CSC delivery include dir -->
+        <var name="my.var" value="${config.delivery.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.include.dir}"/>
+
+        <property name="bcpp.csc.delivery.incl.rootdir" location="${my.var}"/>
+        <property name="bcpp.csc.delivery.incl.flags"
+                  value="-I${bcpp.csc.delivery.incl.rootdir}"/>
+
+        <!-- CSCI delivery include dir -->
+        <var name="my.var" value="${my.csci.location}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.include.dir}"/>
+        <var name="my.var" value="${my.var}${FS}${csc.lang}"/>
+
+        <property name="bcpp.csci.delivery.incl.rootdir" location="${my.var}"/>
+
+        <if>
+            <isset property="my.csci.orb"/>
+            <then>
+                <var name="my.var" value="${bcpp.csci.delivery.incl.rootdir}"/>
+                <var name="my.var" value="${my.var}${FS}${csc.owner}"/>
+
+                <property name="bcpp.csci.delivery.incl.flags"
+                    value="-I${bcpp.csci.delivery.incl.rootdir} -I${my.var}"/>
+            </then>
+            <else>
+                <property name="bcpp.csci.delivery.incl.flags"
+                          value="-I${bcpp.csci.delivery.incl.rootdir}"/>
+            </else>
+        </if>
+
+        <!-- include flags from the dependencies -->
+        <propertycopy property="bcpp.dep.incl.flags" silent="true"
+                      from="csc.${my.delivery.basename}.incl.flags"/>
+
+        <!-- stubs and skels include dirs from the dependencies -->
+        <propertycopy property="bcpp.delivery.idl.stubskel.dir" silent="true"
+            from="csc.${my.delivery.basename}.idl.stubskel.incl.dirs"/>
+
+        <!-- additional cflags (from the CSC properties) for this delivery -->
+        <propertycopy property="bcpp.delivery.addcflags" silent="true"
+                      from="csc.${my.delivery.basename}.addcflags"/>
+
+        <!-- construct bcpp.cpp.cflags -->
+        <var name="my.var" value="${bcpp.cpp.debug.flags}"/>
+        <var name="my.var" value="${my.var} ${bcpp.cpp.optim.flags}"/>
+        <var name="my.var" value="${my.var} ${bcpp.cpp.shared.flags}"/>
+        <var name="my.var" value="${my.var} ${bcpp.cxx.compiler.flags}"/>
+
+        <if>
+            <isset property="my.csci.orb"/>
+            <then>
+                <var name="my.var" value="${my.var} ${bcpp.orb.cflags}"/>
+            </then>
+        </if>
+
+        <if>
+            <not><isset property="bcpp.require.linking"/></not>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.csc.delivery.incl.flags}"/>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.csci.delivery.incl.flags}"/>
+            </then>
+        </if>
+        
+        <if>
+            <and>
+                <not><isset property="bcpp.require.linking"/></not>
+                <isset property="bcpp.dep.incl.flags"/>
+            </and>
+            <then>
+                <var name="my.var" value="${my.var} ${bcpp.dep.incl.flags}"/>
+            </then>
+        </if>
+
+        <if>
+            <and>
+                <not><isset property="bcpp.require.linking"/></not>
+                <isset property="bcpp.delivery.idl.stubskel.dir"/>
+            </and>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.delivery.idl.stubskel.dir}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="bcpp.delivery.addcflags"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.delivery.addcflags}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="bcpp.csci.tools.cflags"/>
+            <then>
+                <var name="my.var" value="${my.var} ${bcpp.csci.tools.cflags}"/>
+            </then>
+        </if>
+
+        <if>
+            <and>
+                <not><isset property="bcpp.require.linking"/></not>
+                <isset property="bcpp.csc.delivery.stubskel.incl.dir"/>
+            </and>
+            <then>
+                <var name="my.var"
+                value="${my.var} -I${bcpp.csc.delivery.stubskel.incl.dir}"/>
+            </then>
+        </if>
+
+        <property name="bcpp.cpp.cflags" value="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-dependency-file" target creates the dependency file of the
+        specified source file.
+
+        It depends on the following targets:
+            + "-construct-dependency-file-path"
+    -->
+    <target name="-create-dependency-file" if="bcpp.dependency.file"
+            depends="-construct-dependency-file-path">
+
+        <!-- create -->
+        <if>
+            <or>
+                <not>
+                    <available file="${bcpp.dependency.file}"/>
+                </not>
+                <uptodate targetfile="${my.source.file}"
+                          srcfile="${bcpp.dependency.file}"/>
+            </or>
+            <then>
+                <trycatch property="bcpp.create.dependency.file.error">
+                    <try>
+                        <xexec executable="${bcpp.cxx}"
+                               failonerror="true"
+                               output="${bcpp.dependency.file}"
+                               vmlauncher="false">
+
+                            <arg line="${bcpp.cxx.dependency.flags}"/>
+                            <arg line="${bcpp.cpp.cflags}"/>
+                            <arg value="${my.source.file}"/>
+                        </xexec>
+                    </try>
+                    <catch>
+                        <loadfile srcFile="${bcpp.dependency.file}"
+                                  property="bcpp.dependency.file.content"/>
+                        <echo message="${bcpp.dependency.file.content}"/>
+                        <delete file="${bcpp.dependency.file}" quiet="true"/>
+
+                        <!-- clean up -->
+                        <xvar name="bcpp.dependency.file.content" unset="true"/>
+                        <callgc/>
+                    </catch>
+                </trycatch>
+
+                <fail if="bcpp.create.dependency.file.error"
+                      message="${bcpp.create.dependency.file.error}"/>
+            </then>
+        </if>
+
+        <!-- read the dependency file -->
+        <loadfile property="bcpp.dependency.file.content"
+                  srcFile="${bcpp.dependency.file}"/>
+
+        <!--
+            create an ANT Path so that it can be used to check whether the
+            object file needs to be (re)built.
+        -->
+        <dependencytopath pathId="bcpp.dependency.path"
+                          dependencies="${bcpp.dependency.file.content}"/>
+
+        <!-- clean up -->
+        <xvar name="bcpp.dependency.file.content" unset="true"/>
+        <callgc/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-dependency-file-path" constructs the dependency file
+        path.
+    -->
+    <target name="-construct-dependency-file-path">
+        <!--
+            the ANT "basename" task can also strip the suffix of a file name
+            however we don't know in advance the suffix of the source file
+            we are going to compile (it could be .c or .cpp or .C, etc.)
+        -->
+        <stripfileext file="${my.source.file}"
+                      property="bcpp.source.fileext.stripped"/>
+
+        <var name="my.var" value="${csc.build.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${bcpp.source.fileext.stripped}"/>
+        <var name="my.var" value="${my.var}${bcpp.cxx.depfile.ext}"/>
+
+        <property name="bcpp.dependency.file" location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-object-file" target runs the C++ compiler to create the
+        object file from the specified source file.
+
+        It depends on the following targets:
+            + "-require-source-file-compilation"
+    -->
+    <target name="-create-object-file"
+            depends="-require-source-file-compilation"
+            if="bcpp.require.source.file.compilation">
+
+        <xexec executable="${bcpp.cxx}" showCmd="true"
+               failonerror="true" vmlauncher="false">
+
+            <arg line="${bcpp.cpp.cflags}"/>
+            <arg line="-c -o ${bcpp.object.file}"/>
+            <arg value="${my.source.file}"/>
+        </xexec>
+
+        <fail if="bcpp.create.object.file.error"
+              message="${bcpp.create.object.file.error}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-require-source-file-compilation" target checks if the object file
+        needs to be built.
+
+        It depends on the following targets:
+            + "-construct-object-file-path"
+    -->
+    <target name="-require-source-file-compilation" if="bcpp.object.file"
+            depends="-construct-object-file-path">
+
+        <!-- check -->
+        <available file="${bcpp.object.file}"
+                   property="bcpp.object.file.present"/>
+
+        <if>
+            <isset property="bcpp.object.file.present"/>
+            <then>
+                <outofdate property="bcpp.require.source.file.compilation">
+                    <sourcefiles>
+                        <path refid="bcpp.dependency.path"/>
+                    </sourcefiles>
+                    <targetfiles>
+                        <pathelement path="${bcpp.object.file}"/>
+                    </targetfiles>
+                </outofdate>
+            </then>
+            <else> <!-- object file does not exist -->
+                <property name="bcpp.require.source.file.compilation"
+                          value="true"/>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-object-file-path" target constructs the object file
+        path.
+    -->
+    <target name="-construct-object-file-path">
+        <var name="my.var" value="${csc.build.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${bcpp.source.fileext.stripped}"/>
+        <var name="my.var" value="${my.var}.o"/>
+
+        <property name="bcpp.object.file" location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-link-object-files" target links all the object files to the
+        libraries to produce the delivery file.
+
+        It depends on the following targets:
+            + "-require-linking"
+            + "-construct-compilation-cflags"
+            + "-construct-compilation-ldflags"
+    -->
+    <target name="-link-object-files"
+            depends="-require-linking, -construct-compilation-cflags,
+                     -construct-compilation-ldflags"
+            if="bcpp.require.linking">
+
+        <pathtolist property="bcpp.obj.files" pathRefId="bcpp.obj.files.path"/>
+
+        <!-- link -->
+        <switch value="${my.delivery.type}">
+            <case value="exe">
+                <xexec executable="${bcpp.ld}" showCmd="true"
+                       failonerror="true" vmlauncher="false">
+
+                    <arg line="${bcpp.cpp.cflags}"/>
+                    <arg line="${bcpp.cpp.ldflags}"/>
+                    <arg line="-o ${my.delivery.file}"/>
+                    <arg line="${bcpp.obj.files}"/>
+                </xexec>
+            </case>
+            <case value="lib">
+                <if>
+                    <equals arg1="${config.cpp.shared}" arg2="y"/>
+                    <then>
+                        <xexec executable="${bcpp.ar}" showCmd="true"
+                               failonerror="true" vmlauncher="false">
+
+                            <arg line="${bcpp.cpp.ldflags}"/>
+                            <arg line="${bcpp.ar.flags}"/>
+                            <arg line="${my.delivery.file}"/>
+                            <arg line="${bcpp.obj.files}"/>
+                        </xexec>
+                    </then>
+                    <else> <!-- static -->
+                        <xexec executable="${bcpp.ar}" showCmd="true"
+                               failonerror="true" vmlauncher="false">
+
+                            <arg line="${bcpp.ar.flags}"/>
+                            <arg line="${my.delivery.file}"/>
+                            <arg line="${bcpp.obj.files}"/>
+                        </xexec>
+                    </else>
+                </if>
+            </case>
+            <default>
+                <fail>unknown delivery type '${my.delivery.type}'.</fail>
+            </default>
+        </switch>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-require-linking" target checks if linking is required.
+
+        It depends on the following targets:
+            + "-make-csc-delivery-dir"
+            + "-construct-delivery-file-path"
+    -->
+    <target name="-require-linking" if="my.delivery.file"
+            depends="-make-csc-delivery-dir, -construct-delivery-file-path">
+
+        <!-- get the list of required libs -->
+        <propertycopy property="bcpp.delivery.req.libs" silent="true"
+                      from="csc.${my.delivery.basename}.requiredlibs"/>
+
+        <!-- get the list of object files -->
+        <path id="bcpp.obj.files.path">
+            <fileset dir="${csc.build.dir}">
+                <include name="*.o"/>
+            </fileset>
+        </path>
+
+        <!-- check -->
+        <available file="${my.delivery.file}"
+                   property="my.delivery.file.present"/>
+
+        <if>
+            <isset property="my.delivery.file.present"/>
+            <then>
+                <if>
+                    <isset property="bcpp.delivery.req.libs"/>
+                    <then>
+                        <listtopath pathId="bcpp.delivery.req.libs.path"
+                                    list="${bcpp.delivery.req.libs}"/>
+
+                        <outofdate property="bcpp.require.linking">
+                            <sourcefiles>
+                                <path refid="bcpp.obj.files.path"/>
+                                <path refid="bcpp.delivery.req.libs.path"/>
+                            </sourcefiles>
+                            <targetfiles>
+                                <pathelement path="${my.delivery.file}"/>
+                            </targetfiles>
+                        </outofdate>
+                    </then>
+                    <else> <!-- no required libs -->
+                        <outofdate property="bcpp.require.linking">
+                            <sourcefiles>
+                                <path refid="bcpp.obj.files.path"/>
+                            </sourcefiles>
+                            <targetfiles>
+                                <pathelement path="${my.delivery.file}"/>
+                            </targetfiles>
+                        </outofdate>
+                    </else>
+                </if>
+            </then>
+            <else> <!-- the delivery file is not present -->
+                <property name="bcpp.require.linking" value="true"/>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-compilation-ldflags" target creates the property
+        bcpp.cpp.ldflags.
+    -->
+    <target name="-construct-compilation-ldflags">
+        <!-- get the required libs flags -->
+        <propertycopy property="bcpp.delivery.req.lib.flags" silent="true"
+            from="csc.${my.delivery.basename}.requiredlibs.ldflags"/>
+
+        <!-- additional ldflags (from the CSC properties) for this delivery -->
+        <propertycopy property="bcpp.delivery.addldflags" silent="true"
+                      from="csc.${my.delivery.basename}.addldflags"/>
+
+        <!-- construct bcpp.cpp.ldflags -->
+        <var name="my.var" value="${bcpp.ld.flags}"/>
+        
+        <if>
+            <isset property="my.csci.orb"/>
+            <then>
+                <var name="my.var" value="${my.var} ${bcpp.orb.ldflags}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="bcpp.delivery.req.lib.flags"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.delivery.req.lib.flags}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="bcpp.delivery.addldflags"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.delivery.addldflags}"/>
+            </then>
+        </if>
+
+        <if>
+            <isset property="bcpp.csci.tools.ldflags"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bcpp.csci.tools.ldflags}"/>
+            </then>
+        </if>
+
+        <property name="bcpp.cpp.ldflags" value="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-local-generated-source-files" target copies the generated
+        source files into the local delivery directory.
+
+        It depends on the following targets:
+            + "-make-csc-delivery-incl-dir"
+    -->
+    <target name="-export-local-generated-source-files"
+            depends="-make-csc-delivery-incl-dir"
+            if="require.code.generation">
+
+        <fileset id="bcpp.generated.headers" dir="${my.codegen.generated.dir}">
+            <include name="*.h*"/>
+        </fileset>
+
+        <if>
+            <isset property="build.use.symbolic.link"/>
+            <then>
+                <pathconvert property="bcpp.generated.headers.list" pathsep=" ">
+                    <path>
+                        <fileset refid="bcpp.generated.headers"/>
+                    </path>
+                </pathconvert>
+
+                <if>
+                    <not>
+                        <equals arg1="${bcpp.generated.headers.list}"
+                                arg2="" trim="true"/>
+                    </not>
+                    <then>
+                        <xexec executable="ln" failonerror="true"
+                               showCmd="false" outputproperty="dummy"
+                               vmlauncher="false">
+
+                            <arg line="-sf ${bcpp.generated.headers.list}"/>
+                            <arg value="${bcpp.csc.delivery.incl.dir}"/>
+                        </xexec>
+                    </then>
+                </if>
+            </then>
+            <else> <!-- copy -->
+                <copy todir="${bcpp.csc.delivery.incl.dir}">
+                    <fileset refid="bcpp.generated.headers"/>
+                </copy>
+            </else>
+        </if>
+    </target>
+
+
+</project>
+
+

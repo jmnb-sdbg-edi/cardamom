@@ -1,0 +1,443 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_APPLICATION_IDL_
+#define CDMW_PLATFORM_MNGT_APPLICATION_IDL_
+
+
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwPlatformMngtObservable.idl>
+#include <CdmwPlatformMngtMonitoring.idl>
+#include <CdmwPlatformMngtEntityContainer.idl>
+#include <CdmwPlatformMngtServiceContainer.idl>
+#include <CdmwPlatformMngtPropertyContainer.idl>
+#include <CdmwPlatformMngtProcessProxy.idl>
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwPlatformMngt
+{
+
+    /**
+     * The CDMW application.
+     */
+    interface Application : Observable, PullMonitorable,
+        CdmwPlatformMngtEntity::RWEntityContainer,
+        CdmwPlatformMngtService::RWServiceDefContainer,
+        RWPropertyContainer
+    {
+
+        /**
+        * The name identifying the application.
+        */
+        readonly attribute ApplicationName name;
+
+        /**
+        * Returns the status of the application with its additional information.
+        */
+        ApplicationStatus get_status(out string status_info);
+
+        /**
+        * Returns the mode of the application with its additional information.
+        */
+        FunctioningMode get_mode(out string mode_info);
+
+        /**
+        * Returns a snapshot of the whole application.
+        */
+        ApplicationSnapshot get_snapshot();
+
+        /**
+        * Returns the processes of the application.
+        * The first how_many processes will be returned at most and the
+        * rest of the processes may be retrieved thanks to the iterator.
+        *
+        * @param how_many the number of processes to return
+        * @param processes_iterator the iterator to the rest of processes.
+        * @return At most the number of processes requested
+        */
+        ProcessProxies get_processes(in unsigned long how_many,
+            out ProcessProxiesIterator processes_iterator );
+
+        /**
+        * Returns the specified process proxy.
+        *
+        * @param process_name the name identifying the process.
+        * @return the process proxy
+        * @exception ProcessNotFound if process_name doesn't denote
+        * an existing process.
+        */
+        ProcessProxy get_process(in ProcessName process_name)
+            raises(ProcessNotFound);
+
+        /**
+        * Defines the initial configuration of the application.
+        *
+        * @param application_def the definition of the application.
+        *
+        * @exception DuplicateEntity if there is a duplicate entity name among
+        * the application's entities
+        * @exception DuplicateService if there is a duplicate service name among
+        * the application's service definitions
+        * @exception DuplicateProcess if there is a duplicate process name among
+        * the application's processes
+        * @exception ProcessHostNotFound if an unknown host is used by one of
+        * the application's processes
+        * @exception DuplicateProcessEntity if there is a duplicate entity name
+        * among the entities of one of the application processes
+        * @exception DuplicateProcessService if there is a duplicate service
+        * name among the services of one of the application processes
+        * @exception DuplicateProcessStep if there is a duplicate step label
+        * among the steps of one of the application processes
+        * @exception DuplicateProcessActivityPoint if there is a duplicate
+        * name among the activity points of one of the application processes
+        * @exception AlreadyDone if the initial configuration has already been
+        * defined.
+        * @exception IncompatibleStatus if the application is not in the INITIAL
+        * status.
+        */
+        void define(in ApplicationDef application_def)
+            raises(DuplicateEntity, DuplicateService,
+            DuplicateProcess, ProcessHostNotFound,
+            DuplicateProcessEntity, DuplicateProcessService,
+            DuplicateProcessStep, DuplicateProcessActivityPoint,
+            AlreadyDone, IncompatibleStatus);
+
+        /**
+        * Adds a process to the application.
+        *
+        * @param process_def the definition of the process to add.
+        *
+        * @return the proxy to the added process
+        *
+        * @exception ProcessAlreadyExists if the process name is already used
+        * within the application.
+        * @exception HostNotFound if the host where the process will be run is
+        * not found.
+        * @exception DuplicateEntity if there is a duplicate entity name among
+        * the entities of the process
+        * @exception DuplicateService if there is a duplicate service name among
+        * the service definitions of the process
+        * @exception DuplicateStep if there is a duplicate step label among
+        * the steps of the process
+        * @exception DuplicateActivityPoint if there is a duplicate name
+        * among the activity point definitions of the process
+        * @exception IncompatibleStatus if the status of the application doesn't
+        * allow the operation.
+        */
+        ProcessProxy add_process(in ProcessDef process_def)
+            raises(ProcessAlreadyExists, HostNotFound,
+            DuplicateEntity, DuplicateService, DuplicateStep,
+            DuplicateActivityPoint, IncompatibleStatus);
+
+        /**
+        * Removes a process from the application.
+        * The process must be inactive.
+        *
+        * @param process_name the name identifying the process to remove.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote
+        * an existing process.
+        * @exception ProcessStillActive if the process is still active
+        * @exception IncompatibleStatus if the status of the application doesn't
+        * allow the operation.
+        */
+        void remove_process( in ProcessName process_name )
+            raises(ProcessNotFound, ProcessStillActive, IncompatibleStatus);
+
+        /**
+        * Sets the graph of process initialisation.
+        *
+        * @param process_graph the process graph.
+        *
+        * @exception ReferenceNotFound if an element of the graph refers to an
+        * unknown process
+        * @exception CircularReference if a circular reference has been detected
+        * in the graph
+        * @exception StepOutOfBound if the step defined in an element graph is
+        * out of bound for the corresponding process.
+        * @exception StepJump if a jump has been detected between steps of the
+        * same process.
+        * @exception IncompatibleStatus if the initialisation of the application
+        * is in progress.
+        */
+        void set_init_graph(in GraphElements process_graph)
+            raises(ReferenceNotFound, CircularReference,
+            StepOutOfBound, StepJump, IncompatibleStatus);
+
+        /**
+        * Sets the graph of process stop.
+        *
+        * @param process_graph the process graph.
+        *
+        * @exception ReferenceNotFound if an element of the graph refers to an
+        * unknown process
+        * @exception CircularReference if a circular reference has been detected
+        * in the graph
+        * @exception IncompatibleStatus if the stop of the application
+        * is in progress.
+        */
+        void set_stop_graph(in GraphElements process_graph)
+            raises(ReferenceNotFound, CircularReference, IncompatibleStatus);
+
+        /**
+        * Starts the initialisation of the application.
+        * The initialisation order of the application's processes will follow the
+        * graph of process initialisation.
+        *
+        * @param startup_kind the startup kind of the whole system.
+        * @exception IncompatibleStatus if the status of the application doesn't
+        * allow the operation.
+        */
+        void initialise(in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(IncompatibleStatus);
+
+        /**
+        * Initialises the application.
+        * Unlike the initialise() operation, this operation will not return
+        * until the request has been actually performed.
+        * (See initialise() for description).
+        *
+        * @return the status of this long request.
+        */
+        LongRequestStatus initialise_and_wait(
+            in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(IncompatibleStatus);
+
+        /**
+        * Resumes the initialisation of the application.
+        *
+        * @exception IncompatibleStatus if the status of the application doesn't
+        * allow the operation.
+        */
+        void resume()
+            raises(IncompatibleStatus);
+
+        /**
+        * Resumes the initialisation of the application.
+        * Unlike the resume() operation, this operation will not return
+        * until the request has been actually performed.
+        * (See resume() for description).
+        *
+        * @return the status of this long request.
+        */
+        LongRequestStatus resume_and_wait()
+            raises(IncompatibleStatus);
+        
+        /**
+        * Acknowledges the DEGRADED_MODE of the application.
+        * The mode of the application is reset to NORMAL_MODE.
+        *
+        * @exception IncompatibleStatus if the status of the application doesn't
+        * allow the operation.
+        */
+        void acknowledge()
+            raises(IncompatibleStatus);
+
+        /**
+        * Requests the application to run.
+        * All managed processes of the application that are initialised
+        * will be requested concurrently to run.
+        *
+        * @exception IncompatibleStatus if the status of the application doesn't
+        * allow the operation.
+        */
+        void run()
+            raises(IncompatibleStatus);
+
+        /**
+        * Requests the application to stop.
+        * The stop order of the application's processes will follow the graph
+        * of process stop. Active processes that do not belong to this graph
+        * will be stopped concurrently.
+
+        * @param emergency if true, the graph is not used and all the processes
+        * of the application will be requested to stop concurrently. This flag
+        * is also transmitted to the processes.
+        */
+        void stop(in boolean emergency);
+
+        /**
+        * Stops the application.
+        * Unlike the stop() operation, this operation will not return
+        * until the request has been actually performed.
+        * (See stop() for description).
+        *
+        * @return the status of this long request.
+        */
+        LongRequestStatus stop_and_wait(in boolean emergency);
+
+    }; // End interface Application
+
+
+    /**
+    * The sequence of Application.
+    */
+    typedef sequence<Application> Applications;
+
+
+    /**
+    * The iterator for Applications.
+    */
+    interface ApplicationsIterator
+    {
+        void reset();
+
+        boolean next_one(out Application an_application);
+
+        boolean next_n(in unsigned long how_many,
+                   out Applications n_applications);
+
+        void destroy();
+
+    }; // End interface ApplicationsIterator
+
+
+    /**
+    * The interface used by an application agent to notify :
+    * - messages from an application process
+    * - status changes from an application process
+    * - status changes from an activity point of an application process
+    */
+    interface ProcessObserver
+    {
+
+        /**
+        * Notifies a message.
+        *
+        * @param process_name the name identifying the process.
+        * @param header the header of the message.
+        * @param issuer the issuer of the message.
+        * @param message the message to notify.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote
+        * an existing process.
+        */
+        void notify_message(in ProcessName process_name,
+            in CdmwPlatformMngtBase::EventHeader header,
+            in CdmwPlatformMngtBase::EventIssuer issuer,
+            in string message)
+            raises(ProcessNotFound);
+
+        /**
+        * Notifies a fatal error.
+        *
+        * @param process_name the name identifying the process.
+        * @param time_stamp the time stamp of the error.
+        * @param issuer the issuer of the error.
+        * @param error_info the information about the error.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote
+        * an existing process.
+        */
+        void notify_error(in ProcessName process_name,
+            in CdmwPlatformMngtBase::TimeStamp time_stamp,
+            in CdmwPlatformMngtBase::EventIssuer issuer,
+            in string error_info)
+            raises(ProcessNotFound);
+        
+        /**
+        * Notifies the ending of the process.
+        *
+        * @param process_name the name identifying the process.
+        * @param time_stamp the time stamp of the ending.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote
+        * an existing process.
+        */
+        void notify_ending(in ProcessName process_name,
+            in CdmwPlatformMngtBase::TimeStamp time_stamp)
+            raises(ProcessNotFound);
+
+        /**
+        * Notifies the monitoring failure of the process.
+        *
+        * @param process_name the name identifying the process.
+        * @param time_stamp the time stamp of the monitoring failure.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote
+        * an existing process.
+        */
+        void notify_monitoring_failure(in ProcessName process_name,
+            in CdmwPlatformMngtBase::TimeStamp time_stamp)
+            raises(ProcessNotFound);
+
+        /**
+        * Notifies the monitoring failure of an activity point.
+        *
+        * @param process_name the name identifying the process.
+        * @param point_index the index of the activity point.
+        * @param time_stamp the time stamp of the monitoring failure.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote
+        * an existing process.
+        * @exception ActivityPointNotFound if point_index is out of range.
+        */
+        void notify_point_monitoring_failure(in ProcessName process_name,
+            in unsigned long point_index,
+            in CdmwPlatformMngtBase::TimeStamp time_stamp)
+            raises(ProcessNotFound, ActivityPointNotFound);
+
+        /**
+        * Notifies a user event.
+        *
+        * @param process_name the name identifying the process.
+        * @param issuer the issuer of the event.
+        * @param data the data of the event.
+        */
+        void notify_user_event(in string process_name,
+            in CdmwPlatformMngtBase::EventIssuer issuer,
+            in any data)
+            raises(ProcessNotFound);
+
+    }; // End interface ProcessObserver
+
+
+    /**
+    * The interface used by the system to control the application.
+    */
+    interface ApplicationControl
+    {
+
+        /**
+        * Requests the application to update itself as a host has become
+        * unavailable.
+        *
+        * @param unavailable_host_name the unavailable host.
+        */
+        void update_application(in HostName unavailable_host_name);
+
+        /**
+        * Requests the application to terminate.
+        */
+        void destroy_application();
+
+    }; // End interface ApplicationControl
+
+
+}; // End Module CdmwPlatformMngt
+
+#endif // CDMW_PLATFORM_MNGT_APPLICATION_IDL_
+

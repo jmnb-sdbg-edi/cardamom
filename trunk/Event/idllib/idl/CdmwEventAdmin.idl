@@ -1,0 +1,204 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_EVENTADMIN_IDL_
+#define CDMW_EVENTADMIN_IDL_
+
+
+// ORB include files
+
+#ifdef __OpenCCM__
+
+#ifndef __CORBA_Imported__
+#define __CORBA_Imported__
+import CORBA;
+#endif
+
+#elif defined(ORBACUS)
+#include <OB/orb.idl>
+#else
+#include <orb.idl>
+#endif
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the administration part 
+* Cdmw Event service for administration.
+*/
+module CdmwEventAdmin { 
+
+     /**
+     * Constant definition of the Cdmw EventChannelProfileManager name
+     * in the naming service.
+     */
+     const string EventChannelProfileManagerName = "EventChannelProfileManager";
+     
+     /**
+     * Structure EventChannelProperty allow to define a property associating 
+     * a name with a string value.
+     */
+     struct EventChannelProperty {
+         /**
+         * property name
+         */
+         string name;
+
+         /**
+         * property value
+         */
+         string value;
+     }; 
+     
+     /**
+     * Sequence EventChannelProfile allowing to define a set of property
+     */
+     typedef sequence<EventChannelProperty> EventChannelProfile;
+
+     /**
+     * Sequence EventChannelNameList allowing to define a sequence
+     */
+     typedef sequence<string> EventChannelNameList;
+
+     /**
+     * Exception to be raised whenever a name is not valid (is not
+     * what expected).
+     */
+     exception InvalidName {
+         /**
+         * The reason of the exception (may give more information).
+         */
+         string reason;
+     };
+
+     /**
+     * Exception to be raised whenever there is a query to create an object
+     * using a name that is already used for another object.
+     */
+     exception AlreadyExistant{
+         /**
+         * The reason of the exception (may give more information).
+         */
+         string reason;
+     };
+
+     /**
+     * Exception to be raised whenever an object doesn't exist.
+     */
+     exception NotExist {
+         /**
+         * The reason of the exception (may give more information).
+         */
+         string reason;
+     };
+
+     /**
+     * The EventChannelFactory supports operation to manage properties of event channels.
+     */
+     interface EventChannelProfileManager {
+
+         /**
+         * This attribute contains the list of managed event channels.
+         *
+         */
+         readonly attribute EventChannelNameList managed_event_channels;
+
+         /**
+         * This operation create a new event channel profile.
+         *
+         * @param name The event channel name as declared in the Cdmw 
+         * Naming&Repository.
+         * @param profile A set of properties associated to this event channel.
+         *
+         * @exception AlreadyExistant if a set of properties has already exist for this channel.
+         * @exception InvalidName if the event channel name has a bad format.
+         *
+         */ 
+         void create_profile(in string channel_name, in EventChannelProfile profile)
+             raises (AlreadyExistant, InvalidName);
+
+
+         /**
+         * This operation remove an event channel profile.
+         *
+         * @param name The event channel name as declared in the Cdmw 
+         * Naming&Repository.
+         *
+           * @exception NotExist if no profile is defined for the channel.
+         */ 
+         void remove_profile(in string channel_name)
+             raises (NotExist);
+
+          /**
+          * This operation update an event channel profile with a new one.
+          *
+          * @param name The event channel name as declared in the Cdmw 
+          * Naming&Repository.
+          * @param profile A set of properties associated to this event channel.
+          *
+          * @exception NotExist if no profile is defined for the channel.
+          * 
+          */ 
+          void update_profile(in string channel_name, in EventChannelProfile profile)
+              raises (NotExist);
+
+          
+          /**
+          * This operation return the profile associated to an event channel.
+          *
+          * @param name The event channel name as declared in the Cdmw 
+          * Naming&Repository.
+          * 
+          * @return A set of properties associated to this event channel.
+            * 
+          * @exception NotExist if no profile is defined for the channel.
+            *
+          */ 
+          EventChannelProfile find_profile(in string channel_name)
+              raises (NotExist);
+
+          /**
+          * This operation save all the current managed profiles in an XML file.
+          *
+          * @param file_name Name of the XML file where event channel profile 
+          * should be saved.
+          * @param write_over Write over an existant file if true.
+          *
+          * @exception AlreadyExistant if the XML file already exists and the 
+          * write_over flag is set to false.
+          */
+          void save_profiles() raises (AlreadyExistant);
+
+          /**
+          * This operation deactivates the servant and permanently removes its 
+          * persistent state.
+          */
+          void destroy();
+    };
+}; 
+
+#endif // CDMW_EVENTADMIN_IDL_
+
+

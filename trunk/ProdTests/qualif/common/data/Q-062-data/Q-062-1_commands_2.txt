@@ -1,0 +1,14 @@
+verbose
+install_assembly @config.install.dir@/share/QualifCcmLb_2.aar
+create_assembly CcmLbAssembly2 myAssembly2
+build_assembly myAssembly2
+sleep 60000
+tear_assembly_down myAssembly2
+destroy_assembly myAssembly2
+remove_assembly CcmLbAssembly2
+tear_assembly_down myAssembly1
+destroy_assembly myAssembly1
+remove_assembly CcmLbAssembly1
+remove_component Client 1,0,0,0
+remove_component ServerWithFacet 1,0,0,0
+exit

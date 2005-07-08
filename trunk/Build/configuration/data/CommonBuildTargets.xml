@@ -1,0 +1,1938 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!--
+    The "make-deliveries" target creates one or more executables or libraries
+    and stores them into the appropriate delivery directory (either the CSC or
+    the CSCI delivery directory or both).
+
+    It depends on the following targets:
+        + "-initialize"
+-->
+<target name="make-deliveries" description="make all the deliveries"
+        depends="-initialize">
+
+    <delete quiet="true">
+        <fileset dir="${TMP}" includes="*.list"/>
+    </delete>
+
+    <var name="p" value="${user.home}${FS}.ccache"/>
+    <var name="p" value="${p}${FS}cc#${site.id}.properties"/>
+    <property name="my.ccache" location="${p}"/>
+
+    <if>
+        <available file="${my.ccache}"/>
+        <then>
+            <xvar name="compiled.cscs" unset="true"/>
+            <property file="${my.ccache}"/>
+        </then>
+        <else>
+            <var name="compiled.cscs" value=""/>
+        </else>
+    </if>
+
+    <!--
+        the property "csc.all.deliveries" is created during the initialization
+        by the "loadcscproperties" task.
+    -->
+    <if>
+        <isset property="csc.all.deliveries"/>
+        <then>
+            <foreach list="${csc.all.deliveries}"
+                     target="-make-delivery"
+                     param="my.delivery.basename"
+                     inheritall="true" delimiter=" "
+            />
+        </then>
+    </if>
+
+    <if>
+        <available file="${my.ccache}"/>
+        <then>
+            <xvar name="compiled.cscs" unset="true"/>
+            <property file="${my.ccache}"/>
+        </then>
+        <else>
+            <var name="compiled.cscs" value=""/>
+        </else>
+    </if>
+
+    <if>
+        <not>
+            <contains string="${compiled.cscs}"
+                      substring="${basedir},"/>
+        </not>
+        <then>
+            <propertyfile file="${my.ccache}">
+                <entry key="compiled.cscs"
+                       value="${compiled.cscs}${basedir},"/>
+            </propertyfile>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-initialize" target loads the global properties.
+
+    It depends on the following targets:
+        + "-define-global-macros"
+        + "-set-local-aliases"
+        + "-load-site-properties"
+        + "-load-depsinfo-properties"
+        + "-set-common-build-aliases"
+        + "-load-csc-properties"
+        + "-build-key-string"
+        + "-get-orb-settings"
+        + "-get-compiler-settings"
+        + "-get-tools-settings"
+-->
+<target name="-initialize"
+        depends="-define-global-macros, -set-local-aliases,
+                 -load-site-properties, -load-depsinfo-properties,
+                 -set-common-build-aliases, -load-csc-properties,
+                 -build-key-string, -get-orb-settings,
+                 -get-compiler-settings, -get-tools-settings">
+</target>
+
+
+<!-- ===========================================================================
+    The "-set-common-build-aliases" target defines common aliases for the build.
+-->
+<target name="-set-common-build-aliases">
+    <condition property="build.use.symbolic.link">
+        <and>
+            <istrue value="${config.delivery.uselink}"/>
+            <os family="unix"/>
+        </and>
+    </condition>
+
+    <if>
+        <isfalse value="${global.compilation}"/>
+        <then>
+            <property name="csci.global.dependencies"
+                location="${TMP}${FS}${tmpfile.prefix}_csci_deps#${site.id}"/>
+        </then>
+    </if>
+
+    <!-- the product name in lower case -->
+    <stringmanip string="${config.product.name}" action="lowercase"
+                 property="product.lcase.name"/>
+
+    <!-- disable fast prerequisites checking -->
+    <property name="sloppy.check" value="false"/>
+
+    <property name="my.stubskel.dirname" value="stubskel"/>
+    <property name="my.unified.stubskel.dirname" value="unifiedstubskel"/>
+
+    <property name="compile.missing.libs" value="true"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-load-site-properties" target loads the site properties file.
+
+    It depends on the following targets:
+        + "-check-site-properties"
+-->
+<target name="-load-site-properties" depends="-check-site-properties">
+    <property file="${build.site.properties}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-load-depsinfo-properties" target loads the dependencies info file.
+-->
+<target name="-load-depsinfo-properties">
+    <var name="p" value="${config.Build.location}${FS}configuration"/>
+    <var name="p" value="${p}${FS}data${FS}DepsInfo.properties"/>
+
+    <loadproperties srcFile="${p}">
+        <filterchain>
+            <expandproperties/>
+        </filterchain>
+    </loadproperties>
+</target>
+
+
+<!-- ===========================================================================
+    The "-check-csc-properties" target checks if the CSC properties file exists.
+-->
+<target name="-check-csc-properties">
+    <!-- set the file name -->
+    <var name="my.var" value="${config.csc.data.dir}"/>
+    <property name="my.csc.properties"
+              location="${my.var}${FS}${config.csc.properties.file}"/>
+
+    <!-- check -->
+    <checkxmlpropertiesfile
+        my.properties.file="${my.csc.properties}"
+        my.xsd.dir="${xsd.dir}"
+        require.validation="${config.csc.properties.validate}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-delivery" target compiles all the source files required by the
+    specified delivery to create either an executable or a library.
+-->
+<target name="-make-delivery">
+    <echo>=&gt; [DELIV] ${my.delivery.basename}</echo>
+
+    <!-- the CSCI location -->
+    <propertycopy name="my.csci.location"
+                  from="config.${csc.owner}.location"/>
+
+    <!-- determine the visibility of this delivery -->
+    <propertycopy name="my.delivery.visibility"
+                  from="csc.${my.delivery.basename}.visibility"/>
+
+    <!-- determine what to do in regards with the the delivery type -->
+    <propertycopy name="my.delivery.type"
+                  from="csc.${my.delivery.basename}.type"/>
+
+    <condition property="my.delivery.is.jnilib">
+        <equals arg1="${my.delivery.type}" arg2="jnilib"/>
+    </condition>
+
+    <condition property="my.delivery.is.data">
+        <equals arg1="${my.delivery.type}" arg2="data"/>
+    </condition>
+
+    <condition property="my.delivery.is.exe.or.lib">
+        <or>
+            <equals arg1="${my.delivery.type}" arg2="exe"/>
+            <equals arg1="${my.delivery.type}" arg2="lib"/>
+            <isset property="my.delivery.is.jnilib"/>
+        </or>
+    </condition>
+
+    <if>
+        <isset property="my.delivery.is.data"/>
+        <then>
+            <antcall target="-generate-data-delivery-files"/>
+        </then>
+    </if>
+
+    <timestampselector property="my.most.recent.file" count="1">
+        <path>
+            <fileset dir="${basedir}" />
+        </path>
+    </timestampselector>
+
+    <if>
+        <and>
+            <isset property="my.delivery.is.exe.or.lib"/>
+            <or>
+                <istrue value="${force.recompilation}"/>
+                <not>
+                    <contains string="${compiled.cscs}"
+                              substring="${basedir},"/>
+                </not>
+                <and>
+                    <contains string="${compiled.cscs}"
+                              substring="${basedir},"/>
+                    <istrue value="${ignore.ccache}"/>
+                </and>
+            </or>
+        </and>
+        <then>
+            <antcall target="-compile-delivery-file"/>
+        </then>
+    </if>
+    
+    <antcall target="-export-delivery-file"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-generate-data-delivery-files" target generates a set of data files.
+-->
+
+<target name="-generate-data-delivery-files">
+         
+    <antcallback target="-construct-delivery-name"
+                 return="my.delivery.name"/>
+
+    <antcallback target="-construct-csc-delivery-dir-path"
+                 return="my.csc.delivery.dir"/>
+
+    <propertycopy name="my.data.soucefiles"
+                  from="csc.${my.delivery.basename}.sourcefiles"/>
+
+    <foreach list="${my.data.soucefiles}" delimiter=" " inheritall="true"
+             target="-generate-data-delivery-file" param="my.param.file"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-generate-data-delivery-file" target generates the specified data file.
+-->
+
+<target name="-generate-data-delivery-file">
+    <xloadproperties srcFile="${build.site.properties}"
+                     filtersetid="my.site.tokens"/>
+
+    <if>
+        <and>
+            <available file="${build.dev.tokens.properties}" type="file"/>
+            <not><isemptyfile file="${build.dev.tokens.properties}" /></not>
+        </and>
+        <then>
+            <xloadproperties srcFile="${build.dev.tokens.properties}" 
+                             filtersetid="my.dev.tokens"/>
+
+            <echo level="verbose">${my.param.file}</echo>
+
+            <copy file="${my.param.file}" todir="${my.csc.delivery.dir}"
+                  overwrite="true">
+
+                <filterset refid="my.site.tokens"/>                
+                <filterset refid="my.dev.tokens"/>
+            </copy>
+        </then>
+        <else>
+            <copy file="${my.param.file}" todir="${my.csc.delivery.dir}"
+                  overwrite="true">
+
+                <filterset refid="my.site.tokens"/>            
+            </copy>
+        </else>
+    </if>
+
+    <chmod perm="a+x">
+        <fileset dir="${my.csc.delivery.dir}">
+            <include name="**/*.sh"/>
+        </fileset>
+    </chmod>
+</target>
+
+
+<!-- ===========================================================================
+    The "-compile-delivery-file" target compiles the source files and creates
+    either an executable or a library.
+
+    It depends on the following targets:
+        + "-construct-delivery-name"
+        + "-make-build-directory"
+        + "-check-missing-libraries"
+        + "-compile-generated-files"
+        + "-compile-idl-files"
+        + "-compile-source-files"
+-->
+<target name="-compile-delivery-file"
+        depends="-construct-delivery-name, -make-build-directory,
+                 -check-missing-libraries, -compile-generated-files,
+                 -compile-idl-files, -compile-source-files">
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-delivery-name" targets constructs the delivery file name in
+    regards with the running OS.
+
+    It depends on the following targets:
+        + "-construct-linux-delivery-name"
+        + "-construct-sunos-delivery-name"
+        + "-construct-aix-delivery-name"
+        + "-construct-windows-delivery-name"
+-->
+<target name="-construct-delivery-name"
+        depends="-construct-linux-delivery-name,
+                 -construct-sunos-delivery-name,
+                 -construct-aix-delivery-name,
+                 -construct-windows-delivery-name">
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-build-directory" target creates the build directory.
+
+    It depends on the following targets:
+        + "-construct-build-dir-path"
+-->
+<target name="-make-build-directory" depends="-construct-build-dir-path"
+        if="csc.build.dir">
+
+    <mkdir dir="${csc.build.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-build-dir-path" target constructs the build directory path.
+-->
+<target name="-construct-build-dir-path">
+    <var name="my.var" value="${config.csc.build.dir}"/>
+    <var name="my.var" value="${my.var}${FS}${my.delivery.name}"/>
+    <if>
+        <isset property="my.delivery.is.jnilib"/>
+        <then>
+            <var name="my.var" value="${my.var}${FS}${config.site.csn}-"/>
+            <var name="my.var" value="${my.var}${bjni.compiler.key.string}"/>
+        </then>
+        <else>
+            <var name="my.var" value="${my.var}${FS}${my.key.string}"/>
+        </else>
+    </if>
+
+    <property name="csc.build.dir" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-require-idl-compilation" target checks if there are any IDL files to
+    compile.
+-->
+<target name="-require-idl-compilation">
+    <!-- get the list of IDL files to compile -->
+    <propertycopy name="my.idl.server" silent="true"
+                  from="csc.${my.delivery.basename}.idl.server"/>
+    <propertycopy name="my.idl.client" silent="true"
+                  from="csc.${my.delivery.basename}.idl.client"/>
+    <propertycopy name="my.idl.tie" silent="true"
+                  from="csc.${my.delivery.basename}.idl.tie"/>
+
+    <!-- check -->
+    <condition property="require.idl.compilation">
+        <or>
+            <isset property="my.idl.server"/>
+            <isset property="my.idl.client"/>
+            <isset property="my.idl.tie"/>
+        </or>
+    </condition>
+
+    <condition property="my.csci.is.missing.orb">
+        <and>
+            <isset property="require.idl.compilation"/>
+            <not>
+                <isset property="my.csci.orb"/>
+            </not>
+        </and>
+    </condition>
+
+    <var name="my.var" value="An ORB must be configured in order"/>
+    <var name="my.var" value="${my.var} to compile IDL files."/>
+    <fail if="my.csci.is.missing.orb" message="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-csc-stubskel-dir" target creates a directory in the CSC generated
+    directory to store the file generated by the IDL compiler.
+
+    It depends on the following targets:
+        + "-construct-csc-stubskel-dir-path"
+-->
+<target name="-make-csc-stubskel-dir" if="my.csc.stubskel.dir"
+        depends="-construct-csc-stubskel-dir-path">
+        
+    <mkdir dir="${my.csc.stubskel.dir}"/>
+
+    <if>
+        <isset property="my.csc.unified.stubskel.dir"/>
+        <then>
+            <mkdir dir="${my.csc.unified.stubskel.dir}"/>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-check-tstamp-file" target checks if the specified IDL file is newer
+    than its corresponding time stamp file.
+
+    It depends on the following targets:
+        + "-construct-tstamp-file-path"
+-->
+<target name="-check-tstamp-file" depends="-construct-tstamp-file-path"
+        if="my.idl.tstamp.file">
+        
+    <if>
+        <available file="${my.idl.tstamp.file}"/>
+        <then>
+            <outofdate property="my.tstamp.file.outdated">
+                <sourcefiles>
+                    <pathelement path="${my.idl.file}"/>
+                </sourcefiles>
+                <targetfiles>
+                    <pathelement path="${my.idl.tstamp.file}"/>
+                </targetfiles>
+            </outofdate>
+        </then>
+        <else>
+            <!--
+                the time stamp file does not exist, we will consider it
+                as outdated.
+            -->
+            <property name="my.tstamp.file.outdated" value="true"/>
+        </else>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-idl-files" target copies the IDL files into the delivery
+    directories.
+
+    It depends on the following targets:
+        + "-export-local-idl-files"
+        + "-export-public-idl-files"
+-->
+<target name="-export-idl-files"
+        depends="-export-local-idl-files, -export-public-idl-files">
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-local-idl-files" target copies the IDL files into the CSC's
+    delivery directory.
+
+    It depends on the following targets:
+        + "-make-csc-delivery-idl-dir"
+-->
+<target name="-export-local-idl-files" depends="-make-csc-delivery-idl-dir">
+    <!-- get the list of IDL files -->
+    <var name="my.var" value=""/>
+    
+    <if>
+        <isset property="my.idl.server"/>
+        <then>
+            <var name="my.var" value="${my.idl.server}"/>
+        </then>
+    </if>
+    
+    <if>
+        <isset property="my.idl.client"/>
+        <then>
+            <var name="my.var" value="${my.var} ${my.idl.client}"/>
+        </then>
+    </if>
+
+    <if>
+        <isset property="my.idl.tie"/>
+        <then>
+            <var name="my.var" value="${my.var} ${my.idl.tie}"/>
+        </then>
+    </if>
+
+    <if>
+        <not>
+            <equals arg1="${my.var}" arg2=""/>
+        </not>
+        <then>
+            <stringmanip string="${my.var}" action="trim"
+                         property="my.idls.to.export"/>
+
+            <condition property="has.idls.to.export">
+                <not>
+                    <equals arg1="${my.idls.to.export}" arg2=""/>
+                </not>
+            </condition>
+        </then>
+    </if>
+
+    <!-- export -->
+    <if>
+        <isset property="has.idls.to.export"/>
+        <then>
+            <if>
+                <isset property="build.use.symbolic.link"/>
+                <then>
+                    <xexec executable="ln" failonerror="true" showCmd="false"
+                           outputproperty="dummy">
+
+                        <arg line="-sf ${my.idls.to.export}"/>
+                        <arg value="${my.csc.delivery.idl.dir}"/>
+                    </xexec>
+                </then>
+                <else> <!-- copy -->
+                    <for list="${my.idls.to.export}" delimiter=" "
+                         param="my.param.file">
+
+                        <sequential>
+                            <copy file="@{my.param.file}"
+                                  todir="${my.csc.delivery.idl.dir}"/>
+                        </sequential>
+                    </for>
+                </else>
+            </if>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-csc-delivery-idl-dir" target creates a directory in the CSC
+    delivery tree to store the IDL file.
+
+    It depends on the following targets:
+        + "-construct-csc-delivery-idl-dir-path"
+-->
+<target name="-make-csc-delivery-idl-dir" if="my.csc.delivery.idl.dir"
+        depends="-construct-csc-delivery-idl-dir-path">
+
+    <mkdir dir="${my.csc.delivery.idl.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-csc-delivery-idl-dir-path" target constructs the path to the
+    directory in the CSC delivery tree which contains the IDL files.
+-->
+<target name="-construct-csc-delivery-idl-dir-path"
+        if="require.idl.compilation">
+
+    <var name="my.var" value="${config.delivery.dir}"/>
+    <var name="my.var" value="${my.var}${FS}${config.delivery.idl.dir}"/>
+
+    <property name="my.csc.delivery.idl.dir" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-csci-delivery-data-dir" target creates a directory in the CSCI
+    delivery tree to store the data file.
+
+    It depends on the following targets:
+        + "-construct-csci-delivery-data-dir-path"
+-->
+<target name="-make-csci-delivery-data-dir"
+        depends="-construct-csci-delivery-data-dir-path">
+
+    <mkdir dir="${my.csci.delivery.data.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-csci-delivery-data-dir-path" target constructs the path to 
+    the directory in the CSCI delivery tree which contains the data files.
+-->
+<target name="-construct-csci-delivery-data-dir-path">
+    <var name="my.var" value="${my.csci.location}"/>
+    <var name="my.var" value="${my.var}${FS}${config.delivery.dir}"/>
+    <var name="my.var" value="${my.var}${FS}${config.delivery.data.dir}"/>
+
+    <property name="my.csci.delivery.data.dir" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-csc-delivery-data-dir" target creates a directory in the CSC
+    delivery tree to store the data file.
+
+    It depends on the following targets:
+        + "-construct-csc-delivery-data-dir-path"
+-->
+<target name="-make-csc-delivery-data-dir"
+        depends="-construct-csc-delivery-data-dir-path">
+
+    <mkdir dir="${my.csc.delivery.data.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-csc-delivery-data-dir-path" target constructs the path to 
+    the directory in the CSC delivery tree which contains the data files.
+-->
+<target name="-construct-csc-delivery-data-dir-path">
+    <var name="my.var" value="${config.delivery.dir}"/>
+    <var name="my.var" value="${my.var}${FS}${config.delivery.data.dir}"/>
+
+    <property name="my.csc.delivery.data.dir" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-public-idl-files" target copies the IDL files into the CSCI's
+    delivery directory.
+
+    It depends on the following targets:
+        + "-make-csci-delivery-idl-dir"
+-->
+<target name="-export-public-idl-files" if="my.csci.delivery.idl.dir"
+        depends="-make-csci-delivery-idl-dir">
+
+    <if>
+        <isset property="has.idls.to.export"/>
+        <then>
+            <if>
+                <isset property="build.use.symbolic.link"/>
+                <then>
+                    <xexec executable="ln" failonerror="true" showCmd="false"
+                           outputproperty="dummy">
+
+                        <arg line="-sf ${my.idls.to.export}"/>
+                        <arg value="${my.csci.delivery.idl.dir}"/>
+                    </xexec>
+                </then>
+                <else> <!-- copy -->
+                    <for list="${my.idls.to.export}" delimiter=" "
+                         param="my.param.file">
+
+                        <sequential>
+                            <copy file="@{my.param.file}"
+                                  todir="${my.csci.delivery.idl.dir}"/>
+                        </sequential>
+                    </for>
+                </else>
+            </if>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-csci-delivery-idl-dir" target creates a directory in the CSCI
+    delivery tree to store the IDL file.
+
+    It depends on the following targets:
+        + "-construct-csci-delivery-idl-dir-path"
+-->
+<target name="-make-csci-delivery-idl-dir" if="my.csci.delivery.idl.dir"
+        depends="-construct-csci-delivery-idl-dir-path">
+
+    <mkdir dir="${my.csci.delivery.idl.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-csci-delivery-idl-dir-path" target constructs the path to
+    the directory in the CSCI delivery tree which contains the IDL files.
+-->
+<target name="-construct-csci-delivery-idl-dir-path"
+        if="require.idl.compilation">
+
+    <!--
+        for IDL files from a CSC to be exported to the CSCI delivery, those
+        condititions must be fulfilled:
+            - the visibility of the specified delivery is set to "public"
+            - and its type is "lib".
+    -->
+    <condition property="require.csci.delivery.idl.dir">
+        <and>
+            <equals arg1="${my.delivery.type}" arg2="lib"/>
+            <or>
+                <equals arg1="${my.delivery.visibility}" arg2="protected"/>
+                <equals arg1="${my.delivery.visibility}" arg2="public"/>
+            </or>
+        </and>
+    </condition>
+
+    <if>
+        <isset property="require.csci.delivery.idl.dir"/>
+        <then>
+            <!-- set the directory name -->
+            <var name="my.var" value="${my.csci.location}${FS}"/>
+            <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
+            <var name="my.var" value="${my.var}${config.delivery.idl.dir}"/>
+
+            <property name="my.csci.delivery.idl.dir" location="${my.var}"/>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-check-missing-libraries" target ensures that all the required
+    libraries are built, if one or more of them are not built yet then this
+    target will have the appropriate CSCs build them.
+-->
+<target name="-check-missing-libraries" unless="global.compilation">
+    <property name="cscdeps.list"
+              location="${TMP}${FS}${tmpfile.prefix}_cscdeps.list"/>
+
+    <if>
+        <istrue value="${compile.missing.libs}"/>
+        <then>
+            <propertycopy name="my.prereqs.to.build" silent="true"
+                          from="csc.${my.delivery.basename}.prereqs.to.build"/>
+
+            <if>
+                <isset property="my.prereqs.to.build"/>
+                <then>
+                    <propertycopy name="my.prereqs.compilseq" silent="true"
+                        from="csc.${my.delivery.basename}.prereqs.compilseq"/>
+
+                    <if>
+                        <not><isset property="my.prereqs.compilseq"/></not>
+                        <then>
+                            <propertyfile file="${cscdeps.list}">
+                                <entry key="cscdeps"
+                                       value="${my.prereqs.to.build}"/>
+                            </propertyfile>
+
+                            <foreach list="${my.prereqs.to.build}"
+                                     param="csc"
+                                     delimiter=" "
+                                     target="-find-other-csc-deps"
+                                     inheritAll="false"
+                            />
+
+                            <findfile
+                                file="PkgDesc.xml"
+                                dir="${config.Build.location}${FS}configuration"
+                                findFirst="true"
+                                property="my.pkg.desc"
+                                recursive="true"
+                            />
+
+                            <property file="${cscdeps.list}"/>
+
+                            <findstaticdeps
+                                pkgdesc="${my.pkg.desc}"
+                                cscdirs="${cscdeps}"
+                                property="sorted.prereqs"
+                                expand="true"
+                            />
+
+                            <xvar name="cscdeps" unset="true"/>
+
+                            <propertyfile file="${cscproperties.cache}">
+                                <entry key="csc.${my.delivery.basename}.prereqs.compilseq"
+                                       value="${sorted.prereqs}"/>
+                            </propertyfile>
+
+                            <property name="my.prereqs.compilseq"
+                                      value="${sorted.prereqs}"/>
+                        </then>
+                    </if>
+
+                    <var name="p" value="${config.Build.location}"/>
+                    <var name="p" value="${p}${FS}configuration"/>
+                    <var name="p" value="${p}${FS}${config.csc.data.dir}"/>
+                    <var name="p" value="${p}${FS}DepsInfo.properties"/>
+
+                    <loadproperties srcFile="${p}">
+                        <filterchain>
+                            <expandproperties/>
+                        </filterchain>
+                    </loadproperties>
+
+                    <tempfile property="my.compile.antfile"
+                              destdir="${TMP}"
+                              prefix="${tmpfile.prefix}_build_"
+                              suffix="#${site.id}.xml"
+                    />
+
+                    <property name="my.ccache.dir"
+                              location="${user.home}${FS}.ccache"/>
+                    <mkdir dir="${my.ccache.dir}"/>
+
+                    <property
+                        name="my.ccache"
+                        location="${my.ccache.dir}${FS}cc#${site.id}.properties"
+                    />
+
+                    <if>
+                        <and>
+                            <available file="${my.ccache}"/>
+                            <isfalse value="${ignore.ccache}"/>
+                        </and>
+                        <then>
+                            <property file="${my.ccache}"/>
+                        </then>
+                        <else>
+                            <var name="compiled.cscs" value="" />
+                        </else>
+                    </if>
+
+                    <createbuildfile
+                        file="${my.compile.antfile}"
+                        cscs="${my.prereqs.compilseq}"
+                        compiledcscs="${compiled.cscs}"
+                        siteproperties="${build.site.properties}"
+                        devtokens="${build.dev.tokens.properties}"
+                        instokens="${build.install.tokens.properties}"
+                        globaldeps="${csci.global.dependencies}"
+                        globalcompilation="true"
+                        ignoreccache="${ignore.ccache}"
+                        quiet="true"
+                    />
+
+                    <basename property="my.compile.antfile.basename"
+                              file="${my.compile.antfile}"/>
+
+                    <ant inheritAll="false"
+                         antfile="${my.compile.antfile.basename}"
+                         dir="${TMP}"
+                    />
+
+                    <delete file="${build.compile.antfile}" quiet="true"/>
+                    <delete file="${cscdeps.list}"
+                            quiet="true"
+                            deleteonexit="true"
+                    />
+                </then>
+            </if>
+        </then>
+        <else>
+            <propertyselector
+                property="prereqs"
+                match="^csc\.(.*)\.prereqs.to.build" select="\1"/>
+
+            <if>
+                <isset property="prereqs"/>
+                <then>
+                    <for list="${prereqs}" param="p">
+                        <sequential>
+                            <propertycopy property="prereq"
+                                          from="csc.@{p}.prereqs.to.build"/>
+
+                            <!-- create a list of CSCs to compile -->
+                            <propertyfile file="${cscdeps.list}">
+                                <entry key="cscdeps"
+                                       value=" ${prereq}"
+                                       operation="+"/>
+                            </propertyfile>
+                        </sequential>
+                    </for>
+                </then>
+            </if>
+        </else>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-find-other-csc-deps" target determines the dependencies of a given
+    CSC.
+-->
+<target name="-find-other-csc-deps">
+    <!--
+        NOTE: this target exists because "-find-csc-deps" depends on
+        "-check-missing-libraries". If we used the "for" task instead of
+        the "foreach" task in "-check-missing-libraries" and thefore insert
+        the below code in the "for" task then ANT will raise an error
+        (recursive target dependency).
+    -->
+
+    <findfile file="Build*.xml"
+              dir="${csc}"
+              findFirst="true"
+              property="csc.build.file"
+    />
+
+    <ant dir="${csc}"
+         antfile="${csc.build.file}"
+         target="-find-csc-deps"
+         inheritall="false">
+
+        <property name="compile.missing.libs" value="false"/>
+    </ant>
+    
+    <xvar name="csc.build.file" unset="true"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-find-csc-deps" target determines the dependencies of a given CSC.
+
+    It depends on the following targets:
+        + "-initialize"
+        + "-check-missing-libraries"
+-->
+<target name="-find-csc-deps" depends="-initialize, -check-missing-libraries"/>
+
+
+<!-- ===========================================================================
+    The "-make-csc-delivery-dir" target creates a new directory in the CSC
+    delivery tree to store either the library or the executable.
+
+    It depends on the following targets:
+        + "-construct-csc-delivery-dir-path"
+-->
+<target name="-make-csc-delivery-dir" if="my.csc.delivery.dir"
+        depends="-construct-csc-delivery-dir-path">
+        
+    <mkdir dir="${my.csc.delivery.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-csc-delivery-dir-path" target constructs the CSC's delivery
+    directory path.
+-->
+<target name="-construct-csc-delivery-dir-path">
+    <var name="my.var" value="${config.delivery.dir}${FS}"/>
+
+    <switch value="${my.delivery.type}">
+        <case value="lib">
+            <var name="my.var"
+                 value="${my.var}${config.delivery.library.dir}"/>
+        </case>
+        <case value="exe">
+            <var name="my.var"
+                 value="${my.var}${config.delivery.executable.dir}"/>
+        </case>
+        <case value="jnilib">
+            <var name="my.var"
+                 value="${my.var}${config.delivery.library.dir}"/>
+        </case>
+        <case value="data">
+            <var name="my.var"
+                 value="${my.var}${config.delivery.data.dir}"/>
+        </case>
+        <default>
+            <fail>unknown delivery type '${my.delivery.type}'.</fail>
+        </default>
+    </switch>
+
+    <if>
+        <isset property="my.delivery.is.jnilib"/>
+        <then>
+            <var name="my.var" value="${my.var}${FS}${config.site.csn}-"/>
+            <var name="my.var" value="${my.var}${bjni.compiler.key.string}"/>
+        </then>
+        <else>
+            <if>
+                <not>
+                    <equals arg1="${my.delivery.type}" arg2="data" trim="true"/>
+                </not>
+                <then>
+                    <var name="my.var" value="${my.var}${FS}${my.key.string}"/>
+                </then>
+            </if>
+        </else>
+    </if>
+    <property name="my.csc.delivery.dir" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-delivery-file-path" target constructs the delivery file
+    path.
+-->
+<target name="-construct-delivery-file-path" if="my.csc.delivery.dir">
+    <var name="my.var" value="${my.csc.delivery.dir}${FS}"/>
+    <var name="my.var" value="${my.var}${my.delivery.name}"/>
+
+    <property name="my.delivery.file" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-delivery-file" target copies the delivery file into the
+    appropriate delivery directory.
+
+    It depends on the following targets:
+        + "-export-lib-or-exe-file"
+        + "-export-data-file"
+-->
+<target name="-export-delivery-file"
+        depends="-export-lib-or-exe-file, -export-data-file">
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-lib-or-exe-file" target copies the library or the executable
+    file to the CSCI delivery directory.
+
+    It depends on the following targets:
+        + "-require-exporting"
+-->
+<target name="-export-lib-or-exe-file" depends="-require-exporting"
+        if="my.delivery.is.exe.or.lib">
+
+    <if>
+        <isset property="require.exporting"/>
+        <then>
+            <if>
+                <isset property="build.use.symbolic.link"/>
+                <then>
+                    <xexec executable="ln" failonerror="true"
+                           showCmd="false" outputproperty="dummy">
+
+                        <arg line="-sf ${my.delivery.file}"/>
+                        <arg value="${my.csci.delivery.dir}"/>
+                    </xexec>
+                </then>
+                <else> <!-- copy -->
+                    <copy file="${my.delivery.file}"
+                          todir="${my.csci.delivery.dir}"/>
+                    <chmod dir="${my.csci.delivery.dir}" perm="ugo+x" 
+                           includes="**/*"/>
+                </else>
+            </if>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-data-file" target copies the library or the data file(s) to the
+    CSCI delivery directory.
+
+    It depends on the following targets:
+        + "-require-exporting"
+-->
+<target name="-export-data-file" depends="-require-exporting"
+        if="my.delivery.is.data">
+
+    <!-- get the data files -->
+    <propertycopy name="my.data.files"
+                  from="csc.${my.delivery.basename}.sourcefiles"/>
+
+    <for list="${my.data.files}" delimiter=" " param="my.param.file">
+        <sequential>
+            <xbasename property="data.file" file="@{my.param.file}"
+                       override="true"/>
+
+            <if>
+                <available file="${my.csc.delivery.dir}${FS}${data.file}"
+                           type="file" />
+                <then>
+                    <if>
+                        <isset property="build.use.symbolic.link"/>
+                        <then>
+                            <xexec executable="ln" failonerror="true"
+                                   showCmd="false" outputproperty="dummy">
+
+                                <arg line="-sf ${my.csc.delivery.dir}${FS}${data.file}"/>
+                                <arg value="${my.csci.delivery.dir}"/>
+                            </xexec>
+                        </then>
+                        <else> <!-- copy -->
+                            <copy file="${my.csc.delivery.dir}${FS}${data.file}"
+                                  todir="${my.csci.delivery.dir}"/>
+                        </else>
+                    </if>
+                </then>
+            </if>
+        </sequential>
+    </for>
+</target>
+
+
+<!-- ===========================================================================
+    The "-require-exporting" target checks if exporting is required.
+
+    It depends on the following targets:
+        + "-make-csci-delivery-dir
+-->
+<target name="-require-exporting" depends="-make-csci-delivery-dir"
+        if="my.csci.delivery.dir">
+
+    <antcallback target="-construct-csc-delivery-dir-path"
+                 return="my.csc.delivery.dir"/>
+
+    <if>
+        <isset property="my.delivery.is.exe.or.lib" />
+        <then>
+            <antcallback target="-construct-delivery-name"
+                         return="my.delivery.name"/>
+            <antcallback target="-construct-delivery-file-path"
+                         return="my.delivery.file"/>
+
+            <!-- set the file name -->
+            <var name="my.var" value="${my.csci.delivery.dir}"/>
+            <var name="my.var" value="${my.var}${FS}${my.delivery.name}"/>
+
+            <property name="my.export.file" location="${my.var}"/>
+
+            <!-- check -->
+            <if>
+                <and>
+                    <available file="${my.delivery.file}"/>
+                    <or>
+                        <not>
+                            <available file="${my.export.file}"/>
+                        </not>
+                        <uptodate targetfile="${my.delivery.file}"
+                                srcfile="${my.export.file}"/>
+                    </or>
+                </and>
+                <then>
+                    <property name="require.exporting" value="true"/>
+                </then>
+            </if>
+        </then>
+        <else>
+            <!--
+                always export data files at the moment as it does not consume
+                a great deal of time (vs the time it would take to test if
+                they exist one by one)
+            -->
+            <property name="require.exporting" value="true"/>
+        </else>
+    </if>
+
+</target>
+
+
+<!-- ===========================================================================
+    The "-make-csci-delivery-dir" target creates a new directory into the CSCI's
+    delivery tree to store either the library or the executable.
+
+    It depends on the following targets:
+        + "-construct-csci-delivery-dir-path"
+-->
+<target name="-make-csci-delivery-dir" if="my.csci.delivery.dir"
+        depends="-construct-csci-delivery-dir-path">
+
+    <mkdir dir="${my.csci.delivery.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-csci-delivery-dir-path" target constructs the path to the
+    directory in the CSCI delivery tree which contains the delivery file.
+-->
+<target name="-construct-csci-delivery-dir-path">
+    <if>
+        <or>
+            <equals arg1="${my.delivery.visibility}" arg2="protected"/>
+            <equals arg1="${my.delivery.visibility}" arg2="public"/>
+        </or>
+        <then>
+            <var name="my.var" value="${my.csci.location}${FS}"/>
+            <var name="my.var"
+                 value="${my.var}${config.delivery.dir}${FS}"/>
+
+            <switch value="${my.delivery.type}">
+                <case value="lib">
+                    <var name="my.var"
+                         value="${my.var}${config.delivery.library.dir}"/>
+                    <var name="my.var"
+                         value="${my.var}${FS}${my.key.string}"/>
+                </case>
+                <case value="exe">
+                    <var name="my.var"
+                         value="${my.var}${config.delivery.executable.dir}"/>
+                    <var name="my.var"
+                         value="${my.var}${FS}${my.key.string}"/>
+                </case>
+                <case value="data">
+                    <var name="my.var"
+                         value="${my.var}${config.delivery.data.dir}"/>
+                </case>
+                <case value="jnilib">
+                    <var name="my.var"
+                         value="${my.var}${config.delivery.library.dir}"/>
+                    <var name="my.var"
+                         value="${my.var}${FS}${config.site.csn}-"/>
+                    <var name="my.var"
+                         value="${my.var}${bjni.compiler.key.string}"/>
+                </case>
+                <default>
+                    <var name="my.var" value="unknown delivey type"/>
+                    <var name="my.var"
+                         value="${my.var} '${my.delivery.type}'."/>
+                    <fail>${my.var}</fail>
+                </default>
+            </switch>
+
+            <property name="my.csci.delivery.dir" location="${my.var}"/>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-check-source-file" target checks if the source file is present.
+-->
+<target name="-check-source-file">
+    <available file="${my.source.file}" property="my.source.file.present"/>
+
+    <fail unless="my.source.file.present"
+          message="Could not find ${my.source.file}."/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-add-lock-on-source-file" target sets a lock on the source file to be
+    compiled. This lock should prevent any other build from trying to compile
+    this source file at the same time.
+
+    It depends on the following targets:
+        + "-construct-source-file-lock-path"
+-->
+<target name="-add-lock-on-source-file" if="my.source.file.lock"
+        depends="-construct-source-file-lock-path">
+
+    <!--
+        if a lock has already been set on this source file then wait until
+        it is removed. however if after 5 minutes, the lock file still exist,
+        then we may just try to get the ownership of the lock.
+    -->
+    <waitfor maxwait="5" maxwaitunit="minute">
+        <not>
+            <available file="${my.source.file.lock}"/>
+        </not>
+    </waitfor>
+
+    <!-- create the lock file -->
+    <touch file="${my.source.file.lock}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-source-file-lock-path" target constructs the path to the
+    lock file to be created before the compilation of a source file.
+-->
+<target name="-construct-source-file-lock-path">
+    <property name="my.source.file.lock"
+              location="${my.source.file}.lock"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-remove-lock-on-source-file" target removes the lock that was set when
+    the build was about to compile the source file.
+-->
+<target name="-remove-lock-on-source-file">
+    <delete file="${my.source.file.lock}" quiet="true"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-run-code-generation" target generates source files or IDL files from
+    a set of XSLT templates.
+
+    It depends on the following targets:
+        + "-require-code-generation"
+        + "-compile-codegen-engine"
+        + "-load-codegen-conf"
+        + "-create-generated-directory"
+        + "-construct-xmi-file-path"
+        + "-construct-idl2-file-path"
+-->
+<target name="-run-code-generation" if="require.code.generation"
+        depends="-require-code-generation, -compile-codegen-engine,
+                 -load-codegen-conf, -create-generated-directory,
+                 -construct-xmi-file-path, -construct-idl2-file-path">
+
+    <!-- define the PATH to be set for OpenCCM to run -->
+    <var name="openccm.PATH" value="${config.OpenCCM_SCRIPTDIR}${PS}"/>
+    <var name="openccm.PATH" value="${openccm.PATH}${config.OpenCCM.bin.dir}"/>
+    <var name="openccm.PATH" value="${openccm.PATH}${PS}${env.PATH}"/>
+
+    <propertycopy name="my.other.idl.defines" silent="true"
+                  from="config.${my.csci.orb}.codegen.defines"/>
+
+    <var name="my.codegen.defines" value="${config.OpenCCM.codegen.defines}"/>
+    <if>
+        <isset property="my.other.idl.defines"/>
+        <then>
+            <var name="my.codegen.defines"
+                 value="${my.codegen.defines} ${my.other.idl.defines}"/>
+        </then>
+    </if>
+
+    <!--
+        list all the mapping properties files found in CodeGen and construct
+        a set of options to provide to OpenCCM when exporting to IDL2.
+    -->
+    <pathconvert property="my.codegen.mappings" pathsep=" -f ">
+        <path>
+            <fileset dir="${my.codegen.csci.data.dir}"
+                     includes="*mapping.properties"/>
+        </path>
+    </pathconvert>
+    <var name="my.codegen.mappings" value="-f ${my.codegen.mappings}"/>
+
+    <!-- run -->
+    <if>
+        <or>
+            <istrue value="${codegen.generate.xmi}"/>
+            <isset property="codegen.idl2.filename"/>
+        </or>
+        <then>
+            <parallel>
+                <!-- start OpenCCM -->
+                <exec executable="ir3_start" dir="${config.OpenCCM_SCRIPTDIR}"
+                      resolveExecutable="true">
+
+                    <env key="OpenCCM_HOMEDIR"
+                         path="${config.OpenCCM_HOMEDIR}"/>
+                    <env key="OpenCCM_CONFIG_DIR"
+                         path="${config.OpenCCM_CONFIG_DIR}"/>
+                    <env key="OpenCCM_SCRIPTDIR"
+                         path="${config.OpenCCM_SCRIPTDIR}"/>
+                    <env key="PATH" path="${openccm.PATH}"/>
+                </exec>
+                <sequential>
+                    <!-- wait until OpenCCM finished starting up -->
+                    <waitfor maxwait="60" maxwaitunit="second">
+                        <available
+                            file="${config.OpenCCM_CONFIG_DIR}${FS}IR3.start"/>
+                    </waitfor>
+
+                    <trycatch property="my.code.generation.failed">
+                        <try>
+                            <!-- feed IDL -->
+                            <exec executable="ir3_feed"
+                                  dir="${config.OpenCCM_SCRIPTDIR}"
+                                  resolveExecutable="true">
+
+                                <env key="OpenCCM_HOMEDIR"
+                                     path="${config.OpenCCM_HOMEDIR}"/>
+                                <env key="OpenCCM_CONFIG_DIR"
+                                     path="${config.OpenCCM_CONFIG_DIR}"/>
+                                <env key="OpenCCM_SCRIPTDIR"
+                                     path="${config.OpenCCM_SCRIPTDIR}"/>
+                                <env key="PATH" path="${openccm.PATH}"/>
+
+                                <arg line="${my.codegen.defines}"/>
+                                <arg line="${codegen.idlflags.incl.dirs}"/>
+                                <arg value="${codegen.dummy.idl}"/>
+                            </exec>
+                            
+                            <!-- export XMI -->
+                            <if>
+                                <not>
+                                    <istrue
+                                        value="${codegen.generate.idl2.only}"/>
+                                </not>
+                                <then>
+                                    <var name="my.var"
+                                         value="Exporting module"/>
+                                    <var name="my.var" value=
+                                       "${my.var} ${codegen.module.to.export}"/>
+                                    <var name="my.var"
+                                         value="${my.var} to XMI"/>
+
+                                    <echo>${my.var}</echo>
+
+                                    <exec executable="ir3_xmi"
+                                          resolveExecutable="true"
+                                          dir="${config.OpenCCM_SCRIPTDIR}">
+
+                                        <env key="OpenCCM_HOMEDIR"
+                                             path="${config.OpenCCM_HOMEDIR}"/>
+                                        <env key="OpenCCM_CONFIG_DIR"
+                                        path="${config.OpenCCM_CONFIG_DIR}"/>
+                                        <env key="OpenCCM_SCRIPTDIR"
+                                        path="${config.OpenCCM_SCRIPTDIR}"/>
+                                        <env key="PATH" path="${openccm.PATH}"/>
+
+                                        <arg line="-dtd ${my.xmi.dtd}"/>
+                                        <arg line="-o ${my.xmi.file}"/>
+                                        <arg
+                                        value="::${codegen.module.to.export}"/>
+                                    </exec>
+
+                                    <!-- validate XMI -->
+                                    <xmlvalidate file="${my.xmi.file}"/>
+                                </then>
+                            </if>
+
+                            <!-- export IDL2 -->
+                            <if>
+                                <isset property="codegen.idl2.filename"/>
+                                <then>
+                                    <var name="my.var"
+                                         value="Exporting module"/>
+                                    <var name="my.var" value=
+                                       "${my.var} ${codegen.module.idl2.to.export}"/>
+                                    <var name="my.var"
+                                         value="${my.var} to IDL2"/>
+
+                                    <echo>${my.var}</echo>
+
+                                    <exec executable="ir3_cdmwidl2"
+                                          resolveExecutable="true"
+                                          dir="${config.OpenCCM_SCRIPTDIR}">
+
+                                        <env key="OpenCCM_HOMEDIR"
+                                             path="${config.OpenCCM_HOMEDIR}"/>
+                                        <env key="OpenCCM_CONFIG_DIR"
+                                        path="${config.OpenCCM_CONFIG_DIR}"/>
+                                        <env key="OpenCCM_SCRIPTDIR"
+                                        path="${config.OpenCCM_SCRIPTDIR}"/>
+                                        <env key="PATH" path="${openccm.PATH}"/>
+
+                                        <arg line="${my.codegen.mappings}"/>
+                                        <arg line="-o ${my.idl2.file}"/>
+                                        <arg value=
+                                            "::${codegen.module.idl2.to.export}"/>
+                                    </exec>
+                                </then>
+                            </if>
+                        </try>
+                        <finally>
+                            <!-- stop OpenCCM -->
+                            <exec executable="ir3_stop"
+                                  dir="${config.OpenCCM_SCRIPTDIR}"
+                                  resolveExecutable="true">
+
+                                <env key="OpenCCM_HOMEDIR"
+                                     path="${config.OpenCCM_HOMEDIR}"/>
+                                <env key="OpenCCM_CONFIG_DIR"
+                                     path="${config.OpenCCM_CONFIG_DIR}"/>
+                                <env key="OpenCCM_SCRIPTDIR"
+                                     path="${config.OpenCCM_SCRIPTDIR}"/>
+                                <env key="PATH" path="${openccm.PATH}"/>
+                            </exec>
+
+                            <!-- clean up -->
+                            <!--<delete file="${codegen.dummy.idl}"
+                                    quiet="true"/>-->
+                            <delete dir="${config.OpenCCM_CONFIG_DIR}"
+                                    quiet="true"/>
+                        </finally>
+                    </trycatch>
+                </sequential>
+            </parallel>
+        </then>
+        <else>
+            <!-- create an dummy XMI document -->
+            <echo file="${my.xmi.file}">&lt;XMI/&gt;</echo>
+        </else>
+    </if>
+
+    <!-- stop the build if any errors were thrown -->
+    <fail if="my.code.generation.failed"
+          message="found errors during the code generation"/>
+
+    <!-- generate source files -->
+    <if>
+        <not><istrue value="${codegen.generate.idl2.only}"/></not>
+        <then>
+            <antcall target="-run-template-manager"/>
+        </then>
+    </if>
+
+    <touch file="${my.codegen.generated.dir}${FS}.done"/>
+
+    <!-- clean up -->
+    <delete file="${my.xmi.file}" quiet="true"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-require-code-generation" target checks whether a configuration file
+    is set for the code generator.
+-->
+<target name="-require-code-generation">
+    <!-- get the config file which describes what to generate -->
+    <propertycopy name="my.cgen.cfgfile" silent="true"
+                  from="csc.${my.delivery.basename}.cgen.cfgfile"/>
+
+    <if>
+        <isset property="my.cgen.cfgfile"/>
+        <then>
+            <available file="${my.cgen.cfgfile}" type="file"
+                       property="my.cgen.cfgfile.present"/>
+
+            <if>
+                <isset property="my.cgen.cfgfile.present"/>
+                <then>
+                    <antcallback target="-construct-generated-dir-path"
+                                 return="my.codegen.generated.dir"/>
+
+                    <if>
+                        <available file="${my.codegen.generated.dir}"
+                                   type="dir"/>
+
+                        <then>
+                            <available
+                                file="${my.codegen.generated.dir}${FS}.done"
+                                type="file"
+                                property="already.generated"
+                            />
+
+                            <if>
+                                <not><isset property="already.generated"/></not>
+                                <then>
+                                    <property name="require.code.generation"
+                                              value="true"/>
+                                </then>
+                                <else>
+                                    <!--
+                                        check if the generated files are older
+                                        than the code generation configuration
+                                        file.
+                                    -->
+                                    <outofdate
+                                        property="require.code.generation">
+
+                                        <sourcefiles>
+                                            <pathelement
+                                                path="${my.cgen.cfgfile}"/>
+                                        </sourcefiles>
+                                        <targetfiles>
+                                            <fileset
+                                            dir="${my.codegen.generated.dir}"/>
+                                        </targetfiles>
+                                    </outofdate>
+                                </else>
+                            </if>
+                        </then>
+                        <else>
+                            <property name="require.code.generation"
+                                      value="true"/>
+                        </else>
+                    </if>
+                </then>
+                <else>
+                    <var name="s" value="Skipping code generation as"/>
+                    <var name="s" value="${s} ${my.cgen.cfgfile} does not"/>
+                    <var name="s" value="${s} exist."/>
+                    <echo>${s}</echo>
+                </else>
+            </if>
+        </then>
+    </if>
+
+    <xvar name="already.generated" unset="true"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-compile-codegen-engine" target ensures that the code generation engine
+    is compiled.
+
+    It depends on the following targets:
+        + "-require-codegen-engine-compilation"
+-->
+<target name="-compile-codegen-engine" if="require.codegen.engine.compilation"
+        depends="-require-codegen-engine-compilation">
+
+    <property name="my.cgen.engine.location"
+              location="${my.codegen.csci.location}${FS}engine${FS}java"/>
+
+    <ant dir="${my.cgen.engine.location}" antfile="BuildJAVA.xml"
+         inheritAll="false">
+
+        <property name="sloppy.check" value="${sloppy.check}"/>
+    </ant>
+</target>
+
+
+<!-- ===========================================================================
+    The "-require-codegen-engine-compilation" target checks if the code
+    generation engine needs to be compiled.
+-->
+<target name="-require-codegen-engine-compilation" if="require.code.generation">
+    <!-- set the code generation engine lib name -->
+    <propertycopy name="my.codegen.csci.location"
+                  from="config.CodeGen.location"/>
+
+    <var name="my.var" value="${my.codegen.csci.location}${FS}"/>
+    <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
+    <var name="my.var" value="${my.var}${config.delivery.library.dir}${FS}"/>
+    <var name="my.var" value="${my.var}lib${product.lcase.name}cgengine.jar"/>
+
+    <property name="my.cgen.engine" location="${my.var}"/>
+
+    <!-- check -->
+    <available file="${my.cgen.engine}" property="my.cgen.engine.present"/>
+
+    <condition property="require.codegen.engine.compilation">
+        <not>
+            <isset property="my.cgen.engine.present"/>
+        </not>
+    </condition>
+</target>
+
+
+<!-- ===========================================================================
+    The "-load-codegen-conf" target loads the code generation config file.
+-->
+<target name="-load-codegen-conf" if="require.code.generation">
+    <!-- list of IDL directories computed from the list of prerequisites -->
+    <propertycopy name="my.CSCI_IDL_PATH" silent="true"
+                  from="csc.${my.delivery.basename}.CSCI_IDL_PATH"/>
+
+    <!-- IDL directories from the ORB -->
+    <var name="my.var" value="${csc.lang}"/>
+    <if>
+        <equals arg1="${my.var}" arg2="c++" trim="yes"/>
+        <then>
+            <var name="my.var" value="cpp"/>
+        </then>
+    </if>
+
+    <!-- load the code generator configuration file -->
+    <propertycopy name="my.idl.incl.dirs"
+                  from="config.${my.csci.orb}.idlflags.incl.dirs"/>
+
+    <propertycopy name="my.ORB_IDL_PATH" silent="true"
+                  from="config.${my.csci.orb}.idlflags.extra.incl.dirs"/>
+
+    <if>
+        <isset property="my.ORB_IDL_PATH"/>
+        <then>
+            <var name="my.ORB_IDL_PATH"
+                 value="${my.idl.incl.dirs} ${my.ORB_IDL_PATH}"/>
+        </then>
+        <else>
+            <var name="my.ORB_IDL_PATH" value="${my.idl.incl.dirs}"/>
+        </else>
+    </if>
+
+    <loadcodegenconf file="${my.cgen.cfgfile}" cscLocation="${basedir}"
+                     csciLocation="${my.csci.location}">
+
+        <filterset>
+            <filtersfile file="${build.site.properties}"/>
+            <filter token="CSCI_IDL_PATH" value="${my.CSCI_IDL_PATH}"/>
+            <filter token="ORB_IDL_PATH"  value="${my.ORB_IDL_PATH}"/>
+        </filterset>
+    </loadcodegenconf>
+
+    <!-- location of the XMI DTD -->
+    <var name="my.var" value="${my.codegen.csci.location}${FS}"/>
+    <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
+    <var name="my.var" value="${my.var}${config.delivery.data.dir}"/>
+
+    <property name="my.codegen.csci.data.dir" location="${my.var}"/>
+
+    <property name="my.xmi.dtd"
+              location="${my.codegen.csci.data.dir}${FS}XMI.dtd"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-create-generated-directory" target creates the directory into which
+    all files generated during the code generation will be stored.
+
+    It depends on the following targets:
+        + "-construct-generated-dir-path"
+-->
+<target name="-create-generated-directory" if="my.codegen.generated.dir"
+        depends="-construct-generated-dir-path">
+
+    <mkdir dir="${my.codegen.generated.dir}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-generated-dir-path" target constructs the path to the
+    directory into which all files generated during the code generation will be
+    stored.
+-->
+<target name="-construct-generated-dir-path" if="my.cgen.cfgfile">
+    <basename property="my.cgen.cfgfile.basename" file="${my.cgen.cfgfile}"/>
+
+    <var name="my.var" value="${config.csc.generated.dir}${FS}"/>
+    <var name="my.var" value="${my.var}${my.delivery.name}${FS}"/>
+    <var name="my.var" value="${my.var}${my.cgen.cfgfile.basename}"/>
+
+    <property name="my.codegen.generated.dir" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-xmi-file-path" target constructs the path to the XMI file.
+-->
+<target name="-construct-xmi-file-path" if="my.codegen.generated.dir">
+    <var name="my.var" value="${my.codegen.generated.dir}${FS}"/>
+    <var name="my.var" value="${my.var}${codegen.module.to.export}.xmi"/>
+
+    <property name="my.xmi.file" location="${my.var}"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-construct-idl2-file-path" target constructs the path to the IDL2 file.
+-->
+<target name="-construct-idl2-file-path" if="my.codegen.generated.dir">
+    <if>
+        <isset property="codegen.idl2.filename"/>
+        <then>
+            <var name="my.var" value="${my.codegen.generated.dir}${FS}"/>
+            <var name="my.var" value="${my.var}${codegen.idl2.filename}"/>
+
+            <property name="my.idl2.file" location="${my.var}"/>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+    The "-run-template-manager" target builds an XSLT template which handles
+    the call to the named templates found in each of the XSLT templates found
+    in the include directories.
+-->
+<target name="-run-template-manager">
+    <propertycopy name="my.codegen.tmpl.incl.dirs"
+                  from="csc.${my.delivery.basename}.codegen.tmpl.incl.dirs"/>
+
+    <!-- add the common XSLT templates to the list of include directories -->
+    <var name="my.codegen.tmpl.incl.dirs"
+         value="-I ${my.codegen.csci.data.dir} ${my.codegen.tmpl.incl.dirs}"/>
+
+    <java classname="cdmw.codegenerator.TemplateManager" fork="true"
+          classpath="${my.cgen.engine}${PS}${config.Saxon.classpath}"
+          newenvironment="true">
+
+        <arg line="${my.codegen.tmpl.incl.dirs}"/>
+        <arg line="-c ${my.cgen.cfgfile}"/>
+        <arg line="-o ${my.codegen.generated.dir}"/>
+        <arg line="-l ${csc.lang}"/>
+        <arg line="--csc ${csc.name}"/>
+        <arg line="${my.xmi.file}"/>
+    </java>
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-generated-files" target exports the generated source files into
+    the appropriate delivery directories.
+
+    It depends on the following targets:
+        + "-export-local-generated-source-files"
+        + "-export-local-generated-idl-files"
+        + "-export-generated-data-files"
+-->
+<target name="-export-generated-files"
+        depends="-export-local-generated-source-files,
+                 -export-local-generated-idl-files,
+                 -export-generated-data-files">
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-generated-data-files" target exports the generated data files 
+    into the appropriate delivery directories.
+-->
+<target name="-export-generated-data-files"
+        depends="-make-csc-delivery-data-dir, 
+                 -construct-csci-delivery-data-dir-path"
+        if="require.code.generation">
+
+    <fileset id="bcpp.generated.datas" dir="${my.codegen.generated.dir}">
+        <include name="*.dtd"/>
+        <include name="*.cpf"/>
+        <include name="*.ccd"/>
+    </fileset>
+    
+    <copy todir="${my.csc.delivery.data.dir}">
+        <fileset refid="bcpp.generated.datas"/>
+    </copy>
+    
+
+    <if>
+        <or>
+            <equals arg1="${my.delivery.visibility}" arg2="protected"/>
+            <equals arg1="${my.delivery.visibility}" arg2="public"/>
+        </or>
+        <then>
+            <antcall target="-make-csci-delivery-data-dir"/>
+
+            <if>
+                <isset property="build.use.symbolic.link"/>
+                <then>  
+                    <pathconvert property="bcpp.generated.datas.list"
+                                 pathsep=" ">
+
+                        <path>
+                            <fileset refid="bcpp.generated.datas"/>
+                        </path>
+                    </pathconvert>
+                    <if>                        
+
+                        <not>
+                            <equals arg1="${bcpp.generated.datas.list}"
+                                    arg2="" trim="true"/>
+                        </not>
+                        <then>
+                            <xexec executable="ln" failonerror="true"
+                                   showCmd="false" outputproperty="dummy">
+                                
+                                <arg line="-sf ${bcpp.generated.datas.list}"/>
+                                <arg value="${my.csci.delivery.data.dir}"/>
+                            </xexec>
+                        </then>
+                    </if>
+                </then>
+                <else> <!-- copy -->
+                    <copy todir="${my.csci.delivery.data.dir}">
+                        <fileset refid="bcpp.generated.datas"/>
+                    </copy>
+                </else>
+            </if>                                
+        </then>
+    </if>        
+</target>
+
+
+<!-- ===========================================================================
+    The "-export-local-generated-idl-files" target copies the generated IDL
+    files into the local delivery directory.
+-->
+<target name="-export-local-generated-idl-files" if="require.code.generation">
+    <property name="require.idl.compilation" value="true"/>
+    <antcallback target="-make-csc-delivery-idl-dir"
+                 return="my.csc.delivery.idl.dir"/>
+
+    <if>
+        <isset property="codegen.idl2.filename"/>
+        <then>
+            <fileset id="my.generated.idl.files"
+                     dir="${my.codegen.generated.dir}">
+
+                <include name="*.idl"/>
+            </fileset>
+
+            <if>
+                <isset property="build.use.symbolic.link"/>
+                <then>
+                    <pathconvert property="my.generated.idl.list" pathsep=" ">
+                        <path>
+                            <fileset refid="my.generated.idl.files"/>
+                        </path>
+                    </pathconvert>
+
+                    <if>
+                        <not>
+                            <equals arg1="${my.generated.idl.list}"
+                                    arg2="" trim="true"/>
+                        </not>
+                        <then>
+                            <xexec executable="ln" failonerror="true"
+                                   showCmd="false" outputproperty="dummy">
+
+                                <arg line="-sf ${my.generated.idl.list}"/>
+                                <arg value="${my.csc.delivery.idl.dir}"/>
+                            </xexec>
+                        </then>
+                    </if>
+                </then>
+                <else> <!-- copy -->
+                    <copy todir="${my.csc.delivery.idl.dir}">
+                        <fileset refid="my.generated.idl.files"/>
+                    </copy>
+                </else>
+            </if>
+        </then>
+    </if>
+</target>
+
+
+<!-- ===========================================================================
+     The "-load-csc-properties-for-install" target loads the CSC properties file
+-->
+<target name="-load-csc-properties-for-install">
+    <runtarget target="-load-depsinfo-properties"/>
+    <loadcscproperties file="${my.csc.properties}" prefix="install">
+        <filterset>
+            <filtersfile file="${build.site.properties}"/>
+        </filterset>
+    </loadcscproperties>
+    <echoproperties destfile="${install.conf}" prefix="install."/>
+</target>

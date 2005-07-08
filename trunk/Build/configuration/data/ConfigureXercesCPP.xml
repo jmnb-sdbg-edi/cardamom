@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureXercesCPP" default="-check-XercesCPP" basedir=".">
+
+
+    <description>
+        This build file locates and checks Apache Xerces C++.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-XercesCPP" target checks if Apache Xerces C++ is suitable
+        for the build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-check-XercesCPP-linux"
+            + "-check-XercesCPP-sunos"
+            + "-check-XercesCPP-windows"
+            + "-check-XercesCPP-aix"
+            + "-set-XercesCPP-properties"
+    -->
+    <target name="-check-XercesCPP"
+            depends="-initialize, -check-XercesCPP-linux,
+                     -check-XercesCPP-sunos, -check-XercesCPP-windows,
+                     -check-XercesCPP-aix, -set-XercesCPP-properties">
+
+        <!-- save XercesCPP properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-XercesCPP-linux" target checks if Apache Xerces C++ is
+        suitable for the build on a Linux platform.
+    -->
+    <target name="-check-XercesCPP-linux" if="is.linux">
+        <antcallback target="-test1-linux" return="xercesc++.include.dir"/>
+        <antcallback target="-test2-linux" return="xercesc++.lib.dir"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-XercesCPP-sunos" target checks if Apache Xerces C++ is
+        suitable for the build on a SUN Solaris platform.
+    -->
+    <target name="-check-XercesCPP-sunos" if="is.sunos">
+        <antcallback target="-test1-sunos" return="xercesc++.include.dir"/>
+        <antcallback target="-test2-sunos" return="xercesc++.lib.dir"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-XercesCPP-aix" target checks if Apache Xerces C++ is
+        suitable for the build on an IBM AIX platform.
+    -->
+    <target name="-check-XercesCPP-aix" if="is.aix">
+        <antcallback target="-test1-aix" return="xercesc++.include.dir"/>
+        <antcallback target="-test2-aix" return="xercesc++.lib.dir"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-XercesCPP-windows" target checks if Apache Xerces C++ is
+        suitable for the build on a Windows platform.
+    -->
+    <target name="-check-XercesCPP-windows" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- ======================================================================
+        The "-locate-XercesCPP" target determines the installation directory of
+        Apache Xerces C++.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-XercesCPP" depends="-initialize">
+        <!-- determine the XercesCPP installation directory -->
+        <var name="my.var"
+             value="Enter the ${tool.fullname} installation directory"/>
+
+        <propertycopy property="xercesc++.default.install.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.install.dir"/>
+
+        <if>
+            <isset property="xercesc++.default.install.dir"/>
+            <then>
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${my.var}" dirPathOnly="true"
+                                addproperty="config.${tool.name}.install.dir"
+                                default="${xercesc++.default.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.install.dir"
+                                      from="xercesc++.default.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirPathOnly="true"
+                        addproperty="config.${tool.name}.install.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="xercesc++.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.install.dir"
+                   value="${xercesc++.install.dir}"/>
+        </propertyfile>
+
+        <!-- determine the include directory -->
+        <propertycopy property="xercesc++.default.include.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.include.dir"/>
+
+        <if>
+            <not>
+                <isset property="xercesc++.default.include.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the bin directory -->
+                <findfile file="DOM.hpp" dir="${xercesc++.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="xercesc++.dom.hpp"/>
+
+                <!--
+                    we need to run the "dirname" task twice because the
+                    xercesc++ include files are stored in
+                    xerces-install-dir/dom/ and we want the directory that
+                    contains the dom directory.
+                -->
+                <dirname property="xercesc++.dom.include.dir"
+                         file="${xercesc++.dom.hpp}"/>
+                <dirname property="xercesc++.default.include.dir"
+                         file="${xercesc++.dom.include.dir}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} include directory"
+                        addproperty="config.${tool.name}.include.dir"
+                        default="${xercesc++.default.include.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.include.dir"
+                              from="xercesc++.default.include.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="xercesc++.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.include.dir"
+                   value="${xercesc++.include.dir}"/>
+        </propertyfile>
+
+        <!-- determine the lib directory -->
+        <propertycopy property="xercesc++.default.lib.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.dir"/>
+
+        <if>
+            <not>
+                <isset property="xercesc++.default.lib.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the lib directory -->
+                <findfile file="libxerces-c${xercesc++.required.lib.version}.*"
+                          dir="${xercesc++.install.dir}" findFirst="true"
+                          recursive="true" property="xercesc++.lib.file"/>
+
+                <dirname property="xercesc++.default.lib.dir"
+                         file="${xercesc++.lib.file}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} lib directory"
+                        addproperty="config.${tool.name}.lib.dir"
+                        default="${xercesc++.default.lib.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.lib.dir"
+                              from="xercesc++.default.lib.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="xercesc++.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.lib.dir"
+                   value="${xercesc++.lib.dir}"/>
+        </propertyfile>
+
+        <!-- save the properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for Xerces C++ -->
+        <propertycopy property="xercesc++.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <switch value="${xercesc++.required.version}">
+            <case value="1.3.0">
+                <property name="xercesc++.required.lib.version" value="1_3"/>
+            </case>
+        </switch>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="Apache Xerces C++"/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-test1-linux" target checks whether the Apache Xerces C++ include
+        files can be found.
+    -->
+    <target name="-test1-linux">
+        <echo message="Checking the ${tool.fullname} include directory"/>
+
+        <!-- the test is successful if DOM.hpp is found in that directory -->
+        <propertycopy property="xercesc++.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <available file="${xercesc++.include.dir}${FS}dom${FS}DOM.hpp"
+                   property="xercesc++.include.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find the ${tool.fullname} include"/>
+        <var name="my.var" value="${my.var} files in the directory"/>
+        <var name="my.var" value="${my.var} ${xercesc++.include.dir}."/>
+        <fail unless="xercesc++.include.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-sunos" target checks whether the Apache Xerces C++ include
+        files can be found.
+    -->
+    <target name="-test1-sunos" depends="-test1-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test1-aix" target checks whether the Apache Xerces C++ include
+        files can be found.
+    -->
+    <target name="-test1-aix" depends="-test1-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test2-linux" target checks whether the Apache Xerces C++ libraries
+        can be found.
+    -->
+    <target name="-test2-linux">
+        <echo message="Checking the ${tool.fullname} lib directory"/>
+
+        <!--
+            the test is successful if libxercesc*.so is found in that
+            directory
+        -->
+        <propertycopy property="xercesc++.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <var name="my.var" value="${xercesc++.lib.dir}${FS}libxerces-c"/>
+        <var name="my.var"
+             value="${my.var}${xercesc++.required.lib.version}.so"/>
+
+        <available file="${my.var}" property="xercesc++.lib.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find the ${tool.fullname}"/>
+        <var name="my.var" value="${my.var} libraries in the directory"/>
+        <var name="my.var" value="${my.var} ${xercesc++.lib.dir}."/>
+        <fail unless="xercesc++.lib.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test2-sunos" target checks whether the Apache Xerces C++ libraries
+        can be found.
+    -->
+    <target name="-test2-sunos" depends="-test2-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test2-aix" target checks whether the Apache Xerces C++ libraries
+        can be found.
+    -->
+    <target name="-test2-aix" depends="-test2-linux"/>
+
+
+    <!-- =======================================================================
+        The "-set-XercesCPP-properties" target defines properties that will be
+        saved into the site configuration file.
+    -->
+    <target name="-set-XercesCPP-properties">
+        <!-- cflags -->
+        <property name="config.${tool.name}.cflags"
+                  value="-I${xercesc++.include.dir}"/>
+
+        <!-- ldflags -->
+        <var name="my.var" value="-L${xercesc++.lib.dir}"/>
+        <var name="my.var" value="${my.var} -lxerces-c"/>
+        <var name="my.var" value="${my.var}${xercesc++.required.lib.version}"/>
+        <property name="config.${tool.name}.ldflags" value="${my.var}"/>
+    </target>
+
+
+</project>
+
