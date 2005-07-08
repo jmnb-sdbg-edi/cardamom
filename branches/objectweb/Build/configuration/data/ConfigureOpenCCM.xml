@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureOpenCCM" default="-check-OpenCCM" basedir=".">
+
+
+    <description>
+        This build file locates and checks OpenCCM.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-OpenCCM" target checks if OpenCCM is suitable for the build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-define-OpenCCM-script-filenames"
+            + "-check-OpenCCM-linux"
+            + "-check-OpenCCM-sunos"
+            + "-check-OpenCCM-windows"
+            + "-check-OpenCCM-aix"
+            + "-set-OpenCCM-properties"
+            + "-customize-OpenCCM-scripts"
+    -->
+    <target name="-check-OpenCCM"
+            depends="-initialize, -define-OpenCCM-script-filenames,
+                     -check-OpenCCM-linux, -check-OpenCCM-sunos,
+                     -check-OpenCCM-windows, -check-OpenCCM-aix,
+                     -set-OpenCCM-properties, -customize-OpenCCM-scripts">
+
+        <!-- save OpenCCM properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-OpenCCM-linux" target checks if the OpenCCM is suitable for
+        the build on a Linux platform.
+    -->
+    <target name="-check-OpenCCM-linux" if="is.linux">
+        <antcallback target="-test1-linux" return="openccm.jvm.sh"/>
+        <antcallback target="-test2" return="openccm.lib.dir"/>
+        <antcallback target="-test3"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-OpenCCM-sunos" target checks if the OpenCCM is suitable for
+        the build on a SUN Solaris platform.
+    -->
+    <target name="-check-OpenCCM-sunos" if="is.sunos">
+        <antcallback target="-test1-sunos" return="openccm.jvm.sh"/>
+        <antcallback target="-test2" return="openccm.lib.dir"/>
+        <antcallback target="-test3"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-OpenCCM-aix" target checks if the OpenCCM is suitable for
+        the build on an IBM AIX platform.
+    -->
+    <target name="-check-OpenCCM-aix" if="is.aix">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-OpenCCM-windows" target checks if the OpenCCM is suitable
+        for the build on a Windows platform.
+    -->
+    <target name="-check-OpenCCM-windows" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- ======================================================================
+        The "-locate-OpenCCM" target determines the installation directory of
+        OpenCCM.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-OpenCCM" depends="-initialize">
+        <!-- determine the OpenCCM installation directory -->
+        <var name="my.var"
+             value="Enter the ${tool.fullname} installation directory"/>
+
+        <propertycopy property="openccm.default.install.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.install.dir"/>
+
+        <if>
+            <isset property="openccm.default.install.dir"/>
+            <then>
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${my.var}" dirPathOnly="true"
+                                addproperty="config.${tool.name}.install.dir"
+                                default="${openccm.default.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.install.dir"
+                                      from="openccm.default.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirPathOnly="true"
+                        addproperty="config.${tool.name}.install.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="openccm.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.install.dir"
+                   value="${openccm.install.dir}"/>
+        </propertyfile>
+
+        <!-- determine the bin directory -->
+        <propertycopy property="openccm.default.bin.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.bin.dir"/>
+
+        <if>
+            <not>
+                <isset property="openccm.default.bin.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the bin directory -->
+                <findfile file="ir3_start" dir="${openccm.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="openccm.ir3_start"/>
+
+                <dirname property="openccm.default.bin.dir"
+                         file="${openccm.ir3_start}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} bin directory"
+                        addproperty="config.${tool.name}.bin.dir"
+                        default="${openccm.default.bin.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.bin.dir"
+                              from="openccm.default.bin.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="openccm.bin.dir"
+                      from="config.${tool.name}.bin.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.bin.dir"
+                   value="${openccm.bin.dir}"/>
+        </propertyfile>
+
+        <!-- determine the lib directory -->
+        <propertycopy property="openccm.default.lib.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.dir"/>
+
+        <if>
+            <not>
+                <isset property="openccm.default.lib.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the lib directory -->
+                <findfile file="OpenCCM.jar" dir="${openccm.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="openccm.openccm.jar"/>
+
+                <dirname property="openccm.default.lib.dir"
+                         file="${openccm.openccm.jar}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} lib directory"
+                        addproperty="config.${tool.name}.lib.dir"
+                        default="${openccm.default.lib.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.lib.dir"
+                              from="openccm.default.lib.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="openccm.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.lib.dir"
+                   value="${openccm.lib.dir}"/>
+        </propertyfile>
+
+        <!-- determine the idl directory -->
+        <propertycopy property="openccm.default.idl.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.idl.dir"/>
+
+        <if>
+            <not>
+                <isset property="openccm.default.idl.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the idl directory -->
+                <findfile file="IFR_3_0.idl" dir="${openccm.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="openccm.ifr3.idl"/>
+
+                <dirname property="openccm.default.idl.dir"
+                         file="${openccm.ifr3.idl}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} idl directory"
+                        addproperty="config.${tool.name}.idl.dir"
+                        default="${openccm.default.idl.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.idl.dir"
+                              from="openccm.default.idl.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="openccm.idl.dir"
+                      from="config.${tool.name}.idl.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.idl.dir"
+                   value="${openccm.idl.dir}"/>
+        </propertyfile>
+
+        <!-- save the properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-install-customized-scripts" target installs the customized
+        shells scripts into the product installation directory tree.
+
+        It depends on the following targets:
+            + "-set-OpenCCM-properties"
+            + "-customize-OpenCCM-scripts"
+            + "-create-envi-OpenCCM"
+    -->
+    <target name="-install-customized-scripts"
+            depends="-set-OpenCCM-properties, -customize-OpenCCM-scripts,
+                     -create-envi-OpenCCM">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for OpenCCM -->
+        <propertycopy property="openccm.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="OpenCCM"/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-define-OpenCCM-script-filenames" target defines properties for
+        the OpenCCM script file names.
+    -->
+    <target name="-define-OpenCCM-script-filenames">
+        <propertycopy property="openccm.bin.dir"
+                      from="config.${tool.name}.bin.dir"/>
+
+        <property name="openccm.ir3_start"
+                  location="${openccm.bin.dir}${FS}ir3_start"/>
+
+        <property name="openccm.ir3_started"
+                  location="${openccm.bin.dir}${FS}ir3_started"/>
+
+        <property name="openccm.ir3_stop"
+                  location="${openccm.bin.dir}${FS}ir3_stop"/>
+
+        <property name="openccm.ir3_feed"
+                  location="${openccm.bin.dir}${FS}ir3_feed"/>
+
+        <property name="openccm.ir3_idl2"
+                  location="${openccm.bin.dir}${FS}ir3_idl2"/>
+
+        <property name="openccm.jvm.sh"
+                  location="${openccm.bin.dir}${FS}jvm.sh"/>
+
+        <property name="openccm.envi.sh"
+                  location="${openccm.bin.dir}${FS}envi.${tool.name}.sh"/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-test1-linux" target checks whether the OpenCCM script files can
+        be found.
+    -->
+    <target name="-test1-linux">
+        <echo message="Checking the ${tool.fullname} bin directory"/>
+
+        <!--
+            the test is successful if all the script files are found in
+            the bin directory.
+        -->
+
+        <!-- ir3_start -->
+        <available file="${openccm.ir3_start}"
+                   property="openccm.ir3_start.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="openccm.ir3_start.is.ok"
+              message="Could not find ${my.var}."/>
+
+        <!-- ir3_started -->
+        <available file="${openccm.ir3_started}"
+                   property="openccm.ir3_started.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="openccm.ir3_started.is.ok"
+              message="Could not find ${my.var}."/>
+
+        <!-- ir3_stop -->
+        <available file="${openccm.ir3_stop}"
+                   property="openccm.ir3_stop.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="openccm.ir3_stop.is.ok"
+              message="Could not find ${my.var}."/>
+
+        <!-- ir3_feed -->
+        <available file="${openccm.ir3_feed}"
+                   property="openccm.ir3_feed.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="openccm.ir3_feed.is.ok"
+              message="Could not find ${my.var}."/>
+
+        <!-- ir3_idl2 -->
+        <available file="${openccm.ir3_idl2}"
+                   property="openccm.ir3_idl2.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="openccm.ir3_idl2.is.ok"
+              message="Could not find ${my.var}."/>
+
+        <!-- jvm.sh -->
+        <available file="${openccm.jvm.sh}"
+                   property="openccm.jvm.sh.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="openccm.jvm.sh.is.ok"
+              message="Could not find ${my.var}."/>
+
+        <!-- envi.OpenCCM.sh -->
+        <available file="${openccm.envi.sh}"
+                   property="openccm.envi.sh.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="openccm.envi.sh.is.ok"
+              message="Could not find ${my.var}."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-sunos" target checks whether the OpenCCM script files can be
+        found.
+    -->
+    <target name="-test1-sunos" depends="-test1-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test2" target checks whether the OpenCCM libraries can be found.
+    -->
+    <target name="-test2">
+        <echo message="Checking the ${tool.fullname} lib directory"/>
+
+        <!--
+            the test is succefful if OpenCCM.jar is found in the lib directory
+        -->
+        <propertycopy property="openccm.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <available file="${openccm.lib.dir}${FS}${tool.name}.jar" type="file"
+                   property="openccm.lib.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find the ${tool.fullname} JAR"/>
+        <var name="my.var" value="${my.var} files in the directory"/>
+        <var name="my.var" value="${my.var} ${openccm.lib.dir}."/>
+        <fail unless="openccm.lib.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test3" target checks whether the OpenCCM IDLs can be found.
+    -->
+    <target name="-test3">
+        <echo message="Checking the ${tool.fullname} idl directory"/>
+
+        <!--
+            the test is succefful if IFR_3_0.idl is found in the idl directory
+        -->
+        <propertycopy property="openccm.idl.dir"
+                      from="config.${tool.name}.idl.dir"/>
+
+        <available file="${openccm.idl.dir}${FS}IFR_3_0.idl" type="file"
+                   property="openccm.idl.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find the ${tool.fullname} IDL"/>
+        <var name="my.var" value="${my.var} files in the directory"/>
+        <var name="my.var" value="${my.var} ${openccm.idl.dir}."/>
+        <fail unless="openccm.idl.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-set-OpenCCM-properties" target defines properties that will be
+        saved into the site configuration file.
+    -->
+    <target name="-set-OpenCCM-properties">
+        <!-- classpath -->
+        <findfile file="*.jar" dir="${openccm.lib.dir}" recursive="true"
+                  separator="${PS}" property="config.${tool.name}.classpath"/>
+
+        <!-- environment variables to set for OpenCCM to run -->
+
+        <!-- OpenCCM_HOMEDIR -->
+        <propertycopy property="config.OpenCCM_HOMEDIR"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- OpenCCM_SCRIPTDIR -->
+        <var name="my.var" value="${config.CodeGen.location}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.data.dir}"/>
+
+        <property name="config.OpenCCM_SCRIPTDIR" location="${my.var}"/>
+
+        <!-- OpenCCM_CONFIG_DIR -->
+        <tempfile property="config.OpenCCM_CONFIG_DIR" destDir="${user.home}"
+                  prefix="OpenCCM_CONFIG_DIR_"/>
+
+        <!-- code generation specific -->
+        <property name="config.${tool.name}.codegen.defines"
+                  value="-D__OpenCCM__"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-OpenCCM-scripts" target alters the original OpenCCM
+        scripts.
+
+        It depends on the following targets:
+            + "-define-OpenCCM-script-filenames"
+            + "-make-OpenCCM-script-dir"
+            + "-customize-jvm.sh-unix"
+            + "-customize-ir3_start-unix"
+            + "-customize-ir3_started-unix"
+            + "-customize-ir3_stop-unix"
+            + "-customize-ir3_idl2-unix"
+            + "-customize-ir3_cdmwidl2-unix"
+            + "-customize-ir3_xmi-unix"
+            + "-customize-ir3_feed-unix"
+            + "-set-file-attributes"
+            + "-create-jidlscript-properties"
+    -->
+    <target name="-customize-OpenCCM-scripts"
+            depends="-initialize, -define-OpenCCM-script-filenames,
+                     -make-OpenCCM-script-dir, -customize-jvm.sh-unix,
+                     -customize-ir3_start-unix, -customize-ir3_started-unix,
+                     -customize-ir3_stop-unix, -customize-ir3_idl2-unix,
+                     -customize-ir3_cdmwidl2-unix, -customize-ir3_xmi-unix,
+                     -customize-ir3_feed-unix, -set-file-attributes,
+                     -create-jidlscript-properties">
+
+        <copy file="${config.OpenCCM_HOMEDIR}${FS}templates${FS}idl3.template"
+              todir="${config.OpenCCM_SCRIPTDIR}"/>
+
+        <copy todir="${config.OpenCCM_SCRIPTDIR}">
+            <fileset dir="${config.OpenCCM_HOMEDIR}${FS}properties"
+                     includes="*.properties"/>
+        </copy>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-make-OpenCCM-script-dir" target creates the OpenCCM script
+        directory.
+    -->
+    <target name="-make-OpenCCM-script-dir">
+        <mkdir dir="${config.OpenCCM_SCRIPTDIR}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-jvm.sh-unix" target generates a new jvm.sh script.
+    -->
+    <target name="-customize-jvm.sh-unix" unless="is.windows">
+        <!--
+            read the original jvm.sh script, we need the current value of
+            BOOTJARFILES.
+        -->
+        <property file="${openccm.jvm.sh}"/>
+
+        <!-- extract the value of JVM -->
+        <selecttoken string="${JVM}" tokenNumber="1" delimiter="&quot;"
+                     property="openccm.JVM.content"/>
+
+        <!-- set the code generator lib engine location -->
+        <stringmanip string="${config.product.name}" action="lowercase"
+                     property="product.lcase.name"/>
+
+        <var name="my.var" value="${config.CodeGen.location}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${config.delivery.library.dir}"/>
+        <var name="my.var" value="${my.var}${FS}lib${product.lcase.name}"/>
+        <var name="my.var" value="${my.var}cgengine.jar"/>
+
+        <property name="codegen.lib.location" location="${my.var}"/>
+
+        <!-- generate the new jvm.sh -->
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}jvm.sh">
+#!/bin/sh
+
+BOOTJARFILES=${codegen.lib.location}${PS}${BOOTJARFILES}
+
+JVM="${openccm.JVM.content} -Djidlscript.bin=${config.OpenCCM_SCRIPTDIR}"
+JVM="$${JVM} -Dccm.templates=${config.OpenCCM_SCRIPTDIR}"
+JVM="$${JVM} -Xbootclasspath:$${BOOTJARFILES}"
+
+if [ "$$1" = "exec" ]; then
+    $${JVM} $$2
+elif [ "$$1" = "fork" ]; then
+    $${JVM} $$2 > $$3 &amp;
+    echo $$! > $$4
+    while [ ! -s  $$3 ]; do
+        sleep 1
+    done
+fi
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-ir3_start-unix" target generates a new ir3_start script.
+    -->
+    <target name="-customize-ir3_start-unix" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}ir3_start">
+#!/bin/sh
+
+if [ -f $${OpenCCM_CONFIG_DIR}/IR3.IOR ]; then
+    echo "Error: The OpenCCM's OMG IDL3 Repository is already started!"
+    exit 1
+fi
+
+if [ ! -d $${OpenCCM_CONFIG_DIR} ]; then
+    echo "Creating the $${OpenCCM_CONFIG_DIR} directory."
+    mkdir -p $${OpenCCM_CONFIG_DIR}
+fi
+
+echo "Launching the OpenCCM's IR3."
+
+args="org.objectweb.ccm.scripts.IR3Install $${OpenCCM_CONFIG_DIR}/IR3.IOR"
+jvm.sh fork "$$args" $${OpenCCM_CONFIG_DIR}/IR3.output $${OpenCCM_CONFIG_DIR}/IR3.PID
+ir3_feed -D__OMG_IDL3__ $${OpenCCM_HOMEDIR}/idl/IFR_3_0.idl
+touch $${OpenCCM_CONFIG_DIR}/IR3.start
+
+echo "The OpenCCM's OMG IDL3 Repository is started."
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-ir3_started-unix" target generates a new ir3_started
+        script.
+    -->
+    <target name="-customize-ir3_started-unix" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}ir3_started">
+#!/bin/sh
+
+if [ ! -f $${OpenCCM_CONFIG_DIR}/IR3.IOR ]; then
+    echo "Error: The OpenCCM's OMG IDL3 Repository is not started!"
+    exit 1
+fi
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-ir3_stop-unix" target generates a new ir3_stop script.
+    -->
+    <target name="-customize-ir3_stop-unix" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}ir3_stop">
+#!/bin/sh
+
+if [ ! -f $${OpenCCM_CONFIG_DIR}/IR3.PID ]; then
+    echo "Error: The OpenCCM's OMG IDL3 Repository is not started!"
+    exit 1
+fi
+
+kill -9 `cat $${OpenCCM_CONFIG_DIR}/IR3.PID`
+rm -rf $${OpenCCM_CONFIG_DIR} 2&gt;/dev/null
+
+echo "The OpenCCM's OMG IDL3 Repository is shut down."
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-ir3_idl2-unix" target generates a new ir3_idl2 script.
+    -->
+    <target name="-customize-ir3_idl2-unix" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}ir3_idl2">
+#!/bin/sh
+
+. $${OpenCCM_HOMEDIR}/bin/ir3_started
+
+args="org.objectweb.ccm.scripts.IR3toIDL2 -ORBInitRef"
+args="$$args InterfaceRepository=file:$${OpenCCM_CONFIG_DIR}/IR3.IOR $$@"
+jvm.sh exec "$$args"
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-ir3_cdmwidl2-unix" target generates a new ir3_cdmwidl2
+        script.
+    -->
+    <target name="-customize-ir3_cdmwidl2-unix" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}ir3_cdmwidl2">
+#!/bin/sh
+
+. $${OpenCCM_HOMEDIR}/bin/ir3_started
+
+args="cdmw.codegenerator.IR3toCdmwIDL2 -ORBInitRef"
+args="$$args InterfaceRepository=file:$${OpenCCM_CONFIG_DIR}/IR3.IOR $$@"
+jvm.sh exec "$$args"
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-ir3_xmi-unix" target generates a new ir3_xmi script.
+    -->
+    <target name="-customize-ir3_xmi-unix" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}ir3_xmi">
+#!/bin/sh
+
+. $${OpenCCM_HOMEDIR}/bin/ir3_started
+
+args="cdmw.codegenerator.IR3toXMI -ORBInitRef"
+args="$$args InterfaceRepository=file:$${OpenCCM_CONFIG_DIR}/IR3.IOR $$@"
+jvm.sh exec "$$args"
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-customize-ir3_feed-unix" target generates a new ir3_feed script.
+    -->
+    <target name="-customize-ir3_feed-unix" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}ir3_feed">
+#!/bin/sh
+
+. $${OpenCCM_HOMEDIR}/bin/ir3_started
+
+args="org.objectweb.ccm.scripts.IR3Feed -ORBInitRef"
+args="$$args InterfaceRepository=file:$${OpenCCM_CONFIG_DIR}/IR3.IOR $$@"
+jvm.sh exec "$$args"
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-set-file-attributes" target sets the executable attribute on the
+        newly created scripts.
+    -->
+    <target name="-set-file-attributes" unless="is.windows">
+        <chmod perm="ugo+x" dir="${config.OpenCCM_SCRIPTDIR}"
+               includes="**/ir3* **/jvm* **/*.sh"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-jidlscript-properties" target generates the jidlscript
+        properties file.
+    -->
+    <target name="-create-jidlscript-properties">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}jidlscript.properties">
+jidlscript.name=jidlscript
+jidlscript.Name=Java IDLScript Interpreter
+jidlscript.release=0.1
+        </echo>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-envi-OpenCCM" target generates the envi.OpenCCM.sh shell
+        script.
+    -->
+    <target name="-create-envi-OpenCCM" unless="is.windows">
+        <echo file="${config.OpenCCM_SCRIPTDIR}${FS}envi.OpenCCM.sh">
+OpenCCM_HOMEDIR=${config.OpenCCM_HOMEDIR}
+export OpenCCM_HOMEDIR
+
+OpenCCM_SCRIPTDIR=${config.OpenCCM_SCRIPTDIR}
+export OpenCCM_SCRIPTDIR
+
+OpenCCM_CONFIG_DIR=/tmp/OpenCCM_CONFIG_DIR_$$$$
+export OpenCCM_CONFIG_DIR
+
+if [ "$${PATH}" = "" ]; then
+    PATH=${OpenCCM_BINDIR}
+else
+    PATH=${OpenCCM_BINDIR}:$${OpenCCM_HOMEDIR}/bin:$${PATH}
+fi
+export PATH
+        </echo>
+    </target>
+
+
+</project>
+
+

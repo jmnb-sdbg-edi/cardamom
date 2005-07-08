@@ -1,0 +1,10 @@
+cg TestEventChannel1
+cg TestEventChannel2
+cg TestEventChannel3
+cg TestEventChannel4
+cg TestEventChannel5
+ct TestTypedEventChannel1
+ct TestTypedEventChannel2
+ct TestTypedEventChannel3
+ct TestTypedEventChannel4
+x

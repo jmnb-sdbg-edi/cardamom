@@ -1,0 +1,350 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_DAEMON_IDL_
+#define CDMW_PLATFORM_MNGT_DAEMON_IDL_
+
+
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwPlatformMngtMonitoring.idl>
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwPlatformMngt
+{
+
+
+    interface HostProbe;
+    interface Application;
+    interface ApplicationAgent;
+    interface PlatformObserver;
+    interface ApplicationControl;
+
+
+    /**
+    * The notifier of plaform information (OS level events).
+    */
+    interface PlatformNotifier {
+
+        /**
+        * Registers a PlatformObserver.
+        *
+        * @param observer_name the name used to identify the observer
+        * @param platform_observer the observer to be registered
+        * @param platform_snapshot the snapshot of the current
+        * platform information. All further notification to the observer
+        * will correspond only to a change in the platform information.
+        *
+        * @return the observer that was previously registered with
+        * observer_name. Otherwise returns nil.
+        * @exception CORBA::BAD_PARAM if platform_observer is nil.
+        */
+        PlatformObserver register (in string observer_name,
+            in PlatformObserver platform_observer,
+            out PlatformSnapshot platform_snapshot);
+
+        /**
+        * Unregisters a PlatformObserver.
+        *
+        * @param observer_name the name identifying the observer to unregister
+        *
+        * @return the observer.
+        *
+        * @exception ObserverNotFound if observer_name doesn't denote
+        * a previously registered observer.
+        */
+        PlatformObserver unregister (in string observer_name)
+            raises(ObserverNotFound);
+
+    }; // End interface PlatformNotifier
+
+
+    /**
+    * The Daemon interface provides access to any host in the system
+    * from anywhere. A Daemon can be contacted using the corbaloc scheme.
+    */
+    interface Daemon : PullMonitorable
+    {
+
+        /**
+        * The platform notifier associated with this daemon.
+        */
+        readonly attribute PlatformNotifier platform_notifier;
+
+        /**
+        * Creates an unmanaged process running on the host of this daemon.
+        *
+        * @param process_name the name identifying the process.
+        * @param process_info the information needed for creating the process.
+        *
+        * @exception ProcessAlreadyExists if process_name is already used
+        * for an existing process.
+        * @exception InvalidInfo if process_info contains invalid information.
+        */
+        void create_process (in ProcessName process_name,
+            in ProcessInfo process_info) 
+            raises (ProcessAlreadyExists, InvalidInfo);
+
+        /**
+        * Kills a process created by this daemon.
+        *
+        * @param process_name the name identifying the process.
+        *
+        * @exception ProcessNotFound if process_name doesn't denote an
+        * existing process.
+        */
+        void kill_process ( in ProcessName process_name) 
+                raises (ProcessNotFound);
+
+
+        /**
+        * Resolves the specified corbaloc.
+        * 
+        * @param corbaloc the corbaloc to resolve
+        * @return the resolved corbaloc.
+        * @exception InvalidCorbaloc if corbaloc doesn't denote a valid corbaloc.
+        */
+        Object resolve_corbaloc ( in string corbaloc) 
+                raises ( InvalidCorbaloc );
+
+
+        /**
+        * Returns the specified remote daemon.
+        * 
+        * @param host_name the host of the remote daemon.
+        *
+        * @exception HostNotFound if the host cannot be found.
+        * @exception HostNotReachable if the host doesn't respond.
+        */
+        Daemon get_remote_daemon (in HostName host_name)
+            raises (HostNotFound, HostNotReachable);
+
+        /**
+        * Creates the platform application on the host for the specified application.
+        *
+        * @param application_info the information needed for creating the
+        * platform application.
+        * @param creation_timeout the timeout allowed for the creation.
+        * @param application_control the control of the created application.
+        *
+        * @exception CreationError if the platform application returned a fatal error
+        * and aborts its creation.
+        * @exception ApplicationAlreadyExists if the platform application
+        * already exists.
+        * @exception InvalidInfo if application_info contains invalid information.
+        * @exception CreationTimeout if the application has not acknowledged its
+        * creation during the allowed timeout.
+        */
+        Application create_application(in ApplicationInfo application_info,
+            in Timeout creation_timeout,
+            out ApplicationControl application_control) 
+            raises (CreationError, ApplicationAlreadyExists,
+                InvalidInfo, CreationTimeout);
+
+        /**
+        * Kills the process of the specified application.
+        *
+        * @param application_name the name of the application.
+        * @param creation_timeout the timeout allowed for the creation.
+        *
+        * @exception ApplicationNotFound if the application is not found.
+        */
+        void kill_application(in ApplicationName application_name)
+            raises (ApplicationNotFound);
+
+        /**
+        * Creates the application agent on the host for the specified application.
+        *
+        * @param agent_info the information needed for creating the application
+        * agent.
+        * @param creation_timeout the timeout allowed for the creation.
+        *
+        * @exception CreationError if the application agent returned a fatal error
+        * and aborts its creation.
+        * @exception ApplicationAgentAlreadyExists if the application agent
+        * already exists.
+        * @exception InvalidInfo if agent_info contains invalid information.
+        * @exception CreationTimeout if the agent has not acknowledged its
+        * creation during the allowed timeout.
+        */
+        ApplicationAgent create_application_agent (
+            in ApplicationAgentInfo agent_info, in Timeout creation_timeout) 
+            raises (CreationError, ApplicationAgentAlreadyExists,
+                InvalidInfo, CreationTimeout);
+
+        /**
+        * Returns the agent of the specified application if any.
+        *
+        * @param application_name the name of the application.
+        * @return the application agent or a NIL reference if
+        * there is no agent for the specified application.
+        */
+        ApplicationAgent search_application_agent(in ApplicationName application_name);
+
+
+        /**
+        * Kills the agent of the specified application.
+        *
+        * @param application_name the name of the application.
+        *
+        * @exception ApplicationAgentNotFound if there is no agent for the
+        * specified application.
+        */
+        void kill_application_agent(in ApplicationName application_name)
+            raises (ApplicationAgentNotFound);
+
+
+        /**
+        * Creates the probe for the host.
+        *
+        * @param probe_info the information needed for creating
+        * the probe process.
+        * @param creation_timeout the timeout allowed for the creation.
+        * @param respawn if true, the host probe is restarted upon crash.
+        *
+        * @exception CreationError if the host probe returned a fatal error
+        * and aborts its creation.
+        * @exception HostProbeAlreadyExists if the specified host has already
+        * a probe.
+        * @exception InvalidInfo if probe_info contains invalid information.
+        * @exception CreationTimeout if the process has not acknowledged
+        * its creation during the allowed timeout.
+        */
+        HostProbe create_host_probe (in HostProbeInfo probe_info,
+            in Timeout creation_timeout, in boolean respawn) 
+            raises (CreationError, HostProbeAlreadyExists,
+                InvalidInfo, CreationTimeout);
+
+        /**
+        * Returns the host probe if any.
+        *
+        * @return the probe or a NIL reference if the probe is not found.
+        */
+        HostProbe search_host_probe();
+
+
+        /**
+        * Kills the host probe.
+        *
+        * @exception HostProbeNotFound if there is no probe for the host.
+        */
+        void kill_host_probe() 
+            raises (HostProbeNotFound);
+
+
+        /**
+        * Shutdowns the host.
+        */
+        void shutdown ();
+
+
+        /**
+        * Reboots the host.
+        */
+        void reboot ();
+
+
+    }; // End interface Daemon
+
+
+    /**
+    * The callback used by an application to notify its creation
+    * or a fatal error during its creation to the daemon.
+    */
+    interface ApplicationCallback
+    {
+        /**
+        * Notifies creation to the daemon.
+        *
+        * @param the_application the application notifying its creation.
+        * @param the_application_control the control of the application.
+        * @return the acknowlegement from the daemon containing information
+        * needed by the application.
+        */
+        ApplicationAck set_ready(in Application the_application,
+            in ApplicationControl the_application_control);
+
+        /**
+        * Notifies a fatal error during the creation.
+        *
+        * @param error_info the information about the error.
+        */
+        void notify_error (in string error_info);
+
+    }; // End interface ApplicationCallback
+
+
+    /**
+    * The callback used by an application agent to notify its creation
+    * or a fatal error during its creation to the daemon.
+    */
+    interface ApplicationAgentCallback
+    {
+        /**
+        * Notifies creation to the daemon.
+        *
+        * @param the_agent the agent notifying its creation.
+        * @return the acknowlegement from the daemon containing information
+        * needed by the agent.
+        */
+        ApplicationAgentAck set_ready(in ApplicationAgent the_agent);
+
+        /**
+        * Notifies a fatal error during the creation.
+        *
+        * @param error_info the information about the error.
+        */
+        void notify_error (in string error_info);
+
+    }; // End interface ApplicationAgentCallback
+
+
+    /**
+    * The callback used by a host probe to notify its creation
+    * or a fatal error during its creation to the daemon.
+    */
+    interface HostProbeCallback
+    {
+        /**
+        * Notifies creation to the daemon.
+        *
+        * @param the_probe the probe notifying its creation.
+        */
+        void set_ready(in HostProbe the_probe);
+
+        /**
+        * Notifies a fatal error during the creation.
+        *
+        * @param error_info the information about the error.
+        */
+        void notify_error (in string error_info);
+
+    }; // End interface HostProbeCallback
+
+
+}; // End Module CdmwPlatformMngt
+
+#endif // CDMW_PLATFORM_MNGT_DAEMON_IDL_
+

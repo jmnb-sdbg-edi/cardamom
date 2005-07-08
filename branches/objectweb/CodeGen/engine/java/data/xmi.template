@@ -1,0 +1,850 @@
+## ====================================================================
+## 
+## OpenCCM: The Open CORBA Component Model Platform
+## Copyright (C) 2000-2002 USTL - LIFL - GOAL
+## Contact: openccm-team@objectweb.org
+## 
+## This library is free software; you can redistribute it and/or
+## modify it under the terms of the GNU Lesser General Public
+## License as published by the Free Software Foundation; either
+## version 2.1 of the License, or any later version.
+## 
+## This library is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+## Lesser General Public License for more details.
+## 
+## You should have received a copy of the GNU Lesser General Public
+## License along with this library; if not, write to the Free Software
+## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+## USA
+## 
+## Initial developer(s): Mathieu Vadet.
+## Contributor(s): Tran Huynh (tran.huynh@fr.thalesgroup.com)
+## 
+## ====================================================================
+
+##
+##  This file contains the OMG IDL3 mappings for OMG IDL3 declarations
+##
+##  Note: end of line are NOT relevant !
+##        spaces ARE relevant !
+##  Note: for evaluated strings, "generator" to refer to the generator class
+##        and "self" to refer to the printer class.
+##  Note: this file needs '$' as call character and '#' as comment character
+##
+
+
+##
+## Mapping for an object.
+## It actually defines the entry point for the XMI document.
+##
+#id OBJECT
+$self.open(generator.getFilename())$
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- *************************************************************************** -->
+<!--  The OpenCCM scripted visitor.                                              -->
+<!--                                                                             -->
+<!--  Main Authors : Mathieu Vadet (Mathieu.Vadet@lifl.fr)                       -->
+<!--                 Tran Huynh (tran.huynh@fr.thalesgroup.com)                  -->
+<!--                 Philippe Merle (Philippe.Merle@lifl.fr)                     -->
+<!--                                                                             -->
+<!--  Done by the Genie des Objets et composAnts Logiciels (GOAL) Team,          -->
+<!--  Laboratoire d'Informatique Fondamentale de Lille (LIFL), UPRESA 8022 CNRS, -->
+<!--  Universite des Sciences et Technologies de Lille (USTL), Lille, France.    -->
+<!--                                                                             -->
+<!--  (C) LIFL 2000-2001 All Rights Reserved                                     -->
+<!-- *************************************************************************** -->
+
+<!DOCTYPE XMI SYSTEM "$generator.getDTD()$">
+
+<XMI xmi.version="1.1" xmlns:UML="org.omg/UML1.3">
+<XMI.header>
+<XMI.documentation>
+<XMI.exporter>OpenCCM XMI generator</XMI.exporter>
+</XMI.documentation>
+</XMI.header>
+<XMI.content>
+<UML:Model xmi.id="$model_id = self.newRootId(); model_id$">
+<UML:Namespace.ownedElement>
+## Visit contained elements
+$self.visitModule(obj)$
+## Prints external references
+$self.externalTypes()$
+</UML:Namespace.ownedElement>
+<UML:Namespace.ownedElement>
+## Prints generalizations
+<!-- ********** Generalizations ********** -->
+$self.generalizations()$
+</UML:Namespace.ownedElement>
+<UML:Namespace.ownedElement>
+## Prints associations
+<!-- ************ Associations *********** -->
+$self.associations()$
+$self.associations_union_members()$
+$self.associations_ccm_manages()$
+$self.associations_typedefs()$
+$self.associations_anon_arrays()$
+</UML:Namespace.ownedElement>
+<UML:Namespace.ownedElement>
+## Prints stereotypes
+<!-- ************ Stereotypes ************ -->
+$self.corbaStereotypes()$
+</UML:Namespace.ownedElement>
+</UML:Model>
+</XMI.content>
+</XMI>
+
+<!-- *************************************************************************** -->
+<!--  End of file -->
+<!-- *************************************************************************** -->
+
+
+
+##
+## Mapping for a module.
+##
+#id MODULE
+<!-- CORBAModule -->
+<UML:Package xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAModule")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit contained elements
+$self.contents(obj)$
+## CORBAConstants
+$self.corbaConstants(self.getXMIId(obj.getId()))$
+</UML:Namespace.ownedElement>
+</UML:Package>
+
+
+
+##
+## Mapping for a module that contains elements external to the module
+## passed as argument to the XMI generator.
+##
+#id MODULE_EXT_REFS
+<!-- CORBAModule -->
+<UML:Package xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAModule")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+$self.visit(vect)$
+</UML:Namespace.ownedElement>
+</UML:Package>
+
+
+
+##
+## Mapping for a component.
+##
+#id COMPONENT
+<!-- CCMComponent -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CCMComponent")$'>
+## Look for a base component and for supported interfaces
+$self.baseComponent(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit contained elements
+$self.contents(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for a 'provides'.
+##
+#id PROVIDES
+$self.provides(obj)$
+
+
+
+##
+## Mapping for a 'publishes'.
+##
+#id PUBLISHES
+$self.publishes(obj)$
+
+
+
+##
+## Mapping for a 'consumes'.
+##
+#id CONSUMES
+$self.consumes(obj)$
+
+
+
+##
+## Mapping for a 'uses'.
+##
+#id USES
+$self.uses(obj)$
+
+
+
+##
+## Mapping for an 'emits'.
+##
+#id EMITS
+$self.emits(obj)$
+
+
+
+##
+## Mapping for a home.
+##
+#id HOME
+<!-- CCMHome -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CCMHome")$'>
+## Look for a base home and supported interfaces
+$self.baseHome(obj)$
+## Look for a managed component
+$self.managedComponent(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit contained elements
+$self.contents(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an eventtype.
+##
+#id EVENT
+<!-- CCMEvent -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" isAbstract="$self.isAbstract(obj)$" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CCMEvent")$'>
+## Look for base values
+$self.baseValues(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit the value type factory
+$self.initializer(obj)$
+## Visit contained elements
+$self.contents(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an interface.
+##
+#id INTERFACE
+<!-- CORBAInterface -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAInterface")$'>
+## Look for base interfaces
+$self.baseInterfaces(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit contained elements
+$self.contents(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an abstract interface.
+##
+#id ABSTRACT_INTERFACE
+<!-- CORBAInterface (abstract) -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" isAbstract="true" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAInterface")$'>
+## Look for base interfaces
+$self.baseInterfaces(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit contained elements
+$self.contents(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an local interface.
+##
+#id LOCAL_INTERFACE
+<!-- CORBAInterface (local) -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAInterface")$'>
+## Look for base interfaces
+$self.baseInterfaces(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+<UML:TaggedValue tag="isLocal" value="TRUE"/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit contained elements
+$self.contents(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an operation.
+##
+#id OPERATION
+<!-- CORBAOperation -->
+<UML:Operation xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" owner="$self.getScopeId(obj)$">
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+## Look for exceptions raised
+$self.operationExceptions(obj)$
+</UML:ModelElement.taggedValue>
+<UML:BehavioralFeature.parameter>
+<UML:Parameter xmi.id="$self.newId()$" kind="return" behavioralFeature="$self.getXMIId(obj.getId())$" type="$self.getXMIId(obj.getType())$"/>
+## Look for operation parameters
+$self.operationParams(obj)$
+</UML:BehavioralFeature.parameter>
+</UML:Operation>
+
+
+
+##
+## Mapping for an operation parameter.
+##
+#id OPERATION_PARAMETER
+<UML:Parameter xmi.id="$self.newId()$" name="$name$" kind="$kind$" behavioralFeature="$operation$" type="$type$"/>
+
+
+
+##
+## Mapping for an operation exception.
+##
+#id OPERATION_EXCEPTION
+<UML:TaggedValue tag="raises" value="$exception$"/>
+
+
+
+##
+## Mapping for a factory.
+##
+#id FACTORY
+<!-- CCMHomeFactory -->
+<UML:Operation xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" stereotype='$self.getXMIId("CCMHomeFactory")$' owner="$self.getScopeId(obj)$">
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+## Look for exceptions raised
+$self.operationExceptions(obj)$
+</UML:ModelElement.taggedValue>
+<UML:BehavioralFeature.parameter>
+<UML:Parameter xmi.id="$self.newId()$" kind="return" behavioralFeature="$self.getXMIId(obj.getId())$" type="$self.getXMIId(obj.getType())$"/>
+## Look for operation parameters
+$self.operationParams(obj)$
+</UML:BehavioralFeature.parameter>
+</UML:Operation>
+
+
+
+##
+## Mapping for a finder.
+##
+#id FINDER
+<!-- CCMHomeFinder -->
+<UML:Operation xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" stereotype='$self.getXMIId("CCMHomeFinder")$' owner="$self.getScopeId(obj)$">
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+## Look for exceptions raised
+$self.operationExceptions(obj)$
+</UML:ModelElement.taggedValue>
+<UML:BehavioralFeature.parameter>
+<UML:Parameter xmi.id="$self.newId()$" kind="return" behavioralFeature="$self.getXMIId(obj.getId())$" type="$self.getXMIId(obj.getType())$"/>
+## Look for operation parameters
+$self.operationParams(obj)$
+</UML:BehavioralFeature.parameter>
+</UML:Operation>
+
+
+
+##
+## Mapping for a constant.
+##
+#id CONSTANT
+$self.constant(obj)$
+
+
+
+##
+## Mapping for constants defined within a module scope.
+##
+#id CONSTANT_IN_MODULE_SCOPE
+<!-- CORBAConstants -->
+<UML:Class xmi.id="$constants_id = self.newId(); constants_id$" name="Constants" visibility="public" namespace="$scope_id$" stereotype='$self.getXMIId("CORBAConstants")$'>
+<UML:Namespace.ownedElement>
+$self.constants_in_module_scope(constants_id)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an alias.
+##
+#id ALIAS
+$self.alias(obj)$
+
+
+
+##
+## Mapping for an alias which is not an array, a sequence or a fixed.
+##
+#id TYPEDEF
+<!-- CORBATypedef -->
+<UML:Class xmi.id="$alias_id$" name="$name$" visibility="public" namespace="$scope_id$" stereotype='$self.getXMIId("CORBATypedef")$'>
+$self.insertGeneralizableElement(gen_id)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$type_id$'/>
+</UML:ModelElement.taggedValue>
+</UML:Class>
+
+
+
+##
+## Mapping for a typedefed CORBA sequence.
+##
+#id TYPEDEF_SEQUENCE
+<!-- CORBASequence -->
+<UML:Class xmi.id="$seq_id$" name="$name$" visibility="public" namespace="$scope_id$" stereotype='$self.getXMIId("CORBASequence")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$type_id$'/>
+</UML:ModelElement.taggedValue>
+</UML:Class>
+
+
+
+##
+## Mapping for an anonymous sequence.
+##
+#id ANONYMOUS_SEQUENCE
+<!-- CORBAAnonymousSequence -->
+<UML:Class xmi.id="$seq_id$" visibility="public" namespace="$scope_id$" stereotype='$self.getXMIId("CORBASequence")$'/>
+
+
+##
+## Mapping for an anonymous array.
+##
+#id ANONYMOUS_ARRAY
+<!-- CORBAAnonymousArray -->
+<UML:Class xmi.id="$array_id$" visibility="public" namespace="$scope_id$" stereotype='$self.getXMIId("CORBAAnonymousArray")$'/>
+
+
+
+##
+## Mapping for a typedefed CORBA array.
+##
+#id TYPEDEF_ARRAY
+<!-- CORBAArray -->
+<UML:Class xmi.id="$array_id$" name="$name$" visibility="public" namespace="$scope_id$" stereotype='$self.getXMIId("CORBAArray")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$type_id$'/>
+</UML:ModelElement.taggedValue>
+</UML:Class>
+
+
+
+##
+## Mapping for a typedefed CORBA fixed.
+##
+#id TYPEDEF_FIXED
+<!-- CORBAFixed -->
+<UML:Class xmi.id="$fixed_id$" name="$name$" visibility="public" namespace="$scope_id$" stereotype='$self.getXMIId("CORBAFixed")$'>
+$self.insertGeneralizableElement(gen_id)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$type_id$'/>
+<UML:TaggedValue tag="digits" value="$digits$"/>
+<UML:TaggedValue tag="scale" value="$scale$"/>
+</UML:ModelElement.taggedValue>
+</UML:Class>
+
+
+
+##
+## Mapping for a struct.
+##
+#id STRUCT
+<!-- CORBAStruct -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAStruct")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit struct members
+$self.structMembers(obj.getId(), obj.getMembers())$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for a union.
+##
+#id UNION
+<!-- CORBAUnion -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAUnion")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit union members
+$self.unionMembers(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an exception.
+##
+#id EXCEPTION
+<!-- CORBAException -->
+<UML:Exception xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAException")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit struct members
+$self.structMembers(obj.getId(), obj.getMembers())$
+</UML:Namespace.ownedElement>
+</UML:Exception>
+
+
+
+##
+## Mapping for an enum.
+##
+#id ENUM
+<!-- CORBAEnum -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAEnum")$'>
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit enum elements
+$self.enumMembers(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for an enum member.
+##
+#id ENUM_MEMBER
+<UML:Attribute xmi.id="$self.newId()$" name="$name$" visibility="public" multiplicity="1..1" owner="$owner_id$">
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="IDLOrder" value="$idl_order$"/>
+</UML:ModelElement.taggedValue>
+</UML:Attribute>
+
+
+
+##
+## Mapping for a valuetype.
+##
+#id VALUE
+<!-- CORBAValue -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" isAbstract="$self.isAbstract(obj)$" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBAValue")$'>
+## Look for base values
+$self.baseValues(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+<UML:Namespace.ownedElement>
+## Visit the value type factory
+$self.initializer(obj)$
+## Visit contained elements
+$self.contents(obj)$
+</UML:Namespace.ownedElement>
+</UML:Class>
+
+
+
+##
+## Mapping for a value type factory.
+##
+#id INITIALIZER
+<!-- CORBAValueFactory -->
+<UML:Operation xmi.id="$initializer_id = self.newId(); initializer_id$" name="$init.getName()$" visibility="public" stereotype='$self.getXMIId("CORBAValueFactory")$' owner="$owner_id$">
+<UML:BehavioralFeature.parameter>
+<UML:Parameter xmi.id="$self.newId()$" kind="return" behavioralFeature="$initializer_id$" type="$owner_id$"/>
+## Look for operation parameters
+$self.initializerParams(initializer_id, init.getParameters())$
+</UML:BehavioralFeature.parameter>
+</UML:Operation>
+
+
+
+##
+## Mapping for a value type member.
+## - CORBA basic types : UML attribute
+## - User-defined IDL types : UML association
+##
+#id VALUE_MEMBER
+$self.valueMember(obj)$
+
+
+
+##
+## Mapping for a valuebox.
+##
+#id VALUE_BOX
+<!-- CORBABoxedValue -->
+<UML:Class xmi.id="$self.newId(obj)$" name="$obj.getName()$" visibility="public" namespace="$self.getScopeId(obj)$" stereotype='$self.getXMIId("CORBABoxedValue")$'>
+## Look for the boxed type
+$self.boxedType(obj)$
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="typeid" value='$obj.getId()$'/>
+</UML:ModelElement.taggedValue>
+</UML:Class>
+
+
+
+##
+## Mapping for a stereotype.
+##
+#id STEREOTYPE
+<UML:Stereotype xmi.id="$self.getXMIId(name)$" name="$name$" baseClass="$base_class$"/>
+
+
+
+##
+## Mapping for an element that is generalizable.
+##
+#id GENERALIZABLE_ELEMENT
+<UML:GeneralizableElement.generalization>
+<UML:Generalization xmi.idref="$gen_id$"/>
+</UML:GeneralizableElement.generalization>
+
+
+
+##
+## Mapping for a generalization.
+##
+#id GENERALIZATION
+<UML:Generalization xmi.id="$gen_id$" namespace="$model_id$">
+<UML:Generalization.subtype>
+<UML:GeneralizableElement xmi.idref="$child_id$"/>
+</UML:Generalization.subtype>
+<UML:Generalization.supertype>
+<UML:GeneralizableElement xmi.idref="$parent_id$"/>
+</UML:Generalization.supertype>
+</UML:Generalization>
+
+
+
+##
+## Mapping for an attribute.
+## - CORBA basic types : UML attribute
+## - User-defined IDL types : UML association
+##
+#id ATTRIBUTE
+$self.attribute(obj)$
+
+
+
+##
+## Mapping for an attribute (CORBA basic types).
+##
+#id ATTRIBUTE_BASIC_TYPES
+<UML:Attribute xmi.id="$attrib_id$" name="$name$" visibility="$visibility$" $multiplicity$ $stereotype$ owner="$scope_id$" type="$type$"/>
+
+
+
+##
+## Mapping for a constant defined within an interface.
+##
+#id ATTRIBUTE_CONSTANT
+<UML:Attribute xmi.id="$attrib_id$" name="$name$" visibility="$visibility$" ownerScope="classifier" changeable="frozen" stereotype='$self.getXMIId("CORBAConstant")$' owner="$scope_id$" type="$type$">
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="initialValue" value="$init_value$"/>
+</UML:ModelElement.taggedValue>
+</UML:Attribute>
+
+
+
+##
+## Mapping for a union member when a CORBA basic type is visited.
+##
+#id ATTRIBUTE_UNION_MEMBER
+<UML:Attribute xmi.id="$attrib_id$" name="$name$" visibility="public" multiplicity="0..1" owner="$scope_id$" type="$type$">
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="IDLOrder" value="$idl_order$"/>
+<UML:TaggedValue tag="Case" value="$label$"/>
+</UML:ModelElement.taggedValue>
+</UML:Attribute>
+
+
+
+##
+## Mapping for an association qualifier attribute
+## Note: used when a CORBASequence or a CORBAArray is visited.
+##
+#id ATTRIBUTE_ASSOCIATION_QUALIFIER
+<UML:Attribute xmi.id="$self.newId()$" name="$name$" type='$self.getXMIId("CORBAlong")$'>
+<UML:ModelElement.constraint>
+<UML:Constraint xmi.id="$self.newId()$">
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="constraintUpperValue" value="$value$"/>
+</UML:ModelElement.taggedValue>
+</UML:Constraint>
+</UML:ModelElement.constraint>
+</UML:Attribute>
+
+
+
+##
+## Mapping for an association.
+##
+#id ASSOCIATION
+<UML:Association xmi.id="$assoc_id$" visibility="$visibility$" namespace="$model_id$" $stereotype$>
+<UML:Association.connection>
+## Source
+<UML:AssociationEnd multiplicity="$multiplicity_src$" type="$src_elem_ref$"/>
+## Destination
+<UML:AssociationEnd name="$name$" multiplicity="$multiplicity_dest$" type="$dest_elem_ref$"/>
+</UML:Association.connection>
+</UML:Association>
+
+
+
+##
+## Mapping for a CCMManages.
+##
+#id ASSOCIATION_CCM_MANAGES
+<UML:Association xmi.id="$assoc_id$" visibility="public" namespace="$model_id$" stereotype='$self.getXMIId("CCMManages")$'>
+<UML:Association.connection>
+## Home
+<UML:AssociationEnd stereotype='$self.getXMIId("CCMHome")$' type="$home_ref$"/>
+## Component
+<UML:AssociationEnd stereotype='$self.getXMIId("CCMComponent")$' type="$component_ref$"/>
+</UML:Association.connection>
+</UML:Association>
+
+
+
+##
+## Mapping for a CCMManages.
+##
+#id ASSOCIATION_CCM_MANAGES_WITH_PK
+<UML:Association xmi.id="$assoc_id$" visibility="public" namespace="$model_id$" stereotype='$self.getXMIId("CCMManages")$'>
+<UML:Association.connection>
+## Primary key
+<UML:AssociationEnd stereotype='$self.getXMIId("CCMPrimaryKey")$' type="$pk_ref$"/>
+## Home
+<UML:AssociationEnd stereotype='$self.getXMIId("CCMHome")$' type="$home_ref$"/>
+## Component
+<UML:AssociationEnd stereotype='$self.getXMIId("CCMComponent")$' type="$component_ref$"/>
+</UML:Association.connection>
+</UML:Association>
+
+
+
+##
+## Mapping for a union member when a user-defined type is visited.
+##
+#id ASSOCIATION_UNION_MEMBER
+<UML:Association xmi.id="$assoc_id$" visibility="$visibility$" namespace="$model_id$">
+<UML:Association.connection>
+## Source
+<UML:AssociationEnd multiplicity="0" type="$src_elem_ref$"/>
+## Destination
+<UML:AssociationEnd name="$name$" multiplicity="1" type="$dest_elem_ref$">
+## Tagged values
+<UML:ModelElement.taggedValue>
+<UML:TaggedValue tag="IDLOrder" value="$idl_order$"/>
+<UML:TaggedValue tag="Case" value="$label$"/>
+</UML:ModelElement.taggedValue>
+</UML:AssociationEnd>
+</UML:Association.connection>
+</UML:Association>
+
+
+
+##
+## Mapping for a CORBA sequence when an alias is visited
+##
+#id ASSOCIATION_SEQUENCE
+<UML:Association xmi.id="$assoc_id$" visibility="public" namespace="$model_id$">
+<UML:Association.connection>
+## Source
+<UML:AssociationEnd multiplicity="0..1" type="$src_elem_ref$">
+<UML:AssociationEnd.qualifier>
+$self.qualifierAttribute("CORBASequence", obj)$
+</UML:AssociationEnd.qualifier>
+</UML:AssociationEnd>
+## Destination
+<UML:AssociationEnd multiplicity="$multiplicity$" type="$dest_elem_ref$"/>
+</UML:Association.connection>
+</UML:Association>
+
+
+
+##
+## Mapping for a CORBA array when an alias is visited
+##
+#id ASSOCIATION_ARRAY
+<UML:Association xmi.id="$assoc_id$" visibility="public" namespace="$model_id$">
+<UML:Association.connection>
+## Source
+<UML:AssociationEnd multiplicity="0..1" type="$src_elem_ref$">
+<UML:AssociationEnd.qualifier>
+$self.qualifierAttribute("CORBAArray", obj)$
+</UML:AssociationEnd.qualifier>
+</UML:AssociationEnd>
+## Destination
+<UML:AssociationEnd multiplicity="$multiplicity$" type="$dest_elem_ref$"/>
+</UML:Association.connection>
+</UML:Association>
+
+
+##
+## Mapping for a CORBA array when an alias is visited
+##
+#id ASSOCIATION_ANONYMOUS_ARRAY
+<UML:Association xmi.id="$assoc_id$" visibility="public" namespace="$model_id$">
+<UML:Association.connection>
+## Source
+<UML:AssociationEnd multiplicity="1..1" type="$src_elem_ref$">
+<UML:AssociationEnd.qualifier>
+$self.qualifierAttribute("CORBAAnonymousArray", obj)$
+</UML:AssociationEnd.qualifier>
+</UML:AssociationEnd>
+## Destination
+<UML:AssociationEnd multiplicity="1..1" type="$dest_elem_ref$"/>
+</UML:Association.connection>
+</UML:Association>
+
+
+
+##
+## Mapping for a native.
+## Not currently defined.
+##
+#id NATIVE
+<!-- CORBANative -->
+
+
+
+##
+## Mapping for an unknown.
+## Not currently defined.
+##
+#id NULL
+<!-- CORBANull -->

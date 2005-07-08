@@ -1,0 +1,19 @@
+Mon Feb  7 12:27:33 2005  Angelo Corsaro  <corsaro@cse.wustl.edu>
+
+	* configuration/data/package.txt:
+
+	  Added entry for PortableGroup.
+
+Mon Feb  7 12:24:05 2005  Angelo Corsaro  <corsaro@cse.wustl.edu>
+
+	* configuration/data/PkgDesc.xml:
+
+	  Added commonsvcs/c++ csc to  Foundation csci.
+
+Mon Feb  7 12:23:52 2005  Angelo Corsaro  <corsaro@cse.wustl.edu>
+
+	* ChangeLog: Added ChangeLog, this file should be used to track
+	  changes to this CSCI.	 
+
+	  
+

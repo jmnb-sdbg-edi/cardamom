@@ -1,0 +1,111 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef OBTypedEventChannelFactory_idl
+#define OBTypedEventChannelFactory_idl
+
+#include <CosTypedEventChannelAdmin.idl>
+#include <OBEventChannelFactory.idl>
+
+#pragma prefix "ooc.com"
+
+/**
+  *
+  * This module contains the interface for a
+  * typed event channel factory object.
+  *
+  **/
+module OBTypedEventChannelFactory
+{ 
+
+/**
+  *
+  * The interface for a typed event channel factory object, which
+  * provides operations for the creation and retrieval of
+  * typed event channels.
+  *
+  **/
+interface TypedEventChannelFactory
+{ 
+    /**
+      *
+      * Creates and returns a typed event channel, which is a
+      * persistent object reference.
+      *
+      * @param id The channel id identifying the new
+      * typed event channel.
+      *
+      * @return The typed event channel.
+      *
+      * @exception ChannelAlreadyExists A typed event channel
+      * identified by <code>id</code> already exists.
+      *
+      **/
+    CosTypedEventChannelAdmin::TypedEventChannel create_channel(
+        in OBEventChannelFactory::ChannelId id)
+    raises(OBEventChannelFactory::ChannelAlreadyExists);
+
+    /**
+      *
+      * Retrieves a typed event channel object, which is a persistent
+      * object reference.
+      *
+      * @param id The channel id of the typed event channel to
+      * retrieve.
+      *
+      * @return The typed event channel.
+      *
+      * @exception ChannelNotAvailable The requested
+      * typed event channel identified by the <code>id</code> doesn't
+      * exist.
+      *
+      **/
+    CosTypedEventChannelAdmin::TypedEventChannel get_channel_by_id(
+    in OBEventChannelFactory::ChannelId id)
+        raises(OBEventChannelFactory::ChannelNotAvailable);
+
+    /**
+      *
+      * Returns a sequence of channel ids identifying available
+      * typed event channels.
+      *
+      * @return The sequence of channel ids.
+      *
+      **/
+    OBEventChannelFactory::ChannelIdSeq get_channels();
+
+    /**
+      *
+      * Shutdown the typed event service.
+      *
+      **/
+    void shutdown();
+};
+
+};
+
+#endif
+
+

@@ -1,0 +1,890 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef Components_IDL_
+#define Components_IDL_
+
+
+// This file contains all the Components module definitions
+// defined by the CORBA Component Model Specification
+// in the OMG TC Document Number ptc/2001-11-03
+//
+// Editor: Dr. Philippe Merle - LIFL & INRIA
+
+// #include "IFR_3_0.idl"
+
+#ifdef __OpenCCM__
+
+#ifndef __CORBA_Imported__
+#define __CORBA_Imported__
+import CORBA;
+#endif
+
+#elif defined(ORBACUS)
+#include <OB/orb.idl>
+#else
+#include <orb.idl>
+#endif
+
+#include "CosPersistentState.idl"
+#include "SecurityLevel2.idl"
+
+#ifdef TAO
+#include <IFR_Base.pidl>
+#endif
+
+#pragma prefix "omg.org"
+
+module Components
+{
+
+    // From Chapter 61: Component Model
+
+    // As this is not explicitly defined but used in Chapter 61
+    // then this could be merged with Components::Deployment::InvalidConfiguration!
+    //
+    exception InvalidConfiguration { };
+
+    // Explicitly defined in Chapter 61
+
+    typedef string FeatureName;
+
+    typedef sequence<FeatureName> NameList;
+
+#ifdef _ORBRIVER_ADA_
+    // OctetSeq is defined for Orbada because CORBA::OctetSeq is not defined
+    // (This is due to the Mapping: it needs Corba-Sequences which is a child package)
+    typedef sequence<octet> OctetSeq;
+    // The following pragma is used to have a good type check with a different ORB
+    // (where CORBA::OctetSeq is used).
+    // NOTE: pragma ID don't take pragma prefix into account so we must write the prefix
+    #pragma ID OctetSeq "IDL:omg.org/CORBA/OctetSeq:1.0"
+#endif
+    exception InvalidName { };
+
+    exception InvalidConnection { };
+
+    exception AlreadyConnected { };
+
+    exception NoConnection { };
+
+    exception ExceededConnectionLimit { };
+
+    exception CookieRequired { };
+
+    exception WrongComponentType { };
+
+    exception NoKeyAvailable { };
+
+    exception DuplicateKeyValue { };
+
+    exception InvalidKey { };
+
+    exception UnknownKeyValue { };
+
+    typedef unsigned long FailureReason;
+
+    exception CreateFailure
+    {
+        FailureReason reason;
+    };
+
+    exception FinderFailure
+    {
+        FailureReason reason;
+    };
+
+    exception RemoveFailure
+    {
+        FailureReason reason;
+    };
+
+    valuetype PortDescription
+     {
+        public FeatureName name;
+          public CORBA::RepositoryId type_id;
+     };
+
+     valuetype FacetDescription : PortDescription
+     {
+          public Object facet_ref;
+     };
+    typedef sequence<FacetDescription> FacetDescriptions;
+
+    interface Navigation
+    {
+        Object provide_facet (in FeatureName name)
+                                raises (InvalidName);
+
+        FacetDescriptions get_all_facets();
+
+        FacetDescriptions get_named_facets (in NameList names)
+                                raises (InvalidName);
+
+        boolean same_component (in Object object_ref);
+    };
+#ifdef TAO
+#else
+    enum DefinitionKind {
+        dk_none,        dk_all,
+        dk_Attribute,   dk_Constant,    dk_Exception,   dk_Interface,
+        dk_Module,      dk_Operation,   dk_Typedef,
+        dk_Alias,       dk_Struct,      dk_Union,       dk_Enum,
+        dk_Primitive,   dk_String,      dk_Sequence,    dk_Array,
+        dk_Repository,
+        dk_Wstring,     dk_Fixed,
+        dk_Value,       dk_ValueBox,    dk_ValueMember,
+        dk_Native
+    };
+
+    interface IRObject {
+        // read interface
+        readonly attribute  DefinitionKind  def_kind;
+        // write interface
+        void                destroy ();
+    };
+
+#endif
+    valuetype Cookie
+    {
+#ifdef _ORBRIVER_ADA_
+	private OctetSeq cookieValue;
+#else
+        private CORBA::OctetSeq cookieValue;
+#endif
+    };
+
+    valuetype ConnectionDescription
+    {
+        public Cookie ck;
+        public Object objref;
+    };
+    typedef sequence<ConnectionDescription> ConnectionDescriptions;
+
+    valuetype ReceptacleDescription : PortDescription
+    {
+        public boolean is_multiple;
+        public ConnectionDescriptions connections;
+    };
+    typedef sequence<ReceptacleDescription> ReceptacleDescriptions;
+
+    interface Receptacles
+    {
+        Cookie connect ( in FeatureName name, in Object connection )
+            raises (
+                InvalidName,
+                InvalidConnection,
+                AlreadyConnected,
+                ExceededConnectionLimit);
+
+        void disconnect (
+                in FeatureName name,
+                in Cookie ck) raises (
+                    InvalidName,
+                    InvalidConnection,
+                    CookieRequired,
+                    NoConnection);
+
+        ConnectionDescriptions get_connections (
+                in FeatureName name) raises (InvalidName);
+
+        ReceptacleDescriptions get_all_receptacles ();
+
+        ReceptacleDescriptions get_named_receptacles (
+                in NameList names) raises(InvalidName);
+    };
+
+    abstract valuetype EventBase { };
+
+    exception BadEventType
+    {
+        CORBA::RepositoryId expected_event_type;
+    };
+
+    interface EventConsumerBase
+    {
+        void push_event(in EventBase evt) raises (BadEventType);
+    };
+
+    valuetype ConsumerDescription : PortDescription
+    {
+        public EventConsumerBase consumer;
+    };
+    typedef sequence<ConsumerDescription> ConsumerDescriptions;
+
+    valuetype EmitterDescription : PortDescription
+    {
+        public EventConsumerBase consumer;
+    };
+    typedef sequence<EmitterDescription> EmitterDescriptions;
+
+    valuetype SubscriberDescription
+    {
+        public Cookie ck;
+        public EventConsumerBase consumer;
+    };
+    typedef sequence<SubscriberDescription> SubscriberDescriptions;
+
+    valuetype PublisherDescription : PortDescription
+    {
+        public SubscriberDescriptions consumers;
+    };
+    typedef sequence<PublisherDescription> PublisherDescriptions;
+
+    interface Events
+    {
+        EventConsumerBase get_consumer (in FeatureName sink_name)
+                                raises (InvalidName);
+
+        Cookie subscribe (in FeatureName publisher_name,
+                                in EventConsumerBase subscriber)
+                                raises (InvalidName, InvalidConnection,
+                                        ExceededConnectionLimit);
+
+        void unsubscribe (in FeatureName publisher_name,
+                                in Cookie ck)
+                                raises (InvalidName, InvalidConnection);
+
+        void connect_consumer (in FeatureName emitter_name,
+                                in EventConsumerBase consumer)
+                                raises (InvalidName, AlreadyConnected,
+                                        InvalidConnection);
+
+        EventConsumerBase disconnect_consumer (
+                                in FeatureName source_name)
+                                raises (InvalidName, NoConnection);
+
+        ConsumerDescriptions get_all_consumers ();
+
+        ConsumerDescriptions get_named_consumers (
+                                in NameList names)
+                                raises (InvalidName);
+
+        EmitterDescriptions get_all_emitters ();
+
+        EmitterDescriptions get_named_emitters (in NameList names)
+                                raises (InvalidName);
+
+        PublisherDescriptions get_all_publishers ();
+
+        PublisherDescriptions get_named_publishers (in NameList names)
+                                raises (InvalidName);
+    };
+
+    abstract valuetype PrimaryKeyBase { };
+
+    interface CCMObject;
+
+    interface CCMHome
+    {
+#ifdef _ORBRIVER_ADA_
+// Ada Mapping move interface repository definitions to Repository_Root child package
+// but checking with a different ORB should be OK for these methods because the Orbada
+// repository Id of IRObject is IDL:omg.org/CORBA/IRObject as said in the Corba mapping
+        CORBA::Repository_Root::IRObject get_component_def();
+
+        CORBA::Repository_Root::IRObject get_home_def ();
+#else
+#ifdef TAO
+        CORBA::IRObject get_component_def();
+        CORBA::IRObject get_home_def ();
+#else 
+        IRObject get_component_def();
+        IRObject get_home_def ();
+#endif
+#endif
+
+        void remove_component (in CCMObject comp)
+                       raises (RemoveFailure);
+    };
+
+    interface KeylessCCMHome
+    {
+        CCMObject create_component() raises (CreateFailure);
+    };
+
+    exception HomeNotFound { };
+
+    interface HomeFinder
+    {
+        CCMHome find_home_by_component_type (
+            in CORBA::RepositoryId comp_repid)raises (HomeNotFound);
+
+        CCMHome find_home_by_home_type (
+            in CORBA::RepositoryId home_repid) raises (HomeNotFound);
+
+        CCMHome find_home_by_name (
+            in string home_name) raises (HomeNotFound);
+    };
+
+    interface Configurator
+    {
+        void configure (in CCMObject comp)
+                raises (WrongComponentType);
+    };
+
+    valuetype ConfigValue
+    {
+        public FeatureName name;
+        public any value;
+    };
+    typedef sequence<ConfigValue> ConfigValues;
+
+    interface StandardConfigurator : Configurator
+    {
+        void set_configuration (in ConfigValues descr);
+    };
+
+    interface HomeConfiguration : CCMHome
+    {
+        void set_configurator (in Configurator cfg);
+
+        void set_configuration_values (in ConfigValues config);
+
+        void complete_component_configuration (in boolean b);
+
+        void disable_home_configuration();
+    };
+
+    valuetype ComponentPortDescription
+    {
+        public FacetDescriptions facets;
+        public ReceptacleDescriptions receptacles;
+        public ConsumerDescriptions consumers;
+        public EmitterDescriptions emitters;
+        public PublisherDescriptions publishers;
+    };
+
+    interface CCMObject : Navigation, Receptacles, Events
+    {
+#ifdef _ORBRIVER_ADA_
+// Ada Mapping move interface repository definitions to Repository_Root child package
+// but checking with a different ORB should be OK for these methods because the Orbada
+// repository Id of IRObject is IDL:omg.org/CORBA/IRObject as said in the Corba mapping
+        CORBA::Repository_Root::IRObject get_component_def ( );
+#else
+	#ifdef TAO
+		CORBA::IRObject get_component_def ( );
+	#else
+		IRObject get_component_def ( );
+	#endif
+#endif
+        CCMHome get_ccm_home( );
+
+        PrimaryKeyBase get_primary_key( ) raises (NoKeyAvailable);
+
+        void configuration_complete( ) raises (InvalidConfiguration);
+
+        void remove() raises (RemoveFailure);
+
+        ComponentPortDescription get_all_ports ();
+    };
+
+    // From Chapter 615: CCM Implementation Framework
+
+    // Required here but defined in Chapter 62
+
+    enum CCMExceptionReason
+    {
+        SYSTEM_ERROR,
+        CREATE_ERROR,
+        REMOVE_ERROR,
+        DUPLICATE_KEY,
+        FIND_ERROR,
+        OBJECT_NOT_FOUND,
+        NO_SUCH_ENTITY
+    };
+
+    exception CCMException
+    {
+        CCMExceptionReason reason;
+    };
+
+    // Explicitly defined in Chapter 615
+
+    local interface EnterpriseComponent {};
+
+    local interface ExecutorLocator : EnterpriseComponent
+    {
+        Object obtain_executor (in string name)
+            raises (CCMException);
+
+        void release_executor (in Object exc)
+            raises (CCMException);
+
+        void configuration_complete()
+            raises (InvalidConfiguration);
+    };
+
+    local interface HomeExecutorBase {};
+
+    // From Chapter 62: The Container Programming Model
+
+    module Transaction
+    {
+        typedef sequence<octet> TranToken;
+
+        exception NoTransaction { };
+
+        exception NotSupported { };
+
+        exception SystemError { };
+
+        exception RollbackError { };
+
+        exception HeuristicMixed { };
+
+        exception HeuristicRollback { };
+
+        exception Security { };
+
+        exception InvalidToken { };
+
+        enum Status
+        {
+            ACTIVE,
+            MARKED_ROLLBACK,
+            PREPARED,
+            COMMITTED,
+            ROLLED_BACK,
+            NO_TRANSACTION,
+            PREPARING,
+            COMMITTING,
+            ROLLING_BACK
+        };
+
+        local interface UserTransaction
+        {
+            void begin () raises (NotSupported, SystemError);
+
+            void commit () raises (RollbackError, NoTransaction,
+                                HeuristicMixed, HeuristicRollback,
+                                Security, SystemError);
+
+            void rollback () raises (NoTransaction, Security, SystemError);
+
+            void set_rollback_only () raises (NoTransaction, SystemError);
+
+            Status get_status() raises (SystemError);
+
+            void set_timeout (in long to) raises (SystemError);
+
+            TranToken suspend () raises (NoTransaction, SystemError);
+
+            void resume (in TranToken txtoken)
+                            raises (InvalidToken, SystemError);
+        };
+    };
+
+    typedef SecurityLevel2::Credentials Principal;
+
+    exception IllegalState { };
+
+    local interface CCMContext
+    {
+        Principal get_caller_principal();
+
+        CCMHome get_CCM_home();
+
+        boolean get_rollback_only() raises (IllegalState);
+
+        Transaction::UserTransaction get_user_transaction()
+                                raises (IllegalState);
+
+        boolean is_caller_in_role (in string role);
+
+        void set_rollback_only() raises (IllegalState);
+    };
+
+    local interface SessionContext : CCMContext
+    {
+        Object get_CCM_object() raises (IllegalState);
+    };
+
+    local interface SessionComponent : EnterpriseComponent
+    {
+        void set_session_context ( in SessionContext ctx)
+                                raises (CCMException);
+
+        void ccm_activate() raises (CCMException);
+
+        void ccm_passivate() raises (CCMException);
+
+        void ccm_remove () raises (CCMException);
+    };
+
+    local interface SessionSynchronization
+    {
+        void after_begin () raises (CCMException);
+
+        void before_completion () raises (CCMException);
+
+        void after_completion (in boolean committed) raises (CCMException);
+    };
+
+    local interface EntityContext : CCMContext
+    {
+        Object get_CCM_object () raises (IllegalState);
+
+        PrimaryKeyBase get_primary_key () raises (IllegalState);
+    };
+
+    local interface EntityComponent : EnterpriseComponent
+    {
+        void set_entity_context (in EntityContext ctx)
+                    raises (CCMException);
+
+        void unset_entity_context ()raises (CCMException);
+
+        void ccm_activate () raises (CCMException);
+
+        void ccm_load ()raises (CCMException);
+
+        void ccm_store ()raises (CCMException);
+
+        void ccm_passivate ()raises (CCMException);
+
+        void ccm_remove ()raises (CCMException);
+    };
+
+    typedef CosPersistentState::CatalogBase CatalogBase;
+
+    typedef CosPersistentState::_TypeId _TypeId;
+
+    exception PolicyMismatch { };
+
+    exception PersistenceNotAvailable { };
+
+    local interface HomeRegistration;
+
+    local interface CCM2Context : CCMContext
+    {
+        HomeRegistration get_home_registration ();
+
+        void req_passivate () raises (PolicyMismatch);
+
+        CatalogBase get_persistence (in _TypeId catalog_type_id)
+                    raises (PersistenceNotAvailable);
+    };
+
+    local interface HomeRegistration
+    {
+        void register_home (in CCMHome home_ref,
+                            in string home_name);
+
+        void unregister_home (in CCMHome home_ref);
+    };
+
+    exception UnknownActualHome { };
+
+    exception ProxyHomeNotSupported { };
+
+    local interface ProxyHomeRegistration : HomeRegistration
+    {
+        void register_proxy_home (
+                in CCMHome rhome,
+                in CCMHome ahome)
+                raises (UnknownActualHome, ProxyHomeNotSupported);
+    };
+
+    enum BadComponentReferenceReason
+    {
+        NON_LOCAL_REFERENCE,
+        NON_COMPONENT_REFERENCE,
+        WRONG_CONTAINER
+    };
+
+    exception BadComponentReference
+    {
+        BadComponentReferenceReason reason;
+    };
+
+    local interface Session2Context : SessionContext, CCM2Context
+    {
+        Object create_ref (in CORBA::RepositoryId repid);
+
+        Object create_ref_from_oid (
+#ifdef _ORBRIVER_ADA_
+            in OctetSeq oid,
+#else
+            in CORBA::OctetSeq oid,
+#endif
+            in CORBA::RepositoryId repid);
+
+#ifdef _ORBRIVER_ADA_
+        OctetSeq get_oid_from_ref (in Object objref)
+            raises (IllegalState, BadComponentReference);
+#else
+        CORBA::OctetSeq get_oid_from_ref (in Object objref)
+            raises (IllegalState, BadComponentReference);
+#endif
+    };
+
+    typedef short SegmentId;
+    const SegmentId COMPONENT_SEGMENT = 0;
+
+    typedef short FacetId;
+    const FacetId COMPONENT_FACET = 0;
+
+    typedef sequence<octet> IdData;
+    typedef CosPersistentState::Pid PersistentId;
+
+    exception InvalidStateIdData {};
+
+    typedef short StateIdType;
+    const StateIdType PERSISTENT_ID = 0;
+
+    abstract valuetype StateIdValue
+    {
+        StateIdType get_sid_type();
+
+        IdData get_sid_data();
+    };
+
+    local interface StateIdFactory
+    {
+        StateIdValue create (in IdData data) raises (InvalidStateIdData);
+    };
+
+    valuetype PersistentIdValue : StateIdValue
+    {
+        private PersistentId pid;
+
+        PersistentId get_pid();
+
+        factory init (in PersistentId pid);
+    };
+
+    valuetype SegmentDescr
+    {
+        private StateIdValue sid;
+
+        private SegmentId seg;
+
+        StateIdValue get_sid();
+
+        SegmentId get_seg_id();
+
+        factory init (in StateIdValue sid, in SegmentId seg);
+    };
+    typedef sequence<SegmentDescr> SegmentDescrSeq;
+
+    local interface ComponentId
+    {
+        FacetId get_target_facet();
+
+        SegmentId get_target_segment();
+
+        StateIdValue get_target_state_id (in StateIdFactory sid_factory)
+                raises (InvalidStateIdData);
+
+        StateIdValue get_segment_state_id (
+            in SegmentId seg,
+            in StateIdFactory sid_factory)
+            raises (InvalidStateIdData);
+
+        ComponentId create_with_new_target (
+            in FacetId new_target_facet,
+            in SegmentId new_target_segment);
+
+        SegmentDescrSeq get_segment_descrs (
+                in StateIdFactory sid_factory)
+                raises (InvalidStateIdData);
+    };
+
+    local interface Entity2Context : EntityContext, CCM2Context
+    {
+        ComponentId get_component_id ()
+            raises (IllegalState);
+
+        ComponentId create_component_id (
+            in FacetId target_facet,
+            in SegmentId target_segment,
+            in SegmentDescrSeq seq_descrs);
+
+        ComponentId create_monolithic_component_id (
+            in FacetId target_facet,
+            in StateIdValue sid);
+
+        Object create_ref_from_cid (
+            in CORBA::RepositoryId repid,
+            in ComponentId cid);
+
+        ComponentId get_cid_from_ref (
+            in Object objref) raises (BadComponentReference);
+    };
+
+    // From Chapter 64: Integrating with Enterprise JavaBeans
+
+    abstract valuetype Enumeration
+    {
+           boolean has_more_elements();
+
+        CCMObject next_element();
+    };
+
+    typedef sequence<CCMObject> CCMObjectSeq;
+
+    valuetype DefaultEnumeration : Enumeration
+    {
+        private CCMObjectSeq objects;
+    };
+
+    // From Chapter 69.9: Component Deployment
+
+    typedef sequence<CCMHome> CCMHomes;
+
+    module Deployment
+    {
+        typedef FailureReason InvalidConfigurationReason;
+        const InvalidConfigurationReason UnknownConfigValueName = 0;
+        const InvalidConfigurationReason InvalidConfigValueType = 1;
+        const InvalidConfigurationReason ConfigValueRequired = 2;
+        const InvalidConfigurationReason ConfigValueNotExpected = 3;
+
+        exception InvalidConfiguration
+        {
+            InvalidConfigurationReason reason;
+            FeatureName name;
+        };
+
+        typedef string UUID;
+
+        typedef string Location;
+
+        exception UnknownImplId { };
+
+        exception InvalidLocation { };
+
+        exception InstallationFailure
+        {
+            FailureReason reason;
+        };
+
+        interface ComponentInstallation
+        {
+            void install(in UUID implUUID,
+                         in Location component_loc)
+                    raises (InvalidLocation, InstallationFailure);
+
+            void replace(in UUID implUUID,
+                         in Location component_loc)
+                    raises (InvalidLocation, InstallationFailure);
+
+            void remove(in UUID implUUID)
+                    raises (UnknownImplId, RemoveFailure);
+
+            Location get_implementation(in UUID implUUID)
+                    raises(UnknownImplId, InstallationFailure);
+        };
+
+        interface Assembly;
+
+        exception InvalidAssembly { };
+
+        interface AssemblyFactory
+        {
+            Cookie create(in Location assembly_loc)
+                raises (InvalidLocation, CreateFailure);
+
+            Assembly lookup(in Cookie c)
+                raises (InvalidAssembly);
+
+            void destroy(in Cookie c)
+                raises (InvalidAssembly, RemoveFailure);
+        };
+
+        enum AssemblyState { INACTIVE,  INSERVICE };
+
+        interface Assembly
+        {
+            void build() raises (CreateFailure);
+
+            void tear_down() raises (RemoveFailure);
+
+            AssemblyState get_state();
+        };
+
+        interface ComponentServer;
+        typedef sequence<ComponentServer> ComponentServers;
+
+        interface ServerActivator
+        {
+            ComponentServer create_component_server(
+                                in ConfigValues config)
+                                raises(CreateFailure, InvalidConfiguration);
+
+            void remove_component_server(in ComponentServer server)
+                                raises(RemoveFailure);
+
+            ComponentServers get_component_servers();
+        };
+
+        interface Container;
+        typedef sequence<Container> Containers;
+
+        interface ComponentServer
+        {
+            readonly attribute ConfigValues configuration;
+
+            ServerActivator get_server_activator();
+
+            Container create_container(in ConfigValues config)
+                        raises (CreateFailure, InvalidConfiguration);
+
+            void remove_container(in Container cref) raises (RemoveFailure);
+
+            Containers get_containers();
+
+             void remove() raises (RemoveFailure);
+        };
+
+        exception ImplEntryPointNotFound { };
+
+        interface Container
+        {
+            readonly attribute ConfigValues configuration;
+
+            ComponentServer get_component_server();
+
+            CCMHome install_home(in UUID id,
+                                 in string entrypt,
+                                 in ConfigValues config)
+                        raises (UnknownImplId,
+                                ImplEntryPointNotFound,
+                                InstallationFailure,
+                                InvalidConfiguration);
+
+            void remove_home(in CCMHome href) raises (RemoveFailure);
+
+            CCMHomes get_homes();
+
+            void remove() raises (RemoveFailure);
+        };
+    };
+};
+
+#endif // Components_IDL_
+

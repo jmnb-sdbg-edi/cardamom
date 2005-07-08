@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under 
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your 
+ * option) any later version. 
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
+ * License for more details. 
+ * 
+ * You should have received a copy of the GNU Library General 
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to 
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureSplice" default="-check-Splice" basedir=".">
+
+
+    <description>
+        This build file locates and checks Splice.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-Splice" target checks if Splice is suitable for the build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-check-Splice-linux"
+            + "-check-Splice-sunos"
+            + "-check-Splice-windows"
+            + "-check-Splice-aix"
+    -->
+    <target name="-check-Splice"
+            depends="-initialize, -check-Splice-linux, -check-Splice-sunos,
+                     -check-Splice-windows, -check-Splice-aix">
+
+        <!-- save Splice properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Splice-linux" target checks if Splice is suitable for the
+        build on a Linux platform.
+    -->
+    <target name="-check-Splice-linux" if="is.linux">
+        <antcallback target="-test1-linux"/>
+        <antcallback target="-test2-linux" return="splice.lib.dir"/>
+        <antcallback target="-test3-linux"/>
+        <antcallback target="-test4-linux" return="splice.bin.dir"/>
+        <antcallback target="-test5-linux"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Splice-sunos" target checks if Splice is suitable for the
+        build on a SUN Solaris platform.
+    -->
+    <target name="-check-Splice-sunos" if="is.sunos">
+        <antcallback target="-test1-sunos"/>
+        <antcallback target="-test2-sunos" return="splice.lib.dir"/>
+        <antcallback target="-test3-sunos"/>
+        <antcallback target="-test4-sunos" return="splice.bin.dir"/>
+        <antcallback target="-test5-sunos"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Splice-aix" target checks if Splice is suitable for the
+        build on an IBM AIX platform.
+    -->
+    <target name="-check-Splice-aix" if="is.aix">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-Splice-windows" target checks if Splice is suitable for the
+        build on a Windows platform.
+    -->
+    <target name="-check-Splice-windows" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-Splice" target determines the installation directory of
+        Splice.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-Splice" depends="-initialize">
+        <!-- determine the Splice installation directory -->
+        <var name="my.var"
+             value="Enter the ${tool.fullname} installation directory"/>
+
+        <propertycopy property="splice.default.install.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.install.dir"/>
+
+        <if>
+            <isset property="splice.default.install.dir"/>
+            <then>
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${my.var}" dirPathOnly="true"
+                                addproperty="config.${tool.name}.install.dir"
+                                default="${splice.default.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.install.dir"
+                                      from="splice.default.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirPathOnly="true"
+                        addproperty="config.${tool.name}.install.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="splice.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.install.dir"
+                   value="${splice.install.dir}"/>
+        </propertyfile>
+
+        <!-- determine the bin directory -->
+        <propertycopy property="splice.default.bin.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.bin.dir"/>
+
+        <if>
+            <not>
+                <isset property="splice.default.bin.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the bin directory -->
+                <findfile file="sdds" dir="${splice.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="splice.spliced"/>
+
+                <dirname property="splice.default.bin.dir"
+                         file="${splice.spliced}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} bin directory"
+                        addproperty="config.${tool.name}.bin.dir"
+                        default="${splice.default.bin.dir}" dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.bin.dir"
+                              from="splice.default.bin.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="splice.bin.dir"
+                      from="config.${tool.name}.bin.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.bin.dir"
+                   value="${splice.bin.dir}"/>
+        </propertyfile>
+
+        <!-- determine the include directory -->
+        <propertycopy property="splice.default.include.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.include.dir"/>
+
+        <if>
+            <not>
+                <isset property="splice.default.include.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the include directory -->
+                <findfile file="dds_dcps.h" dir="${splice.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="splice.splicedb.h"/>
+
+                <!--<dirname property="splice.default.include.dir"
+                         file="${splice.splicedb.h}"/>-->
+
+
+                <selecttoken string="${splice.splicedb.h}" delimiter="${FS}dcps"
+                             tokenNumber="0" property="splice.default.include.dir"
+                             override="true"/>
+
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} include directory"
+                        addproperty="config.${tool.name}.include.dir"
+                        default="${splice.default.include.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.include.dir"
+                              from="splice.default.include.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="splice.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.include.dir"
+                   value="${splice.include.dir}"/>
+        </propertyfile>
+
+        <!-- determine the lib directory -->
+        <propertycopy property="splice.default.lib.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.dir"/>
+
+        <if>
+            <not>
+                <isset property="splice.default.lib.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the lib directory -->
+                <findfile file="libdcpscorbac++.*" dir="${splice.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="splice.libsplice.file"/>
+
+                <dirname property="splice.default.lib.dir"
+                         file="${splice.libsplice.file}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} lib directory"
+                        addproperty="config.${tool.name}.lib.dir"
+                        default="${splice.default.lib.dir}" dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.lib.dir"
+                              from="splice.default.lib.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="splice.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.lib.dir"
+                   value="${splice.lib.dir}"/>
+        </propertyfile>
+
+        <!-- save the properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for Splice -->
+        <propertycopy property="splice.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="Splice"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-linux" target checks whether the Splice include files can be
+        found.
+    -->
+    <target name="-test1-linux">
+        <echo message="Checking the ${tool.fullname} include directory"/>
+
+        <!-- the test is successful if splice.h is found in that directory -->
+        <propertycopy property="splice.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <available file="${splice.include.dir}${FS}/dcps/C++/TAO/dds_dcps.h"
+                   property="splice.include.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find any ${tool.fullname} include"/>
+        <var name="my.var" value="${my.var} files in the directory"/>
+        <var name="my.var" value="${my.var} ${splice.include.dir}."/>
+        <fail unless="splice.include.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-sunos" target checks whether the Splice include files can be
+        found.
+    -->
+    <target name="-test1-sunos" depends="-test1-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test2-linux" target checks whether the Splice libraries can be
+        found.
+    -->
+    <target name="-test2-linux">
+        <echo message="Checking the ${tool.fullname} lib directory"/>
+
+        <!--
+            the test is successful if libsplice.so is found in that directory
+        -->
+        <propertycopy property="splice.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <available file="${splice.lib.dir}${FS}libdcpscorbac++.so"
+                   property="splice.lib.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find ${tool.fullname} libraries"/>
+        <var name="my.var" value="${my.var} in the directory"/>
+        <var name="my.var" value="${my.var} ${splice.lib.dir}."/>
+        <fail unless="splice.lib.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test2-sunos" target checks whether the Splice libraries can be
+        found.
+    -->
+    <target name="-test2-sunos" depends="-test2-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test3-linux" target checks if library path has been set.
+    -->
+    <target name="-test3-linux">
+        <echo>Checking if library path has been set.</echo>
+        
+        <!--
+            the test is successful if LD_LIBRARY_PATH contains the path to
+            the Splice library directory.
+        -->
+        <condition property="splice.ld_library.path.is.ok">
+            <contains string="${env.LD_LIBRARY_PATH}"
+                      substring="${splice.lib.dir}"/>
+        </condition>
+
+        <!-- stop checking if the LD_LIBRARY_PATH was not ok -->
+        <fail unless="splice.ld_library.path.is.ok"
+              message="${splice.lib.dir} is missing in LD_LIBRARY_PATH"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test3-sunos" target checks if library path has been set.
+    -->
+    <target name="-test3-sunos" depends="-test3-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test4-linux" target checks whether the Splice executable files
+        can be found.
+    -->
+    <target name="-test4-linux">
+        <echo message="Checking the ${tool.fullname} bin directory"/>
+
+        <!-- the test is successful if spliced is found in that directory -->
+        <propertycopy property="splice.bin.dir"
+                      from="config.${tool.name}.bin.dir"/>
+
+        <available file="${splice.bin.dir}${FS}sdds"
+                   property="splice.bin.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find the ${tool.fullname}"/>
+        <var name="my.var" value="${my.var} binaries in the directory"/>
+        <var name="my.var" value="${my.var} ${splice.bin.dir}."/>
+        <fail unless="splice.bin.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test4-sunos" target checks whether the Splice include files can be
+        found.
+    -->
+    <target name="-test4-sunos" depends="-test4-linux"/>
+
+
+    <!-- =======================================================================
+        The "-test5-linux" target checks the Splice version.
+    -->
+    <target name="-test5-linux">
+        <echo message="Checking the ${tool.fullname} version"/>
+
+        <var name="my.var" value="-own-pgrp -license="/>
+        <var name="my.var"
+             value="${my.var}${splice.bin.dir}/../etc/Splice.license"/>
+        
+        <propertycopy property="splice.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- the file to read to check the SPLICE version -->
+        <property name="splice.version.file"
+                  location="${splice.install.dir}${FS}release.com"/>
+
+        <available file="${splice.version.file}"
+                   property="splice.version.file.present"/>
+
+        <if>
+            <isset property="splice.version.file.present"/>
+            <then>
+                <!-- read the content of the file -->
+                <loadfile srcFile="${splice.version.file}"
+                          property="splice.version.file.content">
+                   <filterchain>
+                      <linecontains>
+                         <contains value="SPLICE-DDS HDE Release" />
+                      </linecontains>
+                   </filterchain>
+                </loadfile>
+
+                <!--
+                    the test is successful if the file release.com contains the
+                    the required version or the version checking is disabled
+                    or the check mode is set to "loose".
+                -->
+                <selecttoken string="${splice.version.file.content}"
+                             tokenNumber="1" delimiter="Release V"
+                             property="splice.current.version1"/>
+
+                <selecttoken string="${splice.current.version1}"
+                             tokenNumber="0" delimiter=" For"
+                             property="splice.current.version"/>
+
+                <var name="s" value="warning: your version is"/>
+                <var name="s" value="${s} ${splice.current.version}, expected"/>
+                <var name="s" value="${s} version is ${splice.required.version}"/>
+
+                <var name="s2" value="The required version for Splice is"/>
+                <var name="s2" value="${s2} ${splice.required.version}, your"/>
+                <var name="s2"
+                     value="${s2} version is ${splice.current.version}."/>
+
+                <if>
+                    <istrue value="${require.tool.version.checking}"/>
+                    <then>
+                        <if>
+                            <not>
+                                <equals arg1="${splice.current.version}"
+                                        arg2="${splice.required.version}"
+                                        trim="true"/>
+                            </not>
+                            <then>
+                                <if>
+                                    <equals arg1="${require.tool.check.mode}"
+                                            arg2="loose" trim="true"/>
+                                    <then>
+                                        <!-- issue a warning message -->
+                                        <echo>${s}</echo>
+                                    </then>
+                                    <else>
+                                        <!-- stop -->
+                                        <fail>${s2}</fail>
+                                    </else>
+                                </if>
+                            </then>
+                        </if>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <fail>Could not find ${splice.version.file}.</fail>
+            </else>
+        </if>
+
+       
+        <condition property="splice.version.is.ok">
+            <contains string="${splice.current.version}" 
+                      substring="${splice.required.version}"/>
+        </condition>
+
+        <!-- stop checking if the version is not ok -->
+        <!-- TODO: give more details about the version -->
+        <fail unless="splice.version.is.ok" message="Incorrect version"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test5-sunos" target checks the Splice version.
+    -->
+    <target name="-test5-sunos" depends="-test5-linux"/>
+
+
+</project>
+
