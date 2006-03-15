@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -78,11 +78,6 @@ enum AdminLogMessageIds
     MSG_ID_ADMIN_HOST_NOT_FOUND,
 
     /**
-     * "Host probe not found"
-     */
-    MSG_ID_ADMIN_HOST_PROBE_NOT_FOUND,
-
-    /**
      * "Application \"%s\" not found"
      */
     MSG_ID_ADMIN_APPLICATION_NOT_FOUND,
@@ -129,11 +124,6 @@ enum AdminLogMessageIds
     MSG_ID_ADMIN_HOST_ALREADY_EXISTS,
 
     /**
-     * "The host probe \"%s\" already exists"
-     */
-    MSG_ID_ADMIN_HOST_PROBE_ALREADY_EXISTS,
-
-    /**
      * "The application \"%s\" already exists"
      */
     MSG_ID_ADMIN_APPLICATION_ALREADY_EXISTS,
@@ -170,7 +160,7 @@ enum AdminLogMessageIds
     MSG_ID_ADMIN_DUPLICATE_APPLICATION,
 
     /**
-     * "The process \"%s\" is duplicated among the processes of the application\"%s\""
+     * "The process \"%s\"/\"%s\" is duplicated among the processes of the application\"%s\""
      */
     MSG_ID_ADMIN_DUPLICATE_PROCESS,
 
@@ -185,7 +175,7 @@ enum AdminLogMessageIds
     MSG_ID_ADMIN_DUPLICATE_APPLICATION_ENTITY,
 
     /**
-     * "The entity \"%s\" is duplicated among the entities of the process \"%s\""
+     * "The entity \"%s\" is duplicated among the entities of the process \"%s\"/\"%s\""
      */
     MSG_ID_ADMIN_DUPLICATE_PROCESS_ENTITY,
 
@@ -200,7 +190,7 @@ enum AdminLogMessageIds
     MSG_ID_ADMIN_DUPLICATE_APPLICATION_SERVICE,
 
     /**
-     * "The service \"%s\" is duplicated among the services of the process \"%s\""
+     * "The service \"%s\" is duplicated among the services of the process \"%s\"/\"%s\""
      */
     MSG_ID_ADMIN_DUPLICATE_PROCESS_SERVICE,
 
@@ -220,30 +210,9 @@ enum AdminLogMessageIds
     MSG_ID_ADMIN_DUPLICATE_STEP,
 
     /**
-     * "The step label \"%s\" is duplicated among the steps of the process \"%s\""
+     * "The step label \"%s\" is duplicated among the steps of the process \"%s\"/\"%s\""
      */
     MSG_ID_ADMIN_DUPLICATE_PROCESS_STEP,
-
-    /**
-     * "The monitoring point \"%s\" is duplicated among the monitoring points"
-     */
-    MSG_ID_ADMIN_DUPLICATE_MONITORING_POINT,
-
-    /**
-     * "The monitoring point \"%s\" is duplicated among the monitoring points of the process \"%s\""
-     */
-    MSG_ID_ADMIN_DUPLICATE_PROCESS_MONITORING_POINT,
-
-    
-    /**
-     * "The monitoring point \"%s\" is invalid"
-     */
-    MSG_ID_ADMIN_INVALID_MONITORING_POINT,
-
-    /**
-     * "The monitoring point \"%s\" of the process \"%s\" is invalid"
-     */
-    MSG_ID_ADMIN_INVALID_PROCESS_MONITORING_POINT,
 
     /**
      * "No other step to perform"

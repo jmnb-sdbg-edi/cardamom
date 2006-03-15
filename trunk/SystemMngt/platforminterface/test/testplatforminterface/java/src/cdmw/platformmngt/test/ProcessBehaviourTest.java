@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,8 +26,7 @@
 package cdmw.platformmngt.test;
 
 import cdmw.testutils.Testable;
-import cdmw.platformmngt.ProcessImpl;
-import com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointMonitoringModel;
+import cdmw.platformmngt.ProcessDelegateImpl;
 
 /**
  * The Process & Behaviour test.
@@ -35,21 +34,28 @@ import com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointMonitoringMo
  */
 public class ProcessBehaviourTest extends Testable {
 
-    public ProcessBehaviourTest() {
+    private String[] args;
+
+    public ProcessBehaviourTest(String[] args) {
         this.name = "Process & Behaviour Test";
         this.out = System.out;
+        this.args = args;
     }
 
     public void doTests() {
     	
-    	// set number of requested successfull tests
-		setNbOfRequestedTestOK(17);
+    	  // set number of requested successfull tests
+	     setNbOfRequestedTestOK(12);
     
         out.println("Testing Process & Behaviour...");
 
         out.println("Use case n°1: behaviour with the default process impl");        
         UserProcessBehaviour behaviour = new UserProcessBehaviour();
-        ProcessImpl process = new ProcessImpl(behaviour);
+
+        org.omg.CORBA.ORB orb = org.omg.CORBA.ORB.init(
+            args, cdmw.orbsupport.ORBUtils.getProperties());
+
+        ProcessDelegateImpl process = new ProcessDelegateImpl(orb, behaviour);
         
         out.println("Checking current step...");
         if ( behaviour.getCurrentStep() == 1) {
@@ -62,9 +68,9 @@ public class ProcessBehaviourTest extends Testable {
         try {
             process.next_step();
             succeed();
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep is) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep is) {
             fail();
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.BadOrder bo) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.BadOrder bo) {
             fail();
         }
         
@@ -79,9 +85,9 @@ public class ProcessBehaviourTest extends Testable {
         try {
             process.next_step();
             fail();
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep is) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep is) {
             succeed();
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.BadOrder bo) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.BadOrder bo) {
             fail();
         }
 
@@ -96,7 +102,7 @@ public class ProcessBehaviourTest extends Testable {
         try {
             process.initialise(null);
             succeed();
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.BadOrder bo) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.BadOrder bo) {
             fail();
         }
         if ( behaviour.getState() == behaviour.INITIALISED ) {
@@ -113,9 +119,9 @@ public class ProcessBehaviourTest extends Testable {
             } else {
                 fail();
             }
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun nrtr) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun nrtr) {
             fail();
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.AlreadyDone ad) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.AlreadyDone ad) {
             fail();
         }
 
@@ -127,31 +133,8 @@ public class ProcessBehaviourTest extends Testable {
             fail();
         }
 
-        out.println("Calling the default nb_activity_points...");
-        if ( process.nb_activity_points() == 0 ) {
-            succeed();
-        } else {
-            fail();
-        }
-        
-        out.println("Calling the default get_activity_point " 
-            + "(should raise an exception)...");
-        try {
-            process.get_activity_point(0);
-            fail();
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.OutOfRange oor) {
-            succeed();
-        }
-
-        out.println("Calling get_all_activity_points...");
-        if ( process.get_all_activity_points().length == 0) {
-            succeed();
-        } else {
-            fail();
-        }
-
-        out.println("Calling get_pull_monitorable...");
-        if ( process.get_pull_monitorable() == null) {
+        out.println("Calling get_pull_monitorable that is created in ProcessImpl...");
+        if ( process.get_pull_monitorable() != null) {
             succeed();
         } else {
             fail();
@@ -165,31 +148,12 @@ public class ProcessBehaviourTest extends Testable {
         }
         
         out.println("Use case n°2: behaviour with a user defined process impl");
-        UserProcessImpl process2 = new UserProcessImpl();
+        UserProcessImpl process2 = new UserProcessImpl(orb);
         
         out.println("Calling initialise...");
         process2.initialise(null);
         succeed();
         
-        out.println("Calling get_all_activity_points...");
-        if ( process2.get_all_activity_points().length == 1 ) {
-            succeed();
-        } else {
-            fail();
-        }
-
-        out.println("Calling get_activity_point...");
-        try {
-            if ( process2.get_activity_point(0).monitoring_model.value() ==
-                ActivityPointMonitoringModel.PUSH_MONITORING_MODEL.value() ) {
-                succeed();
-            } else {
-                fail();
-            }
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.OutOfRange oor) {
-            fail();
-        }
-    
     }
 
 }

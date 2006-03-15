@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,8 +29,10 @@
 #include "Foundation/ossupport/OS.hpp"
 #include "Foundation/orbsupport/OrbSupport.hpp"
 
+#include "SystemMngt/idllib/CdmwPlatformMngtBase.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtCommon.stub.hpp"
-#include "SystemMngt/idllib/CdmwPlatformMngtPropertyContainer.stub.hpp"
+#include "SystemMngt/idllib/CdmwPlatformMngtEntity.stub.hpp"
+#include "SystemMngt/idllib/CdmwPlatformMngtEntityContainer.stub.hpp"
 
 namespace Cdmw {         // Begin namespace Cdmw
 namespace PlatformAdmin { // Begin namespace PlatformAdmin
@@ -38,29 +40,11 @@ namespace PlatformAdmin { // Begin namespace PlatformAdmin
 class ConfigException;
 class PropertyParser;
 
-class Property
+class Property 
 {
 public:
-    static
-    char* get_definition(
+    static CdmwPlatformMngt::PropertyDef* get_definition(
         const PropertyParser& propertyParser );
-};
-
-class PropertyContainer
-{
-private:
-    CdmwPlatformMngt::RWPropertyContainer_var m_property_container;
-
-protected:
-    PropertyContainer(
-        CdmwPlatformMngt::RWPropertyContainer_ptr property_container );
-
-public:
-    void add_property(
-        const char* propertyName );
-
-    void remove_property(
-        const char* propertyName );
 };
 
 } // End namespace PlatformAdmin

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -34,14 +34,17 @@
 #include "Foundation/osthreads/Mutex.hpp"
 #include "Foundation/osthreads/ReaderWriterLock.hpp"
 
+#include "SystemMngt/idllib/CdmwPlatformMngtApplicationBase.skel.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtApplication.skel.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtApplicationAgent.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtCommon.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtEntity.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtEvent.stub.hpp"
-#include "SystemMngt/idllib/CdmwPlatformMngtHostProxy.stub.hpp"
+#include "SystemMngt/idllib/CdmwPlatformMngtHost.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtService.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtDaemon.stub.hpp"
+
+#include "SystemMngt/idllib/CdmwPlatformMngtElementRepository.stub.hpp"
 
 #ifdef CDMW_USE_FAULTTOLERANCE
 #include "SystemMngt/platformapplicationlibrary/CdmwPlatformMngtFTConverter.stub.hpp"
@@ -50,8 +53,10 @@
 #include "SystemMngt/platformlibrary/StateMachineTemplate.hpp"
 #include "SystemMngt/platformlibrary/DeactivableServant_impl.hpp"
 #include "SystemMngt/platformlibrary/EventHandler.hpp"
-#include "SystemMngt/platformlibrary/EntityContainer_impl.hpp"
 #include "SystemMngt/platformlibrary/ServiceDefContainer_impl.hpp"
+#include "SystemMngt/platformelementlibrary/ManagedElement_impl.hpp"
+#include "SystemMngt/platformelementlibrary/EntityContainer.hpp"
+#include "SystemMngt/platformelementlibrary/DataStoreDefinition.hpp"
 
 #include <string>
 #include <set>
@@ -62,9 +67,8 @@ namespace Cdmw
 namespace PlatformMngt
 {
 
-class EntityObserver_impl;
 class EventNotifierStoppedException;
-class ProcessProxy_impl;
+class Process_impl;
 class ProcessObserver_impl;
 class RWEntityContainer_impl;
 class RWServiceDefContainer_impl;
@@ -74,7 +78,6 @@ class TaskFactory;
 class Starter;
 class SynchronisableTaskFactory;
 class Sequencer;
-class ApplicationAgentObserver_impl;
 class GraphElementFactory;
 class ApplicationEntityStatusChangeFactory;
 class ApplicationStatusChangeFactory;
@@ -94,63 +97,67 @@ public:
     };
 };
 
+/**
+ * Purpose:
+ * Thrown when the process name has been found more than one time
+ * (Process name is not an unique key id).
+ */
+class ProcessNameNotUnique : public Exception
+{
+public:
+    ProcessNameNotUnique()
+        : Exception (Exception::SAFE, "Process name is not unique")
+    {
+    };
+};
+
 
 /**
  *Purpose:
  *<p>
  */
-class Application_impl : public virtual DeactivableServant_impl,
-                         public virtual POA_CdmwPlatformMngt::Application,                         
-                         public virtual PortableServer::RefCountServantBase
+class Application_impl : public virtual POA_CdmwPlatformMngt::Application,
+                         public DeactivableServant_impl,
+                         public ManagedElement_impl
 {
+	friend class ApplicationControl;
+    friend class ApplicationInitialising;
+    friend class ApplicationRunRequest;
+    friend class ApplicationStopping;
 
 public:
-    friend class ProcessProxy_impl;
-  
-    typedef std::map< std::string, ProcessProxy_impl* > ProcessProxies;
-
 
     /**
      * The type of process invalidation.
      */
     enum InvalidationType
     {
-        AGENT_DEATH,
         HOST_UNAVAILABLE
     };
-
-protected:
-    /**
-     * The mutex used with the initialisation condition and the stop condition.
-     */
-    OsSupport::Mutex m_mutex;
-
+    
+     
 private:
-        
+    
     /**
      * The POA.
      */
     PortableServer::POA_var m_poa;
-
+    
+    
+    /**
+     * Indicates whether the application has been defined.
+     */
+    bool m_applicationDefined;
+    
     /**
      * The read/write lock to protect access to the internal data.
      */
     OsSupport::ReaderWriterLock m_rwApplicationLock;
 
     /**
-     * The application agent observer.
+     * The mutex used with the initialisation condition and the stop condition.
      */
-    ApplicationAgentObserver_impl* m_agentObserver;
-
-    /**
-     * The functioning mode.
-     */
-    CdmwPlatformMngt::FunctioningMode m_mode;
-
-    /**
-     * The information about the mode this application.
-     */
-    CORBA::String_var m_modeInfo;
+    OsSupport::Mutex m_mutex;    
 
     /**
      * The initialisation variable condition for long operation.
@@ -161,6 +168,16 @@ private:
      * The stop variable condition for long operation.
      */
     OsSupport::Condition m_stop_condition;
+    
+    /**
+     * The initialisation condition flag for long operation.
+     */
+    bool m_init_condition_flag;
+    
+    /**
+     * The stop condition flag for long operation.
+     */
+    bool m_stop_condition_flag;
 
     /**
      * The status of a long initialisation operation.
@@ -177,25 +194,7 @@ private:
      */
     OsSupport::Mutex m_mutexMode;
 
-    /**
-     * The actual entity container.
-     */
-    EntityContainer_impl::EntityContainer* m_actualEntityContainer;
-
-    /**
-     * The actual service def container.
-     */
-    ServiceDefContainer_impl::ServiceDefContainer* m_actualServiceDefContainer;
-
-    /**
-     * The read/write service container.
-     */
-    RWServiceDefContainer_impl* m_rwServiceDefContainer;
-
-    /**
-     * Indicates whether the application has been defined.
-     */
-    bool m_applicationDefined;
+    
     
     /**
      * The reader/writer lock used to manage concurrent thread safe access to
@@ -234,15 +233,10 @@ private:
     PortableServer::ServantBase_var m_processObserverServant;
     
     /**
-     * The Agent Observer object var to take pointer ownership
+     * The Service Broker object var to take pointer ownership
      */
-    PortableServer::ServantBase_var m_agentObserverServant;
+    PortableServer::ServantBase_var m_serviceBrokerServant;
     
-    /**
-     * The Entity Observer object var to take pointer ownership
-     */
-    PortableServer::ServantBase_var m_entityObserverServant;
-
     /**
      * The Service Def Container object var to take pointer ownership
      */
@@ -258,30 +252,63 @@ private:
      */
     PortableServer::ServantBase_var m_rwEntityContainerServant;
     
-    /**
-     * The Service Broker object var to take pointer ownership
-     */
-    PortableServer::ServantBase_var m_serviceBrokerServant;
     
     
-
-public:
     /**
-     * The information about the status this application.
+     * The actual entity container.
      */
-    CORBA::String_var m_statusInfo;
+    PlatformMngt::EntityContainer* m_actualEntityContainer;
 
     /**
-     * The list of process proxies managed by this application.
+     * The actual service def container.
      */
-    ProcessProxies m_processProxies;
+    ServiceDefContainer_impl::ServiceDefContainer* m_actualServiceDefContainer;
+
+    /**
+     * The read/write service container.
+     */
+    RWServiceDefContainer_impl* m_rwServiceDefContainer;
+    
+    
 
     /**
      * The process observer.
      */
     ProcessObserver_impl* m_processObserver;
-
+    
+    /**
+     * The system process observer.
+     */
+    CdmwPlatformMngt::ProcessObserver_var m_syst_processObserver;
+        
+    /**
+     * The services' broker.
+     */
+    ServiceBroker_impl* m_serviceBroker;
+    
+    /**
+     * The system services' broker reference.
+     */
+    CdmwPlatformMngtService::ServiceBroker_var m_syst_serviceBroker;
+    
+    /**
+     * The service def container servant.
+     */
+    ServiceDefContainer_impl* m_serviceDefContainer;
+        
+    /**
+     * The read/write entity container.
+     */
+    RWEntityContainer_impl* m_rwEntityContainer;
+  
+    /**
+     * The entityDef to restore entity default values
+     */
+    CdmwPlatformMngt::EntityDefs* m_default_entitydefs;
+  
+    
 #ifdef CDMW_USE_FAULTTOLERANCE
+
     /**
      * The replicationManagerIOGR
      */
@@ -290,83 +317,57 @@ public:
     /**
      * The reference of the faut tolerance converter (fault report to systemmngt event)
      */
-    CdmwPlatformMngt::FTConverter_var m_ftConverter;    
-#endif    
-    /**
-     * The entity observer.
-     */
-    EntityObserver_impl* m_entityObserver;
+    CdmwPlatformMngt::FTConverter_var m_ftConverter;   
+     
+#endif  
 
     /**
-     * The services' broker.
+     * The reference to the system host container.
      */
-    ServiceBroker_impl* m_serviceBroker;
+    CdmwPlatformMngt::HostContainer_var m_hostContainer;
+    
+    /**
+     * The application entity status change factory.
+     */
+    ApplicationEntityStatusChangeFactory* m_appEntityStatusChangeFactory;
 
+    /**
+     * The application status change factory.
+     */
+    ApplicationStatusChangeFactory* m_appStatusChangeFactory;
+
+    /**
+     * The application mode change factory.
+     */
+    ApplicationModeChangeFactory* m_appModeChangeFactory;
+    
     /**
      * The application acknowledgement data.
      */
-    CdmwPlatformMngt::ApplicationAck_var m_applicationAck;
-
+    CdmwPlatformMngt::ApplicationStartingData_var m_applicationStartData;
+    
     /**
-     * The host container.
+     * The list of process managed by this application.
      */
-    CdmwPlatformMngt::HostContainer_var m_hostContainer;
-
-    /**
-     * The supervision event notifier.
-     */
-    SupervisionEventNotifier* m_eventNotifier;
-
+    typedef std::map <std::string, Process_impl*> ProcessServants;
+    
+    ProcessServants m_process_servants;
+    
     /**
      * The associated state machine.
      */
     ApplicationStateMachine* m_stateMachine;
-
-    /**
-     * The observer of the system entities.
-     */
-    CdmwPlatformMngtEntity::SystemEntityObserver_var m_systemEntityObserver;
-
-    /**
-     * The service def container servant.
-     */
-    ServiceDefContainer_impl* m_serviceDefContainer;
     
     /**
-     * The read/write entity container.
+     * The supervision event notifier.
      */
-    RWEntityContainer_impl* m_rwEntityContainer;
-
+    SupervisionEventNotifier* m_eventNotifier;
+    
     /**
      * The handler of events.
      */
     EventHandler m_eventHandler;
-
-    /**
-     * The startup kind.
-     */
-    CdmwPlatformMngtBase::StartupKind_var m_startup_kind;
-
-    /**
-     * Indicates whether to stop the application normaly or with emergency.
-     */
-    CORBA::Boolean m_emergency;
-
-    /**
-     * The dependency graph of processes used for the initialisation of the application.
-     */
-    CdmwPlatformMngt::GraphElements_var m_initProcessGraph;
-
-    /**
-     * The dependency graph of processes used for the stop of the application.
-     */
-    CdmwPlatformMngt::GraphElements_var m_stopProcessGraph;
-
-    /**
-     * Indicates whether the init processes graph has changed or not.
-     */
-    bool m_newInitGraph;
-
+    
     /**
      * The asynchronous task factory.
      */
@@ -401,22 +402,20 @@ public:
      * The graph element factory.
      */
     GraphElementFactory* m_graphElementFactory;
-
+    
+    
     /**
-     * The application entity status change factory.
+     * The system name.
      */
-    ApplicationEntityStatusChangeFactory* m_appEntityStatusChangeFactory;
-
+    CORBA::String_var m_system_name;
+    
     /**
-     * The application status change factory.
+     * Application datastore
      */
-    ApplicationStatusChangeFactory* m_appStatusChangeFactory;
+    ApplicationDataStore* m_application_ds;
+    
 
-    /**
-     * The application mode change factory.
-     */
-    ApplicationModeChangeFactory* m_appModeChangeFactory;
-
+    
     /**
      * The states of an application.
      */
@@ -429,8 +428,57 @@ public:
     static ApplicationStopping* M_stopping;
     static ApplicationStopped* M_stopped;
     static ApplicationInitialisationIncomplete* M_initialisationIncomplete;
+    
+    
+
+public:
+      
+
+    /**
+     * Indicates whether the init processes graph has changed or not.
+     */
+    bool m_newInitGraph;
+    
+    /**
+     * The startup kind.
+     */
+    CdmwPlatformMngtBase::StartupKind_var m_startup_kind;
+    
+    /**
+     * Indicates whether to stop the application normaly or with emergency.
+     */
+    CORBA::Boolean m_emergency;
+    
+    
+    /**
+     * The information about the status this application.
+     */
+    CORBA::String_var m_statusInfo;
+    
+    /**
+     * The functioning mode.
+     */
+    CdmwPlatformMngt::FunctioningMode m_mode;
+        
+    /**
+     * The information about the mode of this system.
+     */
+    CORBA::String_var m_modeInfo;
+    
+    
+    /**
+     * The dependency graph of processes used for the initialisation of the application.
+     */
+    CdmwPlatformMngt::GraphElements_var m_processInitGraph;
+
+    /**
+     * The dependency graph of processes used for the stop of the application.
+     */
+    CdmwPlatformMngt::GraphElements_var m_processStopGraph;
+
 
 private:
+
     /**
      *Purpose:
      *<p> Copy constructor is not allowed.
@@ -444,13 +492,38 @@ private:
      */ 
     Application_impl& operator=(
         const Application_impl& rhs );
+        
+        
+    /**
+     *Purpose:
+     *<p> Set the application record in data store
+     *
+     */
+    void set_record_in_datastore();
+            
+    /**
+     *Purpose:
+     *<p> Remove the application record in datastore
+     *
+     */
+    void remove_record_in_datastore();
+    
+    /**
+     *Purpose:
+     *<p> Get the application record from data store
+     *
+     */
+    CdmwPlatformMngt::ApplicationRecord* get_record_from_datastore();
+    
 
 public:
     /**
      *Purpose:
      *<p> Default constructor.
      *
-     *@param eventNotifier the supervision observer to be notified of events.
+     *@param poa                the poa in charge of servants.
+     *@param eventNotifier      the supervision observer to be notified of events.
+     *@param element_repository the element repository 
      *
      *@exception BadParameterException if the parameter is invalid.
      *@exception AlreadyDoneException if the state machine is already running.
@@ -462,7 +535,8 @@ public:
     Application_impl(
         PortableServer::POA_ptr poa,
         SupervisionEventNotifier* eventNotifier,
-        std::string replicationManagerIOGR,
+        CdmwPlatformMngt::RWElementRepository_ptr element_repository,
+        const std::string& replicationManagerIOGR,
         CdmwPlatformMngt::FTConverter_ptr ftConverter)
             throw( BadParameterException,
                    AlreadyDoneException,
@@ -471,7 +545,8 @@ public:
 #else
     Application_impl(
         PortableServer::POA_ptr poa,
-        SupervisionEventNotifier* eventNotifier )
+        SupervisionEventNotifier* eventNotifier,
+        CdmwPlatformMngt::RWElementRepository_ptr element_repository)
             throw( BadParameterException,
                    AlreadyDoneException,
                    UnknownStateException,
@@ -483,6 +558,35 @@ public:
      *<p> Default destructor.
      */
     virtual ~Application_impl();
+    
+    /**
+     *Purpose:
+     *<p> Synchronise with datastore
+     *
+     */
+    void synchro_with_datastore();
+    
+    /**
+     *Purpose:
+     *<p> Synchronise the processes with their datastore
+     *
+     */
+    void synchro_processes_with_datastore();
+    
+    /**
+     *Purpose:
+     *<p> Synchronise the processing
+     *
+     */
+    void synchro_processing();
+    
+    /**
+     *Purpose:
+     *<p> Synchronise the processing of processes
+     *
+     */
+    void synchro_processing_of_processes();
+
 
 public:
     /**
@@ -498,21 +602,23 @@ public:
      *Purpose:
      *<p> Destroys all the states.
      */
-    static void destroyStates();
-
+    static void destroyStates();               
+                   
     /**
      *Purpose:
      *<p> Ends the creation of the application servant by taking in additional
      * information provided by the application acknowledgement data.
      *
-     *@param applicationAck the acknowledgement data.
+     *@param applicationStartData the data for application servant to start.
+     *@param application_path     the path of the Application.
      *
      *@exception OutOfMemoryException Lack of memory.
      */
-    void endCreation(
-        const CdmwPlatformMngt::ApplicationAck& applicationAck )
-            throw( OutOfMemoryException,
-                   CORBA::SystemException );
+    void end_creation(
+        const CdmwPlatformMngt::ApplicationStartingData& applicationStartData,
+        const char* application_path)
+            throw (OutOfMemoryException,
+                   CORBA::SystemException);
 
     /**
      *Purpose:
@@ -521,8 +627,7 @@ public:
      *
      *@param hostName the host running a part of this application.
      *
-     *@return the application agent or a NIL reference if there is no agent
-     * for this application.
+     *@return the application agent
      *
      *@exception HostNotFound if the host cannot be found.
      *@exception HostNotReachable if the host doesn't respond.
@@ -538,14 +643,33 @@ public:
      */
     CdmwPlatformMngt::ApplicationAgent_ptr getAgent(
         const char* hostName )
-            throw( CdmwPlatformMngt::HostNotFound,
+            throw (CdmwPlatformMngt::HostNotFound,
                    CdmwPlatformMngt::HostNotReachable,
                    CdmwPlatformMngt::CreationError,
                    CdmwPlatformMngt::ApplicationAgentAlreadyExists,
                    CdmwPlatformMngt::InvalidInfo,
                    CdmwPlatformMngt::CreationTimeout,
                    AgentNotFoundException,
-                   CORBA::SystemException );
+                   CORBA::SystemException);
+                   
+    /**
+     *Purpose:
+     *<p> Gets the application agent representing this application on the
+     * specified host from the daemon.
+     *
+     *@param hostName the host running a part of this application.
+     *
+     *@return the application agent or nil if agent does not exist
+     *
+     *@exception HostNotFound if the host cannot be found.
+     *@exception HostNotReachable if the host doesn't respond.
+     *@exception CORBA::SystemException
+     */               
+    CdmwPlatformMngt::ApplicationAgent_ptr searchAgentFromDaemon (
+        const char* hostName)
+            throw (CdmwPlatformMngt::HostNotFound,
+                   CdmwPlatformMngt::HostNotReachable,
+                   CORBA::SystemException);
                    
                    
     /**
@@ -566,21 +690,16 @@ public:
         const char* hostName,
         InvalidationType reason );
 
+    
     /**
      *Purpose:
-     *<p> Creates an application agent death event. This method is
-     * designed to be used outside the state machine.
+     *<p> Notifies a mode change events to the supervision event notifier.
+     *
+     * @param functioning_mode the functionning mode
+     * @param mode_info the associated info
      */
-    void notifyAgentDeathEvent(
-        const CdmwPlatformMngtBase::EventHeader& header,
-        const char* hostName );
-
-    /**
-     *Purpose:
-     *<p> Creates a process status change event. This method is
-     * designed to be used outside the state machine.
-     */
-    void notifyModeChangeEvent();
+    void notifyModeChangeEvent(CdmwPlatformMngt::FunctioningMode functioning_mode,
+                               const char* mode_info);
 
     /**
      *Purpose:
@@ -599,7 +718,7 @@ public:
      */
     void notifyEntityStatusChangeEvent(
         const char* entity_name,
-        CdmwPlatformMngtEntity::EntityStatus entity_status,
+        const char* entity_status,
         const char* entity_info );
 
     /**
@@ -673,6 +792,34 @@ public:
                    CdmwPlatformMngt::StepOutOfBound,
                    CdmwPlatformMngt::StepJump,
                    CORBA::SystemException );
+    
+    /**
+     *Purpose:
+     *<p> Check the number of processes having the same name.
+     *
+     * @param process_name the process name to check.
+     *
+     */               
+    int checkNbrOfProcessNames (const char* process_name);
+    
+    /**
+     *Purpose:
+     *<p> Get the host name of the process specified by its name.
+     *
+     * @param process_name the process name.
+     *
+     * @param host_name the host name.
+     *
+     * @return the process servant
+     *
+     * @exception ProcessNameNotUnique thrown if name is not unique
+     * @exception CdmwPlatformMngt::ProcessNotFound thrown if process not found
+     */                  
+    Process_impl* getProcessHostName (
+                                 const std::string& process_name,
+                                 std::string& host_name)
+        throw (ProcessNameNotUnique,
+               CdmwPlatformMngt::ProcessNotFound);
 
     /**
      *Purpose:
@@ -694,8 +841,6 @@ public:
      *  name among the services of one of the application processes
      * @exception DuplicateProcessStep if there is a duplicate step label
      *  among the steps of one of the application processes
-     * @exception DuplicateProcessActivityPoint if there is a duplicate
-     *  name among the activity points of one of the application processes
      */
     void defineApplication(
         const CdmwPlatformMngt::ApplicationDef& application_def )
@@ -706,10 +851,10 @@ public:
                   CdmwPlatformMngt::DuplicateProcessEntity,
                   CdmwPlatformMngt::DuplicateProcessService,
                   CdmwPlatformMngt::DuplicateProcessStep,
-                  CdmwPlatformMngt::DuplicateProcessActivityPoint,
                   CdmwPlatformMngt::AlreadyDone,
                   CdmwPlatformMngt::IncompatibleStatus,
-                  CORBA::SystemException );
+           	  CosPropertyService::MultipleExceptions,
+		  CORBA::SystemException );
 
     /**
      *Purpose:
@@ -717,7 +862,7 @@ public:
      *
      *@param process_def the definition of the process.
      *
-     *@return the CORBA reference of the process proxy.
+     *@return the CORBA reference of the process.
      *
      *@exception ProcessAlreadyExists if the process name is already used
      * within the application.
@@ -729,36 +874,33 @@ public:
      * the service definitions of the process
      *@exception DuplicateStep if there is a duplicate step label among
      * the steps of the process
-     *@exception DuplicateActivityPoint if there is a duplicate name
-     * among the activity point definitions of the process
      *@exception IncompatibleStatus if the status of the application doesn't
      * allow the operation.
      */
-    CdmwPlatformMngt::ProcessProxy_ptr addProcess(
+    CdmwPlatformMngt::Process_ptr addProcess(
         CdmwPlatformMngt::ProcessDef* process_def )
             throw( CdmwPlatformMngt::ProcessAlreadyExists,
                    CdmwPlatformMngt::HostNotFound,
                    CdmwPlatformMngt::DuplicateEntity,
                    CdmwPlatformMngt::DuplicateService,
                    CdmwPlatformMngt::DuplicateStep,
-                   CdmwPlatformMngt::DuplicateActivityPoint,
+		   CosPropertyService::MultipleExceptions,
                    CORBA::SystemException );
 
     /**
      *Purpose:
      *<p> Actually removes the specified process.
      *
-     *@param process_name the name identifying the process.
+     *@param process_key the key name identifying the process.
      *
      *@exception ProcessNotFound if process_name doesn't denote
      * an existing process.
      *@exception ProcessStillActive if the process is still active
      */
-    void removeProcess(
-        const char* process_name )
-            throw( CdmwPlatformMngt::ProcessNotFound,
+    void removeProcess(const char* process_key)
+            throw (CdmwPlatformMngt::ProcessNotFound,
                    CdmwPlatformMngt::ProcessStillActive,
-                   CORBA::SystemException );
+                   CORBA::SystemException);
                    
     /**
      *Purpose:
@@ -787,19 +929,138 @@ public:
 
     /**
      *Purpose:
-     *<p> Get the process proxy associated to the identified process.
+     *<p> facade to get an attribute
      *
-     *@param process_name the name identifying the process.
+     */
+
+     void get_attribute(const char * attr_name, CORBA::Any_out ret_attr , CORBA::Char flag)  throw (CORBA::SystemException, CdmwPlatformMngt::AttributeNotFound);
+
+    /**
+     *Purpose:
+     *<p> facade to set an attribute
      *
-     *@return the process proxy.
+     */
+    void set_attribute(const char * attr_name, const CORBA::Any & attr , CORBA::Char flag)  throw (CORBA::SystemException, CdmwPlatformMngt::AttributeNotFound);
+
+
+
+    /**
+     *Purpose:
+     *<p> Get the process_impl associated to the identified process.
+     *
+     *@param process_key the key name identifying the process.
+     *
+     *@return the process_impl.
      *
      *@exception ProcessNotFound if process_name doesn't denote
      * an existing process.
+     *@exception ElementPathInvalid if key is invalid
      */
-    ProcessProxy_impl* getProcessProxy(
-        const char* process_name )
-            throw( CdmwPlatformMngt::ProcessNotFound,
-                   CORBA::SystemException );
+    Process_impl* getProcess(const char* process_key)
+            throw (CdmwPlatformMngt::ProcessNotFound,
+                   CdmwPlatformMngt::ElementPathInvalid,
+                   CORBA::SystemException);
+    
+    /**
+     *Purpose:
+     *<p> Get the process_impl associated to the identified process.
+     *
+     *@param process_name the name of the process.
+     *@param host_name    the name of the host.
+     *
+     *@return the process_impl.
+     *
+     *@exception ProcessNotFound if process_name doesn't denote
+     * an existing process.
+     *@exception ElementPathInvalid if key is invalid
+     */               
+    Process_impl* getProcess(const char* process_name,
+                             const char* host_name)
+            throw (CdmwPlatformMngt::ProcessNotFound,
+                   CORBA::SystemException);
+    
+    
+    /**
+     *Purpose:
+     *<p> Get the host container (associated to system).
+     *
+     *@return the host container.
+     *
+     */
+    CdmwPlatformMngt::HostContainer_ptr get_host_container();
+    
+    
+    /**
+     *Purpose:
+     *<p> Get the application observer (associated to system).
+     *
+     *@return the application observer.
+     *
+     */               
+    CdmwPlatformMngt::ApplicationObserver_ptr get_application_observer();
+    
+    
+    /**
+     *Purpose:
+     *<p> Get the rw service def container for application.
+     *
+     *@return the rw service def container.
+     *
+     */     
+    RWServiceDefContainer_impl* get_rwservice_defcontainer();
+                
+    /**
+     *Purpose:
+     *<p> Get the supervision event notifier to send notification (reroute to System).
+     *
+     *@return the supervision event notifier.
+     *
+     */      
+    SupervisionEventNotifier* get_event_notifier();  
+    
+    /**
+     *Purpose:
+     *<p> Get the event handler to manage internal event.
+     *
+     *@return the event handler.
+     *
+     */
+    EventHandler*  get_event_handler();
+    
+    
+    /**
+     *Purpose:
+     *<p> Get the process observer.
+     *
+     *@return the process observer.
+     *
+     */                                                  
+    CdmwPlatformMngt::ProcessObserver_ptr get_process_observer()
+            throw(CORBA::SystemException);
+    
+    /**
+     *Purpose:
+     *<p> Get the process observer servant.
+     *
+     *@return the process observer servant.
+     *
+     */        
+    ProcessObserver_impl* get_process_observer_servant();
+            
+    /**
+     *Purpose:
+     *<p> Get the service broker.
+     *
+     *@return the service broker.
+     *
+     */                                                   
+    CdmwPlatformMngtService::ServiceBroker_ptr get_service_broker()
+            throw(CORBA::SystemException);
+            
+            
+            
+    
+    
 
     /**
      *Purpose:
@@ -824,25 +1085,62 @@ public:
      *<p> Indicates the application has not completed its job.
      */
     void non_completion_event();
+    
+    
+    /**
+     *Purpose:
+     *<p> Get the internal status from state machine.
+     */
+    CdmwPlatformMngt::ApplicationStatus get_internal_status();
+
+
+
+
 
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Application/name:1.0
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/restart_type:1.0
      * operation
-     */
-    CdmwPlatformMngt::ApplicationName name()
-              throw(CORBA::SystemException );
+     */         
+    CdmwPlatformMngt::RestartType restart_type ()
+              throw(CORBA::SystemException);
+    
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Application/status:1.0
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/restart_attempt:1.0
      * operation
-     */
-    CdmwPlatformMngt::ApplicationStatus status();
-
+     */    
+    CORBA::Long restart_attempt ()
+              throw(CORBA::SystemException);
+        
+    
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/is_manual_starting:1.0
+     * operation
+     */    
+    CORBA::Boolean is_manual_starting()
+              throw(CORBA::SystemException);
+     
+     
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/set_manual_starting:1.0
+     * operation
+     */   
+    void set_manual_starting(CORBA::Boolean manual_starting)
+              throw(CORBA::SystemException,
+                    CdmwPlatformMngt::IncompatibleStatus);
+                    
+                    
     /**
      *Purpose:
      *<p>
@@ -864,6 +1162,16 @@ public:
     CdmwPlatformMngt::FunctioningMode get_mode(
         CORBA::String_out mode_info )
             throw( CORBA::SystemException );
+            
+    /**
+     *Purpose:
+     *<p>
+     * Set the functionning mode with info
+     * @param functioning_mode the functionning mode
+     * @param mode_info the info about mode
+     */  
+    void set_mode(CdmwPlatformMngt::FunctioningMode functioning_mode,
+                  const char* mode_info);
 
     /**
      *Purpose:
@@ -878,12 +1186,20 @@ public:
      *Purpose:
      *<p>
      * Implements the
+     * IDL:thalesgroup.com/CdmwPlatformMngt/Application/get_number_of_processes:1.0
+     * operation
+     */
+    CORBA::ULong get_number_of_processes() throw(CORBA::SystemException );
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
      * IDL:thalesgroup.com/CdmwPlatformMngt/Application/get_processes:1.0
      * operation
      */
-    CdmwPlatformMngt::ProcessProxies* get_processes(
+    CdmwPlatformMngt::Processes* get_processes(
         CORBA::ULong how_many,
-        CdmwPlatformMngt::ProcessProxiesIterator_out processes_iterator )
+        CdmwPlatformMngt::ProcessesIterator_out processes_iterator )
               throw(CORBA::SystemException );
     /**
      *Purpose:
@@ -892,10 +1208,12 @@ public:
      * IDL:thalesgroup.com/CdmwPlatformMngt/Application/get_process:1.0
      * operation
      */
-    CdmwPlatformMngt::ProcessProxy_ptr get_process(
-        const char* process_name )
+    CdmwPlatformMngt::Process_ptr get_process(const char* process_name,
+                                              const char* host_name)
             throw( CdmwPlatformMngt::ProcessNotFound,
                    CORBA::SystemException );
+	
+
 
     /**
      *Purpose:
@@ -913,9 +1231,9 @@ public:
                    CdmwPlatformMngt::DuplicateProcessEntity,
                    CdmwPlatformMngt::DuplicateProcessService,
                    CdmwPlatformMngt::DuplicateProcessStep,
-                   CdmwPlatformMngt::DuplicateProcessActivityPoint,
                    CdmwPlatformMngt::AlreadyDone,
                    CdmwPlatformMngt::IncompatibleStatus,
+		   CosPropertyService::MultipleExceptions,
                    CORBA::SystemException );
 
     /**
@@ -925,15 +1243,15 @@ public:
      * IDL:thalesgroup.com/CdmwPlatformMngt/Application/add_process:1.0
      * operation
      */
-    CdmwPlatformMngt::ProcessProxy_ptr add_process(
+    CdmwPlatformMngt::Process_ptr add_process(
         CdmwPlatformMngt::ProcessDef* process_def )
             throw( CdmwPlatformMngt::ProcessAlreadyExists,
                    CdmwPlatformMngt::HostNotFound,
                    CdmwPlatformMngt::DuplicateEntity,
                    CdmwPlatformMngt::DuplicateService,
                    CdmwPlatformMngt::DuplicateStep,
-                   CdmwPlatformMngt::DuplicateActivityPoint,
                    CdmwPlatformMngt::IncompatibleStatus,
+		   CosPropertyService::MultipleExceptions,
                    CORBA::SystemException );
 
     /**
@@ -943,8 +1261,7 @@ public:
      * IDL:thalesgroup.com/CdmwPlatformMngt/Application/remove_process:1.0
      * operation
      */
-    void remove_process(
-        const char* process_name )
+    void remove_process(const char* process_name, const char* host_name)
             throw( CdmwPlatformMngt::ProcessNotFound,
                    CdmwPlatformMngt::ProcessStillActive,
                    CdmwPlatformMngt::IncompatibleStatus,
@@ -980,6 +1297,31 @@ public:
                    CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
+
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/get_autorestart_info:1.0
+     * operation
+     */              
+    CdmwPlatformMngt::ApplicationAutoRestartInfo get_autorestart_info()
+            throw(CORBA::SystemException);
+
+
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/set_autorestart_info:1.0
+     * operation
+     */
+    void set_autorestart_info(
+         const CdmwPlatformMngt::ApplicationAutoRestartInfo& autorestart_info)
+            throw(CdmwPlatformMngt::IncompatibleStatus,
+                  CORBA::SystemException);
+                  
+                  
     /**
      *Purpose:
      *<p>
@@ -1069,12 +1411,35 @@ public:
     CdmwPlatformMngt::LongRequestStatus stop_and_wait(
         CORBA::Boolean emergency )
             throw( CORBA::SystemException );
+            
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/cold_restart:1.0
+     * operation
+     */
+    void cold_restart(const CdmwPlatformMngtBase::StartupKind& startup_kind)
+            throw(CdmwPlatformMngt::IncompatibleStatus,
+                  CORBA::SystemException);        
+            
 
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntityContainer/get_number_of_entities:1.0
+     * IDL:thalesgroup.com/CdmwFTSystMngt/ApplicationAccessor/hot_restart:1.0
+     * operation
+     */
+    void hot_restart(const CdmwPlatformMngtBase::StartupKind& startup_kind)
+            throw(CdmwPlatformMngt::IncompatibleStatus,
+                  CORBA::SystemException); 
+
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
+     * IDL:thalesgroup.com/CdmwPlatformMngt/EntityContainer/get_number_of_entities:1.0
      * operation
      */
     CORBA::ULong get_number_of_entities()
@@ -1084,75 +1449,73 @@ public:
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntityContainer/get_all_entity_names:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/EntityContainer/get_all_entity_names:1.0
      * operation
      */
     void get_all_entity_names(
         CORBA::ULong how_many,
-        CdmwPlatformMngtEntity::EntityNames_out entity_names,
-        CdmwPlatformMngtEntity::EntityNamesIterator_out rest )
+        CdmwPlatformMngt::ElementNames_out entity_names,
+        CdmwPlatformMngt::ElementNamesIterator_out rest )
             throw( CORBA::SystemException );
 
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntityContainer/get_entity_status:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/EntityContainer/get_entity:1.0
      * operation
      */
-    CdmwPlatformMngtEntity::EntityStatus get_entity_status(
-        const char* entity_name,
-        CORBA::String_out entity_info )
-            throw( CdmwPlatformMngtEntity::EntityNotFound,
+    CdmwPlatformMngt::Entity_ptr get_entity (const char* entity_name)
+            throw( CdmwPlatformMngt::EntityNotFound,
                    CORBA::SystemException );
 
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntityContainer/get_entities:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/EntityContainer/get_entities:1.0
      * operation
      */
     CORBA::Boolean get_entities(
-        const CdmwPlatformMngtEntity::EntityNames& entity_names,
-        CdmwPlatformMngtEntity::Entities_out nentities )
+        const CdmwPlatformMngt::ElementNames& entity_names,
+        CdmwPlatformMngt::Entities_out nentities )
             throw( CORBA::SystemException );
 
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntityContainer/get_all_entities:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/EntityContainer/get_all_entities:1.0
      * operation
      */
     void get_all_entities(
         CORBA::ULong how_many,
-        CdmwPlatformMngtEntity::Entities_out nentities,
-        CdmwPlatformMngtEntity::EntitiesIterator_out rest )
+        CdmwPlatformMngt::Entities_out nentities,
+        CdmwPlatformMngt::EntitiesIterator_out rest )
             throw( CORBA::SystemException );
 
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngtEntity/RWEntityContainer/add_entity:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/RWEntityContainer/add_entity:1.0
      * operation
      */
-    void add_entity(
-        const char* entity_name )
-            throw( CdmwPlatformMngtEntity::EntityAlreadyExists,
-                   CORBA::SystemException );
+    CdmwPlatformMngt::Entity_ptr add_entity (
+                const CdmwPlatformMngt::EntityDef & entity_def)
+                throw(CdmwPlatformMngt::EntityAlreadyExists,
+		              CORBA::SystemException);
 
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngtEntity/RWEntityContainer/remove_entity:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/RWEntityContainer/remove_entity:1.0
      * operation
      */
     void remove_entity(
         const char* entity_name )
-            throw( CdmwPlatformMngtEntity::EntityNotFound,
+            throw( CdmwPlatformMngt::EntityNotFound,
                    CORBA::SystemException );
 
     /**
@@ -1190,86 +1553,16 @@ public:
         const char* service_name )
             throw( CdmwPlatformMngtService::ServiceNotFound,
                    CORBA::SystemException );
-
+                   
     /**
      *Purpose:
      *<p>
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/PropertyContainer/get_number_of_properties:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/RWServiceDefContainer/remove_all_service_defs:1.0
      * operation
-     */
-    CORBA::ULong get_number_of_properties()
-              throw(CORBA::SystemException );
-    /**
-     *Purpose:
-     *<p>
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/PropertyContainer/get_all_property_names:1.0
-     * operation
-     */
-    void get_all_property_names(
-        CORBA::ULong how_many,
-        CosPropertyService::PropertyNames_out property_names,
-        CosPropertyService::PropertyNamesIterator_out rest )
-              throw(CORBA::SystemException );
-    /**
-     *Purpose:
-     *<p>
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/PropertyContainer/get_property_value:1.0
-     * operation
-     */
-    CORBA::Any* get_property_value(
-        const char* property_name )
-            throw( CosPropertyService::PropertyNotFound,
-                   CosPropertyService::InvalidPropertyName,
-                   CORBA::SystemException );
-
-    /**
-     *Purpose:
-     *<p>
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/PropertyContainer/get_properties:1.0
-     * operation
-     */
-    CORBA::Boolean get_properties(
-        const CosPropertyService::PropertyNames& property_names,
-        CosPropertyService::Properties_out nproperties )
-              throw(CORBA::SystemException );
-    /**
-     *Purpose:
-     *<p>
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/PropertyContainer/get_all_properties:1.0
-     * operation
-     */
-    void get_all_properties(
-        CORBA::ULong how_many,
-        CosPropertyService::Properties_out nproperties,
-        CosPropertyService::PropertiesIterator_out rest )
-              throw(CORBA::SystemException );
-    /**
-     *Purpose:
-     *<p>
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/RWPropertyContainer/set_property:1.0
-     * operation
-     */
-    void set_property(
-        const char* property_name,
-        const CORBA::Any& property_value )
-              throw(CORBA::SystemException );
-    /**
-     *Purpose:
-     *<p>
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/RWPropertyContainer/remove_property:1.0
-     * operation
-     */
-    void remove_property(
-        const char* property_name )
-            throw( CosPropertyService::PropertyNotFound,
-                   CORBA::SystemException );
+     */               
+    void remove_all_service_defs()
+		    throw (CORBA::SystemException);
 
     /**
      *Purpose:
@@ -1278,7 +1571,7 @@ public:
      * IDL:thalesgroup.com/CdmwPlatformMngt/PullMonitorable/is_alive:1.0
      * operation
      */
-  void is_alive()
+    void is_alive()
               throw(CORBA::SystemException );
 
 
@@ -1291,8 +1584,23 @@ public:
      */
     CdmwPlatformMngt::SupervisionObserver_ptr register_observer(
         const char* observer_name,
-        CdmwPlatformMngt::SupervisionObserver_ptr observer )
-            throw( CORBA::SystemException );
+        CdmwPlatformMngt::SupervisionObserver_ptr observer)
+            throw (CORBA::SystemException);
+            
+            
+    /**
+     *Purpose:
+     *<p>
+     * Implements the
+     * IDL:thalesgroup.com/CdmwFTSystMngt/SystemAccessor/register_observer:1.0
+     * operation
+     */
+    CdmwPlatformMngt::SupervisionObserver_ptr register_proxy_observer(
+        const char* observer_name,
+        const char* host_name,
+        CdmwPlatformMngt::SupervisionObserver_ptr observer)
+            throw (CORBA::SystemException);
+      
 
     /**
      *Purpose:
@@ -1302,18 +1610,18 @@ public:
      * operation
      */
     CdmwPlatformMngt::SupervisionObserver_ptr unregister_observer(
-        const char* observer_name )
-            throw( CdmwPlatformMngt::ObserverNotFound,
-                   CORBA::SystemException );
-                   
+        const char* observer_name)
+            throw (CdmwPlatformMngt::ObserverNotFound,
+                   CORBA::SystemException);
                    
                    
     /**
      *Purpose:
-     *<p> return the application name
+     *<p> return the system name
+     *   !! do not desallocate !!
      *
      */
-    const char* get_applicationName();
+    const char* get_system_name();
     
 
 };

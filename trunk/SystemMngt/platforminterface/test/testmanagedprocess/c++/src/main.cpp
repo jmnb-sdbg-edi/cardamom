@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -33,9 +33,11 @@
 #include "Foundation/orbsupport/StrategyList.hpp"
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
 
-#include "Foundation/testutils/Testable.hpp"
+#include "Foundation/testutils/CORBATestManager.hpp"
 
-#include "testmanagedprocess/MyProcessBehaviour.hpp"
+//#include "testmanagedprocess/MyProcessBehaviour.hpp"
+#include "testmanagedprocess/CheckMonitoring_impl.hpp"
+#include "testmanagedprocess/TestManagedProcess.skel.hpp"
 
 #include <cstdlib>
 #include <string>
@@ -62,20 +64,23 @@ namespace
     const std::string AUTO_END_OPTION = "--auto-end";
     const std::string NB_STEPS_OPTION = "--nb-steps";
     const std::string SERVICE_REQUEST_OPTION = "--service-request";
+    const std::string HOST_ENTITY_SET_OPTION = "--host-entity-set";
     const std::string SYS_ENTITY_SET_OPTION = "--sys-entity-set";
     const std::string APP_ENTITY_SET_OPTION = "--app-entity-set";
     const std::string PROC_ENTITY_SET_OPTION = "--proc-entity-set";
     const std::string ENTITY_UPDATING_OPTION = "--entity-update";
     const std::string PROCESS_TIMEOUT_OPTION = "--process-timeout";
+    const std::string SLEEP_OPTION = "--Sleep";
+    const std::string MONITORING_REQUEST_OPTION = "--Request";
+    const std::string MONITORING_EXCEPT_OPTION = "--Exception";
     
     
-    class UnitTest : virtual public Cdmw::TestUtils::Testable
+    class UnitTest : public CppUnit::TestFixture
     {
 
       public:
 
-        UnitTest(const std::string& name)
-             : Testable(name)
+        UnitTest()
         {
         };
 
@@ -90,6 +95,10 @@ namespace
 	    {
 	        TEST_INFO("No Test to process");
 	    };
+
+    CPPUNIT_TEST_SUITE(UnitTest);
+    CPPUNIT_TEST( do_tests );
+    CPPUNIT_TEST_SUITE_END();
     };
 }
 
@@ -119,28 +128,34 @@ usage(std::ostream & os, const std::string &program_name)
        << "[--auto-end=<time-out>]            Process will auto end after time out in msec.\n"
        << "[--nb-steps=<value>]               Number of init stepsName.\n"
        << "[--service-request=<name>]         Service to request.\n"
+       << "[--host-entity-set=<name>]         Host entity to set.\n"
        << "[--sys-entity-set=<name>]          System entity to set.\n"
        << "[--app-entity-set=<name>]          Application entity to set.\n"
        << "[--proc-entity-set=<name>]         Process entity to set.\n"
        << "[--entity-update=<interval-time]   Entity updating interval in msec. \n"
        << "[--process-timeout=<time-out>]     Process will initialises, run and stop after\n"
        << "                                   a time out in msec.\n"
+       << "[--Sleep=<time>]                   Time before is_alive return.\n"
+       << "[--Request=<bool>]                 bool returned by is_alive\n"
+       << "[--Exception=<bool>]               exception raised by is_alive (after a certain number of times)\n"
        << std:: endl;
 }
     
     
+CPPUNIT_TEST_SUITE_REGISTRATION( UnitTest );
     
 int main(int argc, char* argv[])
 {  
     // if called by unit testing (no argument)
     if (argc == 1)
     {
-        UnitTest unit_test ("testmanagedprocess");
-        unit_test.start();
-        return 0;
+        //UnitTest unit_test ;
+        //unit_test.start();
+    Cdmw::TestUtils::CORBATestManager::instance()->run_tests();
+    Cdmw::TestUtils::CORBATestManager::instance()->summary();
+    return Cdmw::TestUtils::CORBATestManager::instance()->was_successful();
     }
-    
-    
+   
     processName = argv[0];
    
     // the return code 
@@ -255,6 +270,18 @@ int main(int argc, char* argv[])
             serviceRequestName = "";  
         }
         
+        std::string hostEntityName = OS::get_option_value (argc, argv, HOST_ENTITY_SET_OPTION);
+        if (hostEntityName == "yes")
+        {
+            std::cout << "bad value for " << HOST_ENTITY_SET_OPTION.c_str() << "=<name> option\n";
+            std::cout << std::endl;
+            return EXIT_FAILURE;
+        }        
+        else if (hostEntityName == "no")
+        { 
+            hostEntityName = "";  
+        }
+        
         std::string sysEntityName = OS::get_option_value (argc, argv, SYS_ENTITY_SET_OPTION);
         if (sysEntityName == "yes")
         {
@@ -348,7 +375,53 @@ int main(int argc, char* argv[])
             }
 	    }
 	    
-            
+        unsigned int sleepTime;
+
+        std::string sleepTimeOption = OS::get_option_value( argc, argv, SLEEP_OPTION);
+
+        if (sleepTimeOption == "no") sleepTime = 100;
+        else if (sleepTimeOption == "yes")
+        {
+            std::cout << "bad value for " << SLEEP_OPTION.c_str() 
+                      << "=<value> option\n";
+            std::cout << std::endl;
+            return EXIT_FAILURE;
+        }
+        else if (sleepTimeOption != "no")
+        {
+            std::istringstream sleepTimeOption_strm(sleepTimeOption);
+            sleepTimeOption_strm >> sleepTime;
+
+            if (sleepTimeOption_strm.fail())
+            {
+              std::cout << "bad value for " << SLEEP_OPTION.c_str() << "=<value> option\n";
+              std::cout << std::endl;
+              return EXIT_FAILURE;
+            }
+        }
+
+        bool monitoringRequest;
+
+        std::string monitoringRequestOption = OS::get_option_value( argc, argv, MONITORING_REQUEST_OPTION);
+
+        if (monitoringRequestOption == "no") monitoringRequest = true;
+        else if (monitoringRequestOption == "true") monitoringRequest = true;
+        else if (monitoringRequestOption == "false") monitoringRequest = false;
+        else monitoringRequest = true;
+
+        bool monitoringExcept;
+
+        std::string monitoringExceptOption = OS::get_option_value( argc, argv, MONITORING_EXCEPT_OPTION);
+
+        if (monitoringExceptOption == "no") monitoringExcept = false;
+        else if (monitoringExceptOption == "true") monitoringExcept = true;
+        else if (monitoringExceptOption == "false") monitoringExcept = false;
+        else monitoringExcept = true;
+                
+        std::string option("--CdmwLocalisationService");
+        std::string portNumber = OS::get_option_value(argc, argv, option) ;
+        std::cout << "test managed process run with CdmwLocalisationService=" << portNumber << std::endl;
+
         orb =  Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategy); 
 
         CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
@@ -357,30 +430,30 @@ int main(int argc, char* argv[])
 
         PortableServer::POAManager_var poaMgr = poa->the_POAManager();
 
-        poaMgr->activate();
-
+        poaMgr->activate();        
+    
         if (managedProcess)
         {
             try
             {
                 bool platformManaged =
-                     PlatformInterface::isLaunchedByPlatformManagement(argc, argv);
+                     PlatformInterface::Is_launched_by_PlatformManagement(argc, argv);
 
                 if (platformManaged)
                 {
                     // initialise the platform interface
-                    PlatformInterface::setup(orb.in(), argc, argv);
+                    PlatformInterface::Setup(orb.in(), argc, argv);
                 }
 
                 // creates the autoEnding class
 		        std::auto_ptr<AutoEnding> pAutoEnding (
                                 new AutoEnding (autoEndTimeOut));
-                                
+        
                 // creates the process behaviour
                 std::auto_ptr<MyProcessBehaviour> pMyProcess(
                                 new MyProcessBehaviour(orb.in(), platformManaged, argv[0],
                                                        pAutoEnding.get(), autoEndTimeOut, entityUpdating,
-                                                       nbStepsValue));
+                                                       nbStepsValue, sleepTime, monitoringRequest, monitoringExcept));
              
       
                 if (!serviceRequestName.empty())
@@ -389,6 +462,12 @@ int main(int argc, char* argv[])
                     pMyProcess->setServiceToRequest (serviceRequestName.c_str());
                 }
                 
+                if (!hostEntityName.empty())
+                { 
+                    // set system entity name to set                   
+                    pMyProcess->setHostEntityToSet (hostEntityName.c_str());
+                }
+
                 if (!sysEntityName.empty())
                 { 
                     // set system entity name to set                   
@@ -407,20 +486,39 @@ int main(int argc, char* argv[])
                     pMyProcess->setProcEntityToSet (procEntityName.c_str());
                 }
 
-
                 // get processId
                 OS::ProcessId processId = OS::get_processId();
+
+                // create the CheckMonitoring servant
+                Cdmw::TestManagedProcess::CheckMonitoring_var checkMonitoring;
+                {
+                    CheckMonitoring_impl* pCheckMonitoringServant =
+                        new CheckMonitoring_impl(pMyProcess.get());
+
+                    // create an object var to take pointer ownership
+                    // (ref count decremented when var destroyed at the block end)
+                    PortableServer::ServantBase_var servant_var = pCheckMonitoringServant;
+                
+                    // activate servant on POA (ref count is incremented)
+                    PortableServer::ObjectId_var oid =
+                        poa->activate_object(pCheckMonitoringServant);
+
+                    CORBA::Object_var object = poa->id_to_reference(oid.in());
+                    checkMonitoring = Cdmw::TestManagedProcess::CheckMonitoring::_narrow(object.in());
+                }
+                Cdmw::OrbSupport::OrbSupport::bind_object_to_corbaloc
+                                               (orb.in(), "CheckMonitoring", checkMonitoring.in());
 
                 if (platformManaged)
                 {
                     // acknowledge the creation of the process
-                    PlatformInterface::acknowledgeCreation(pMyProcess.get());
+                    PlatformInterface::Acknowledge_creation(pMyProcess.get());
                     pMyProcess.release();
                     
                     // sample usage of the platform interface                    
-                    applicationName = PlatformInterface::getApplicationName();
+                    applicationName = PlatformInterface::Get_application_name();
 
-                    processName = PlatformInterface::getProcessName();
+                    processName = PlatformInterface::Get_process_name();
 
 
                     std::cout << "Application name : "
@@ -445,6 +543,12 @@ int main(int argc, char* argv[])
                 
                 // start orb
                 orb->run();
+                
+                if (platformManaged)
+                {
+                    // cleanup the platform interface
+                    PlatformInterface::Cleanup();
+                }                
             }
             
             catch(...)
@@ -455,6 +559,7 @@ int main(int argc, char* argv[])
 		orb->destroy();
                 throw;
             }
+
         }
         
         else

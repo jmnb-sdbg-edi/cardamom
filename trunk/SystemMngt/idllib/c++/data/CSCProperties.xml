@@ -1,61 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
 <config>
     <csc name="idllib" owner="SystemMngt" lang="c++">
         <deliveries>
-            <delivery basename="systemmngtidl" type="lib" visibility="public">
+            <delivery basename="smgcommonidl" type="lib" visibility="public">
                 <condition antfile="Conditions.xml" target="-check-NoFaultTolerance">
                     <idlfiles>
                         <server>
-                            CdmwPlatformMngtSupervisionObserver.idl
-                            CdmwPlatformMngtProcess.idl
-                            CdmwPlatformMngtMonitoring.idl
-                        </server>
-                        <client>
                             CdmwPlatformMngtBase.idl
                             CdmwPlatformMngtCommon.idl
-                            CdmwPlatformMngtHostProxy.idl
-                            CdmwPlatformMngtApplication.idl
-                            CdmwPlatformMngtProcessProxy.idl
-                            CdmwPlatformMngtSystem.idl
-                            CdmwPlatformMngtService.idl
+                            CdmwPlatformMngtCommonBase.idl
+                            CdmwPlatformMngtElementRepository.idl              
+                            CdmwPlatformMngtEvent.idl 
                             CdmwPlatformMngtServiceContainer.idl
-                            CdmwPlatformMngtServiceBroker.idl
-                            CdmwPlatformMngtEntity.idl
-                            CdmwPlatformMngtEntityContainer.idl
-                            CdmwPlatformMngtEntityObserver.idl
-                            CdmwPlatformMngtPropertyContainer.idl
-                            CdmwPlatformMngtEvent.idl
-                            CdmwPlatformMngtObservable.idl
-                            CdmwPlatformMngtMonitoringObserver.idl
-                            CdmwPlatformMngtActivityPoint.idl
-                            CdmwPlatformMngtDaemon.idl
-                            CdmwPlatformMngtApplicationAgent.idl
-                            CdmwPlatformMngtProcessCallback.idl
-                            CdmwPlatformMngtPlatformObserver.idl
+                            CdmwPlatformMngtService.idl                             
+                        </server>
+                        <client>
                         </client>
                         <requireidlsfrom>
                             Foundation
@@ -65,32 +48,15 @@
                 <condition antfile="Conditions.xml" target="-check-FaultTolerance">
                     <idlfiles>
                         <server>
-                            CdmwPlatformMngtSupervisionObserver.idl
-                            CdmwPlatformMngtProcess.idl
-                            CdmwPlatformMngtMonitoring.idl
-                        </server>
-                        <client>
                             CdmwPlatformMngtBase.idl
                             CdmwPlatformMngtCommon.idl
-                            CdmwPlatformMngtHostProxy.idl
-                            CdmwPlatformMngtApplication.idl
-                            CdmwPlatformMngtProcessProxy.idl
-                            CdmwPlatformMngtSystem.idl
-                            CdmwPlatformMngtService.idl
-                            CdmwPlatformMngtServiceContainer.idl
-                            CdmwPlatformMngtServiceBroker.idl
-                            CdmwPlatformMngtEntity.idl
-                            CdmwPlatformMngtEntityContainer.idl
-                            CdmwPlatformMngtEntityObserver.idl
-                            CdmwPlatformMngtPropertyContainer.idl
+                            CdmwPlatformMngtCommonBase.idl
+                            CdmwPlatformMngtElementRepository.idl
                             CdmwPlatformMngtEvent.idl
-                            CdmwPlatformMngtObservable.idl
-                            CdmwPlatformMngtMonitoringObserver.idl
-                            CdmwPlatformMngtActivityPoint.idl
-                            CdmwPlatformMngtDaemon.idl
-                            CdmwPlatformMngtApplicationAgent.idl
-                            CdmwPlatformMngtProcessCallback.idl
-                            CdmwPlatformMngtPlatformObserver.idl
+                            CdmwPlatformMngtServiceContainer.idl
+                            CdmwPlatformMngtService.idl
+                        </server>
+                        <client>
                         </client>
                         <requireidlsfrom>
                             Foundation
@@ -101,74 +67,266 @@
                     </addidlflags>
                 </condition>
             </delivery>
-            <delivery basename="platformidl" type="lib" visibility="public">
+            <delivery basename="systemmngtidl" type="lib" visibility="public">
                 <condition antfile="Conditions.xml" target="-check-NoFaultTolerance">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/pullmonitorableidl
+                        </libraries>
+                    </prerequisites>
                     <idlfiles>
                         <server>
-                            CdmwPlatformMngtBase.idl
-                            CdmwPlatformMngtCommon.idl
-                            CdmwPlatformMngtSystem.idl
-                            CdmwPlatformMngtHostProxy.idl
                             CdmwPlatformMngtApplication.idl
-                            CdmwPlatformMngtProcessProxy.idl
-                            CdmwPlatformMngtService.idl
-                            CdmwPlatformMngtServiceContainer.idl
-                            CdmwPlatformMngtServiceBroker.idl
+                            CdmwPlatformMngtApplicationBase.idl
+                            CdmwPlatformMngtCmdResponseCallback.idl
+                            CdmwPlatformMngtCommandBase.idl
+                            CdmwPlatformMngtCommandedElement.idl 
+                            CdmwPlatformMngtDataStore.idl
                             CdmwPlatformMngtEntity.idl
                             CdmwPlatformMngtEntityContainer.idl
-                            CdmwPlatformMngtEntityObserver.idl
-                            CdmwPlatformMngtPropertyContainer.idl
-                            CdmwPlatformMngtEvent.idl
-                            CdmwPlatformMngtObservable.idl
-                            CdmwPlatformMngtSupervisionObserver.idl
+                            CdmwPlatformMngtElementBase.idl
+                            CdmwPlatformMngtHost.idl
+                            CdmwPlatformMngtManagedElement.idl
                             CdmwPlatformMngtMonitoring.idl
                             CdmwPlatformMngtMonitoringObserver.idl
-                            CdmwPlatformMngtActivityPoint.idl
-                            CdmwPlatformMngtDaemon.idl
-                            CdmwPlatformMngtApplicationAgent.idl
-                            CdmwPlatformMngtProcessCallback.idl
-                            CdmwPlatformMngtPlatformObserver.idl
+                            CdmwPlatformMngtObservable.idl
+                            CdmwPlatformMngtProcess.idl
+                            CdmwPlatformMngtProcessObserver.idl
+                            CdmwPlatformMngtPropertyManager.idl
+                            CdmwPlatformMngtServiceBroker.idl
+                            CdmwPlatformMngtSystem.idl
+                            CdmwPlatformMngtSupervisionObserver.idl                             
                         </server>
                         <client>
-                            CdmwPlatformMngtProcess.idl
+                            CdmwPlatformMngtApplicationAgent.idl
+                            CdmwPlatformMngtDaemon.idl
+                            CdmwPlatformMngtProcessDelegate.idl
+                            CdmwPlatformMngtProcessDelegateWrapper.idl
+                            CdmwPlatformMngtPullMonitorableRegistration.idl
                         </client>
                         <requireidlsfrom>
                             Foundation
+                            SystemMngt
                         </requireidlsfrom>
                     </idlfiles>
                 </condition>
                 <condition antfile="Conditions.xml" target="-check-FaultTolerance">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/pullmonitorableidl
+                        </libraries>
+                    </prerequisites>
                     <idlfiles>
                         <server>
-                            CdmwPlatformMngtBase.idl
-                            CdmwPlatformMngtCommon.idl
-                            CdmwPlatformMngtSystem.idl
-                            CdmwPlatformMngtHostProxy.idl
                             CdmwPlatformMngtApplication.idl
-                            CdmwPlatformMngtProcessProxy.idl
-                            CdmwPlatformMngtService.idl
-                            CdmwPlatformMngtServiceContainer.idl
-                            CdmwPlatformMngtServiceBroker.idl
+                            CdmwPlatformMngtApplicationBase.idl
+                            CdmwPlatformMngtCmdResponseCallback.idl
+                            CdmwPlatformMngtCommandBase.idl
+                            CdmwPlatformMngtCommandedElement.idl 
+                            CdmwPlatformMngtDataStore.idl
                             CdmwPlatformMngtEntity.idl
                             CdmwPlatformMngtEntityContainer.idl
-                            CdmwPlatformMngtEntityObserver.idl
-                            CdmwPlatformMngtPropertyContainer.idl
-                            CdmwPlatformMngtEvent.idl
-                            CdmwPlatformMngtObservable.idl
-                            CdmwPlatformMngtSupervisionObserver.idl
+                            CdmwPlatformMngtElementBase.idl
+                            CdmwPlatformMngtHost.idl
+                            CdmwPlatformMngtManagedElement.idl
                             CdmwPlatformMngtMonitoring.idl
                             CdmwPlatformMngtMonitoringObserver.idl
-                            CdmwPlatformMngtActivityPoint.idl
-                            CdmwPlatformMngtDaemon.idl
-                            CdmwPlatformMngtApplicationAgent.idl
-                            CdmwPlatformMngtProcessCallback.idl
-                            CdmwPlatformMngtPlatformObserver.idl
+                            CdmwPlatformMngtObservable.idl
+                            CdmwPlatformMngtProcess.idl
+                            CdmwPlatformMngtProcessObserver.idl
+                            CdmwPlatformMngtPropertyManager.idl
+                            CdmwPlatformMngtServiceBroker.idl
+                            CdmwPlatformMngtSystem.idl
+                            CdmwPlatformMngtSupervisionObserver.idl
                         </server>
                         <client>
-                            CdmwPlatformMngtProcess.idl
+                            CdmwPlatformMngtApplicationAgent.idl
+                            CdmwPlatformMngtDaemon.idl
+                            CdmwPlatformMngtProcessDelegate.idl
+                            CdmwPlatformMngtProcessDelegateWrapper.idl
+                            CdmwPlatformMngtPullMonitorableRegistration.idl
                         </client>
                         <requireidlsfrom>
                             Foundation
+                            SystemMngt
+                        </requireidlsfrom>
+                    </idlfiles>
+                    <addidlflags>
+                        -DCDMW_USE_FAULTTOLERANCE
+                    </addidlflags>
+                </condition>
+            </delivery>
+            <delivery basename="daemonidl" type="lib" visibility="public">
+                <condition antfile="Conditions.xml" target="-check-NoFaultTolerance">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/pullmonitorableidl
+                        </libraries>
+                    </prerequisites>
+                    <idlfiles>
+                        <server>
+                            CdmwPlatformMngtApplicationAgent.idl
+                            CdmwPlatformMngtProcessDelegate.idl
+                            CdmwPlatformMngtDaemon.idl
+                            CdmwPlatformMngtProcessCallback.idl
+                            CdmwPlatformMngtProcessDelegateWrapper.idl
+                            CdmwPlatformMngtLocalFaultDetector.idl
+                            CdmwPlatformMngtPullMonitorableRegistration.idl
+                        </server>
+                        <client>
+                        </client>
+                        <requireidlsfrom>
+                            Foundation
+                            SystemMngt
+                        </requireidlsfrom>
+                    </idlfiles>
+                </condition>
+                <condition antfile="Conditions.xml" target="-check-FaultTolerance">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/pullmonitorableidl
+                            FaultTolerance/faulttoleranceidl
+                        </libraries>
+                    </prerequisites>
+                    <idlfiles>
+                        <server>
+                            CdmwPlatformMngtApplicationAgent.idl
+                            CdmwPlatformMngtDaemon.idl
+                            CdmwPlatformMngtProcessCallback.idl
+                            CdmwPlatformMngtProcessDelegate.idl
+                            CdmwPlatformMngtProcessDelegateWrapper.idl
+                            CdmwPlatformMngtLocalFaultDetector.idl
+                            CdmwPlatformMngtPullMonitorableRegistration.idl
+                        </server>
+                        <client>
+                            CdmwPlatformMngtProcessDelegate.idl
+                        </client>
+                        <requireidlsfrom>
+                            Foundation
+                            SystemMngt
+                            FaultTolerance
+                        </requireidlsfrom>
+                    </idlfiles>
+                    <addidlflags>
+                        -DCDMW_USE_FAULTTOLERANCE
+                    </addidlflags>
+                </condition>
+            </delivery>
+            <delivery basename="smginterfaceidl" type="lib" visibility="public">
+                <condition antfile="Conditions.xml" target="-check-NoFaultTolerance">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/pullmonitorableidl
+                        </libraries>
+                    </prerequisites>
+                    <idlfiles>
+                        <server>
+                            CdmwPlatformMngtCommandBase.idl
+                            CdmwPlatformMngtProcessDelegate.idl
+                            CdmwPlatformMngtSupervisionObserver.idl
+                            CdmwPlatformMngtMonitoring.idl
+                        </server>
+                        <client>
+                            CdmwPlatformMngtApplication.idl
+                            CdmwPlatformMngtApplicationBase.idl
+                            CdmwPlatformMngtApplicationAgent.idl
+                            CdmwPlatformMngtCmdResponseCallback.idl
+                            CdmwPlatformMngtCommandBase.idl
+                            CdmwPlatformMngtCommandedElement.idl
+                            CdmwPlatformMngtDaemon.idl
+                            CdmwPlatformMngtElementBase.idl
+                            CdmwPlatformMngtEntity.idl
+                            CdmwPlatformMngtEntityContainer.idl
+                            CdmwPlatformMngtHost.idl
+                            CdmwPlatformMngtManagedElement.idl
+                            CdmwPlatformMngtMonitoringObserver.idl
+                            CdmwPlatformMngtObservable.idl
+                            CdmwPlatformMngtProcess.idl
+                            CdmwPlatformMngtProcessCallback.idl
+                            CdmwPlatformMngtProcessDelegateWrapper.idl
+                            CdmwPlatformMngtPropertyManager.idl
+                            CdmwPlatformMngtProcessObserver.idl
+                            CdmwPlatformMngtPullMonitorableRegistration.idl
+                            CdmwPlatformMngtServiceBroker.idl
+                            CdmwPlatformMngtSystem.idl                            
+                        </client>
+                        <requireidlsfrom>
+                            Foundation
+                            SystemMngt
+                        </requireidlsfrom>
+                    </idlfiles>
+                </condition>
+                <condition antfile="Conditions.xml" target="-check-FaultTolerance">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/pullmonitorableidl
+                        </libraries>
+                    </prerequisites>
+                    <idlfiles>
+                        <server>
+                            CdmwPlatformMngtCommandBase.idl
+                            CdmwPlatformMngtProcessDelegate.idl
+                            CdmwPlatformMngtSupervisionObserver.idl
+                            CdmwPlatformMngtMonitoring.idl
+                        </server>
+                        <client>
+                            CdmwPlatformMngtApplication.idl
+                            CdmwPlatformMngtApplicationBase.idl
+                            CdmwPlatformMngtApplicationAgent.idl
+                            CdmwPlatformMngtCmdResponseCallback.idl
+                            CdmwPlatformMngtCommandBase.idl
+                            CdmwPlatformMngtCommandedElement.idl
+                            CdmwPlatformMngtDaemon.idl
+                            CdmwPlatformMngtElementBase.idl
+                            CdmwPlatformMngtEntity.idl
+                            CdmwPlatformMngtEntityContainer.idl
+                            CdmwPlatformMngtHost.idl
+                            CdmwPlatformMngtManagedElement.idl
+                            CdmwPlatformMngtMonitoringObserver.idl
+                            CdmwPlatformMngtObservable.idl
+                            CdmwPlatformMngtProcess.idl
+                            CdmwPlatformMngtProcessCallback.idl
+                            CdmwPlatformMngtProcessDelegateWrapper.idl
+                            CdmwPlatformMngtPropertyManager.idl
+                            CdmwPlatformMngtProcessObserver.idl
+                            CdmwPlatformMngtPullMonitorableRegistration.idl
+                            CdmwPlatformMngtServiceBroker.idl
+                            CdmwPlatformMngtSystem.idl                            
+                        </client>
+                        <requireidlsfrom>
+                            Foundation
+                            SystemMngt
+                        </requireidlsfrom>
+                    </idlfiles>
+                    <addidlflags>
+                        -DCDMW_USE_FAULTTOLERANCE
+                    </addidlflags>
+                </condition>
+            </delivery>
+            <delivery basename="ftaccessoridl" type="lib" visibility="public">
+                <condition antfile="Conditions.xml" target="-check-FaultTolerance">
+                    <prerequisites>
+                        <libraries>
+                            idllib/smgcommonidl
+                        </libraries>
+                    </prerequisites>                   
+                    <idlfiles>
+                        <server>
+                            CdmwFTSystMngtApplication.idl                           
+                            CdmwFTSystMngtEntity.idl
+                            CdmwFTSystMngtEntityContainer.idl
+                            CdmwFTSystMngtHost.idl
+                            CdmwFTSystMngtManagedElement.idl                            
+                            CdmwFTSystMngtProcess.idl 
+                            CdmwFTSystMngtPropertyManager.idl
+                            CdmwFTSystMngtSystem.idl
+                            CdmwFTSystMngtServiceContainer.idl
+                        </server>
+                        <client>  
+                        </client>
+                        <requireidlsfrom>
+                            Foundation
+                            SystemMngt
                         </requireidlsfrom>
                     </idlfiles>
                     <addidlflags>

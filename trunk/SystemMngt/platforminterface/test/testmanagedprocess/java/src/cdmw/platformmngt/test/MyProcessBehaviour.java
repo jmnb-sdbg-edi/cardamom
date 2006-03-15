@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -74,6 +74,11 @@ public class MyProcessBehaviour extends ProcessBehaviour {
     private int currentInitStep = 0;
 
     /**
+     * The host name.
+     */
+    private String hostName;
+
+    /**
      * The application name.
      */
     private String applicationName;
@@ -89,6 +94,11 @@ public class MyProcessBehaviour extends ProcessBehaviour {
     private String serviceName = "";
 
     /**
+     * The host entity name to set.
+     */
+    private String hostEntityName = "";
+
+    /**
      * The system entity name to set.
      */
     private String sysEntityName = "";
@@ -102,6 +112,11 @@ public class MyProcessBehaviour extends ProcessBehaviour {
      * The process entity name to set.
      */
     private String procEntityName = "";
+
+    /**
+     * The host entity to update.
+     */
+    private UpdateEntity updateHostEntity = null;
 
     /**
      * The system entity to update.
@@ -130,6 +145,25 @@ public class MyProcessBehaviour extends ProcessBehaviour {
     */
     private AutoEnding autoEnding = null;
 
+    /**
+    * time to sleep in msec
+    */
+    private int sleepTime;
+
+    /**
+    * PullMonitorable request
+    */
+    private boolean request;
+
+    /**
+    * PullMonitorable exception to raise
+    */
+    private boolean except;
+
+    /**
+    * PullMonitorable counter
+    */
+    private int counter;
 
     /**
      * The constructor.
@@ -142,7 +176,10 @@ public class MyProcessBehaviour extends ProcessBehaviour {
         AutoEnding autoEnding,
         long autoEndTimeOut,
         long entityUpdateInterval,
-        int nbrOfInitSteps) {
+        int nbrOfInitSteps,
+        int sleepTime, 
+        boolean request, 
+        boolean except) {
 
         this.orb = orb;
         this.platformManaged = platformManaged;
@@ -150,6 +187,10 @@ public class MyProcessBehaviour extends ProcessBehaviour {
         this.autoEndTimeOut = autoEndTimeOut;
         this.entityUpdateInterval = entityUpdateInterval;
         this.nbrOfInitSteps = nbrOfInitSteps;
+        this.sleepTime = sleepTime;
+        this.request = request;
+        this.except = except;
+        this.counter = 2;
 
         this.autoEnding = autoEnding;
         if (this.autoEnding != null) {
@@ -158,9 +199,14 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
     }
 
+    int get_counter()
+    {
+        return counter;
+    }
+
     /**
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_steps:1.0
      * attribute
      */
     public int nbSteps() {
@@ -169,7 +215,7 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
     /**
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
      * operation
      */
     public org.omg.CORBA.Object getService() {
@@ -187,18 +233,18 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     public void initialise(
         com.thalesgroup.CdmwPlatformMngtBase.StartupKind startupKind) {
 
         try {
-
             if (platformManaged) {
                 // get application and process names
                 applicationName = PlatformInterface.getApplicationName();
                 processName = PlatformInterface.getProcessName();
+                hostName = OS.getHostname();
 
                 // example of using the PlatformInterface for notifying a message
                 PlatformInterface.notifyMessage(INF.value,
@@ -209,7 +255,6 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
             // init current step
             currentInitStep = 0;
-
 
             // set startup mode
             startupMode = startupKind.startup_mode;
@@ -239,11 +284,11 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
     /**
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/next_step:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/next_step:1.0
      * operation
      */
     public void nextStep()
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep {
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep {
         
         try {
             // increment init step
@@ -262,7 +307,7 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
             // if invalid init step
             if (currentInitStep >= nbrOfInitSteps) {
-                throw new com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep();
+                throw new com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep();
             }
 
         } catch(BadParameterException bpe) {
@@ -275,11 +320,11 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     public void run()
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun {
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun {
 
         try {
 
@@ -325,14 +370,32 @@ public class MyProcessBehaviour extends ProcessBehaviour {
             }
 
             // creates the EntityToUpdate classes
+            HostEntityToUpdate hostEntityToUpdate
+                = new HostEntityToUpdate(hostEntityName, hostName, applicationName, processName);
+
             SystemEntityToUpdate systemEntityToUpdate
-                = new SystemEntityToUpdate(sysEntityName, processName);
+                = new SystemEntityToUpdate(sysEntityName, hostName, applicationName,  processName);
 
             ApplicationEntityToUpdate applicationEntityToUpdate
-                = new ApplicationEntityToUpdate(appEntityName, processName);
+                = new ApplicationEntityToUpdate(appEntityName, hostName, applicationName,  processName);
 
             ProcessEntityToUpdate processEntityToUpdate
-                = new ProcessEntityToUpdate(procEntityName, processName);
+                = new ProcessEntityToUpdate(procEntityName, hostName, applicationName,  processName);
+
+            // if host entity to update
+            if (hostEntityName.length() != 0) {
+                try {
+                    // create the UpdateEntity class
+                    this.updateHostEntity
+                        = new UpdateEntity(hostEntityToUpdate, entityUpdateInterval);
+                    // start thread
+                    System.out.println(processName + ": Starting HostEntity thread...");
+                    this.updateHostEntity.start();
+                } catch (Exception e) {
+                    PlatformInterface.notifyMessage(ERR.value,
+                        processName, "Host Entity Update cannot be started");
+                }
+            }
 
             // if system entity to update
             if (sysEntityName.length() != 0) {
@@ -420,7 +483,7 @@ public class MyProcessBehaviour extends ProcessBehaviour {
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     public void stop() {
@@ -441,6 +504,13 @@ public class MyProcessBehaviour extends ProcessBehaviour {
                 if (autoEndTimeOut > 0 && autoEnding != null) {
                     System.out.println(processName + ": Stopping AutoEnding thread...");
                     autoEnding.end();
+                }
+
+                // if system entity updating to stop
+                if (hostEntityName.length() != 0) {
+                    // stop thread
+                    System.out.println(processName + ": Stopping HostEntity thread...");
+                    updateHostEntity.end();
                 }
 
                 // if system entity updating to stop
@@ -496,6 +566,33 @@ public class MyProcessBehaviour extends ProcessBehaviour {
     }
 
     /**
+        * Purpose:
+        * <p>
+        * the behaviour for the
+        * IDL:FT/PullMonitorable/is_alive:1.0
+        * operation
+        */
+    public boolean is_alive()
+    {
+        try {
+            counter = counter - 1;
+
+            OS.sleep(sleepTime);
+
+            System.out.println(processName + " is alive called, liveliness:" + request);
+
+            if (except && (counter == 0))
+                {
+                    int val = 10;
+                    val = val/counter;
+                }
+        } catch(InterruptedException ie) {
+            ie.printStackTrace();
+        }    
+        return request;
+    }
+
+    /**
      * Auto ends the process
      */
     public void autoEnd() {
@@ -533,11 +630,21 @@ public class MyProcessBehaviour extends ProcessBehaviour {
     /**
      * Sets system entity name to set.
      */
+    public void setHostEntityToSet(String entityName) {
+        if (entityName != null) {
+            this.hostEntityName = entityName;
+        }
+    }
+
+    /**
+     * Sets system entity name to set.
+     */
     public void setSysEntityToSet(String entityName) {
         if (entityName != null) {
             this.sysEntityName = entityName;
         }
     }
+
 
     /**
      * Sets application entity name to set.

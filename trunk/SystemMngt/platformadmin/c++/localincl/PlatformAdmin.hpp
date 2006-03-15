@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,6 +26,7 @@
 #ifndef __PLATFORMADMIN_HPP__
 #define __PLATFORMADMIN_HPP__
 
+#define HELP_OPTION            "--help"
 #define LOG_FILE_OPTION        "--log-file"
 #define CHECK_ONLY_OPTION      "--check-only"
 #define SYSTEM_CORBALOC_OPTION "--system-corbaloc"
@@ -80,12 +81,16 @@
 #define PROC_STOP              "--proc-stop"
 #define PROC_SET_INFO          "--proc-set-info"
 #define PROC_SET_AUTOENDING    "--proc-set-autoending"
-#define PROC_SET_HOST          "--proc-set-host"
+#define PROC_RESET_AUTOENDING  "--proc-reset-autoending"
 #define PROC_SET_LIFE_CYLE     "--proc-set-life-cycle"
+
+#define ENTITY_ADD_PROPERTY    "--ent-add-property"
+#define ENTITY_REMOVE_PROPERTY "--ent-remove-property"
 
 #define HOST_REBOOT            "--host-reboot"
 #define HOST_SHUTDOWN          "--host-shutdown"
-
-
+#define HOST_ADD_PROPERTY      "--host-add-property"
+#define HOST_REMOVE_PROPERTY   "--host-remove-property"
+ 
 #endif //__PLATFORMADMIN_HPP__
 

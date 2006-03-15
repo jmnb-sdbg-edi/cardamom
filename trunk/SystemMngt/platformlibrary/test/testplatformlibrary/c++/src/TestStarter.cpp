@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -33,7 +33,7 @@
 
 #include "Foundation/ossupport/OS.hpp"
 #include "Foundation/common/System.hpp"
-#include "Foundation/testutils/Testable.hpp"
+#include "Foundation/testutils/TestManager.hpp"
 
 #include <iostream>
 #include <string>
@@ -41,9 +41,9 @@
 
 using namespace Cdmw::PlatformMngt;
 
+CPPUNIT_TEST_SUITE_REGISTRATION( TestStarter );
 
-TestStarter::TestStarter(const std::string& name)
-    : Testable(name)
+TestStarter::TestStarter()
 {
 }
 
@@ -56,7 +56,7 @@ TestStarter::~TestStarter()
 void TestStarter::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (8);
+// //     set_nbOfRequestedTestOK (8);
     
     
     TaskCounter taskCounter;
@@ -79,19 +79,19 @@ void TestStarter::do_tests()
     TEST_INFO("Starts the starter with 6 concurrent tasks");
     starter->addTasksToStart(tasksList);
     starter->start();
-    TEST_SUCCEED();
+    CPPUNIT_ASSERT(true);
 
     TEST_INFO("Waiting a while to let the tasks complete their work");
-	int timescale = Cdmw::TestUtils::Testable::get_timescale();
+	int timescale = Cdmw::TestUtils::get_timescale();
     OsSupport::OS::sleep(timescale*1000);
 
     TEST_INFO("Stops the starter");
     starter->stop();
-    TEST_SUCCEED();
+    CPPUNIT_ASSERT(true);
 
     TEST_INFO("Destroys the starter");
     delete starter;
-    TEST_SUCCEED();
+    CPPUNIT_ASSERT(true);
 
     TEST_INFO("Checks the concurrency of tasks");
     size_t maxNumberConcurrentTasks = taskCounter.getMaxNbConcurrentTasks();
@@ -100,9 +100,9 @@ void TestStarter::do_tests()
         << maxNumberConcurrentTasks << std::endl;
 
     if (maxNumberConcurrentTasks > 1)
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     else
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
 
 
     TEST_INFO("Creates a dummy starter with no tasks to start");
@@ -119,17 +119,17 @@ void TestStarter::do_tests()
 
     TEST_INFO("Stops the starter");
     starter->stop();
-    TEST_SUCCEED();
+    CPPUNIT_ASSERT(true);
 
     TEST_INFO("Destroys the starter");
     delete starter;
-    TEST_SUCCEED();
+    CPPUNIT_ASSERT(true);
 
     TEST_INFO("Checks that nothing has been performed");
     if (taskCounter.getMaxNbConcurrentTasks() == 0)
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     else
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
 
 
     TEST_INFO("Starts a new starter and stops it immediately");
@@ -144,7 +144,7 @@ void TestStarter::do_tests()
 
     TEST_INFO("Destroys the starter");
     delete starter;
-    TEST_SUCCEED();
+    CPPUNIT_ASSERT(true);
 
 }
 

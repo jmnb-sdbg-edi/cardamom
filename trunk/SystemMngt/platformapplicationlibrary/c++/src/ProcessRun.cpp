@@ -1,31 +1,31 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 #include "Foundation/orbsupport/OrbSupport.hpp"
 #include "platformapplicationlibrary/ProcessRun.hpp"
-#include "platformapplicationlibrary/ProcessProxy_impl.hpp"
+#include "platformapplicationlibrary/Process_impl.hpp"
 #include "SystemMngt/platformapplicationlibrary/Application_impl.hpp"
 #include "SystemMngt/platformapplicationlibrary/ApplicationLogMessageId.hpp"
 #include "SystemMngt/platformlibrary/LogMngr.hpp"
@@ -58,31 +58,31 @@ void RunProcessCompletionCallback::execute() throw()
 RunProcessTask::RunProcessTask(
     const std::string& taskId,
     TaskObserver* observer,
-    ProcessProxy_impl* processProxy )
+    Process_impl* process )
 : Task( taskId, observer )
 {
-    m_processProxy = processProxy;
+    m_process = process;
 }
 
 bool RunProcessTask::execute() throw()
 {
     bool ret = false;
-    const char* p_appliName = m_processProxy->m_application->get_applicationName();
-    const char* p_procName = m_processProxy->get_processName();
+    const char* p_appliName = m_process->get_application()->get_element_name();
+    const char* p_procKey = m_process->get_process_key();
 
     try
     {
         LogMngr::logMessage(INF, MSG_ID_APP_PROC_RUN,
-                            p_procName,p_appliName);
+                            p_procKey,p_appliName);
                                 
         CdmwPlatformMngt::RequestStatus status;
         
-        status = m_processProxy->run();
+        status = m_process->run();
         
         if( status == CdmwPlatformMngt::REQUEST_SUCCEED )
         {
             LogMngr::logMessage(INF, MSG_ID_APP_PROC_RUN_STATUS_OK,
-                                p_procName,p_appliName);
+                                p_procKey,p_appliName);
                             
             ret = true;
         }
@@ -91,17 +91,17 @@ bool RunProcessTask::execute() throw()
     catch (const CdmwPlatformMngt::IncompatibleStatus &)
     {
         LogMngr::logMessage(INF, MSG_ID_APP_PROC_RUN_STATUS_ERR,
-                            p_procName,p_appliName);
+                            p_procKey,p_appliName);
     }
     catch (const CdmwPlatformMngt::NotReadyToRun &)
     {
         LogMngr::logMessage(INF, MSG_ID_APP_PROC_RUN_NOT_READY_ERR,
-                            p_procName,p_appliName);
+                            p_procKey,p_appliName);
     }
     catch (const CdmwPlatformMngt::IncompatibleType &)
     {
         LogMngr::logMessage(INF, MSG_ID_APP_PROC_RUN_TYPE_ERR,
-                            p_procName,p_appliName);
+                            p_procKey,p_appliName);
     }
     catch (const CORBA::SystemException& e)
     {
@@ -110,13 +110,13 @@ bool RunProcessTask::execute() throw()
         
         LogMngr::logMessage(INF, MSG_ID_APP_PROC_RUN_SYSTEM_ERR,
                             exceptionInfo.str().c_str(),
-                            p_procName,p_appliName);
+                            p_procKey,p_appliName);
     }
     catch (...)
     {
         LogMngr::logMessage(INF, MSG_ID_APP_UNEXPECTED_EXCEPTION,
                             "RunProcessTask::execute()",
-                            p_procName,p_appliName);
+                            p_procKey,p_appliName);
     }
 
     return ret;
@@ -155,16 +155,16 @@ Task* RunProcessTaskFactory::createTask(
 throw( InvalidTaskIdException,
        OutOfMemoryException )    
 {
-    const char* p_appliName = m_application->get_applicationName();
-    std::string processName = "";
+    const char* p_appliName = m_application->get_element_name();
+    std::string procKey = "";
     
     try
     {
-        ProcessProxy_impl* process
-            = m_application->getProcessProxy( taskId.c_str() );
+        Process_impl* process
+            = m_application->getProcess( taskId.c_str() );
             
         // get process name
-        processName = process->get_processName();
+        procKey = process->get_process_key();
         
         std::auto_ptr<RunProcessTask> task(
             new RunProcessTask(
@@ -186,7 +186,7 @@ throw( InvalidTaskIdException,
     {
         LogMngr::logMessage(INF, MSG_ID_APP_UNEXPECTED_EXCEPTION,
                             "RunProcessTaskFactory::createTask",
-                            processName.c_str(),p_appliName);
+                            procKey.c_str(),p_appliName);
                             
         CDMW_THROW1( InvalidTaskIdException, taskId );
     }

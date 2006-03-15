@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -39,9 +39,10 @@
 #include "platformadmin/ApplicationParser.hpp"
 #include "platformadmin/ProcessParser.hpp"
 #include "platformadmin/EntityParser.hpp"
-#include "platformadmin/PropertyParser.hpp"
 #include "platformadmin/GraphParser.hpp"
 #include "platformadmin/AdminLogMessageId.hpp"
+#include "platformadmin/Property.hpp"
+#include "platformadmin/PropertyParser.hpp"
 
 extern bool check_only;
 
@@ -51,8 +52,7 @@ namespace PlatformAdmin { // Begin namespace PlatformAdmin
 Application::Application(
     CdmwPlatformMngt::Application_ptr application )
 : ServiceContainer( application ),
-  EntityContainer( application ),
-  PropertyContainer( application )
+  EntityContainer( application )
 {
     if( !check_only )
         m_application = CdmwPlatformMngt::Application::_duplicate(
@@ -200,21 +200,25 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
 {
     try
     {
-        // Create an ApplicationDef
+         
+	// Create an ApplicationDef
         CdmwPlatformMngt::ApplicationDef_var applicationDef
             = new CdmwPlatformMngt::ApplicationDef();
 
+
         // Add all the managed process definitions to the application definition
         unsigned int managedProcessCount = applicationParser.get_managed_process_count();
-        applicationDef->processes.length( managedProcessCount );
+
+	applicationDef->processes.length( managedProcessCount );
+
         for( unsigned int managedProcessIndex = 0;
              managedProcessIndex < managedProcessCount;
              managedProcessIndex++ )
         {
+	
             CdmwPlatformMngt::ProcessDef_var managedProcessDef
                 = Process::get_definition( applicationParser.get_managed_process(
                     managedProcessIndex ) );
-
             // Checks there is no managed process redefinition
             for( unsigned int l_managedProcessIndex = 0;
                  l_managedProcessIndex < managedProcessIndex;
@@ -225,11 +229,12 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
 
                 if( managedProcessName == managedProcessDef->name() )
                     throw CdmwPlatformMngt::DuplicateProcess(
-                        managedProcessDef->name() );
+                        managedProcessDef->name(),
+                        managedProcessDef->host_name() );
             }
+	    applicationDef->processes[ managedProcessIndex ] = managedProcessDef;
 
-            applicationDef->processes[ managedProcessIndex ] = managedProcessDef;
-        }
+	}
 
         // Add all the unmanaged process definitions to the application definition
         unsigned int unmanagedProcessCount = applicationParser.get_unmanaged_process_count();
@@ -249,10 +254,10 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
             {
                 std::string unmanagedProcessName =
                      applicationDef->processes[ l_unmanagedProcessIndex ]->name();
-
                 if( unmanagedProcessName == unmanagedProcessDef->name() )
                     throw CdmwPlatformMngt::DuplicateProcess(
-                        unmanagedProcessDef->name() );
+                        unmanagedProcessDef->name(),
+                        unmanagedProcessDef->host_name() );
             }
 
             applicationDef->processes[ managedProcessCount + unmanagedProcessIndex ]
@@ -264,8 +269,11 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
         applicationDef->entities.length( entityCount );
         for( unsigned int entityIndex=0; entityIndex<entityCount; entityIndex++ )
         {
-            std::string newEntityName
-                = applicationParser.get_entity( entityIndex ).name();
+        	// Create an EntityDef
+        	CdmwPlatformMngt::EntityDef_var entityDef = Entity::get_definition(
+                applicationParser.get_entity( entityIndex ) );
+        	
+            std::string newEntityName = entityDef->entity_name.in();
 
             // Checks there is no entity redefinition
             for( unsigned int l_entityIndex = 0;
@@ -273,15 +281,14 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
                  l_entityIndex++ )
             {
                 std::string entityName
-                    = applicationDef->entities[ l_entityIndex ].in();
+                    = applicationDef->entities[ l_entityIndex ].entity_name.in();
                 
                 if( newEntityName == entityName )
                     throw CdmwPlatformMngt::DuplicateEntity(
                         newEntityName.c_str() );
             }
 
-            applicationDef->entities[ entityIndex ] =  CORBA::string_dup(
-                newEntityName.c_str() );
+            applicationDef->entities[ entityIndex ] =  entityDef.in();
         }
 
         // Add all the service definitions to the application definition
@@ -333,19 +340,6 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
 
         l_platformApplicationDef->platform_application_info = applicationProcessInfo.in();
         
-        // Set the agent process info
-        CdmwPlatformMngt::ProcessLightInfo_var agentProcessInfo
-            = new CdmwPlatformMngt::ProcessLightInfo();
-
-        agentProcessInfo->process_port
-            = applicationParser.agent_port();
-        agentProcessInfo->working_directory
-            = CORBA::string_dup( applicationParser.agent_run_dir().c_str() );
-        agentProcessInfo->process_args
-            = CORBA::string_dup( applicationParser.agent_args().c_str() );
-
-        l_platformApplicationDef->application_agent_info = agentProcessInfo.in();
-
         // Set the monitoring info
         CdmwPlatformMngt::MonitoringInfo_var monitoringInfo
             = new CdmwPlatformMngt::MonitoringInfo();
@@ -360,6 +354,19 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
         // Set the out parameter
         platformApplicationDef = l_platformApplicationDef._retn();
 
+	// Set the Properties for Application 
+
+	 
+        unsigned int propertyCount = applicationParser.get_property_count();
+        applicationDef->properties.length( propertyCount );
+                                               	                                                        
+	for( unsigned int propIndex=0; propIndex<propertyCount; propIndex++)
+        {
+
+		CdmwPlatformMngt::PropertyDef_var prop = Property::get_definition(applicationParser.get_property(propIndex));
+   	        applicationDef->properties[propIndex] = prop;
+        }
+	
         return applicationDef._retn();
     }
     catch( const std::bad_alloc& )
@@ -372,6 +379,7 @@ CdmwPlatformMngt::ApplicationDef* Application::get_definition(
             PlatformMngt::ERR,
             MSG_ID_ADMIN_DUPLICATE_PROCESS,
             e.process_name.in(),
+            e.host_name.in(),
             applicationParser.name().c_str() );
 
         throw LoggedException();
@@ -458,15 +466,6 @@ void Application::add_process(
 
         throw LoggedException();
     }
-    catch( const CdmwPlatformMngt::DuplicateActivityPoint& e )
-    {
-        PlatformMngt::LogMngr::logMessage(
-            PlatformMngt::ERR,
-            MSG_ID_ADMIN_DUPLICATE_MONITORING_POINT,
-            e.point_name.in() );
-
-        throw LoggedException();
-    }
     catch( const CdmwPlatformMngt::IncompatibleStatus& e )
     {
         PlatformMngt::LogMngr::logMessage(
@@ -478,12 +477,13 @@ void Application::add_process(
 }
 
 void Application::remove_process(
-    const char* processName )
+    const char* processName,
+    const char* hostName )
 {
     try
     {
         if( !check_only )
-            m_application->remove_process( processName );
+            m_application->remove_process( processName, hostName );
     }
     catch( const CdmwPlatformMngt::ProcessNotFound& e )
     {
@@ -625,6 +625,54 @@ void Application::set_stop_graph(
         throw LoggedException();
     }
 }
+
+
+	void Application::add_property(const char* propertyConfigFileName) 
+	{
+	    try
+	    {
+                ConfigFileParser parser( propertyConfigFileName );
+		PropertyParser propertyparser = parser.get_property();
+		CosPropertyService::PropertyDef_var cos_prop = new CosPropertyService::PropertyDef;
+		CosPropertyService::PropertyModeType prop_mode_type = CosPropertyService::PropertyModeType(0);
+		CdmwPlatformMngt::PropertyDef_var prop = Property::get_definition(propertyparser);
+                cos_prop->property_name = prop->property_name;
+		cos_prop->property_value = prop->initial_value;
+		if (prop->mode_type==1) prop_mode_type = CosPropertyService::PropertyModeType(1);
+		cos_prop->property_mode = prop_mode_type;
+		m_application -> define_property_with_mode(prop->property_name.in(),prop->initial_value, prop_mode_type);
+                
+	    }
+	    catch( const CdmwPlatformMngt::IncompatibleStatus& e )
+	    {
+		PlatformMngt::LogMngr::logMessage(
+		    PlatformMngt::ERR,
+		    MSG_ID_ADMIN_INCOMPATIBLE_STATUS );
+		
+		throw LoggedException();
+	    }
+	}
+
+	void Application::remove_property(const char* propertyConfigFileName)
+	{
+           try
+            {
+                ConfigFileParser parser( propertyConfigFileName );
+                PropertyParser propertyparser = parser.get_property();
+                CdmwPlatformMngt::PropertyDef_var prop = Property::get_definition(propertyparser);
+		m_application -> delete_property (prop -> property_name);
+            }
+            catch( const CdmwPlatformMngt::IncompatibleStatus& e )
+            {
+                PlatformMngt::LogMngr::logMessage(
+                    PlatformMngt::ERR,
+                    MSG_ID_ADMIN_INCOMPATIBLE_STATUS );
+
+                throw LoggedException();
+            }
+
+	}
+
 
 } // End namespace PlatformAdmin
 } // End namespace Cdmw

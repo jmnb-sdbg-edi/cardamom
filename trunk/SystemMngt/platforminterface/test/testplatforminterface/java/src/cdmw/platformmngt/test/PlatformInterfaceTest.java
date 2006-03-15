@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,7 +29,7 @@ import cdmw.testutils.Testable;
 import cdmw.common.BadOrderException;
 import cdmw.common.BadParameterException;
 
-import cdmw.platformmngt.ProcessImpl;
+import cdmw.platformmngt.ProcessDelegateImpl;
 
 /**
  * The PlatformInterface test.
@@ -51,8 +51,8 @@ public class PlatformInterfaceTest extends Testable {
 
     public void doTests() {
     	
-    	// set number of requested successfull tests
-		setNbOfRequestedTestOK(26);
+    	  // set number of requested successfull tests
+		  setNbOfRequestedTestOK(23);
     
         String eventIssuer = "An issuer";
         String entityName = "An entity name";
@@ -88,7 +88,7 @@ public class PlatformInterfaceTest extends Testable {
         }
         
         UserProcessBehaviour behaviour = null;
-        com.thalesgroup.CdmwPlatformMngt.Process process = null;
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process = null;
         
         out.println("Calling acknowledgeCreation with a behaviour before setup...");
         try {
@@ -297,6 +297,7 @@ public class PlatformInterfaceTest extends Testable {
             fail();
         }
         
+        /****
         out.println("Status forced to SETUP_PERFORMED");
         PlatformInterface.forceStatus(SETUP_PERFORMED);
         out.println("Calling setSystemEntityStatus before acknowlegment...");
@@ -340,6 +341,7 @@ public class PlatformInterfaceTest extends Testable {
         } catch(Exception e) {
             fail();
         }
+        ****/
         
         
         out.println("Creating a header with an INF level...");
@@ -361,7 +363,9 @@ public class PlatformInterfaceTest extends Testable {
             " Day=   " + timeStamp.day +
             " Hour=  " + timeStamp.hour +
             " Min=   " + timeStamp.minute +
-            " Sec=   " + timeStamp.second);
+            " Sec=   " + timeStamp.second +
+            " Milli= " + timeStamp.millisecond +
+            " Micro= " + timeStamp.microsecond);
             
         out.println("Doing basic tests on the created time stamp...");
         if ( timeStamp.year > 1901 &&
@@ -369,7 +373,9 @@ public class PlatformInterfaceTest extends Testable {
             timeStamp.day > 0 && timeStamp.day < 32 &&
             timeStamp.hour  > -1 && timeStamp.hour < 24 &&
             timeStamp.minute > -1 && timeStamp.minute < 60 &&
-            timeStamp.second > -1 && timeStamp.second < 60 ) {
+            timeStamp.second > -1 && timeStamp.second < 60 &&
+            timeStamp.millisecond > -1 && timeStamp.millisecond < 1000 &&
+            timeStamp.microsecond > -1 && timeStamp.microsecond < 1000 ) {
             succeed();
         } else {
             fail();

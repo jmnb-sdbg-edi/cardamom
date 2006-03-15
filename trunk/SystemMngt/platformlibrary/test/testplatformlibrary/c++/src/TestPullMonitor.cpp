@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -31,7 +31,7 @@
 
 #include "Foundation/ossupport/OS.hpp"
 #include "Foundation/common/System.hpp"
-#include "Foundation/testutils/Testable.hpp"
+#include "Foundation/testutils/CORBATestManager.hpp"
 #include "Foundation/orbsupport/CORBA.hpp"
 
 #include <sstream>
@@ -46,6 +46,7 @@ using namespace Cdmw::PlatformMngt;
 using namespace Cdmw::OsSupport;
 
 
+CPPUNIT_TEST_SUITE_REGISTRATION(TestPullMonitor);
 
 
 MonitorCallback::MonitorCallback(const std::string& message)
@@ -69,10 +70,10 @@ bool MonitorCallback::get_executed ()
      
 
 
+/*
 TestPullMonitor::TestPullMonitor(const std::string& name, 
                                  CORBA::ORB_ptr orb,
                                  PortableServer::POA_ptr poa)
-    : Testable(name)
 {
 	m_orb = CORBA::ORB::_duplicate(orb);
     m_POA = PortableServer::POA::_duplicate(poa);
@@ -82,12 +83,17 @@ TestPullMonitor::TestPullMonitor(const std::string& name,
 TestPullMonitor::~TestPullMonitor()
 {
 }
+*/
 
 
 void TestPullMonitor::do_tests()
 {   
+
+m_orb =  CORBA::ORB::_duplicate( Cdmw::TestUtils::CORBATestManager::instance()->get_ORB());
+m_POA = PortableServer::POA::_duplicate( Cdmw::TestUtils::CORBATestManager::instance()->get_POA());
+
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (17);
+// //     set_nbOfRequestedTestOK (17);
     
      
 	MonitorCallback  *p_ResponseCallback = NULL;
@@ -98,7 +104,7 @@ void TestPullMonitor::do_tests()
     std::string monitorableServiceName = "MonitorableService";
     std::string corbaloc;
 
-    int timescale = Cdmw::TestUtils::Testable::get_timescale();
+    int timescale = Cdmw::TestUtils::get_timescale();
 
     try
     {
@@ -114,12 +120,12 @@ void TestPullMonitor::do_tests()
 		
         corbaloc = corbaloc_ref.str();
         
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
      
@@ -138,11 +144,11 @@ void TestPullMonitor::do_tests()
 				
 	    TEST_INFO("Trying to resolve the corbaloc reference");				    									    
 	    CORBA::Object_ptr obj = m_orb->string_to_object(corbaloc.c_str());
-		TEST_CHECK(! CORBA::is_nil(obj));
+		CPPUNIT_ASSERT(! CORBA::is_nil(obj));
 												    
 	    TEST_INFO("Trying to narrowing the reference");
 	    PullMonitorable_var pullMonitorable = PullMonitorable::_narrow(obj);
-	    TEST_CHECK(! CORBA::is_nil(pullMonitorable.in()));
+	    CPPUNIT_ASSERT(! CORBA::is_nil(pullMonitorable.in()));
 																			
 
         TEST_INFO("Creates a PullMonitor Object: Polling timescale*1s, Timeout timescale*500ms");
@@ -155,7 +161,7 @@ void TestPullMonitor::do_tests()
         pullMonitor.setResponseCallback (p_ResponseCallback);
         pullMonitor.setNoResponseCallback (p_NoResponseCallback);
            
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     
     
         TEST_INFO("Start monitor");
@@ -163,15 +169,15 @@ void TestPullMonitor::do_tests()
         OS::sleep(timescale*100);
         
         TEST_INFO("Check  callback has not yet been called");
-        TEST_CHECK(p_ResponseCallback->get_executed() == false);       
-        TEST_CHECK(p_NoResponseCallback->get_executed() == false);
+        CPPUNIT_ASSERT(p_ResponseCallback->get_executed() == false);       
+        CPPUNIT_ASSERT(p_NoResponseCallback->get_executed() == false);
 
         OS::sleep(timescale*1500);
         TEST_INFO("Check response callback has been called");
-        TEST_CHECK(p_ResponseCallback->get_executed() == true);
+        CPPUNIT_ASSERT(p_ResponseCallback->get_executed() == true);
         
         TEST_INFO("Check no response callback has not been called");
-        TEST_CHECK(p_NoResponseCallback->get_executed() == false);
+        CPPUNIT_ASSERT(p_NoResponseCallback->get_executed() == false);
         
         
         TEST_INFO("Stop monitoring");
@@ -182,13 +188,13 @@ void TestPullMonitor::do_tests()
         OS::kill_process (pidMonitorable);
         OS::sleep(timescale*3000);
                       
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
                 
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
 
@@ -208,11 +214,11 @@ void TestPullMonitor::do_tests()
 				
 	    TEST_INFO("Trying to resolve the corbaloc reference");				    									    
 	    CORBA::Object_ptr obj = m_orb->string_to_object(corbaloc.c_str());
-		TEST_CHECK(! CORBA::is_nil(obj));
+		CPPUNIT_ASSERT(! CORBA::is_nil(obj));
 												    
 	    TEST_INFO("Trying to narrowing the reference");
 	    PullMonitorable_var pullMonitorable = PullMonitorable::_narrow(obj);
-	    TEST_CHECK(! CORBA::is_nil(pullMonitorable.in()));
+	    CPPUNIT_ASSERT(! CORBA::is_nil(pullMonitorable.in()));
 																			
 																			
         TEST_INFO("Creates a PullMonitor Object: Polling timescale*1s, Timeout timescale*500ms");
@@ -225,7 +231,7 @@ void TestPullMonitor::do_tests()
         pullMonitor.setResponseCallback (p_ResponseCallback);
         pullMonitor.setNoResponseCallback (p_NoResponseCallback);
            
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     
     
         TEST_INFO("Start monitor");
@@ -233,16 +239,16 @@ void TestPullMonitor::do_tests()
         OS::sleep(timescale*100);
         
         TEST_INFO("Check  callback has not yet been called");
-        TEST_CHECK(p_ResponseCallback->get_executed() == false);       
-        TEST_CHECK(p_NoResponseCallback->get_executed() == false);
+        CPPUNIT_ASSERT(p_ResponseCallback->get_executed() == false);       
+        CPPUNIT_ASSERT(p_NoResponseCallback->get_executed() == false);
         
         
-        OS::sleep(timescale*1500);
+        OS::sleep(timescale*5000);
         TEST_INFO("Check response callback has not been called");
-        TEST_CHECK(p_ResponseCallback->get_executed() == false);
+        CPPUNIT_ASSERT(p_ResponseCallback->get_executed() == false);
         
         TEST_INFO("Check no response callback has been called");
-        TEST_CHECK(p_NoResponseCallback->get_executed() == true);
+        CPPUNIT_ASSERT(p_NoResponseCallback->get_executed() == true);
         
         
         TEST_INFO("Stop monitoring");
@@ -255,13 +261,13 @@ void TestPullMonitor::do_tests()
         OS::kill_process (pidMonitorable);
         OS::sleep(timescale*3000);
                       
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
                 
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
     

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -28,28 +28,12 @@
 
 
 #include <CdmwPlatformMngtEntity.idl>
+#include <CdmwPlatformMngtElementBase.idl>
 
 #pragma prefix "thalesgroup.com"
 
-module CdmwPlatformMngtEntity
+module CdmwPlatformMngt
 {
-
-    /**
-    * The iterator for EntityNames.
-    */
-    interface EntityNamesIterator
-    {
-        void reset();
-
-        boolean next_one(out EntityName entity_name);
-
-        boolean next_n(in unsigned long how_many,
-           out EntityNames entity_names);
-
-        void destroy();
-    };
-
-
     /**
     * The iterator for Entities.
     */
@@ -68,7 +52,6 @@ module CdmwPlatformMngtEntity
 
     /**
     * The container of entities.
-    * Similar as PropertyContainer.
     */
     interface EntityContainer
     {
@@ -76,14 +59,13 @@ module CdmwPlatformMngtEntity
         unsigned long get_number_of_entities();
 
         void get_all_entity_names(in unsigned long how_many,
-            out EntityNames entity_names,
-            out EntityNamesIterator rest);
+            out ElementNames entity_names,
+            out ElementNamesIterator rest);
 
-        EntityStatus get_entity_status(in EntityName entity_name,
-            out string entity_info)
+        Entity get_entity(in ElementName entity_name)
             raises(EntityNotFound);
 
-        boolean get_entities(in EntityNames entity_names,
+        boolean get_entities(in ElementNames entity_names,
             out Entities nentities);
 
         void get_all_entities(in unsigned long how_many,
@@ -97,17 +79,24 @@ module CdmwPlatformMngtEntity
      * The writable EntityContainer.
      */
     interface RWEntityContainer : EntityContainer
-    {
-
+    {  
         /**
         * Adds an entity.
         *
-        * @param entity_name the name identifying the entity to add.
+        * @param entity_def the definition of the entity to add.
         *
-        * @exception EntityAlreadyExists if entity name already exists.
+        * @return the added entity element
+        *
+        * @exception EntityAlreadyExists if the entity name already exists.
+        * @exception CosPropertyService::MultipleExceptions if bad properties in entity
+        * @exception DuplicateCommand if there is a duplicate command name
+        * among the commands of the process
+        * @exception DuplicateCommandArg if there is a duplicate command arg name
+        * among the commands of the process
         */
-        void add_entity(in EntityName entity_name)
-            raises(EntityAlreadyExists);
+        Entity add_entity(in EntityDef entity_def)
+            raises(EntityAlreadyExists, CosPropertyService::MultipleExceptions,
+                   DuplicateCommand, DuplicateCommandArg);
 
         /**
         * Removes an entity.
@@ -116,13 +105,13 @@ module CdmwPlatformMngtEntity
         * @exception EntityNotFound if entity name doesn't denote
         * an existing entity.
         */
-        void remove_entity(in EntityName entity_name)
+        void remove_entity(in ElementName entity_name)
             raises(EntityNotFound);
 
     }; // End interface RWEntityContainer
 
 
-}; // End Module CdmwPlatformMngtEntity
+}; // End Module CdmwPlatformMngt
 
 #endif // CDMW_PLATFORM_MNGT_ENTITY_CONTAINER_IDL_
 

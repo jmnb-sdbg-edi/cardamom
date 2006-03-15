@@ -1,3 +1,1058 @@
+ECR-0206 -- Thu  Nov 24 16:10:37 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* platformapplicationlibrary/test/testfacade_Application/c++/src/TestFacade_Application.cpp
+	* platformapplicationlibrary/test/testfacade_Application/c++/src/main.cpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/src/TestFacade_Process.cpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/src/main.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/TestStdAttributes_Process.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/main.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/src/TestStdAttributes_Process_Managed.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/src/main.cpp
+	* platformdaemon/test/testplatformdaemon/c++/src/PILOT_PlatformDaemon.cpp
+	* platformdaemon/test/testplatformdaemon/c++/src/main.cpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/main.cpp
+	* platformelementlibrary/test/testuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testuserdefinedattributes/c++/src/main.cpp
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/main.cpp
+	* platformfaultdetector/test/testplatformfaultdetector/c++/localincl/SIM_OrbThread.hpp
+	* platformfaultdetector/test/testplatformfaultdetector/c++/src/PILOT_PlatformFaultDetector.cpp
+	* platformfaultdetector/test/testplatformfaultdetector/c++/src/main.cpp
+	* platformftaccessorlibrary/test/testplatformftaccessorlibrary/c++/src/PILOT_System.cpp
+	* platformftaccessorlibrary/test/testplatformftaccessorlibrary/c++/src/main.cpp
+	* platformftproxy/test/testbasic/c++/src/PILOT_System.cpp
+	* platformftproxy/test/testbasic/c++/src/main.cpp
+	* platformftsystem/test/testFTSupervision/c++/src/PILOT_System.cpp
+	* platformftsystem/test/testFTSupervision/c++/src/main.cpp
+	* platformftsystemstarter/test/teststarter/c++/src/main.cpp
+	* platforminterface/test/testmanagedprocess/c++/src/main.cpp
+	* platforminterface/test/testmonitoring/c++/src/main.cpp
+	* platforminterface/test/testplatforminterface/c++/src/main.cpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestServiceDef.hpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestPullMonitor.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestServiceDef.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestSupervisionEventNotifier.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/main.cpp
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/src/Main2.cpp
+	* platformsystemlibrary/test/testfacade_Host/c++/localincl/TestFacade_Host.hpp
+	* platformsystemlibrary/test/testfacade_Host/c++/src/TestFacade_Host.cpp
+	* platformsystemlibrary/test/testfacade_Host/c++/src/main.cpp
+	* platformsystemlibrary/test/testfacade_System/c++/src/TestFacade_System.cpp
+	* platformsystemlibrary/test/testfacade_System/c++/src/main.cpp
+	* platformsystemlibrary/test/testnavigability/c++/localincl/TestNavigability.hpp
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp
+	* platformsystemlibrary/test/testnavigability/c++/src/main.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/TestStdAttributes_Host.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/main.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/TestStdAttributes_System.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/main.cpp
+	* platformsystemlibrary/test/testvalidnavigability/c++/src/TestValidNavigability.cpp
+	* platformsystemlibrary/test/testvalidnavigability/c++/src/main.cpp
+	* platformvaluetypes/test/testgraphelement/c++/localincl/TestGraphElement.hpp
+	* platformvaluetypes/test/testgraphelement/c++/src/Main.cpp
+	* valid/perfdaemon/c++/localincl/TestPerfDaemonThread.hpp
+	* valid/testexceptions/c++/localincl/TestExceptionThread.hpp
+	* valid/testnotificationreception/c++/localincl/TestNotificationReceptionThread.hpp
+
+        CORBATestManager instead of TestManager in unit and valid. tests .
+	Removed some comments .
+
+
+ECR-0206 -- Wed  Nov 16 12:40:00 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>"
+
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/localincl/TestFacade_Application.hpp
+	* platformapplicationlibrary/test/testfacade_Application/c++/src/TestFacade_Application.cpp
+	* platformapplicationlibrary/test/testfacade_Application/c++/src/main.cpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/localincl/TestFacade_Process.hpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/src/TestFacade_Process.cpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/src/main.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/localincl/TestStdAttributes_Process.hpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/TestStdAttributes_Process.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/main.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/localincl/TestStdAttributes_Process_Managed.hpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/src/TestStdAttributes_Process_Managed.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/src/main.cpp
+	* platformdaemon/test/testplatformdaemon/c++/data/CSCProperties.xml
+	* platformdaemon/test/testplatformdaemon/c++/localincl/PILOT_PlatformDaemon.hpp
+	* platformdaemon/test/testplatformdaemon/c++/localincl/SIM_FaultManager.hpp
+	* platformdaemon/test/testplatformdaemon/c++/localincl/SIM_FaultNotifier.hpp
+	* platformdaemon/test/testplatformdaemon/c++/src/PILOT_PlatformDaemon.cpp
+	* platformdaemon/test/testplatformdaemon/c++/src/main.cpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CSCProperties.xml
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/main.cpp
+	* platformelementlibrary/test/testuserdefinedattributes/c++/data/CSCProperties.xml
+	* platformelementlibrary/test/testuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* platformelementlibrary/test/testuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testuserdefinedattributes/c++/src/main.cpp
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/data/CSCProperties.xml
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/main.cpp
+	* platformfaultdetector/test/testplatformfaultdetector/c++/data/CSCProperties.xml
+	* platformfaultdetector/test/testplatformfaultdetector/c++/localincl/PILOT_PlatformFaultDetector.hpp
+	* platformfaultdetector/test/testplatformfaultdetector/c++/src/PILOT_PlatformFaultDetector.cpp
+	* platformfaultdetector/test/testplatformfaultdetector/c++/src/main.cpp
+	* platformftaccessorlibrary/test/testplatformftaccessorlibrary/c++/data/CSCProperties.xml
+	* platformftaccessorlibrary/test/testplatformftaccessorlibrary/c++/localincl/PILOT_System.hpp
+	* platformftaccessorlibrary/test/testplatformftaccessorlibrary/c++/src/PILOT_System.cpp
+	* platformftaccessorlibrary/test/testplatformftaccessorlibrary/c++/src/main.cpp
+	* platformftproxy/test/testbasic/c++/data/CSCProperties.xml
+	* platformftproxy/test/testbasic/c++/localincl/PILOT_System.hpp
+	* platformftproxy/test/testbasic/c++/localincl/TestModus.hpp
+	* platformftproxy/test/testbasic/c++/src/PILOT_System.cpp
+	* platformftproxy/test/testbasic/c++/src/main.cpp
+	* platformftsystem/test/testFTSupervision/c++/data/CSCProperties.xml
+	* platformftsystem/test/testFTSupervision/c++/localincl/PILOT_System.hpp
+	* platformftsystem/test/testFTSupervision/c++/localincl/SIM_FaultDetector.hpp
+	* platformftsystem/test/testFTSupervision/c++/localincl/SIM_FaultManager.hpp
+	* platformftsystem/test/testFTSupervision/c++/localincl/SIM_FaultNotifier.hpp
+	* platformftsystem/test/testFTSupervision/c++/src/PILOT_System.cpp
+	* platformftsystem/test/testFTSupervision/c++/src/main.cpp
+	* platformftsystemstarter/test/teststarter/c++/data/CSCProperties.xml
+	* platformftsystemstarter/test/teststarter/c++/localincl/PILOT_System.hpp
+	* platformftsystemstarter/test/teststarter/c++/src/PILOT_System.cpp
+	* platformftsystemstarter/test/teststarter/c++/src/main.cpp
+	* platforminterface/test/testmanagedprocess/c++/data/CSCProperties.xml
+	* platforminterface/test/testmanagedprocess/c++/src/CheckMonitoring_impl.cpp
+	* platforminterface/test/testmanagedprocess/c++/src/main.cpp
+	* platforminterface/test/testmonitoring/c++/data/CSCProperties.xml
+	* platforminterface/test/testmonitoring/c++/src/main.cpp
+	* platforminterface/test/testplatforminterface/c++/data/CSCProperties.xml
+	* platforminterface/test/testplatforminterface/c++/localincl/PlatformInterfaceTest.hpp
+	* platforminterface/test/testplatforminterface/c++/src/PlatformInterfaceTest.cpp
+	* platforminterface/test/testplatforminterface/c++/src/main.cpp
+	* platformlibrary/test/testplatformlibrary/c++/data/CSCProperties.xml
+	* platformlibrary/test/testplatformlibrary/c++/localincl/MessageQueueDestructor.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/MessageQueueWriter.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/MySynchronisableTaskFactory.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/MyTaskFactory.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestContainer.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestElement.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestEventHandler.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestGraphChecker.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestGraphUtility.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestMessageQueue.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestPullMonitor.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestSequencer.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestServiceDef.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestStarter.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestStateMachine.hpp
+	* platformlibrary/test/testplatformlibrary/c++/localincl/TestSupervisionEventNotifier.hpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestContainer.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestElement.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestEventHandler.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestGraphChecker.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestGraphUtility.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestMessageQueue.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestPullMonitor.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestSequencer.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestServiceDef.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestStarter.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestStateMachine.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/TestSupervisionEventNotifier.cpp
+	* platformlibrary/test/testplatformlibrary/c++/src/main.cpp
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/data/CSCProperties.xml
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/localincl/SupervisionObserverTester2.hpp
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/src/Main2.cpp
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/src/SupervisionObserverTester2.cpp
+	* platformsystemlibrary/test/testfacade_Host/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/localincl/TestFacade_Host.hpp
+	* platformsystemlibrary/test/testfacade_Host/c++/src/TestFacade_Host.cpp
+	* platformsystemlibrary/test/testfacade_Host/c++/src/main.cpp
+	* platformsystemlibrary/test/testfacade_System/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testfacade_System/c++/localincl/TestFacade_System.hpp
+	* platformsystemlibrary/test/testfacade_System/c++/src/TestFacade_System.cpp
+	* platformsystemlibrary/test/testfacade_System/c++/src/main.cpp
+	* platformsystemlibrary/test/testnavigability/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testnavigability/c++/localincl/TestNavigability.hpp
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp
+	* platformsystemlibrary/test/testnavigability/c++/src/main.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/localincl/TestStdAttributes_Host.hpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/TestStdAttributes_Host.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/main.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/localincl/TestStdAttributes_System.hpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/TestStdAttributes_System.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/main.cpp
+	* platformsystemlibrary/test/testvalidnavigability/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testvalidnavigability/c++/localincl/TestValidNavigability.hpp
+	* platformsystemlibrary/test/testvalidnavigability/c++/src/TestValidNavigability.cpp
+	* platformsystemlibrary/test/testvalidnavigability/c++/src/main.cpp
+	* platformvaluetypes/test/testgraphelement/c++/data/CSCProperties.xml
+	* platformvaluetypes/test/testgraphelement/c++/localincl/TestGraphElement.hpp
+	* platformvaluetypes/test/testgraphelement/c++/src/Main.cpp
+	* platformvaluetypes/test/testgraphelement/c++/src/TestGraphElement.cpp
+	* valid/perfdaemon/c++/data/CSCProperties.xml
+	* valid/perfdaemon/c++/localincl/TestPerfDaemon.hpp
+	* valid/perfdaemon/c++/localincl/TestPerfDaemonThread.hpp
+	* valid/perfdaemon/c++/src/TestPerfDaemon.cpp
+	* valid/perfdaemon/c++/src/main.cpp
+	* valid/testexceptions/c++/data/CSCProperties.xml
+	* valid/testexceptions/c++/localincl/TestException.hpp
+	* valid/testexceptions/c++/localincl/TestExceptionThread.hpp
+	* valid/testexceptions/c++/src/TestException.cpp
+	* valid/testnotificationreception/c++/data/CSCProperties.xml
+	* valid/testnotificationreception/c++/localincl/TestNotificationReception.hpp
+	* valid/testnotificationreception/c++/localincl/TestNotificationReceptionThread.hpp
+	* valid/testnotificationreception/c++/src/TestNotificationReception.cpp
+	* valid/testnotificationreception/c++/src/main.cpp
+
+	Added cppunit tool on unit tests and valid tests .
+
+PCR-0543 -- Tue Nov 15 16:10:03 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+
+	* platformapplicationlibrary/c++/src/ManagedProcess_impl.cpp
+
+	Resolved a bug into this file 
+
+PCR-0543 -- Mon Nov 14 14:10:03 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+
+	* valid/validationdata/data/V-SMG-018.xml
+	* valid/validationdata/data/Property.xml
+	* valid/validationdata/data/CdmwPlatformMngtProperty.dtd
+	* platformadmin/c++/src/PlatformAdmin.cpp
+	* platformapplicationlibrary/c++/incl/Application_impl.hpp
+	* platformapplicationlibrary/c++/localincl/ManagedProcess_impl.hpp
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	* platformapplicationlibrary/c++/src/ManagedProcess_impl.cpp
+	* platformapplicationlibrary/c++/src/Process_impl.cpp
+	* platformelementlibrary/c++/incl/EntityContainer_impl.hpp
+	* platformelementlibrary/c++/incl/ManagedElement_impl.hpp
+	* platformelementlibrary/c++/src/ManagedElement_impl.cpp
+	* platformsystemlibrary/c++/localincl/System_impl.hpp
+	* platformsystemlibrary/c++/src/System_impl.cpp
+	* valid/validationdata/c++/data/CSCProperties.xml
+
+	Added new feature in Platform Admin to add Property at Entity of Supervised
+	object (at run time)
+
+
+
+PCR-0543 -- Fri Nov  3 12:25:03 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+
+	* platformadmin/c++/localincl/Host.hpp
+	* platformadmin/c++/src/Host.cpp
+	* platformadmin/c++/src/PlatformAdmin.cpp
+	* platformadmin/c++/src/PlatformAdminUsage.cpp
+
+	Added new feature in PlatformAdmin for adding to Host Supervised
+	Object property at run time.
+
+ECR-0201 -- Fri Nov  4 12:05:03 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwFTSystMngtApplication.idl
+	* idllib/idl/CdmwFTSystMngtSystem.idl
+	* idllib/idl/CdmwPlatformMngtApplication.idl
+	* idllib/idl/CdmwPlatformMngtSystem.idl
+	* platformapplicationlibrary/c++/incl/Application_impl.hpp
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	* platformftaccessorlibrary/c++/incl/ApplicationAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/incl/SystemAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/ApplicationAccessor_impl.cpp
+	* platformftaccessorlibrary/c++/src/SystemAccessor_impl.cpp
+	* platformftproxy/c++/localincl/Application_impl.hpp
+	* platformftproxy/c++/localincl/System_impl.hpp
+	* platformftproxy/c++/src/Application_impl.cpp
+	* platformftproxy/c++/src/System_impl.cpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_ApplicationAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_SystemAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/src/SIM_ApplicationAccessor_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_SystemAccessor_impl.cpp
+	* platformsystemlibrary/c++/localincl/System_impl.hpp
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/c++/src/System_impl.cpp
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp
+
+        Added 2 new methods : get_number_of_apllications (in System)
+        and get_number_of_processes (in Application) .
+	Modified testnavigability unit test to also call the above
+	2 new methods .
+	Modified the get_processes method (from Host to Process)
+	to also call the new 2 methods (see above) .
+
+
+PCR-0543 -- Thu Nov  3 15:10:03 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+
+	* platformadmin/c++/localincl/Entity.hpp
+	* platformadmin/c++/localincl/PlatformAdmin.hpp
+	* platformadmin/c++/src/Entity.cpp
+	* platformadmin/c++/src/PlatformAdmin.cpp
+	* platformadmin/c++/src/PlatformAdminUsage.cpp
+
+	Added the new feature in the platform admin; by this feature is
+	possible to add and to remove an entity property at runtime for
+	Entities attached to the following supervised object: System, Application, Process.
+
+
+PCR-0543 -- Thu Nov  3 11:30:03 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp
+
+        Upgrade of testnavigability (a unit test) to add another
+        test on returned iterator by get_processes method (from
+        Host to Process). Corrected a bug on get_processes method (from Host to Process).
+
+PCR-0543 -- Wed Nov  2 17:50:03 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* platformsystemlibrary/test/testvalidnavigability/c++/src/TestValidNavigability.cpp	
+
+        Modified validation test V-SMG-014 (testvalidnavigability)
+	to call the new function get_processes (from Host to Process).
+
+PCR-0543 -- Wed Nov  2 14:30:03 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwPlatformMngtHost.idl
+	* platformapplicationlibrary/c++/incl/Application_impl.hpp
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	* platformelementlibrary/c++/src/ManagedElement_impl.cpp
+	* platformftproxy/c++/src/Host_impl.cpp
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp
+
+        Added new implementation of get_processes method (from Host to
+        Process) and deleted the getprocesses method (from Host 
+        to Process) .
+        Deleted get_parent method, in Application, and corrected a bug
+        on get_parent method of ManagedElement .
+        Modified the unit test testnavigability to call the new 
+        get_processes method (from Host to Process) .
+
+PCR-0543 -- Tue Oct 25 17:05:00 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+
+
+	* idllib/idl/CdmwPlatformMngtCommon.idl
+	* idllib/idl/CdmwPlatformMngtDataStore.idl
+	* platformadmin/c++/localincl/Application.hpp
+	* platformadmin/c++/localincl/Process.hpp
+	* platformadmin/c++/localincl/System.hpp
+	* platformadmin/c++/src/Application.cpp
+	* platformadmin/c++/src/ConfigFileParser.cpp
+	* platformadmin/c++/src/PlatformAdmin.cpp
+	* platformadmin/c++/src/Process.cpp
+	* platformadmin/c++/src/System.cpp
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	* platformapplicationlibrary/c++/src/ManagedProcess_impl.cpp
+	* platformapplicationlibrary/c++/src/Process_impl.cpp
+	* platformapplicationlibrary/c++/src/UnmanagedProcess_impl.cpp
+	* platformelementlibrary/c++/incl/ManagedElement_impl.hpp
+	* platformelementlibrary/c++/src/ManagedElement_impl.cpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/start_testpersistenceuserdefinedattributes.sh
+	* platforminterface/c++/src/PlatformInterface.cpp
+	* platformsystemlibrary/c++/src/System_impl.cpp
+
+	Added the following feature: On platformadmin CSC it's possible to set a userdefined attributes at runtime
+				     On managedelement CSC is possible to recover the default user defined attributes (specified 
+				     in the System Definition configuration file)			
+			
+
+
+PCR-0543 -- Fri Oct 7 11:30:00 2005  Antonello Cedrone
+<a.cedrone@vitrociset.it>
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/HelloSystemDefinition.xml
+
+	Resolved a bug on configuration file HelloSystemDefinition.xml
+
+PCR-0543 -- Wed  Oct 5 12:15:00 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+	* platformadmin/c++/data/CdmwPlatformMngtSystem.dtd
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/HelloSystemDefinition.xml
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	
+	Modified Log Messages in the TestUserDefinedAttributes.cpp classes and
+	resolved a bug in CdmwPlatformMngtSystem.dtd and in HelloSystemDefinition.xml .  
+
+PCR-0543 -- Mon Oct 3 14:00:00 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/HelloProcess.cpp
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/localincl/HelloProcessBehaviour.hpp
+
+	 Resolved a small bug introducing HelloProcess class and HelloProcessBehaviour for testing managed process 		      in validation test V-SMG-016
+
+PCR-0543 -- Mon Oct 3 11:10:00 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	
+	  Resolved a bug at compile-time on this class
+
+PCR-0543 -- Mon Oct 3 10:00:00 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/HelloProcess.cpp
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/localincl/HelloProcessBehaviour.hpp
+
+  	 Resolved a small bug introducing HelloProcess class and
+	 HelloProcessBehaviour for testing managed process. 	
+
+PCR-0543 -- Wed Sep 20 20:45:03 2005  Antonello Cedrone <a.cedrone@vitrociset.it>
+	                        
+
+	 * platformadmin/c++/data/CdmwPlatformMngtSystem.dtd								     
+	 * platformadmin/c++/localincl/ApplicationParser.hpp								     
+	 * platformadmin/c++/localincl/ConfigFileParser.hpp								     
+	 * platformadmin/c++/localincl/EntityParser.hpp 								     
+	 * platformadmin/c++/localincl/HostParser.hpp									     
+	 * platformadmin/c++/localincl/PlatformAdminSnapshot.hpp							     
+	 * platformadmin/c++/localincl/ProcessParser.hpp								     
+	 * platformadmin/c++/localincl/Property.hpp									     
+	 * platformadmin/c++/localincl/PropertyParser.hpp								     
+	 * platformadmin/c++/localincl/SystemParser.hpp 								     
+	 * platformadmin/c++/src/Application.cpp									     
+	 * platformadmin/c++/src/ApplicationParser.cpp  								     
+	 * platformadmin/c++/src/ConfigFileParser.cpp									     
+	 * platformadmin/c++/src/Entity.cpp										     
+	 * platformadmin/c++/src/EntityParser.cpp									     
+	 * platformadmin/c++/src/Host.cpp										     
+	 * platformadmin/c++/src/HostParser.cpp 									     
+	 * platformadmin/c++/src/PlatformAdminSnapshot.cpp								     
+	 * platformadmin/c++/src/Process.cpp										     
+	 * platformadmin/c++/src/ProcessParser.cpp									     
+	 * platformadmin/c++/src/Property.cpp										     
+	 * platformadmin/c++/src/PropertyParser.cpp									     
+	 * platformadmin/c++/src/System.cpp										     
+	 * platformadmin/c++/src/SystemParser.cpp									     
+	 * platformapplicationlibrary/c++/incl/ApplicationStates.hpp							     
+	 * platformapplicationlibrary/c++/incl/Application_impl.hpp							     
+	 * platformapplicationlibrary/c++/localincl/ManagedProcess_impl.hpp						     
+	 * platformapplicationlibrary/c++/localincl/Process_impl.hpp							     
+	 * platformapplicationlibrary/c++/localincl/UnmanagedProcess_impl.hpp						     
+	 * platformapplicationlibrary/c++/src/ApplicationStates.cpp							     
+	 * platformapplicationlibrary/c++/src/Application_impl.cpp							     
+	 * platformapplicationlibrary/c++/src/ManagedProcess_impl.cpp							     
+	 * platformapplicationlibrary/c++/src/Process_impl.cpp  							     
+	 * platformapplicationlibrary/c++/src/UnmanagedProcess_impl.cpp 						     
+	 * platformelementlibrary/c++/incl/EntityContainer.hpp  							     
+	 * platformelementlibrary/c++/incl/Entity_impl.hpp								     
+	 * platformelementlibrary/c++/incl/ManagedElement_impl.hpp							     
+	 * platformelementlibrary/c++/incl/RWEntityContainer_impl.hpp							     
+	 * platformelementlibrary/c++/src/EntityContainer.cpp								     
+	 * platformelementlibrary/c++/src/Entity_impl.cpp								     
+	 * platformelementlibrary/c++/src/ManagedElement_impl.cpp							     
+	 * platformelementlibrary/c++/src/RWEntityContainer_impl.cpp							     
+	 * platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CSCProperties.xml  		     
+	 * platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/HelloSystemDefinition.xml  	     
+	 * platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp	     
+	 * platformelementlibrary/test/testuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp  		     
+	 * platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/data/CSCProperties.xml		     
+	 * platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/data/HelloSystemDefinition.xml	     
+	 * platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp       
+	 * platformftaccessorlibrary/c++/incl/ApplicationAccessor_impl.hpp						     
+	 * platformftaccessorlibrary/c++/incl/RWEntityContainerAccessor_impl.hpp					     
+	 * platformftaccessorlibrary/c++/src/ApplicationAccessor_impl.cpp						     
+	 * platformftaccessorlibrary/c++/src/RWEntityContainerAccessor_impl.cpp 					     
+	 * platformftproxy/c++/localincl/Application_impl.hpp								     
+	 * platformftproxy/c++/src/Application_impl.cpp 								     
+	 * platformsystemlibrary/c++/localincl/HostContainer.hpp							     
+	 * platformsystemlibrary/c++/localincl/Host_impl.hpp								     
+	 * platformsystemlibrary/c++/src/HostContainer.cpp								     
+	 * platformsystemlibrary/c++/src/Host_impl.cpp  								     
+	 * platformsystemlibrary/c++/src/System_impl.cpp								     
+	 * valid/validationdata/data/V-SMG-016.xml									     
+	 
+
+	 Developed the management property by platformadmin process (modified also for this porpouse the CdmwPlatformMngtSystem.dtd)
+	 Changed validation test V-SMG-016 for testing requirement by platformadmin.
+	 
+
+
+PCR-0543 -- Wed Sep 28 10:45:03 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwFTSystMngtPropertyManager.idl
+	* idllib/idl/CdmwFTSystMngtSystem.idl
+	* idllib/idl/CdmwPlatformMngtCommon.idl
+	* idllib/idl/CdmwPlatformMngtPropertyManager.idl
+	* idllib/idl/CdmwPlatformMngtSystem.idl
+	* platformapplicationlibrary/c++/incl/Application_impl.hpp
+	* platformapplicationlibrary/c++/localincl/Process_impl.hpp
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	* platformapplicationlibrary/c++/src/Process_impl.cpp
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/CdmwFaultToleranceManager.dtd
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/HelloSystemDefinition.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/proc1.sh
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/proc2.sh
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/proc3.sh
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/start_testfacade_Application.sh
+	* platformapplicationlibrary/test/testfacade_Application/c++/data/start_testfacade_Application.xml
+	* platformapplicationlibrary/test/testfacade_Application/c++/localincl/TestFacade_Application.hpp
+	* platformapplicationlibrary/test/testfacade_Application/c++/src/TestFacade_Application.cpp
+	* platformapplicationlibrary/test/testfacade_Application/c++/src/main.cpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/CdmwFaultToleranceManager.dtd
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/HelloSystemDefinition.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/proc1.sh
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/proc2.sh
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/proc3.sh
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/start_testfacade_Process.sh
+	* platformapplicationlibrary/test/testfacade_Process/c++/data/start_testfacade_Process.xml
+	* platformapplicationlibrary/test/testfacade_Process/c++/localincl/TestFacade_Process.hpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/src/TestFacade_Process.cpp
+	* platformapplicationlibrary/test/testfacade_Process/c++/src/main.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/start_teststdattributes_Process.sh
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/start_teststdattributes_Process_Managed.sh
+	* platformelementlibrary/c++/incl/Entity_impl.hpp
+	* platformelementlibrary/c++/src/Entity_impl.cpp
+	* platformftaccessorlibrary/c++/incl/ApplicationAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/incl/EntityAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/incl/HostAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/incl/ProcessAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/incl/SystemAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/ApplicationAccessor_impl.cpp
+	* platformftaccessorlibrary/c++/src/EntityAccessor_impl.cpp
+	* platformftaccessorlibrary/c++/src/HostAccessor_impl.cpp
+	* platformftaccessorlibrary/c++/src/ProcessAccessor_impl.cpp
+	* platformftaccessorlibrary/c++/src/SystemAccessor_impl.cpp
+	* platformftproxy/c++/localincl/Application_impl.hpp
+	* platformftproxy/c++/localincl/Entity_impl.hpp
+	* platformftproxy/c++/localincl/Host_impl.hpp
+	* platformftproxy/c++/localincl/Process_impl.hpp
+	* platformftproxy/c++/localincl/System_impl.hpp
+	* platformftproxy/c++/src/Application_impl.cpp
+	* platformftproxy/c++/src/Entity_impl.cpp
+	* platformftproxy/c++/src/Host_impl.cpp
+	* platformftproxy/c++/src/Process_impl.cpp
+	* platformftproxy/c++/src/System_impl.cpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_ApplicationAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_EntityAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_HostAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_ProcessAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_SystemAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/src/SIM_ApplicationAccessor_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_EntityAccessor_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_HostAccessor_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_ProcessAccessor_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_SystemAccessor_impl.cpp
+	* platformsystemlibrary/c++/localincl/Host_impl.hpp
+	* platformsystemlibrary/c++/localincl/System_impl.hpp
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/c++/src/System_impl.cpp
+	* platformsystemlibrary/test/testfacade_Host/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/data/CdmwFaultToleranceManager.dtd
+	* platformsystemlibrary/test/testfacade_Host/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/data/proc1.sh
+	* platformsystemlibrary/test/testfacade_Host/c++/data/proc2.sh
+	* platformsystemlibrary/test/testfacade_Host/c++/data/proc3.sh
+	* platformsystemlibrary/test/testfacade_Host/c++/data/start_testfacade_Host.sh
+	* platformsystemlibrary/test/testfacade_Host/c++/data/start_testfacade_Host.xml
+	* platformsystemlibrary/test/testfacade_Host/c++/localincl/TestFacade_Host.hpp
+	* platformsystemlibrary/test/testfacade_Host/c++/src/TestFacade_Host.cpp
+	* platformsystemlibrary/test/testfacade_Host/c++/src/main.cpp
+	* platformsystemlibrary/test/testfacade_System/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testfacade_System/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformsystemlibrary/test/testfacade_System/c++/data/CdmwFaultToleranceManager.dtd
+	* platformsystemlibrary/test/testfacade_System/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformsystemlibrary/test/testfacade_System/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/testfacade_System/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformsystemlibrary/test/testfacade_System/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/testfacade_System/c++/data/proc1.sh
+	* platformsystemlibrary/test/testfacade_System/c++/data/proc2.sh
+	* platformsystemlibrary/test/testfacade_System/c++/data/proc3.sh
+	* platformsystemlibrary/test/testfacade_System/c++/data/start_testfacade_System.sh
+	* platformsystemlibrary/test/testfacade_System/c++/data/start_testfacade_System.xml
+	* platformsystemlibrary/test/testfacade_System/c++/localincl/TestFacade_System.hpp
+	* platformsystemlibrary/test/testfacade_System/c++/src/TestFacade_System.cpp
+	* platformsystemlibrary/test/testfacade_System/c++/src/main.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/start_teststdattributes_Host.sh
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/start_teststdattributes_System.sh
+
+          Added new developments for the facade to read/write standard (or user-defined) attributes , added new unit tests for this facade, improved some unit tests printings .
+
+
+PCR-0495 -- Thu Sept 8 10:30:00 2005 Antonello Cedrone<a.cedrone@vitrociset.it>
+
+	* platformapplicationlibrary/c++/data/CSCProperties.xml
+	* platformelementlibrary/c++/data/CSCProperties.xml
+	* platformftproxy/c++/data/CSCProperties.xml
+	* platformftsystem/c++/data/CSCProperties.xml
+	* platformftsystemstarter/c++/data/CSCProperties.xml
+	* platformsystem/c++/data/CSCProperties.xml
+	* platformsystemlibrary/c++/data/CSCProperties.xml
+
+	Modified these files, added an entry for the -lTAO_CosProperty
+
+
+ECR-0158  -- Fri Aug 26 9:55:00 2005 Antonello Cedrone <a.cedrone@vitrociset.it>
+	
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttribu
+tes.c
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttribu
+tes.c
+
+	Modifided Debugging infos in these files
+
+
+ECR-0158  -- Thu Aug 25 18:35:00 2005 Antonello Cedrone <a.cedrone@vitrociset.it>
+	
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/start_testpersistenceuserd
+efinedattributes.sh
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.c
+pp
+	* platformelementlibrary/test/testuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* valid/validationdata/data/V-SMG-016.xml
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/data/start_testpersistenceuserd
+efinedattributes.sh
+	* platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.c
+pp
+	* platformelementlibrary/test/testvaliduserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+
+
+	Separating the Validation test V-SMG-016.xml from unit test  tespersistenceuserdefinedattributes.
+	Creating the Validation Test testvalidpersistenceuserdefinedattributes.
+
+
+ECR-0158 -- Thu Aug 25 17:40:03 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+ 	* idllib/idl/CdmwFTSystMngtProcess.idl
+	* idllib/idl/CdmwPlatformMngtProcess.idl
+	* platformapplicationlibrary/c++/localincl/Process_impl.hpp
+	* platformapplicationlibrary/c++/src/Process_impl.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/localincl/TestStdAttributes_Process.hpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/TestStdAttributes_Process.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/localincl/TestStdAttributes_Process_Managed.hpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/src/TestStdAttributes_Process_Managed.cpp
+	* platformftaccessorlibrary/c++/incl/ProcessAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/ProcessAccessor_impl.cpp
+	* platformftproxy/c++/localincl/Process_impl.hpp
+	* platformftproxy/c++/src/Process_impl.cpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_ProcessAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/src/SIM_ProcessAccessor_impl.cpp
+	* platformsystemlibrary/test/testnavigability/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/CdmwFaultToleranceManager.dtd
+	* platformsystemlibrary/test/testnavigability/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/start_testnavigability.sh
+	* platformsystemlibrary/test/testnavigability/c++/localincl/TestNavigability.hpp
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp
+	* platformsystemlibrary/test/testnavigability/c++/src/main.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/localincl/TestStdAttributes_Host.hpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/TestStdAttributes_Host.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/TestStdAttributes_System.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/main.cpp
+
+          deleting of methods set_core... , update of some comments, conversion of testnavigability to FT mode.
+
+
+ECR-0158 -- Thu Aug 25 09:44:37 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+	* idllib/idl/CdmwPlatformMngtCommon.idl
+	* platformadmin/c++/src/PlatformAdminSnapshot.cpp
+	* platformftaccessorlibrary/c++/src/FTConverter_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_HostAccessor_impl.cpp
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/src/SupervisionObserverTester2.cpp
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformvaluetypes/c++/src/HostStatusChange_impl.cpp:
+
+          Modified HOST_NOT_RESPONDING to HOST_UNREACHABLE
+
+
+ECR-0158 -- Wed Aug 24 14:30:52 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+	* platformsystemlibrary/test/testvalidnavigability/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testvalidnavigability/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/testvalidnavigability/c++/localincl/TestValidNavigability.hpp
+	* platformsystemlibrary/test/testvalidnavigability/c++/src/TestValidNavigability.cpp
+	* platformsystemlibrary/test/testvalidnavigability/c++/src/main.cpp
+	* valid/validationdata/c++/data/CSCProperties.xml
+	* valid/validationdata/data/V-SMG-014.xml
+
+	  Added new validation test V-SMG-014 for navigability : REQ-SRS-SMG-440 and REQ-SRS-SMG-460      	
+
+
+ECR-0158  -- Tue Aug 2 17:50:00 2005 Antonello Cedrone <a.cedrone@vitrociset.it>
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/start_testpersistenceuserdefinedattributes.sh
+	* platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* platformelementlibrary/test/testuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* valid/validationdata/data/V-SMG-016.xml
+
+        Modified these files
+
+
+
+ECR-0158  -- Mon Aug 1 19:00:00 2005 Antonello Cedrone <a.cedrone@vitrociset.it>
+	* M idllib/idl/CdmwPlatformMngtCommon.idl
+	* M idllib/idl/CdmwPlatformMngtDataStore.idl
+	* M platformelementlibrary/c++/localincl/
+	* M platformelementlibrary/c++/incl/ManagedElement_impl.hpp
+	* M platformelementlibrary/c++/src/ManagedElement_impl.cpp
+	* M platformsystemlibrary/c++/src/System_impl.cpp
+	* M platformapplicationlibrary/c++/src/Application_impl.cpp
+	* M platformapplicationlibrary/c++/src/Process_impl.cpp
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp	
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/CdmwFaultToleranceManager_conf.xml
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/CdmwFaultToleranceManager.dtd 
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml 
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/CdmwPlatformMngtDaemon_conf.xml 
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/start_testuserdefinedattributes.sh
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/start_testuserdefinedattributes.xml
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/HelloSystemDefinition.xml
+	* A platformelementlibrary/test/testeuserdefinedattributes/c++/data/CSCProperties.xml
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/proc1.sh 
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/proc2.sh
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/proc3.sh
+	* A platformelementlibrary/test/testuserdefinedattributes/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp	
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/localincl/TestUserDefinedAttributes.hpp
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/src/TestUserDefinedAttributes.cpp
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CdmwFaultToleranceManager_conf.xml
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CdmwFaultToleranceManager.dtd 
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml 
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CdmwPlatformMngtDaemon_conf.xml 
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/start_testuserdefinedattributes.sh
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/start_testuserdefinedattributes.xml
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/HelloSystemDefinition.xml
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CSCProperties.xml
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/proc1.sh 
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/proc2.sh
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/proc3.sh
+	* A platformelementlibrary/test/testpersistenceuserdefinedattributes/c++/data/CdmwSystemMngtDatastoreConfig.xml
+
+	* M valid/validationdata/c++/data/CSCProperties.xml
+	* A valid/validationdata/data/V-SMG-015.xml
+	* A valid/validationdata/data/V-SMG-016.xml:
+
+
+
+	
+	Implemented the Property service for managing the user defined attributes in
+	ManagedElement_impl class.
+	Modified System_impl, Process_impl and Application_impl for setting and retrieving 
+ 	user defined attributes from datastore.
+ 	Added 2 unit test in CSC platform element library: testuserattributes
+	and testpersistenceuserdefinedattributes.
+	Added 2 validation test V-015 and V-016.
+  	
+	
+
+
+
+
+ECR-0158 -- Mon Aug  1 14:40:22 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/CdmwFaultToleranceManager.dtd
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/HelloSystemDefinition.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/proc1.sh
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/start_teststdattributes_Process_Managed.sh
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/data/start_teststdattributes_Process_Managed.xml
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/localincl/TestStdAttributes_Process_Managed.hpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/src/TestStdAttributes_Process_Managed.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process_Managed/c++/src/main.cpp
+	* valid/validationdata/c++/data/CSCProperties.xml
+	* valid/validationdata/data/V-SMG-012.xml:
+	  
+	  Added new unit test teststdattributes_Process_Managed and added new valid. test V-012
+
+
+
+ECR-0158 -- Fri Jul 29 16:50:14 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwFTSystMngtProcess.idl
+	* idllib/idl/CdmwPlatformMngtProcess.idl
+	* platformapplicationlibrary/c++/localincl/Process_impl.hpp
+	* platformapplicationlibrary/c++/src/Process_impl.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/HelloSystemDefinition.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/TestStdAttributes_Process.cpp
+	* platformftaccessorlibrary/c++/incl/ProcessAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/ProcessAccessor_impl.cpp
+	* platformftproxy/c++/localincl/Process_impl.hpp
+	* platformftproxy/c++/src/Process_impl.cpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_ProcessAccessor_impl.hpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/TestStdAttributes_System.cpp
+	* valid/validationdata/c++/data/CSCProperties.xml
+	* valid/validationdata/data/V-SMG-011.xml
+	* valid/validationdata/data/V-SMG-013.xml:
+
+	  implemented new validation tests V-011 and V-013, added new
+	  method get_run_as_root() of Process and improved some .xml files style.
+
+
+ECR-0158 -- Wed Jul 27 18:45:53 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* valid/validationdata/c++/data/CSCProperties.xml
+	* valid/validationdata/data/V-SMG-010.xml:
+
+ 	  Added new validation test V-010         
+
+
+ECR-0158 -- Wed Jul 27 13:35:39 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwFTSystMngtHost.idl
+	* idllib/idl/CdmwPlatformMngtHost.idl
+	* platformftaccessorlibrary/c++/incl/HostAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/HostAccessor_impl.cpp
+	* platformftproxy/c++/localincl/Host_impl.hpp
+	* platformftproxy/c++/src/Host_impl.cpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_HostAccessor_impl.hpp
+	* platformsystemlibrary/c++/localincl/Host_impl.hpp
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/TestStdAttributes_Host.cpp:
+
+	  Added new get_host_name of Host and added new tests to TestStdAttributes_Host
+
+
+ECR-0158 -- Tue Jul 26 12:35:48 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwFTSystMngtProcess.idl
+	* idllib/idl/CdmwPlatformMngtCommon.idl
+	* idllib/idl/CdmwPlatformMngtProcess.idl
+	* platformapplicationlibrary/c++/localincl/Process_impl.hpp
+	* platformapplicationlibrary/c++/src/Process_impl.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/TestStdAttributes_Process.cpp
+	* platformftaccessorlibrary/c++/incl/ProcessAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/ProcessAccessor_impl.cpp
+	* platformftproxy/c++/localincl/Process_impl.hpp
+	* platformftproxy/c++/src/Process_impl.cpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_HostAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_ProcessAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_SystemAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/src/SIM_HostAccessor_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_ProcessAccessor_impl.cpp
+	* platformftproxy/test/testbasic/c++/src/SIM_SystemAccessor_impl.cpp:
+
+	  Added other new attributes implementations (of Process ) , and
+	  associated unit tests .          
+
+
+ECR-0158 -- Mon Jul 25 11:15:25 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwFTSystMngtHost.idl
+	* idllib/idl/CdmwFTSystMngtSystem.idl
+	* idllib/idl/CdmwPlatformMngtCommon.idl
+	* idllib/idl/CdmwPlatformMngtDataStore.idl
+	* idllib/idl/CdmwPlatformMngtHost.idl
+	* idllib/idl/CdmwPlatformMngtSystem.idl
+	* platformftaccessorlibrary/c++/incl/HostAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/incl/SystemAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/HostAccessor_impl.cpp
+	* platformftaccessorlibrary/c++/src/SystemAccessor_impl.cpp
+	* platformftproxy/c++/localincl/Host_impl.hpp
+	* platformftproxy/c++/localincl/System_impl.hpp
+	* platformftproxy/c++/src/Host_impl.cpp
+	* platformftproxy/c++/src/System_impl.cpp
+	* platformsystemlibrary/c++/localincl/Host_impl.hpp
+	* platformsystemlibrary/c++/localincl/System_impl.hpp
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/c++/src/System_impl.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/CdmwFaultToleranceManager.dtd
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/proc1.sh
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/proc2.sh
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/proc3.sh
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/start_teststdattributes_Host.sh
+	* platformsystemlibrary/test/teststdattributes_Host/c++/data/start_teststdattributes_Host.xml
+	* platformsystemlibrary/test/teststdattributes_Host/c++/localincl/TestStdAttributes_Host.hpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/TestStdAttributes_Host.cpp
+	* platformsystemlibrary/test/teststdattributes_Host/c++/src/main.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/TestStdAttributes_System.cpp
+
+	  Added other new attributes implementations (of System and Host ) , and
+	  associated unit tests .          
+
+
+ECR-0158 -- Wed Jul 20 14:10:59 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/CSCProperties.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/CdmwFTSystemMngtGroupCreator_conf.xm
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/CdmwFaultToleranceManager.dtd
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/HelloSystemDefinition.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/proc1.sh
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/proc2.sh
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/proc3.sh
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/start_teststdattributes_Process.sh
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/data/start_teststdattributes_Process.xml
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/localincl/TestStdAttributes_Process.hpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/TestStdAttributes_Process.cpp
+	* platformapplicationlibrary/test/teststdattributes_Process/c++/src/main.cpp:
+
+	  Added unit tests (on get.. and set.. methods) for four attributes of Process. 	
+
+ECR-0158 -- Tue Jul 19 11:50:54 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwFTSystMngtSystem.idl
+	* idllib/idl/CdmwPlatformMngtCommon.idl
+	* idllib/idl/CdmwPlatformMngtDataStore.idl
+	* idllib/idl/CdmwPlatformMngtSystem.idl
+	* platformftaccessorlibrary/c++/incl/SystemAccessor_impl.hpp
+	* platformftaccessorlibrary/c++/src/SystemAccessor_impl.cpp
+	* platformftproxy/c++/localincl/System_impl.hpp
+	* platformftproxy/c++/src/System_impl.cpp
+	* platformftproxy/test/testbasic/c++/localincl/SIM_SystemAccessor_impl.hpp
+	* platformftproxy/test/testbasic/c++/src/SIM_SystemAccessor_impl.cpp
+	* platformsystemlibrary/c++/localincl/System_impl.hpp
+	* platformsystemlibrary/c++/src/System_impl.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/CdmwFaultToleranceManager.dtd
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/CdmwFaultToleranceManager_conf.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/CdmwSystemMngtDatastoreConfig.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/proc1.sh
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/proc2.sh
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/proc3.sh
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/start_teststdattributes_System.sh
+	* platformsystemlibrary/test/teststdattributes_System/c++/data/start_teststdattributes_System.xml
+	* platformsystemlibrary/test/teststdattributes_System/c++/localincl/TestStdAttributes_System.hpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/TestStdAttributes_System.cpp
+	* platformsystemlibrary/test/teststdattributes_System/c++/src/main.cpp
+
+	  Added implementation (for v2.1 developments) of system_mission attribute of System.
+	  And added the unit test teststdattributes_System for the above attribute .
+
+ECR-0158 -- Mon Jul 11 16:50:05 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/test/testnavigability/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp:
+
+	  Added <numeric_limits> template to calculate max. number of
+	  CORBA::ULong where necessary .
+	  Modified testnavigability sources : new xml file for platform daemon
+	  and modified scenario file (and c++ code of test) to substitute
+	  localhost with 127.0.0.1   .
+	  
+	  
+ECR-0130 -- Mon Jun 13 08:50:05 2005  Fabrizio Lorenna <f.lorenna@vitrociset.it>
+
+ 	* idllib/idl/CdmwPlatformMngtApplication.idl
+	* idllib/idl/CdmwPlatformMngtHost.idl
+	* platformapplicationlibrary/c++/incl/Application_impl.hpp
+	* platformapplicationlibrary/c++/localincl/Process_impl.hpp
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	* platformapplicationlibrary/c++/src/Process_impl.cpp
+	* platformftproxy/c++/localincl/Host_impl.hpp
+	* platformftproxy/c++/src/Host_impl.cpp
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/data/CSCProperties.xml
+	* platformsystemlibrary/c++/localincl/Host_impl.hpp
+	* platformsystemlibrary/c++/src/Host_impl.cpp
+	* platformsystemlibrary/test/testnavigability/c++/data/CSCProperties.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/HelloSystemDefinition.xml
+	* platformsystemlibrary/test/testnavigability/c++/data/proc1.sh
+	* platformsystemlibrary/test/testnavigability/c++/data/proc2.sh
+	* platformsystemlibrary/test/testnavigability/c++/data/proc3.sh
+	* platformsystemlibrary/test/testnavigability/c++/data/start_testnavigability.sh
+	* platformsystemlibrary/test/testnavigability/c++/data/start_testnavigability.xml
+	* platformsystemlibrary/test/testnavigability/c++/localincl/TestNavigability.hpp
+	* platformsystemlibrary/test/testnavigability/c++/src/TestNavigability.cpp
+	* platformsystemlibrary/test/testnavigability/c++/src/main.cpp:
+
+          Added new functions for navigability in Host, Application and
+	  Process classes to this branch AMS_V2_IBB2 .
+	  To the same branch, added also the testnavigability test suite
+	  for the above functions .
+     
+
+ECR-0130 -- Wed Jun  8 12:20:05 2005  Antonello Cedrone <acedrone@vitrociset.it>
+
+	* platformapplicationlibrary/c++/incl/Application_impl.hpp
+	* platformapplicationlibrary/c++/localincl/ProcessProxy_impl.hpp:
+
+
+          Corrected comments on the files above for having a right API
+	  documentation.
+
+
+Tue Jun 7 14:50:00 2005 Antonello Cedrone <a.cedrone@vitrociset.it>
+
+	* idllib/idl/CdmwApplication.idl
+	* idllib/idl/CdmwProcessProxy.idl
+	* platformapplicationlibrary/c++/incl/Application_impl.hpp
+	* platformapplicationlibrary/c++/src/Application_impl.cpp
+	* platformapplicationlibrary/c++/localincl/ProcessProxy_impl.hpp
+	* platformapplicationlibrary/c++/src/ProcessProxy_impl.cpp
+	* platformsystem/test/testnavigability/c++/src/TestNavigability.cpp
+	* platformsystem/test/testnavigability/c++/data/start_testnavigability.sh
+
+
+          ECR-0130: added new functions get_parent() from Application to
+          System and get_parent() from Process to Application;
+          modified TestNavigability (testnavigability) for the above new
+          functions.
+	  Corrected a small bug in file start_testnavigability.sh
+
+
+Mon Jun  6 14:40:00 2005  Fabrizio Lorenna  <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwPlatformMngtHostProxy.idl
+	* platformsystem/c++/localincl/HostProxy_impl.hpp
+	* platformsystem/c++/src/HostProxy_impl.cpp
+	* platformsystem/test/testnavigability/c++/data/CSCProperties.xml
+	* platformsystem/test/testnavigability/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystem/test/testnavigability/c++/src/TestNavigability.cpp 
+
+          ECR-0130: added new function get_process(const char *) from Host to 
+	  Process and related unit test on testnavigability test suite.
+	  Corrected a small bug in files CSCProperties.xml and
+	  CdmwPlatformMngtDaemon_conf.xml .
+
+Wed Jun  1 12:00:00 2005  Fabrizio Lorenna  <f.lorenna@vitrociset.it>
+
+	* idllib/idl/CdmwPlatformMngtHostProxy.idl
+	* platformsystem/c++/localincl/HostProxy_impl.hpp
+	* platformsystem/c++/src/HostProxy_impl.cpp
+	* platformsystem/test/testnavigability/c++/data/CdmwPlatformMngtDaemon_conf.xml
+	* platformsystem/test/testnavigability/c++/data/CSCProperties.xml
+	* platformsystem/test/testnavigability/c++/data/HelloSystemDefinition.xml
+	* platformsystem/test/testnavigability/c++/data/proc1.sh
+	* platformsystem/test/testnavigability/c++/data/proc2.sh
+	* platformsystem/test/testnavigability/c++/data/proc3.sh
+	* platformsystem/test/testnavigability/c++/data/start_testnavigability.sh
+	* platformsystem/test/testnavigability/c++/data/start_testnavigability.xml
+	* platformsystem/test/testnavigability/c++/src/main.cpp
+	* platformsystem/test/testnavigability/c++/src/TestNavigability.cpp
+	* platformsystem/test/testnavigability/c++/localincl/TestNavigability.hpp
+
+          ECR-0130: added new functions get_parent() from Host to 
+	  Process and get_processes() from Host to Process ;
+	  added new test suite (testnavigability) for the above new 
+	  fuctions.
+
+	* platformsupervisionobserver/test/testsupervisionobserver/c++/data/CSCProperties.xml:
+
+	  corrected a small bug : added platformlibrary/platformlibrary that was missing
+
+
 V1.Op4 : PCR-0022 Problem in the get_processes method in the SystemMngt: 
 				  incrementation of the list was badly encoded,
 				  and the number of requisit process was not readjust is the number of process was lower

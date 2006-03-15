@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -41,11 +41,8 @@
 #include <iostream>
 #include <fstream>
 
-
-
 using namespace Cdmw::PlatformMngt;
 using namespace Cdmw::OsSupport;
-
 
 
 /**
@@ -68,7 +65,10 @@ public:
                        AutoEnding* pAutoEnding,
                        long autoEndTimeOut = -1, 
                        unsigned long entityUpdateInterval = 5000,
-                       int nbrOfInitSteps=1)
+                       int nbrOfInitSteps=1,
+                       unsigned int sleepTime = 0, 
+                       bool request = true, 
+                       bool except = false)
     {
         m_orb = CORBA::ORB::_duplicate(orb);
         m_platformManaged = platformManaged;
@@ -78,7 +78,11 @@ public:
         m_nbrOfInitSteps = nbrOfInitSteps;
         m_currentInitStep = 0;
         m_startup_mode = 0;
-        
+        m_sleepTime = sleepTime;
+        m_request = request;
+        m_except = except;
+        m_counter = 2;
+
         m_pAutoEnding = pAutoEnding;
         if (m_pAutoEnding != NULL)
         {
@@ -116,12 +120,16 @@ public:
         }        
     }
 
+    CORBA::Short get_counter()
+    {
+        return m_counter;
+    }
     
     /**
     * Purpose:
     * <p>
     * the behaviour for the
-    * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_steps:1.0
     * attribute
     */
     virtual CORBA::ULong nb_steps() throw(CORBA::SystemException)
@@ -134,13 +142,13 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
 	* operation
 	*/
     virtual CORBA::Object_ptr get_service() throw(CORBA::SystemException)
     {
         // example of using the PlatformInterface for notifying a message
-        PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+        PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
             m_processName.c_str(), "Service requested->NIL returned");
             
         return CORBA::Object::_nil();
@@ -151,20 +159,20 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
 	* operation
 	*/
     virtual void initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
-        throw(CdmwPlatformMngt::Process::BadOrder, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::BadOrder, CORBA::SystemException)
     {
         if (m_platformManaged)
         {
             // get application and process names                    
-            m_applicationName = PlatformInterface::getApplicationName();
-            m_processName = PlatformInterface::getProcessName();
-                    
+            m_applicationName = PlatformInterface::Get_application_name();
+            m_processName = PlatformInterface::Get_process_name();
+            m_hostName = Cdmw::OsSupport::OS::get_hostname();
             // example of using the PlatformInterface for notifying a message
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), "Initialisation requested");
         }
         
@@ -191,7 +199,7 @@ public:
                 msgInfo << m_startup_mode;
                 msgInfo << " msec";
                      
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                     m_processName.c_str(), msgInfo.str().c_str());
             }
         
@@ -208,17 +216,25 @@ public:
         
         
         // creates the EntityToUpdate classes
+        std::auto_ptr<HostEntityToUpdate> pHostEntityToUpdate (
+                    new HostEntityToUpdate (m_hostEntityName, m_hostName, m_applicationName, m_processName));
+                                
         std::auto_ptr<SystemEntityToUpdate> pSystemEntityToUpdate (
-                    new SystemEntityToUpdate (m_sysEntityName, m_processName));
+                    new SystemEntityToUpdate (m_sysEntityName, m_hostName, m_applicationName, m_processName));
                                 
         std::auto_ptr<ApplicationEntityToUpdate> pApplicationEntityToUpdate (
-                    new ApplicationEntityToUpdate (m_appEntityName, m_processName));
+                    new ApplicationEntityToUpdate (m_appEntityName, m_hostName, m_applicationName, m_processName));
                                 
         std::auto_ptr<ProcessEntityToUpdate> pProcessEntityToUpdate (
-                    new ProcessEntityToUpdate (m_procEntityName, m_processName));
+                    new ProcessEntityToUpdate (m_procEntityName, m_hostName, m_applicationName, m_processName));
                                 
       
         // creates the UpdateEntity classes
+        std::auto_ptr<UpdateEntity> pUpdateHostEntity (
+                    new UpdateEntity (pHostEntityToUpdate.get(),
+                                      m_entityUpdateInterval));
+        pHostEntityToUpdate.release();
+                                
         std::auto_ptr<UpdateEntity> pUpdateSystemEntity (
                     new UpdateEntity (pSystemEntityToUpdate.get(),
                                       m_entityUpdateInterval));
@@ -235,10 +251,12 @@ public:
         pProcessEntityToUpdate.release();
                                 
         // transfer auto pointers
+        m_pUpdateHostEntity = pUpdateHostEntity.get();
         m_pUpdateSystemEntity = pUpdateSystemEntity.get();
         m_pUpdateApplicationEntity = pUpdateApplicationEntity.get();
         m_pUpdateProcessEntity = pUpdateProcessEntity.get();
                          
+        pUpdateHostEntity.release(); 
         pUpdateSystemEntity.release(); 
         pUpdateApplicationEntity.release(); 
         pUpdateProcessEntity.release();                
@@ -249,11 +267,11 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/next_step:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/next_step:1.0
 	* operation
 	*/
     virtual void next_step()
-        throw(CdmwPlatformMngt::Process::InvalidStep, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::InvalidStep, CORBA::SystemException)
     {
         // increment init step
         if (m_currentInitStep < m_nbrOfInitSteps)
@@ -268,7 +286,7 @@ public:
         if (m_platformManaged)
         {              
             // example of using the PlatformInterface for notifying a message
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), msgInfo.str().c_str());
         }
         
@@ -281,7 +299,7 @@ public:
         // if invalid init step
         if (m_currentInitStep >= m_nbrOfInitSteps)
         {
-            throw CdmwPlatformMngt::Process::InvalidStep();
+            throw CdmwPlatformMngt::ProcessDelegate::InvalidStep();
         }            
     }
     
@@ -290,18 +308,18 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
 	* operation
 	*/
     virtual void run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun,
-              CdmwPlatformMngt::Process::AlreadyDone,
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
+              CdmwPlatformMngt::ProcessDelegate::AlreadyDone,
               CORBA::SystemException)
     {
         if (m_platformManaged)
         {              
             // example of using the PlatformInterface for notifying a message
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), "Run requested");
         }
         
@@ -319,7 +337,7 @@ public:
             
             try
             {
-                CORBA::Object_var serviceObject = PlatformInterface::getService (m_serviceName.c_str());
+                CORBA::Object_var serviceObject = PlatformInterface::Get_service (m_serviceName.c_str());
             }
             catch (const CdmwPlatformMngtService::ServiceNotFound& e)
             {
@@ -359,7 +377,7 @@ public:
             
             if (errorSet)
             {
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::ERR,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::ERR,
                                m_processName.c_str(), infoMsg.c_str());
             }
             else
@@ -367,12 +385,27 @@ public:
                 infoMsg = "Service has been found : ";
                 infoMsg += m_serviceName;
                 
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                m_processName.c_str(), infoMsg.c_str());
             }
         }
         
         
+        // if system entity to update
+        if (!m_hostEntityName.empty())
+        {
+            try
+            {
+                // start thread
+                m_pUpdateHostEntity->start();
+            }
+            catch (...)
+            {
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::ERR,
+                      m_processName.c_str(), "Host Entity Update cannot be started");
+            }
+        }
+    
         // if system entity to update
         if (!m_sysEntityName.empty())
         {
@@ -383,12 +416,12 @@ public:
             }
             catch (...)
             {
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::ERR,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::ERR,
                       m_processName.c_str(), "System Entity Update cannot be started");
             }
         }
     
-        // if application entity to update
+         // if application entity to update
         if (!m_appEntityName.empty())
         {
             try
@@ -398,7 +431,7 @@ public:
             }
             catch (...)
             {
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::ERR,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::ERR,
                       m_processName.c_str(), "Application Entity Update cannot be started");
             }
         }
@@ -413,7 +446,7 @@ public:
             }
             catch (...)
             {
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::ERR,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::ERR,
                       m_processName.c_str(), "Process Entity Update cannot be started");
             }
         }
@@ -428,7 +461,7 @@ public:
             }
             catch (...)
             {
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::ERR,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::ERR,
                       m_processName.c_str(), "AutoEnding cannot be started");
             }
         }
@@ -443,7 +476,7 @@ public:
                 msgInfo << m_startup_mode;
                 msgInfo << " msec";
                      
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                     m_processName.c_str(), msgInfo.str().c_str());
             }
         
@@ -463,7 +496,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
 	* operation
 	*/
     virtual void stop() throw(CORBA::SystemException)
@@ -471,7 +504,7 @@ public:
         if (m_platformManaged)
         {              
             // example of using the PlatformInterface for notifying a message
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), "Stop requested");
         }
         
@@ -488,6 +521,13 @@ public:
             if (m_pAutoEnding != NULL && m_autoEndTimeOut > 0)
             {
                 m_pAutoEnding->stop();
+            }
+            
+            // if host entity updating to stop
+            if (!m_hostEntityName.empty())
+            {
+                // start thread
+                m_pUpdateHostEntity->stop();
             }
             
             // if system entity updating to stop
@@ -529,13 +569,13 @@ public:
                 msgInfo << m_startup_mode;
                 msgInfo << " msec";
                      
-                PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+                PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                     m_processName.c_str(), msgInfo.str().c_str());
             }
         
             else
             {
-                std::cout << m_processName.c_str() << "Stop Timeout requested :"
+                std::cout << m_processName << "Stop Timeout requested :"
                           << m_startup_mode << " msec"
                           << std::endl;
             }
@@ -548,6 +588,31 @@ public:
         m_orb->shutdown(false);
     }
 
+    /**
+        * Purpose:
+        * <p>
+        * the behaviour for the
+        * IDL:FT/PullMonitorable/is_alive:1.0
+        * operation
+        */
+    virtual bool is_alive()
+        throw(CORBA::SystemException)
+    {
+         m_counter -= 1;
+
+			std::cout << m_processName << " is alive called, liveliness:" 
+				       << m_request
+				       << std::endl;
+         OS::sleep (m_sleepTime);
+
+
+         if (m_except && (m_counter == 0))
+         {
+				exit(0);
+         }
+
+         return m_request;
+    }
 
     /**
 	* Purpose:
@@ -558,7 +623,7 @@ public:
         if (m_platformManaged)
         {              
             // example of using the PlatformInterface for notifying a message
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), "Process auto ending");
         }
         
@@ -584,6 +649,18 @@ public:
         }
     }
     
+    
+    /**
+    * Purpose:
+    * <p> Set host entity name to set.
+    */ 
+    void setHostEntityToSet (const char* p_entityName)
+    {
+        if (p_entityName != NULL)
+        {
+            m_hostEntityName = p_entityName;
+        }
+    }
     
     /**
     * Purpose:
@@ -659,6 +736,11 @@ private:
     int m_currentInitStep;
     
     /**
+     * The host name.
+     */
+    std::string m_hostName;
+
+    /**
     * The application name.
     */
     std::string m_applicationName;
@@ -674,6 +756,11 @@ private:
     std::string m_serviceName;
     
     /**
+    * The host entity name to set.
+    */
+    std::string m_hostEntityName;
+    
+    /**
     * The system entity name to set.
     */
     std::string m_sysEntityName;
@@ -687,6 +774,11 @@ private:
     * The process entity name to set.
     */
     std::string m_procEntityName;
+    
+    /**
+    * The host entity to update.
+    */
+    UpdateEntity* m_pUpdateHostEntity;
     
     /**
     * The system entity to update.
@@ -715,6 +807,28 @@ private:
     * The AutoEnding thread class.
     */
     AutoEnding* m_pAutoEnding;
+    /**
+    * time to sleep in msec
+    */
+    unsigned int m_sleepTime;
+
+
+    /**
+    * PullMonitorable request
+    */
+    bool m_request;
+
+
+    /**
+    * PullMonitorable exception to raise
+    */
+    bool m_except;
+
+
+    /**
+    * PullMonitorable counter
+    */
+    int m_counter;
 
 };
 

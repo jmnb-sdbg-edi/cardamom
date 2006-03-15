@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,7 +26,7 @@
 #ifndef INCL_PLATFORMMNGT_MANAGED_PROCESS_PROXY_STATES_HPP
 #define INCL_PLATFORMMNGT_MANAGED_PROCESS_PROXY_STATES_HPP
 
-#include "platformapplicationlibrary/ProcessProxy_impl.hpp"
+#include "platformapplicationlibrary/Process_impl.hpp"
 #include "SystemMngt/platformlibrary/StateMachineTemplate.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtProcess.stub.hpp"
 
@@ -35,10 +35,10 @@ namespace Cdmw
 namespace PlatformMngt
 {
 
-class ManagedProcessProxy_impl;
+class ManagedProcess_impl;
 class ManagedProcessState;
 
-typedef StateMachine< ManagedProcessProxy_impl, ManagedProcessState >
+typedef StateMachine< ManagedProcess_impl, ManagedProcessState >
     ManagedProcessStateMachine;
 
 /**
@@ -91,7 +91,8 @@ public:
     
     virtual
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException )
     {
@@ -135,17 +136,6 @@ public:
         ManagedProcessStateMachine* stateMachine,
         const CdmwPlatformMngt::CompleteMonitoringInfo& monitoring_info )
             throw( CdmwPlatformMngt::IncompatibleStatus,
-                   CORBA::SystemException )
-    {
-        throw CdmwPlatformMngt::IncompatibleStatus();
-    };
-
-    virtual
-    void set_activity_point_defs(
-        ManagedProcessStateMachine* stateMachine,
-        const CdmwPlatformMngt::ActivityPointDefs& point_defs )
-            throw( CdmwPlatformMngt::DuplicateActivityPoint,
-                   CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException )
     {
         throw CdmwPlatformMngt::IncompatibleStatus();
@@ -241,7 +231,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -269,13 +260,6 @@ public:
         ManagedProcessStateMachine* stateMachine,
         const CdmwPlatformMngt::CompleteMonitoringInfo& monitoring_info )
             throw( CdmwPlatformMngt::IncompatibleStatus,
-                   CORBA::SystemException );
-
-    void set_activity_point_defs(
-        ManagedProcessStateMachine* stateMachine,
-        const CdmwPlatformMngt::ActivityPointDefs& point_defs )
-            throw( CdmwPlatformMngt::DuplicateActivityPoint,
-                   CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
     CdmwPlatformMngt::RequestStatus initialise(
@@ -551,7 +535,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -604,7 +589,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -627,6 +613,11 @@ public:
             throw( CdmwPlatformMngt::DuplicateStep,
                    CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
+                   
+    CdmwPlatformMngt::RequestStatus stop(
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean emergency )
+            throw( CORBA::SystemException );
 
     CdmwPlatformMngt::RequestStatus initialise(
         ManagedProcessStateMachine* stateMachine,
@@ -657,7 +648,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -716,7 +708,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -769,7 +762,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -822,7 +816,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -875,7 +870,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 
@@ -928,7 +924,8 @@ public:
     CdmwPlatformMngt::ProcessStatus status();
 
     void set_autoending(
-        ManagedProcessStateMachine* stateMachine )
+        ManagedProcessStateMachine* stateMachine,
+        CORBA::Boolean auto_ending )
             throw( CdmwPlatformMngt::IncompatibleStatus,
                    CORBA::SystemException );
 

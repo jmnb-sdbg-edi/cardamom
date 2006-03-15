@@ -1,0 +1,136 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_FTSYST_MNGT_COMMANDED_ELEMENT_IDL_
+#define CDMW_FTSYST_MNGT_COMMANDED_ELEMENT_IDL_
+
+
+
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwPlatformMngtCommandBase.idl>
+#include <CdmwPlatformMngtCmdResponseCallback.idl>
+
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwFTSystMngt
+{
+    /**
+    * The CDMW CommandedElement Accessor
+    */
+    interface CommandedElementAccessor
+    {
+        /**
+        *
+        * Returns the status of the command with its additional information.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::CommandStatus get_command_status(
+               in CdmwPlatformMngt::ElementPath target_element_path,
+               out string status_info)
+            raises(CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Call the command selected by its name and associated to the element.
+        *
+        * @param target_element_path path of target element to access
+        * @param command_name the name of the command
+        * @param command_args the arguments of the command
+        * @param response_callback the callback called after command processing
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception CommandNotFound if command name has not been registered
+        * @exception CommandArgumentInvalid if the argument value is invalid
+        * @exception CommandRejected if the command is rejected
+        */
+        void call_command (
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in string command_name,
+            in CdmwPlatformMngt::CmdParameterValues command_args,
+            in CdmwPlatformMngt::CommandResponseCallback response_callback)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::CommandNotFound,
+                   CdmwPlatformMngt::CommandArgumentInvalid,
+                   CdmwPlatformMngt::CommandRejected);
+                   
+
+    }; // End interface CommandedElementAccessor
+
+
+
+    /**
+    * The CommandContainer Accessor
+    */
+    interface CommandContainerAccessor : CommandedElementAccessor
+    {
+        /**
+        * Add the new command.
+        *
+        * @param target_element_path path of target element to access
+        * @param command_name the name of the command to create
+        * @param time_out time out to execute the command
+        * @param command_args the definition of the command arguments
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception CommandAlreadyExists if command name has been already registered
+        * @exception CommandArgumentAlreadyExists if the argument is already defined
+        */
+        void add_command (
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in string command_name,
+            in CdmwPlatformMngt::Timeout time_out,
+            in CdmwPlatformMngt::CmdParameterDescriptors command_args)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::CommandAlreadyExists,
+                   CdmwPlatformMngt::CommandArgumentAlreadyExists);
+                   
+                   
+        /**
+        * Remove the command.
+        *
+        * @param target_element_path path of target element to access
+        * @param command_name the name of the command to remove
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception CommandNotFound if command name has not been registered
+        */
+        void remove_command (
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in string command_name)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::CommandNotFound);
+
+
+    }; // End interface CommandContainerAccessor
+
+
+}; // End Module CdmwFTSystMngt
+
+#endif //CDMW_FTSYST_MNGT_COMMANDED_ELEMENT_IDL_
+

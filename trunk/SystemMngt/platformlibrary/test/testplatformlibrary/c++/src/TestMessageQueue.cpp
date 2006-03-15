@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -31,15 +31,15 @@
 
 #include "Foundation/ossupport/OS.hpp"
 #include "Foundation/common/System.hpp"
-#include "Foundation/testutils/Testable.hpp"
+#include "Foundation/testutils/TestManager.hpp"
 
 #include <iostream>
 #include <string>
 #include <memory>
 
+CPPUNIT_TEST_SUITE_REGISTRATION(TestMessageQueue);
 
-TestMessageQueue::TestMessageQueue(const std::string& name)
-    : Testable(name)
+TestMessageQueue::TestMessageQueue()
 {
 }
 
@@ -53,7 +53,7 @@ TestMessageQueue::~TestMessageQueue()
 void TestMessageQueue::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (17);
+// //     set_nbOfRequestedTestOK (17);
     
 
     Cdmw::PlatformMngt::MessageQueue<std::string> queue;
@@ -67,12 +67,12 @@ void TestMessageQueue::do_tests()
         queue.push(mes.get());
 
         mes.release();
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -84,12 +84,12 @@ void TestMessageQueue::do_tests()
         queue.push(mes.get());
 
         mes.release();
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -98,17 +98,17 @@ void TestMessageQueue::do_tests()
     {
 
         queue.push(NULL);
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::BadParameterException& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -116,15 +116,15 @@ void TestMessageQueue::do_tests()
     try
     {
         if (queue.size() == 2)
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         else
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
 
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -142,17 +142,17 @@ void TestMessageQueue::do_tests()
         mes2.release();
 
         queue.push(messages);
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const std::exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -160,15 +160,15 @@ void TestMessageQueue::do_tests()
     try
     {
         if (queue.size() == 4)
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         else
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
 
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -184,17 +184,17 @@ void TestMessageQueue::do_tests()
         messages.push_back(NULL);
 
         queue.push(messages);
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::BadParameterException& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const std::exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -210,17 +210,17 @@ void TestMessageQueue::do_tests()
         mes1.release();
 
         queue.push(messages);
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::BadParameterException& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const std::exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -228,15 +228,15 @@ void TestMessageQueue::do_tests()
     try
     {
         if (queue.size() == 4)
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         else
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
 
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -252,7 +252,7 @@ void TestMessageQueue::do_tests()
         std::cout << mes3->c_str() << std::endl;
 
         if (queue.isEmpty())
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         else
         {
             std::auto_ptr<std::string> mes4(queue.pop());
@@ -260,14 +260,14 @@ void TestMessageQueue::do_tests()
         }
 
         if (!queue.isEmpty())
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         else
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     
@@ -290,7 +290,7 @@ void TestMessageQueue::do_tests()
     writerD.start();
 
     size_t messageCount = 0;
-	int timescale = Cdmw::TestUtils::Testable::get_timescale();
+	int timescale = Cdmw::TestUtils::get_timescale();
     OsSupport::OS::sleep(timescale*20);
 
     do
@@ -313,12 +313,12 @@ void TestMessageQueue::do_tests()
     std::cout << "Maximum number of threads detected : " << maxNbThreads << std::endl;
     if (maxNbThreads > 1)
     {
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     else
     {
         std::cout << "More than one thread was expected." << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     TEST_INFO("Destroy tests");
@@ -330,16 +330,16 @@ void TestMessageQueue::do_tests()
     {
         std::cout << "Waiting for a message." << std::endl;
         std::auto_ptr<std::string> mes(queue.pop());
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::PlatformMngt::MessageQueueDestroyedException&)
     {
         std::cout << "The thread blocked by pop() has been released by destroy()." << std::endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     destructor.join();
@@ -350,30 +350,30 @@ void TestMessageQueue::do_tests()
     {
         bool ret = queue.isEmpty();
         ret = false; // to avoid warning
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::PlatformMngt::MessageQueueDestroyedException&)
     {
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     try
     {
         size_t size = queue.size();
         size = 0; // to avoid warning
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::PlatformMngt::MessageQueueDestroyedException&)
     {
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     try
@@ -382,15 +382,15 @@ void TestMessageQueue::do_tests()
         queue.push(mes.get());
         mes.release();
 
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::PlatformMngt::MessageQueueDestroyedException&)
     {
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     try
@@ -402,29 +402,29 @@ void TestMessageQueue::do_tests()
         mes1.release();
 
         queue.push(messages);
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::PlatformMngt::MessageQueueDestroyedException&)
     {
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     try
     {
         std::auto_ptr<std::string> mes(queue.pop());
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::PlatformMngt::MessageQueueDestroyedException&)
     {
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 }

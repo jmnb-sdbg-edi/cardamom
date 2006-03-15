@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -50,7 +50,7 @@ module CdmwPlatformMngt
          * Useful for a supervision observer that is
          * registered with multiple systems.
          */
-        public SystemName system_name;
+        public ElementName system_name;
 
         /**
          * Indicates the kind of the event.
@@ -89,7 +89,7 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
+            in ElementName system_name,
             in FunctioningMode system_mode, in string mode_info);
     };
 
@@ -112,7 +112,7 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
+            in ElementName system_name,
             in SystemStatus system_status, in string status_info);
     };
 
@@ -124,7 +124,7 @@ module CdmwPlatformMngt
         /**
          * The name of the host whose status has changed.
          */
-        public HostName host_name;
+        public ElementName host_name;
 
         /**
          * The new status of the host.
@@ -135,8 +135,8 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in HostName host_name, in HostStatus host_status);
+            in ElementName system_name,
+            in ElementName host_name, in HostStatus host_status);
     };
 
     /**
@@ -147,20 +147,20 @@ module CdmwPlatformMngt
         /**
          * The name of the host whose status has changed.
          */
-        public HostName host_name;
+        public ElementName host_name;
 
         /**
          * The name of the application whose mode changed.
          */
-        public ApplicationName application_name;
+        public ElementName application_name;
 
        /**
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in HostName host_name,
-            in ApplicationName application_name);
+            in ElementName system_name,
+            in ElementName host_name,
+            in ElementName application_name);
     };
 
     /**
@@ -171,7 +171,7 @@ module CdmwPlatformMngt
         /**
          * The name of the application whose mode changed.
          */
-        public ApplicationName application_name;
+        public ElementName application_name;
 
         /**
          * The mode of the application.
@@ -187,8 +187,8 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ApplicationName application_name,
+            in ElementName system_name,
+            in ElementName application_name,
             in FunctioningMode application_mode, in string mode_info);
     };
     
@@ -200,7 +200,7 @@ module CdmwPlatformMngt
         /**
          * The name of the application whose status changed.
          */
-        public ApplicationName application_name;
+        public ElementName application_name;
 
         /**
          * The status of the application.
@@ -216,8 +216,8 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ApplicationName application_name,
+            in ElementName system_name,
+            in ElementName application_name,
             in ApplicationStatus application_status, in string status_info);
     };
 
@@ -230,11 +230,6 @@ module CdmwPlatformMngt
          * The process id.
          */
         public ProcessID process_id;
-
-        /**
-         * The name of the process host.
-         */
-        public HostName host_name;
 
         /**
          * The issuer of the event.
@@ -250,8 +245,8 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ProcessID process_id, in HostName host_name,
+            in ElementName system_name,
+            in ProcessID process_id,
             in CdmwPlatformMngtBase::EventIssuer issuer,
             in string info);
     };
@@ -284,50 +279,14 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ProcessID process_id, in HostName host_name,
+            in ElementName system_name,
+            in ProcessID process_id,
             in CdmwPlatformMngtBase::EventIssuer issuer,
             in ProcessStatus process_status,
             in short step_number, in string step_label,
             in string info);
     };
 
-    /**
-     * The status change for an activity point. 
-     */
-    valuetype ActivityPointStatusChange : Event
-    {
-        /**
-         * The process id.
-         */
-        public ProcessID process_id;
-
-        /**
-         * The name of the process host.
-         */
-        public HostName host_name;
-
-
-        /**
-         * The name of the activity point.
-         */
-        public ActivityPointName point_name;
-
-        /**
-         * The status of the activity point.
-         */
-        public ActivityPointStatus point_status;
-
-        /**
-         * The factory method.
-         */
-        factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ProcessID process_id, in HostName host_name,
-            in ActivityPointName point_name,
-            in ActivityPointStatus point_status);
-
-    };
 
     /**
      * The status change for a system entity. 
@@ -335,14 +294,19 @@ module CdmwPlatformMngt
     valuetype SystemEntityStatusChange : Event
     {
         /**
+         * The name of the system owning the entity.
+         */
+        //public ElementName system_name;
+        
+        /**
          * The name of the entity whose status changed.
          */
-        public CdmwPlatformMngtEntity::EntityName entity_name;
+        public ElementName entity_name;
 
         /**
          * The new status of the entity.
          */
-        public CdmwPlatformMngtEntity::EntityStatus entity_status;
+        public EntityStatus entity_status;
 
         /**
          * The additional information about the status change.
@@ -353,12 +317,35 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in CdmwPlatformMngtEntity::EntityName entity_name,
-            in CdmwPlatformMngtEntity::EntityStatus entity_status,
+            in ElementName system_name,
+            in ElementName entity_name,
+            in EntityStatus entity_status,
             in string info);
 
     };
+
+    /**
+     * The status change for an application entity. 
+     */
+    valuetype HostEntityStatusChange : SystemEntityStatusChange
+    {
+        /**
+         * The name of the host owning the entity.
+         */
+        public ElementName host_name;
+
+        /**
+         * The factory method for an host entity.
+         */
+        factory create(in CdmwPlatformMngtBase::EventHeader header,
+            in ElementName system_name,
+            in ElementName host_name,
+            in ElementName entity_name,
+            in EntityStatus entity_status,
+            in string info);
+
+    };
+
 
     /**
      * The status change for an application entity. 
@@ -368,16 +355,16 @@ module CdmwPlatformMngt
         /**
          * The name of the application owning the entity.
          */
-        public ApplicationName application_name;
+        public ElementName application_name;
 
         /**
          * The factory method for an application entity.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ApplicationName application_name,
-            in CdmwPlatformMngtEntity::EntityName entity_name,
-            in CdmwPlatformMngtEntity::EntityStatus entity_status,
+            in ElementName system_name,
+            in ElementName application_name,
+            in ElementName entity_name,
+            in EntityStatus entity_status,
             in string info);
 
     };
@@ -390,23 +377,79 @@ module CdmwPlatformMngt
         /**
          * The name of the process owning the entity.
          */
-        public ProcessName process_name;
+        public ElementName process_name;
 
         /**
          * The name of the process host.
          */
-        public HostName host_name;
+        public ElementName host_name;
 
         /**
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ApplicationName application_name, in ProcessName process_name,
-            in HostName host_name,
-            in CdmwPlatformMngtEntity::EntityName entity_name,
-            in CdmwPlatformMngtEntity::EntityStatus entity_status,
+            in ElementName system_name,
+            in ElementName application_name, 
+            in ElementName process_name,
+            in ElementName host_name,
+            in ElementName entity_name,
+            in EntityStatus entity_status,
             in string info);
+    };
+    
+    
+    /**
+    * The Property Info.
+    */
+    struct PropertyInfo
+    {
+        /**
+         * The name of the property whose value changed.
+         */
+        CosPropertyService::PropertyName property_name;
+
+        /**
+         * The new value of the property.
+         */
+        any property_new_value;
+        
+        /**
+         * The old value of the property.
+         */
+        any property_old_value;
+    };
+
+    typedef sequence<PropertyInfo> PropertyInfos;
+    
+    /**
+     * The value change for a set of properties. 
+     */
+     
+    valuetype PropertyChange : Event
+    {
+        /**
+         * The path of element which properties have changed
+         */
+        public ElementPath element_path;
+
+        /**
+         * The infos about the changed properties.
+         */
+        public PropertyInfos property_infos;
+        
+        /**
+         * The additional information about values change.
+         */
+        public string info;
+
+        /**
+         * The factory method.
+         */
+        factory create(in CdmwPlatformMngtBase::EventHeader header,
+            in ElementPath element_path,
+            in PropertyInfos property_infos,
+            in string info);
+
     };
 
     /**
@@ -417,12 +460,17 @@ module CdmwPlatformMngt
         /**
          * The name of the application.
          */
-        public ApplicationName application_name;
+        public ElementName application_name;
 
         /**
          * The name of the process.
          */
-        public ProcessName process_name;
+        public ElementName process_name;
+        
+        /**
+         * The name of the host.
+         */
+        public ElementName host_name;
 
         /**
          * The issuer of the event.
@@ -438,9 +486,10 @@ module CdmwPlatformMngt
          * The factory method.
          */
         factory create(in CdmwPlatformMngtBase::EventHeader header,
-            in SystemName system_name,
-            in ApplicationName application_name,
-            in ProcessName process_name,
+            in ElementName system_name,
+            in ElementName application_name,
+            in ElementName process_name,
+            in ElementName host_name,
             in CdmwPlatformMngtBase::EventIssuer issuer,
             in any data);
     };

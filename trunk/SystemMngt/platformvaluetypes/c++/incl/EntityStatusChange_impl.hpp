@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -74,7 +74,7 @@ namespace Cdmw
                     const CdmwPlatformMngtBase::EventHeader& aHeader,
                     const char* systemNname,
                     const char* entityName,
-                    CdmwPlatformMngtEntity::EntityStatus entityStatus,
+                    const char* entityStatus,
                     const char* theInfo );
         };
 
@@ -111,17 +111,15 @@ namespace Cdmw
                  * provided as parameters. Use this method with a process's entity event.
                  * 
                  *@param system_name Name of the system issuing this status change event.
-                 *@param application_name The application's name.
-                 *@param process_name The name of the process.
                  *@param entity_name The entity's name.
                  *@param entity_status Its status .
                  *@param info Some additional information.
                  */
                 SystemEntityStatusChange_impl(
                     const CdmwPlatformMngtBase::EventHeader& aHeader,
-                    const char* systemNname,
+                    const char* systemName,
                     const char* entityName,
-                    CdmwPlatformMngtEntity::EntityStatus entityStatus,
+                    const char* entityStatus,
                     const char* theInfo );
 
 
@@ -149,7 +147,108 @@ namespace Cdmw
 
 
 
+        /**
+         *Purpose:
+         *<p> A factory class for creating CdmwPlatformMngt::HostEntityStatusChange events.
+         */
 
+        class HostEntityStatusChangeFactory : public virtual CdmwPlatformMngt::HostEntityStatusChange_init
+        {
+
+            private:
+                /**
+                 * Purpose:
+                 * <p> Inherited method used for unmarshalling factory object.
+                 * 
+                 *@return The unmarshalled factory.
+                 */
+                virtual CORBA::ValueBase* create_for_unmarshal();
+
+            public:
+
+                /**
+                 * Purpose:
+                 * <p> Creates a CdmwPlatformMngt::HostEntityStatusChange with the given properties
+                 * provided as parameters. Use this method with a process's entity event.
+                 * 
+                 *@param system_name Name of the system issuing this status change event.
+                 *@param host_name Name of the host issuing this status change event.
+                 *@param entity_name The entity's name.
+                 *@param entity_status Its status .
+                 *@param info Some additional information.
+                 *
+                 *@return the newly created CdmwPlatformMngt::SystemEntityStatusChange object.
+                 */
+                virtual CdmwPlatformMngt::HostEntityStatusChange* create(
+                    const CdmwPlatformMngtBase::EventHeader& aHeader,
+                    const char* systemName,
+                    const char* hostName,
+                    const char* entityName,
+                    const char* entityStatus,
+                    const char* theInfo );
+        };
+
+        /**
+         *Purpose:
+         *<p> An implementation class.
+         *
+         *Features:
+         *<p> [Thread safety, exception safety, performance]
+         *    [if no pertinent write none ]
+         *
+         *@see  [if necessary] 
+         *@link [if necessary] 
+         *
+         */
+
+        class HostEntityStatusChange_impl :
+                    public virtual OBV_CdmwPlatformMngt::HostEntityStatusChange,
+                    public virtual SystemEntityStatusChange_impl
+        {
+
+            protected:
+                /**
+                 * Purpose:
+                 * <p> The default constructor.
+                 */
+                HostEntityStatusChange_impl();
+
+                /**
+                 * Purpose:
+                 * <p> Creates a CdmwPlatformMngt::HostEntityStatusChange_impl with the given properties
+                 * provided as parameters. Use this method with a process's entity event.
+                 * 
+                 *@param system_name Name of the system issuing this status change event.
+                 *@param host_name The host's name.
+                 *@param entity_name The entity's name.
+                 *@param entity_status Its status .
+                 *@param info Some additional information.
+                 */
+                HostEntityStatusChange_impl(
+                    const CdmwPlatformMngtBase::EventHeader& aHeader,
+                    const char* systemName,
+                    const char* hostName,
+                    const char* entityName,
+                    const char* entityStatus,
+                    const char* theInfo );
+                    
+                friend class HostEntityStatusChangeFactory;
+
+
+            public:
+                /**
+                 * Inherited from CORBA::ValueBase
+                 */
+                virtual CORBA::ValueBase* _copy_value();
+
+                /**
+                 * Purpose:
+                 * <p> Provides the description of this event.
+                 * 
+                 *@return The description string of this event.
+                 */
+                virtual char* to_string();
+        };
 
         /**
          *Purpose:
@@ -189,7 +288,7 @@ namespace Cdmw
                     const char* systemName,
                     const char* applicationName,
                     const char* entityName,
-                    CdmwPlatformMngtEntity::EntityStatus entityStatus,
+                    const char* entityStatus,
                     const char* theInfo );
         };
 
@@ -235,7 +334,7 @@ namespace Cdmw
                     const char* systemName,
                     const char* applicationName,
                     const char* entityName,
-                    CdmwPlatformMngtEntity::EntityStatus entity_status,
+                    const char* entity_status,
                     const char* theInfo );
 
                 friend class ApplicationEntityStatusChangeFactory;
@@ -298,7 +397,7 @@ namespace Cdmw
                     const char* processName,
                     const char* hostName,
                     const char* entityName,
-                    CdmwPlatformMngtEntity::EntityStatus entityStatus,
+                    const char* entityStatus,
                     const char* theInfo );
         };
 
@@ -337,7 +436,7 @@ namespace Cdmw
                     const char* processName,
                     const char* hostName,
                     const char* entityName,
-                    CdmwPlatformMngtEntity::EntityStatus entityStatus,
+                    const char* entityStatus,
                     const char* theInfo );
 
                 friend class ProcessEntityStatusChangeFactory;

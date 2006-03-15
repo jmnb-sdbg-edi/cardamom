@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -603,11 +603,12 @@ class LogMngr
 
             const char *logTypeString = getLogTypeString(logType);
 
-            time_t ltime;
-            if (time(&ltime) == time_t(-1))
-            {
-                return "NoTime";    
-            }
+            Cdmw::OsSupport::OS::Timeval time_val = Cdmw::OsSupport::OS::get_time();
+            time_t ltime = time_val.seconds;
+//             if (time(&ltime) == time_t(-1))
+//             {
+//                 return "NoTime";    
+//             }
             
             char buffer[1024];
 
@@ -617,6 +618,9 @@ class LogMngr
 
             strftime(buffer, 1024, "%Y/%m/%d %H:%M:%S", &now);
             std::string header = buffer;
+            std::ostringstream microtime;
+            microtime << ":" << (time_val.microseconds)/1000<< ":" << (time_val.microseconds)%1000;
+            header += microtime.str();;
             header += " ";
             header += logTypeString;
             header += " ";
