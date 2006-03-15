@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -30,14 +30,14 @@ import cdmw.orbsupport.ExceptionMinorCodes;
 //
 // IDL:omg.org/Components/HomeConfiguration:1.0
 //
-public class PushConsumerImpl 
+public class PushConsumerImpl
     extends com.thalesgroup.CdmwCcmCif.PushConsumerPOA {
 
     /**
      * non cdmw consumer
      */
     private org.omg.Components.EventConsumerBase ccmConsumer;
-    
+
     /**
      * LifeCycleObjectBase object used for delegation
      */
@@ -50,7 +50,7 @@ public class PushConsumerImpl
      * @param ccmConsumer
      */
     public PushConsumerImpl(
-        com.thalesgroup.CdmwCcmContainer.CCM2Context ctx, 
+        com.thalesgroup.CdmwCcmContainer.CCM2Context ctx,
         org.omg.Components.EventConsumerBase ccmConsumer) {
         this.lifecycleObjectBase = new LifeCycleObjectBase(ctx);
         this.ccmConsumer = ccmConsumer;
@@ -67,11 +67,16 @@ public class PushConsumerImpl
     // IDL:omg.org/CosEventComm/PushConsumer/push:1.0
     //
     public void push(org.omg.CORBA.Any data) {
-        
-        java.io.Serializable valueType = 
+        /* PCR-0049
+        java.io.Serializable valueType =
             org.omg.CORBA.ValueBaseHelper.extract(data);
-        org.omg.Components.EventBase evt = 
+        org.omg.Components.EventBase evt =
             (org.omg.Components.EventBase) valueType;
+        */
+        cdmw.orbsupport.Codec codec = new cdmw.orbsupport.Codec();
+        org.omg.Components.EventBase evt = (org.omg.Components.EventBase)
+            org.omg.CORBA.ValueBaseHelper.read(codec.decode(data));
+
         if (evt == null) {
             System.err.println("PushConsumerImpl push nil event!");
             throw new org.omg.CORBA.BAD_PARAM(
@@ -88,9 +93,9 @@ public class PushConsumerImpl
                 org.omg.CORBA.CompletionStatus.COMPLETED_NO);
 
         }
-        
+
     }
-    
+
     //
     // IDL:omg.org/CosLifeCycle/LifeCycleObject/copy:1.0
     //
@@ -104,7 +109,7 @@ public class PushConsumerImpl
             org.omg.CosLifeCycle.CannotMeetCriteria {
         return this.lifecycleObjectBase.copy(there, the_criteria);
     }
-    
+
     //
     // IDL:omg.org/CosLifeCycle/LifeCycleObject/move:1.0
     //
@@ -118,7 +123,7 @@ public class PushConsumerImpl
             org.omg.CosLifeCycle.CannotMeetCriteria {
         this.lifecycleObjectBase.move(there, the_criteria);
     }
-    
+
     //
     // IDL:omg.org/CosLifeCycle/LifeCycleObject/remove:1.0
     //
@@ -127,4 +132,3 @@ public class PushConsumerImpl
     }
 
 }
-

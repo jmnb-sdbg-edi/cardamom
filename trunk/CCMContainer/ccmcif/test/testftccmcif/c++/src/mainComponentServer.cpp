@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -31,6 +31,7 @@
 #include <Foundation/ossupport/OS.hpp>
 #include <Foundation/testutils/Testable.hpp>
 #include <Foundation/orbsupport/CORBA.hpp>
+#include <Foundation/orbsupport/Codec.hpp>
 #include <Foundation/orbsupport/OrbSupport.hpp>
 #include <Foundation/orbsupport/StrategyList.hpp>
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
@@ -57,8 +58,9 @@
 #include <CCMContainer/ccmcif/ConsumerDescription_impl.hpp>
 
 
-#include "testftccmcif/SessionComponentWithFacetHome_impl.hpp"
+#include "testftccmcif/FTSessionComponentWithFacetHome_impl.hpp"
 #include "testftccmcif/SessionComponentWithConsumerHome_impl.hpp"
+#include "testftccmcif/FTSessionComponentWithConsumerHome_impl.hpp"
 #include "testftccmcif/ComponentInstallationStub.hpp"
 
 
@@ -127,7 +129,7 @@ void register_ft_location(CORBA::ORB_ptr orb)
     // Get PrimaryBackupGroupRepository object
     //
     Cdmw::FT::Location::PrimaryBackupGroupRepository_impl * primary_backup_repository =
-        Cdmw::FT::Location::PrimaryBackupGroupRepository_impl::get_instance();
+        Cdmw::FT::Location::PrimaryBackupGroupRepository_impl::Get_instance();
         
         std::cout << "   -> Create PrimaryBackupAdmin" << std::endl;
     //
@@ -251,18 +253,26 @@ prepare_ccm_environment(CORBA::ORB_ptr orb)
     // Register HomeAllocators
     //
     typedef Cdmw::CCM::Container::HomeAllocator
-            <Cdmw::CCM::CIF::CdmwTestFtCcmCif::SessionComponentWithFacetHome_impl> 
-            ComponentWithFacetHome_Allocator;
+            <Cdmw::CCM::CIF::CdmwTestFtCcmCif::ComponentsModule::FTSessionComponentWithFacetHome_impl> 
+            FTComponentWithFacetHome_Allocator;
     Cdmw::CCM::Container::HomeAllocatorRegistry::Register(
-        "Cdmw.CCM.CIF.CdmwTestFtCcmCif.SessionComponentWithFacetHome_impl",
-        &ComponentWithFacetHome_Allocator::TheAllocator);
+        "Cdmw.CCM.CIF.CdmwTestFtCcmCif.ComponentsModule.FTSessionComponentWithFacetHome_impl",
+        &FTComponentWithFacetHome_Allocator::TheAllocator);
 
     typedef Cdmw::CCM::Container::HomeAllocator
-            <Cdmw::CCM::CIF::CdmwTestFtCcmCif::SessionComponentWithConsumerHome_impl> 
+            <Cdmw::CCM::CIF::CdmwTestFtCcmCif::ComponentsModule::SessionComponentWithConsumerHome_impl> 
             ComponentWithConsumerHome_Allocator;
     Cdmw::CCM::Container::HomeAllocatorRegistry::Register(
-        "Cdmw.CCM.CIF.CdmwTestFtCcmCif.SessionComponentWithConsumerHome_impl",
+        "Cdmw.CCM.CIF.CdmwTestFtCcmCif.ComponentsModule.SessionComponentWithConsumerHome_impl",
         &ComponentWithConsumerHome_Allocator::TheAllocator);
+
+    typedef Cdmw::CCM::Container::HomeAllocator
+            <Cdmw::CCM::CIF::CdmwTestFtCcmCif::ComponentsModule::FTSessionComponentWithConsumerHome_impl> 
+            FTComponentWithConsumerHome_Allocator;
+    Cdmw::CCM::Container::HomeAllocatorRegistry::Register(
+        "Cdmw.CCM.CIF.CdmwTestFtCcmCif.ComponentsModule.FTSessionComponentWithConsumerHome_impl",
+        &FTComponentWithConsumerHome_Allocator::TheAllocator);
+
 
     //
     // Get the root POA 
@@ -414,7 +424,7 @@ int main(int argc, char* argv[])
         std::cout << "ComponentServer " << ProcessName << " starting..." << std::endl;
         
         // Initialise FT service
-        Cdmw::FT::FTServiceInit::init(argc, argv, false);
+        Cdmw::FT::FTServiceInit::Init(argc, argv, false);
 
         Cdmw::OrbSupport::StrategyList orb_strategies;
         orb_strategies.add_OrbThreaded();
@@ -422,6 +432,9 @@ int main(int argc, char* argv[])
         orb_strategies.add_multicast();
 
         orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, orb_strategies);
+
+        // PCR-0049
+        Cdmw::OrbSupport::CodecBase::init(orb.in());
 
         //
         // Register FT Location

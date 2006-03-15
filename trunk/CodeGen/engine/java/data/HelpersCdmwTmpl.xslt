@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -1243,6 +1243,7 @@
 <xsl:template name="buildHomeImplClassname">
    <xsl:param name="_homeImplNode"/>
    <xsl:param name="_scoped" select="true()"/>
+   <xsl:param name="_prefix" select="''"/>
 
    <xsl:choose>
       <xsl:when test="boolean($_homeImplNode/@classname)">
@@ -1259,13 +1260,13 @@
          </xsl:choose>
       </xsl:when>
       <xsl:otherwise>
-         <xsl:variable name="moduleName" select="substring-before($_homeImplNode/../@factory-idref, $xmlSep)"/>
          <xsl:variable name="homeName">
             <xsl:call-template name="getLastToken">
                <xsl:with-param name="_string" select="$_homeImplNode/../@factory-idref"/>
                <xsl:with-param name="_separator" select="$xmlSep"/>
             </xsl:call-template>
          </xsl:variable>
+         <xsl:variable name="moduleName" select="substring-before($_homeImplNode/../@factory-idref, concat($xmlSep,$homeName))"/>
          <xsl:variable name="homeCategory">
             <xsl:choose>
                <xsl:when test="$_homeImplNode/@category = 'ENTITY'">
@@ -1284,10 +1285,10 @@
          </xsl:variable>
          <xsl:choose>
             <xsl:when test="$_scoped">
-               <xsl:value-of select="concat('Cdmw.CCM.CIF.Cdmw', $moduleName, $xmlSep, $homeCategory, $homeName, '_impl')"/>
+               <xsl:value-of select="concat('Cdmw.CCM.CIF.Cdmw', $moduleName, $xmlSep, $_prefix, $homeCategory, $homeName, '_impl')"/>
             </xsl:when>
             <xsl:otherwise>
-               <xsl:value-of select="concat($homeCategory, $homeName, '_impl')"/>
+               <xsl:value-of select="concat($_prefix, $homeCategory, $homeName, '_impl')"/>
             </xsl:otherwise>
          </xsl:choose>
       </xsl:otherwise>
@@ -1473,19 +1474,13 @@
                         <xsl:with-param name="_whatToFind" select="'CCMPublishes'"/>
                      </xsl:call-template>
                   </xsl:variable>
-                  <xsl:variable name="hasConsumes">
-                     <xsl:call-template name="componentElements">
-                        <xsl:with-param name="_componentName" select="$managedComponentNode/@name"/>
-                        <xsl:with-param name="_whatToFind" select="'CCMConsumes'"/>
-                     </xsl:call-template>
-                  </xsl:variable>
                   <!--
                      Proceed to the next framework.
                   -->
                   <xsl:call-template name="containsEventPorts">
                      <xsl:with-param name="_programNode" select="$_programNode"/>
                      <xsl:with-param name="_index" select="$_index + 1"/>
-                     <xsl:with-param name="_result" select="concat($_result, ' ', $hasEmits, ' ', $hasPublishes, ' ', $hasConsumes)"/>
+                     <xsl:with-param name="_result" select="concat($_result, ' ', $hasEmits, ' ', $hasPublishes)"/>
                   </xsl:call-template>
                </xsl:when>
                <xsl:otherwise>

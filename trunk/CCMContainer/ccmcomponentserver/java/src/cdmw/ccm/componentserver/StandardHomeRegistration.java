@@ -1,31 +1,31 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 package cdmw.ccm.componentserver;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 
 /**
@@ -34,7 +34,7 @@ import cdmw.namingandrepository.RepositoryInterface;
  */
 public class StandardHomeRegistration extends HomeRegistrationBase {
 
-    private cdmw.namingandrepository.NamingInterface root;
+    private cdmw.commonsvcs.naming.NamingInterface root;
 
     public StandardHomeRegistration() {
         // Check that RepositoryInterface has been initialised
@@ -61,7 +61,7 @@ public class StandardHomeRegistration extends HomeRegistrationBase {
                 dom.register_new_factory(basename, factory);
                 result = true;
             }
-        } catch (cdmw.namingandrepository.InvalidNameException ine) {
+        } catch (cdmw.commonsvcs.naming.InvalidNameException ine) {
             // ignore...
         } catch (com.thalesgroup.CdmwNamingAndRepository.NoNameDomain nnd) {
             // ignore...
@@ -93,7 +93,7 @@ public class StandardHomeRegistration extends HomeRegistrationBase {
                 RepositoryInterface.getDomain(dirname);
             dom.release_name(basename);
             result = true;
-        } catch (cdmw.namingandrepository.InvalidNameException ine) {
+        } catch (cdmw.commonsvcs.naming.InvalidNameException ine) {
             // ignore...
         } catch (com.thalesgroup.CdmwNamingAndRepository.NoNameDomain nnd) {
             // ignore...

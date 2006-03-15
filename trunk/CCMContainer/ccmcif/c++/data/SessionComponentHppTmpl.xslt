@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -28,15 +28,28 @@
    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
    xmlns:UML="org.omg/UML1.3">
 
+<!--
+   Main - This template fetches the necessary data from inputs
+   to generate a file when FT.
+
+   @param none
+-->
+<xsl:template name="ft_session_component_hpp">
+   <xsl:call-template name="session_component_hpp">
+      <xsl:with-param name="_hasFaultTolerance" select="'yes'"/>
+   </xsl:call-template>
+</xsl:template> <!-- end of template ft_session_home_cpp -->
 
 
 <!--
    Main - This template fetches the necessary data from inputs
-   to generate a file.
+   to generate a file. It can be called by ft_session_home_cpp template
+   if FT. In this case the parameter _hasFaultTolerance is set to true.
 
    @param none
 -->
 <xsl:template name="session_component_hpp">
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <!--
       Parameters below are used for recursiveness.
    -->
@@ -77,7 +90,16 @@
          <xsl:variable name="managedComponentNode" select="key('classById', $managedComponentId)"/>
 
          <xsl:if test="boolean($managedComponentNode)">
-            <xsl:variable name="componentImplClassname" select="concat('Session', $managedComponentNode/@name, '_impl')"/>
+            <xsl:variable name="componentImplClassname">
+               <xsl:choose>
+                  <xsl:when test="$_hasFaultTolerance = 'yes'">
+                     <xsl:value-of select="concat('FTSession', $managedComponentNode/@name, '_impl')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                     <xsl:value-of select="concat('Session', $managedComponentNode/@name, '_impl')"/>
+                  </xsl:otherwise>
+               </xsl:choose>
+            </xsl:variable>
 
             <!--
                Get the output filename.
@@ -124,8 +146,10 @@
                         <xsl:with-param name="_homeImplNode" select="$homeImplNode"/>
                      </xsl:call-template>
                   </xsl:with-param>
+                  <xsl:with-param name="_homeName" select="$homeName" />
                   <xsl:with-param name="_componentName" select="$managedComponentNode/@name"/>
                   <xsl:with-param name="_isSegmented" select="$isSegmented"/>
+                  <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
                </xsl:call-template>
                <!--
                   Insert the #endif instruction.
@@ -142,6 +166,7 @@
             Proceed to the next home impl if any.
          -->
          <xsl:call-template name="session_component_hpp">
+            <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
             <xsl:with-param name="_index" select="$_index + 1"/>
          </xsl:call-template>
       </xsl:if>
@@ -158,8 +183,10 @@
 -->
 <xsl:template name="session_component_hpp.content">
    <xsl:param name="_scopedHomeImplClassname"/>
+   <xsl:param name="_homeName"/>
    <xsl:param name="_componentName"/>
    <xsl:param name="_isSegmented"/>
+   <xsl:param name="_hasFaultTolerance"/>
 
    <!--
       References to some nodes.
@@ -179,6 +206,11 @@
          <xsl:with-param name="_name" select="$_componentName"/>
       </xsl:call-template>
    </xsl:variable>
+   <xsl:variable name="cppHomeScope">
+      <xsl:call-template name="getScope">
+         <xsl:with-param name="_name" select="$_homeName"/>
+      </xsl:call-template>
+   </xsl:variable>
 
    <!--
       The code generation starts here.
@@ -196,17 +228,23 @@
    </xsl:variable>
 
    #include "<xsl:value-of select="concat($pathPrefix, 'Cdmw_', substring-before($idl3Filename, '.idl') , '_cif')"/>.skel.hpp"
+<xsl:if test="$_hasFaultTolerance = 'no'">
 <![CDATA[
 #include <CCMContainer/ccmcif/CCMObject_impl.hpp>
 
-#ifdef CDMW_USE_FAULTTOLERANCE
+]]>
+</xsl:if>
+<xsl:if test="$_hasFaultTolerance = 'yes'">
+<![CDATA[
+#include <CCMContainer/ccmcif/FTCCMObject_impl.hpp>
 
 #include <FaultTolerance/idllib/FT.stub.hpp>
 #include <FaultTolerance/idllib/CdmwFTActivation.skel.hpp>
 #include <Foundation/orbsupport/RefCountLocalObject.hpp>
-
-#endif
 ]]>
+
+
+</xsl:if>
 
    <!--
       Include all the contained facets.
@@ -217,44 +255,71 @@
    </xsl:call-template>
 
    <xsl:call-template name="openNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
 
-#ifdef CDMW_USE_FAULTTOLERANCE
-    // forward declaration
-    class Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl;
-#endif
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+   // forward declaration
+    class FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl;
+   </xsl:if>
    
    /**
     * Session component
     */
 
-   <xsl:if test="$_isSegmented = 'yes'">
+   <xsl:if test="$_hasFaultTolerance = 'no'">
+      <xsl:if test="$_isSegmented = 'yes'">
    class Session<xsl:value-of select="$_componentName"/>_impl : virtual public POA_<xsl:value-of select="$cppScopedComponentName"/>,
-   </xsl:if>
-   <xsl:if test="$_isSegmented = 'no'">
+      </xsl:if>
+      <xsl:if test="$_isSegmented = 'no'">
    class Session<xsl:value-of select="$_componentName"/>_impl : virtual public POA_Cdmw_<xsl:value-of select="$cppScopedComponentName"/>,
+      </xsl:if>
    </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+      <xsl:if test="$_isSegmented = 'yes'">
+   class FTSession<xsl:value-of select="$_componentName"/>_impl : virtual public POA_<xsl:value-of select="$cppScopedComponentName"/>,
+      </xsl:if>
+      <xsl:if test="$_isSegmented = 'no'">
+   class FTSession<xsl:value-of select="$_componentName"/>_impl : virtual public POA_Cdmw_<xsl:value-of select="$cppScopedComponentName"/>,
+      </xsl:if>
+   </xsl:if>
+
+   <xsl:if test="$_hasFaultTolerance = 'no'">
                                                                 virtual public CCMObject_impl
+   </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+                                                                public FTCCMObject_impl
+   </xsl:if>
    {
       public:
-#ifdef CDMW_USE_FAULTTOLERANCE
-         friend class Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl;
-#endif
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+         friend class FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl;
+   </xsl:if>
 
-
-         Session<xsl:value-of select="$_componentName"/>_impl(const std::string comp_oid,
-                  CdmwCcmContainer::CCM2Context_ptr ctx,
+   <xsl:if test="$_hasFaultTolerance = 'no'">
+         Session<xsl:value-of select="$_componentName"/>_impl(const <![CDATA[std::string&]]> comp_oid,
+   </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+         FTSession<xsl:value-of select="$_componentName"/>_impl(const <![CDATA[std::string&]]> comp_oid,
+   </xsl:if>
+                  Context*                          ctx,
                   CORBA::Object_ptr                 comp_ref,
                   Components::EnterpriseComponent*  executor,
-#ifdef CDMW_USE_FAULTTOLERANCE
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
                   ::FT::ObjectGroup_ptr               group_ref,
-#endif
+   </xsl:if>
                   bool is_created_by_factory_operation)
             throw (Components::CCMException,
                    CORBA::SystemException);
 
+   <xsl:if test="$_hasFaultTolerance = 'no'">
          ~Session<xsl:value-of select="$_componentName"/>_impl();
+   </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+         ~FTSession<xsl:value-of select="$_componentName"/>_impl();
+   </xsl:if>
 
          /**
           * Component attributes
@@ -424,7 +489,7 @@
              * @return the facet servant.
              */
             virtual PortableServer::Servant
-            get_facet_servant(const char* facet_name)
+            get_facet_servant(const std::string& facet_name)
                throw (CORBA::SystemException);
          ]]>
 
@@ -438,13 +503,21 @@
          void advise_executor_of_remove_component()
            throw (CORBA::SystemException);
 
+   <xsl:if test="$_hasFaultTolerance = 'no'">
          // return true if configuration complete has already been called
-         bool is_configured() { return m_configured;}
+         inline bool is_configured() { return m_configured;}
+   </xsl:if>
  
 
       private:
+   <xsl:if test="$_hasFaultTolerance = 'no'">
          Session<xsl:value-of select="$_componentName"/>_impl(const Session<xsl:value-of select="$_componentName"/>_impl<![CDATA[&);]]>
          void operator=(const Session<xsl:value-of select="$_componentName"/>_impl<![CDATA[&);]]>
+   </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+         FTSession<xsl:value-of select="$_componentName"/>_impl(const FTSession<xsl:value-of select="$_componentName"/>_impl<![CDATA[&);]]>
+         void operator=(const FTSession<xsl:value-of select="$_componentName"/>_impl<![CDATA[&);]]>
+   </xsl:if>
 
          /**
           * Attributes
@@ -473,14 +546,14 @@
          // <xsl:value-of select="$_componentName"/> context executor
          Cdmw_<xsl:value-of select="$cppComponentScope"/>::CCM_<xsl:value-of select="$_componentName"/>_SessionContext_var  m_context_executor;
 
-#ifdef CDMW_USE_FAULTTOLERANCE
+         // Indicates if current component has been created via a factory operation
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
          ::FT::ObjectGroup_var         m_group_ref;
          ::CdmwFT::Location::ActivationHandler_var   m_activation_handler;
-       ::CdmwFT::Location::ActivationManager_var   m_activation_manager;
-       ::CdmwFT::Location::HandlerId   m_activation_handler_id;
-#endif
+         ::CdmwFT::Location::ActivationManager_var   m_activation_manager;
+         ::CdmwFT::Location::HandlerId   m_activation_handler_id;
+   </xsl:if>
          
-         // Indicates if current component has been created via a factory operation
          bool m_is_created_by_factory_operation;
 
          <xsl:call-template name="findAllInterfaceReadWriteAttributes">
@@ -491,7 +564,9 @@
    };
 
    <xsl:call-template name="closeNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
 
    <!--

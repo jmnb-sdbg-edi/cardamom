@@ -1,0 +1,5 @@
+PCR-0083 --  ChangeLogTag: Wed Jun  1 12:21:25 CEST 2005  Huynh Tran <card02@selex-si.com>
+
+	* engine/java/data/cdmwidl2.template
+
+	Fixed missing EOL.

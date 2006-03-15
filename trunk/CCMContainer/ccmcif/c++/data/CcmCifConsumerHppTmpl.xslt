@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -218,7 +218,19 @@
    // Forward declaration
    class CCMObject_impl;
 
-   namespace <xsl:value-of select="$consumerNamespace"/> { 
+   <xsl:call-template name="closeNamespace">
+      <xsl:with-param name="_scope" select="'Cdmw.CCM.CIF'"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
+   </xsl:call-template>
+
+
+   <xsl:call-template name="openNamespace">
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppScopedConsumerName)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="false()"/>
+   </xsl:call-template>
+
+
 
    class <xsl:value-of select="$consumerImplClassname"/> : virtual public POA_Cdmw_<xsl:value-of select="$cppScopedConsumerName"/>,
                virtual public LifeCycleObjectBase,
@@ -226,8 +238,8 @@
    {
       public:
          <xsl:value-of select="$consumerImplClassname"/>(Components::ExecutorLocator_ptr exec_locator, 
-               const char* name,
-               Components::CCM2Context_ptr ctx,
+               const <![CDATA[std::string& name]]>,
+               Context*                    ctx,
                PortableServer::Servant     component);
          ~<xsl:value-of select="$consumerImplClassname"/>() throw();     
          
@@ -258,7 +270,9 @@
    };
 
    <xsl:call-template name="closeNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppScopedConsumerName)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="false()"/>
    </xsl:call-template>
 
    <!--

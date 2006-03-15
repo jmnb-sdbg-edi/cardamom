@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -38,13 +38,17 @@
 #include "Foundation/testutils/Testable.hpp"
 #include "Foundation/ossupport/OS.hpp"
 #include "Foundation/orbsupport/CORBA.hpp"
+#include <Foundation/orbsupport/Codec.hpp>
 #include "Foundation/orbsupport/OrbSupport.hpp"
+#include "Foundation/orbsupport/CORBASystemExceptionWrapper.hpp"
 #include "Foundation/orbsupport/StrategyList.hpp"
 #include "Foundation/orbsupport/ExceptionMinorCodes.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "SystemMngt/tools/ProcessAdmin.hpp"
 #include "Event/idllib/CdmwEvent.stub.hpp"
+#include "Event/eventsupport/EventChannelFactory_impl.hpp"
+#include "LifeCycle/lifecycleinit/InitUtils.hpp"
 
 
 #include "SystemMngt/idllib/CdmwPlatformMngtProcessCallback.stub.hpp"
@@ -231,6 +235,53 @@ const int POA_THREAD_POOL_SIZE = 5;
 };  // end namespace
 
 
+
+//
+// Re-implement EventChannelFactory allocator to set 
+// use_profile_manager parameter attribute to false 
+// in EventChannelFactory constructor call.
+//   
+      
+namespace Cdmw {
+namespace Event {
+
+    template <>
+    PortableServer::Servant
+    EventChannelFactory_impl_Allocator::allocate(
+            CORBA::ORB_ptr orb,
+            PortableServer::POA_ptr parent,
+            CdmwLifeCycle::ObjectRegistration_ptr name_domain,
+            const std::string & name_domain_name,
+            const std::string & factory_name,
+            Cdmw::OrbSupport::POAThreadingPolicy & threading_policy,
+            int & argc, char** argv)
+        throw(Cdmw::OutOfMemoryException,
+              Cdmw::BadParameterException,
+              Cdmw::InternalErrorException,
+              CORBA::SystemException)
+    {
+        try {
+            return new Cdmw::Event::EventChannelFactory_impl(orb,
+                                                             parent,
+                                                             name_domain,
+                                                             name_domain_name,
+                                                             factory_name,
+                                                             threading_policy,
+                                                             argc,
+                                                             argv,
+                                                             false);
+        }
+        catch (const std::bad_alloc &)
+        {
+            CDMW_THROW(Cdmw::OutOfMemoryException);
+        }
+    }    
+      
+} // end of namespace Event
+} // end of namespace Cdmw
+
+
+
 int
 run(CORBA::ORB_ptr orb, const char* containerIOR, const char* consumerIOR)
 {
@@ -288,7 +339,7 @@ get_process_callback(CORBA::ORB_ptr orb)
         = CdmwPlatformMngt::ProcessCallback::_nil();
     {
         try {
-            Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
             CORBA::Object_var obj__ = ni.resolve(PROCESS_CALLBACK_BINDING_NAME);
             callback = CdmwPlatformMngt::ProcessCallback::_narrow(obj__.in());
             if (CORBA::is_nil(callback.in())) {
@@ -361,7 +412,7 @@ void initRepository(CORBA::ORB_ptr orb)
         = CdmwNamingAndRepository::Repository::_nil();
     {
         try {
-            Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
             CORBA::Object_var obj__ = ni.resolve(REPOSITORY_NAME);
                 
             rep = CdmwNamingAndRepository::Repository::_narrow(obj__.in());
@@ -400,7 +451,6 @@ int main(int argc, char* argv[])
     CdmwPlatformMngt::ProcessCallback_var callback;
     OS::ProcessId idNaming = 0; 
     OS::ProcessId idRepository = 0; 
-    OS::ProcessId idProfileManager = 0;
 #if CDMW_ORB_VDR == orbacus
     OS::ProcessId idEventServer = 0;
 #endif
@@ -463,6 +513,9 @@ int main(int argc, char* argv[])
     #endif        
         orb = Cdmw::OrbSupport::OrbSupport::ORB_init(nbArgs, 
             String::to_char_array(String::to_strings(serverArgs)), orb_strategies);
+
+        // PCR-0049
+        Cdmw::OrbSupport::CodecBase::init(orb.in());
 
         if (unit_tests) 
         {
@@ -542,67 +595,76 @@ int main(int argc, char* argv[])
           OS::sleep(timescale*1000);
         std::cout << "server initialised" << std::endl;
 
-         
-        // Starting the EventChannelManager
-        std::string profileManagerService="cdmw_event_channel_manager";
-    #if (CDMW_ORB_VDR == orbacus )
-        std::string managerArgs = " -ORBconfig obtest.conf ";
-    #elif (CDMW_ORB_VDR == tao )
-        std::string managerArgs = "";
-    #endif        
-        managerArgs += Options::CALLBACK_IOR_OPTION;
-        managerArgs += "=" + callbackIOR + " " 
-                    + Options::PROCESS_PORT_OPTION + "=15327 " 
-                    + Options::LOCALISATION_SERVICE_OPTION+ "=15328 " 
-                    + " --ProfileXMLFile=EventChannelConf1.xml " 
-                    + Options::PROCESS_XML_FILE_OPTION + "=EventChannelManager.xml "
-                        + Options::VALIDATE_XML_OPTION;
-        std::string dummy;
-    
-        std::cout << " launch EventChannelManager " << managerArgs << std::endl;
-        idProfileManager
-           = OS::create_process(profileManagerService, managerArgs);
-        OS::sleep(timescale*15000);
-        std::cout << "EventChannelManager started" << std::endl;
-        std::cin >> dummy;
-    
-        // EventChannelManager Proc URL is CDMW Test Application/PROC_000 
-        CdmwPlatformMngt::Process_var proc = CdmwPlatformMngt::Process::_nil();
-        std::string proc_url = "corbaname::localhost:" + nameServicePort;
-        proc_url += "#CDMW.I/ProcessCallback.simulated/CDMW Test Application/PROC_000";
-        obj = orb->string_to_object(proc_url.c_str());
-    
-        if (!CORBA::is_nil(obj.in())) 
+        //
+        // Create local event channel factory
+        //         
+        // Create CDMW Factories POA (persistent POA)
+        PortableServer::POA_var factories_poa = 
+            Cdmw::LifeCycle::InitUtils::create_cdmw_LifeCycle_POA(rootPOA.in());
+
+        std::string event_channel_factory_name = "LocalEventChannelFactory";
+
         {
-            proc = CdmwPlatformMngt::Process::_narrow(obj.in());
+           std::string full_name_domain_name;
+           full_name_domain_name = Cdmw::Common::Locations::CDMW_EVENT_SERVICE_NAME_DOMAIN;
+           full_name_domain_name += "/EVENT_CHANNELS";
+           std::string full_factory_name;
+           full_factory_name = Cdmw::Common::Locations::CDMW_EVENT_SERVICE_NAME_DOMAIN;
+           full_factory_name += "/FACTORIES/";
+           full_factory_name += event_channel_factory_name;
+           
+           // TAO doesn't support thread-pool policy with a persistent POA
+           std::auto_ptr<Cdmw::OrbSupport::POAThreadingPolicy> threading_policy(
+               new Cdmw::OrbSupport::ThreadPerConnectionPolicy());
+           
+           // Get the factory Allocator
+           Cdmw::LifeCycle::NamedObjectsFactoryAllocatorBase & allocator =
+               Cdmw::Event::EventChannelFactory_impl_Allocator::TheAllocator;
+            
+            try {
+                Cdmw::CommonSvcs::Naming::NamingInterface root_context =
+                    Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface();
+                Cdmw::LifeCycle::NamedObjectsFactory_initUtil::setup_named_object_factory(
+                    allocator,
+                    orb.in(),
+                    factories_poa.in(),
+                    Cdmw::NamingAndRepository::RepositoryInterface::get_repository(),
+                    root_context,
+                    full_name_domain_name,
+                    full_factory_name,
+                    "",
+                    *threading_policy,
+                    argc, argv
+                    );
+            
+            } catch (const Cdmw::OutOfMemoryException & ex ) {
+                std::string s ("Could not allocate memory for ");
+                s += full_factory_name;
+                s += "\n";
+                s += ex.what();
+                CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::NO_MEMORY>,
+                             CORBA::NO_MEMORY(Cdmw::OrbSupport::NO_MEMORY,
+                                              CORBA::COMPLETED_NO),
+                             s );
+            } catch (const Cdmw::BadParameterException & ex) {
+                CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::BAD_PARAM>,
+                             CORBA::BAD_PARAM(Cdmw::OrbSupport::BAD_PARAMLifeCycleFrameworkInit,
+                                              CORBA::COMPLETED_NO),
+                             ex.what() );
+            } catch (const Cdmw::InternalErrorException & ex ) {
+                CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::INTERNAL>,
+                             CORBA::INTERNAL(Cdmw::OrbSupport::INTERNALLifeCycleFrameworkError,
+                                             CORBA::COMPLETED_NO),
+                             ex.what() );
+            } catch (const CORBA::SystemException & ex ) {
+                CDMW_THROW1( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::SystemException>,
+                             ex );
+            }
         }
-        else
-        {
-            std::cerr << " **** TEST FAILED AT LINE " << __LINE__ 
-                      << " IN FILE: " << __FILE__ << std::endl;
-            return FAILURE;
-        }
-    
-        Cdmw::Tools::ProcessAdmin admin(orb.in(),proc.in());
-    
-        // send initialise order
-        std::string commands("init LAST 2\n exit \n");
-        std::istringstream commands_is(commands);
-        admin.run(commands_is,std::cout);
-        OS::sleep(timescale*5000);
-    
-        // send run order
-        commands = "run\n exit \n";
-        commands_is.str(commands);
-        admin.run(commands_is,std::cout);
-        OS::sleep(timescale*3000);
-    
-    #if CDMW_ORB_VDR == orbacus
-        // Starting Eventservice
-        idEventServer = OS::create_process("eventserv", "-ORBconfig obtest.conf");
-        OS::sleep(timescale*10000);
-        std::cout << "Eventserv started" << std::endl;
-    #endif
+            
+
+        
+        
          
         // declare Value factory to the orb
     #if CDMW_ORB_VDR == tao && CDMW_ORB_VER < 14
@@ -771,11 +833,13 @@ int main(int argc, char* argv[])
         // GET EVENT CHANNEL FACTORY
         
         // Get NamingInterface object from RepositoryInterface
-        Cdmw::NamingAndRepository::NamingInterface ni
+        Cdmw::CommonSvcs::Naming::NamingInterface ni
             = Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface(Locations::CDMW_SERVICES_NAME_DOMAIN);
     
         //Get a reference on the EventChannelFactory
-        obj = ni.resolve("EVENT/FACTORIES/DefaultEventChannelFactory");
+        std::string ecfactory_path = "EVENT/FACTORIES/";
+        ecfactory_path += event_channel_factory_name;
+        obj = ni.resolve(ecfactory_path.c_str());
         CdmwEvent::EventChannelFactory_var event_channel_factory
             = CdmwEvent::EventChannelFactory::_narrow(obj.in());
     
@@ -823,14 +887,6 @@ int main(int argc, char* argv[])
         status = run(orb.in(), containerIOR.in(), consumerIOR.in());
         OS::sleep (timescale*2000);
         
-        // send stop order
-        commands = "stop\n exit \n";
-        commands_is.str(commands);
-        std::cout << "Stop cdmw_event_channel_manager" << std::endl;
-        admin.run(commands_is,std::cout);
-
-        OS::sleep (timescale*3000);
-
     }
     catch(const CORBA::Exception& ex)
     {

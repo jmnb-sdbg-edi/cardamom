@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,12 +26,12 @@
 #ifndef INCL_CDMWINIT_CDMW_PROCESS_IMPL_HPP 
 #define INCL_CDMWINIT_CDMW_PROCESS_IMPL_HPP
 
-#include "Foundation/orbsupport/CORBA.hpp"
-#include "Foundation/orbsupport/RefCountServantBase.hpp"
-#include "Foundation/osthreads/Mutex.hpp"
-#include "Foundation/osthreads/Condition.hpp"
+#include <Foundation/orbsupport/CORBA.hpp>
+#include <Foundation/orbsupport/RefCountServantBase.hpp>
+#include <Foundation/osthreads/Mutex.hpp>
+#include <Foundation/osthreads/Condition.hpp>
 
-#include "SystemMngt/idllib/CdmwPlatformMngtProcess.skel.hpp"
+#include "SystemMngt/idllib/CdmwPlatformMngtProcessDelegate.skel.hpp"
 #include "ConfAndPlug/cdmwinit/ProcessControl.hpp"
 
 
@@ -47,7 +47,7 @@ namespace CdmwInit
 * <p>
 * The default implementation of a managed process.
 */
-class CdmwProcess_impl : virtual public POA_CdmwPlatformMngt::Process,
+class CdmwProcess_impl : virtual public POA_CdmwPlatformMngt::ProcessDelegate,
 			  virtual public Cdmw::OrbSupport::RefCountServantBase
 {
 
@@ -59,7 +59,7 @@ public:
     *  Takes ownership of the supplied behaviour which will be destroyed
     *  by the destructor.
     */ 
-    CdmwProcess_impl(CORBA::ORB_ptr          orb,
+    CdmwProcess_impl (CORBA::ORB_ptr          orb,
                       PortableServer::POA_ptr poa,
                       PortableServer::POA_ptr CDMW_rootPOA,
                       ProcessControl*         ctrl)
@@ -74,8 +74,9 @@ public:
     virtual 
     ~CdmwProcess_impl() throw ();
 
-    virtual PortableServer::POA_ptr _default_POA() {
-	return PortableServer::POA::_duplicate(m_poa.in());
+    virtual PortableServer::POA_ptr _default_POA() 
+    {
+	      return PortableServer::POA::_duplicate(m_poa.in());
     }
 
     void set_cdmw_init_exception_raised();
@@ -88,7 +89,7 @@ public:
     * Purpose:
     * <p>
     * implements the
-    * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_steps:1.0
     * attribute
     */
     virtual 
@@ -96,23 +97,12 @@ public:
     nb_steps()
         throw(CORBA::SystemException);
 
+
     /**
      * Purpose:
      * <p>
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_activity_points:1.0
-     * attribute
-     */
-    virtual 
-    CORBA::ULong 
-    nb_activity_points()
-        throw(CORBA::SystemException);
-    
-    /**
-     * Purpose:
-     * <p>
-     * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
      * operation
      */
     virtual 
@@ -124,11 +114,11 @@ public:
      * Purpose:
      * <p>
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_pull_monitorable:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_pull_monitorable:1.0
      * operation
      */
     virtual 
-    CdmwPlatformMngt::PullMonitorable_ptr 
+    ::FT::PullMonitorable_ptr 
     get_pull_monitorable()
         throw(CORBA::SystemException);
     
@@ -136,7 +126,7 @@ public:
      * Purpose:
      * <p>
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_push_monitorable:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_push_monitorable:1.0
      * operation
      */
     virtual 
@@ -144,36 +134,12 @@ public:
     get_push_monitorable()
         throw(CORBA::SystemException);
     
-    /**
-     * Purpose:
-     * <p>
-     * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_activity_point:1.0
-     * operation
-     */
-    virtual 
-    CdmwPlatformMngt::Process::ActivityPointInfo* 
-    get_activity_point(CORBA::ULong point_index)
-        throw(CdmwPlatformMngt::Process::OutOfRange,
-              CORBA::SystemException);
-    
-    /**
-     * Purpose:
-     * <p>
-     * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_all_activity_points:1.0
-     * operation
-     */
-    virtual 
-    CdmwPlatformMngt::Process::ActivityPointInfos* 
-    get_all_activity_points()
-        throw(CORBA::SystemException);
 
     /**
      * Purpose:
      * <p>
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     virtual 
@@ -184,39 +150,71 @@ public:
      * Purpose:
      * <p>
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/next_step:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/next_step:1.0
      * operation
      */
     virtual 
     void next_step()
-        throw(CdmwPlatformMngt::Process::InvalidStep,
+        throw(CdmwPlatformMngt::ProcessDelegate::InvalidStep,
               CORBA::SystemException);
     
     /**
      * Purpose:
      * <p>
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     virtual 
     void run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun,
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
               CORBA::SystemException);
     
     /**
      * Purpose:
      * <p>
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     virtual 
     void stop()
         throw(CORBA::SystemException);
     
+
+
+    /**
+	  * Purpose:
+	  * <p>
+	  * implements the
+	  * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/call_command:1.0
+	  * operation
+	  */
+	 virtual CdmwPlatformMngt::CommandResponse call_command (
+                 const char * command_name,
+                 const CdmwPlatformMngt::CmdParameterValues & command_args,
+                 CORBA::String_out result_info)
+       throw(CdmwPlatformMngt::CommandCallBackNotFound,
+             CORBA::SystemException);
+
+    /**
+	  * Purpose:
+	  * <p>
+	  * implements the
+	  * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/call_entity_command:1.0
+	  * operation
+	  */
+	 virtual CdmwPlatformMngt::CommandResponse call_entity_command (
+                const char * entity_name,
+                const char * command_name,
+                const CdmwPlatformMngt::CmdParameterValues & command_args,
+                CORBA::String_out result_info)
+       throw(CdmwPlatformMngt::CommandCallBackNotFound,
+             CORBA::SystemException);         
+   
     
 private:
+
     /**
      * Purpose:
      * <p> [Constructor description if necessary]
@@ -225,15 +223,16 @@ private:
      *@exception
      */ 
     CdmwProcess_impl()
-	throw();
+	     throw();
     
     // Hide copy constructor/assignment operator
     CdmwProcess_impl(const CdmwProcess_impl& rhs)
-	throw();
+	     throw();
         
     CdmwProcess_impl&
     operator=(const CdmwProcess_impl& rhs)
-	throw();
+	     throw();
+
     /**
      *[Attribute description]
      */ 
@@ -242,14 +241,15 @@ private:
      *Purpose:
      *<p> The actual behaviour of the process.
      */
-    CORBA::ORB_var          m_orb;
-    PortableServer::POA_var m_poa;
-    PortableServer::POA_var m_CDMW_rootPOA;
-    ProcessControl_var      m_process_ctrl;
-    bool                    m_cdmw_init_exception_raised;
-    bool                    m_cdmw_init_done;
-    OsSupport::Condition*   m_condition;
-    OsSupport::Mutex        m_mutex;
+    CORBA::ORB_var            m_orb;
+    PortableServer::POA_var   m_poa;
+    PortableServer::POA_var   m_CDMW_rootPOA;
+    ProcessControl_var        m_process_ctrl;
+    ::FT::PullMonitorable_var m_default_pull_monitorable;
+    bool                      m_cdmw_init_exception_raised;
+    bool                      m_cdmw_init_done;
+    OsSupport::Condition*     m_condition;
+    OsSupport::Mutex          m_mutex;
 
 
 };

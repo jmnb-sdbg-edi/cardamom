@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -37,6 +37,7 @@
    @param none
 -->
 <xsl:template name="session_context_hpp">
+   <xsl:param name="_prefix" select="''"/>
    <!--
       Parameters below are used for recursiveness.
    -->
@@ -106,6 +107,7 @@
                -->
                <xsl:call-template name="session_context_hpp.content">
                   <xsl:with-param name="_contextImplClassname" select="$contextImplClassname"/>
+                  <xsl:with-param name="_homeName" select="$homeName" />
                   <xsl:with-param name="_scopedHomeImplClassname">
                      <xsl:call-template name="buildHomeImplClassname">
                         <xsl:with-param name="_homeImplNode" select="$homeImplNode"/>
@@ -145,6 +147,7 @@
 -->
 <xsl:template name="session_context_hpp.content">
    <xsl:param name="_contextImplClassname"/>
+   <xsl:param name="_homeName"/>
    <xsl:param name="_scopedHomeImplClassname"/>
    <xsl:param name="_componentName"/>
 
@@ -154,6 +157,12 @@
    <xsl:variable name="cppComponentScope">
       <xsl:call-template name="getScope">
          <xsl:with-param name="_name" select="$_componentName"/>
+      </xsl:call-template>
+   </xsl:variable>
+
+   <xsl:variable name="cppHomeScope">
+      <xsl:call-template name="getScope">
+         <xsl:with-param name="_name" select="$_homeName"/>
       </xsl:call-template>
    </xsl:variable>
 
@@ -175,22 +184,22 @@
    #include "<xsl:value-of select="concat($pathPrefix, 'Cdmw_', substring-before($idl3Filename, '.idl') , '_cif')"/>.skel.hpp"
    <![CDATA[
    #include <CCMContainer/ccmcif/SessionContext_impl.hpp>
+   #include <CCMContainer/ccmcif/CCMObject_impl.hpp>
    #include <Foundation/orbsupport/RefCountLocalObject.hpp>
    ]]>
 
    <xsl:call-template name="openNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
-
-   // Forward declaration
-   class Session<xsl:value-of select="$_componentName"/>_impl;
 
    class <xsl:value-of select="$_contextImplClassname"/> : virtual public Cdmw_<xsl:value-of select="concat($cppComponentScope, $cppSep, 'CCM_', $_componentName, '_SessionContext,')"/>
                                                            public SessionContext_impl
    {
       public:
-         <xsl:value-of select="$_contextImplClassname"/>(Components::CCMContext_ptr ctx,
-                                                        Session<xsl:value-of select="$_componentName"/>_impl* component)
+         <xsl:value-of select="$_contextImplClassname"/>(Cdmw::CCM::CIF::Context* ctx,
+                                                        ::Cdmw::CCM::CIF::CCMObject_impl* component)
             throw (CORBA::SystemException);
 
          ~<xsl:value-of select="$_contextImplClassname"/>();
@@ -229,11 +238,13 @@
          void operator=(const <xsl:value-of select="$_contextImplClassname"/><![CDATA[&);]]>
 
          // Component servant implementation
-         Session<xsl:value-of select="$_componentName"/>_impl* m_component;
+         ::Cdmw::CCM::CIF::CCMObject_impl* m_component;
    };
 
    <xsl:call-template name="closeNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
    
    <!--
@@ -255,7 +266,6 @@
          <xsl:with-param name="_name" select="$_receptacleTypeName"/>
       </xsl:call-template>
    </xsl:variable>
-   
    <xsl:value-of select="concat($lf, 'virtual ', $scopedReturnType, '_ptr get_connection_', $_receptacleName, '()', 
                                 $lf, 'throw(CORBA::SystemException);', $lf)"/>
 </xsl:template> <!-- end of template session_context_hpp.content.1 -->

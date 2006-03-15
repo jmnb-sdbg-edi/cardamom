@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -1806,40 +1806,64 @@ public class LoadCscProperties extends Task {
 
             StringTokenizer st = new StringTokenizer(result);
             while (st.hasMoreTokens()) {
-                String csci = st.nextToken();
+                String nextToken = st.nextToken();
+                if (nextToken.startsWith("/")) {
+                    nextToken = nextToken.substring(1);
+                }
+                String[] tokens = nextToken.split("/");
 
                 csciLocation = getProject().getProperty(
-                    "config." + csci + ".location");
+                    "config." + tokens[0] + ".location");
 
-                String orbKey = buildOrbKey(csci);
+                String orbKey = buildOrbKey(tokens[0]);
 
                 // Path to the directory which contains the IDL files
                 // in the CSCI delivery tree.
-                inclDirs.append("-I");
-                inclDirs.append(csciLocation);
-                inclDirs.append(File.separator);
-                inclDirs.append(deliveryDir);
-                inclDirs.append(File.separator);
-                inclDirs.append(deliveryIdlDir);
-                inclDirs.append(" ");
+                inclDirs.append("-I")
+                        .append(csciLocation).append(File.separator)
+                        .append(deliveryDir).append(File.separator)
+                        .append(deliveryIdlDir).append(" ");
 
                 // Path to the directory which contains the stubs and skels
                 // header files.
-                stubskelInclDirs.append("-I");
-                stubskelInclDirs.append(csciLocation);
-                stubskelInclDirs.append(File.separator);
-                stubskelInclDirs.append(deliveryDir);
-                stubskelInclDirs.append(File.separator);
-                stubskelInclDirs.append(deliveryInclDir);
-                stubskelInclDirs.append(File.separator);
-                stubskelInclDirs.append(m_cscLang);
-                stubskelInclDirs.append(File.separator);
-                stubskelInclDirs.append(csci);
-                stubskelInclDirs.append(File.separator);
-                stubskelInclDirs.append("idllib");
-                stubskelInclDirs.append(File.separator);
-                stubskelInclDirs.append(orbKey);
-                stubskelInclDirs.append(" ");
+                if (tokens.length == 1) {
+                    stubskelInclDirs.append("-I")
+                                    .append(csciLocation).append(File.separator)
+                                    .append(deliveryDir).append(File.separator)
+                                    .append(deliveryInclDir).append(File.separator)
+                                    .append(m_cscLang).append(File.separator)
+                                    .append(tokens[0]).append(File.separator)
+                                    .append("idllib").append(File.separator)
+                                    .append(orbKey).append(" ");
+                } else {
+                    int m = 1;
+                    int n = tokens.length - 1;
+
+                    do {
+                        stubskelInclDirs.append("-I")
+                                    .append(csciLocation).append(File.separator)
+                                    .append(deliveryDir).append(File.separator)
+                                    .append(deliveryInclDir).append(File.separator)
+                                    .append(m_cscLang).append(File.separator)
+                                    .append(tokens[0]).append(File.separator);
+                        for (int i = 1; i <= m; i++) {
+                            stubskelInclDirs.append(tokens[i]);
+                            if (i != m) {
+                                stubskelInclDirs.append(File.separator);
+                            }
+                        }
+                        stubskelInclDirs.append(" ");
+                        m++;
+                    } while (m <= n);
+
+                    stubskelInclDirs.append("-I")
+                                    .append(csciLocation).append(File.separator)
+                                    .append(deliveryDir).append(File.separator)
+                                    .append(deliveryInclDir).append(File.separator)
+                                    .append(m_cscLang).append(File.separator)
+                                    .append(nextToken).append(File.separator)
+                                    .append(orbKey).append(" ");
+                }
             }
 
 

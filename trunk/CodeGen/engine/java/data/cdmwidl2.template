@@ -1,23 +1,23 @@
 # =====================================================================
-# This file is part of CARDAMOM (R) which is jointly developed by THALES 
-# and SELEX-SI. 
+# This file is part of CARDAMOM (R) which is jointly developed by THALES
+# and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+# 2000-2003. All rights reserved.
 # 
-# It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
-# All rights reserved.
+# Copyright (C) THALES 2004-2005. All rights reserved
 # 
-# CARDAMOM is free software; you can redistribute it and/or modify it under 
-# the terms of the GNU Library General Public License as published by the
-# Free Software Foundation; either version 2 of the License, or (at your 
-# option) any later version. 
+# CARDAMOM is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 # 
-# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
-# License for more details. 
+# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+# License for more details.
 # 
-# You should have received a copy of the GNU Library General 
-# Public License along with CARDAMOM; see the file COPYING. If not, write to 
-# the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# You should have received a copy of the GNU Library General Public
+# License along with CARDAMOM; see the file COPYING. If not, write to the
+# Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 # =====================================================================
 
 
@@ -60,7 +60,16 @@ $self.open(generator.getFilename())$
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\n
 */\n
 /* ===================================================================== */\n\n
+
+$java.lang.String.valueOf('#')$ifndef __$generator.getFilename().toUpperCase().substring(generator.getFilename().lastIndexOf("/")+1).replaceAll("[-. ]", "_")$__\n
+$java.lang.String.valueOf('#')$define __$generator.getFilename().toUpperCase().substring(generator.getFilename().lastIndexOf("/")+1).replaceAll("[-. ]", "_")$__\n
+
+\n//__INCLUDES__\n
+
 $self.visit(obj)$
+
+$java.lang.String.valueOf('#')$endif\n
+
 $self.close()$
 
 
@@ -68,13 +77,13 @@ $self.close()$
 ##  Definition of the mapping for a module.
 ##
 #id MODULE
-$self.cdmwPragmaPrefix()$
+#$self.cdmwPragmaPrefix()$
 \n
 module $cdmwPrefix = self.addCdmwPrefix(obj); cdmwPrefix$$moduleName = obj.getName(); moduleName$\n
 {\n
 $self.contents(obj, org.objectweb.ccm.IDL3.DeclarationKind._dk_all)$
 }; // end of module $cdmwPrefix$$moduleName$\n
-
+\n
 
 ##
 ##  Mapping for a module with not all contents generated
@@ -88,12 +97,12 @@ $self.visit(vect)$
 ##  Definition of the mapping for a component.
 ##
 #id COMPONENT
-local interface CCM_$obj.getName()$_SessionContext : $moduleName$::CCM_$obj.getName()$_Context,\n
+local interface CCM_$obj.getName()$_SessionContext : $obj.getParent().getAbsoluteName()$::CCM_$obj.getName()$_Context,\n
                                                      Components::SessionContext\n
 {\n
 };\n
 \n
-interface $obj.getName()$ : $moduleName$::$obj.getName()$\n
+interface $obj.getName()$ : $obj.getAbsoluteName()$\n
 $self.contents(obj, org.objectweb.ccm.IDL3.DeclarationKind._dk_all)$
 {\n
 };\n
@@ -103,13 +112,13 @@ $self.contents(obj, org.objectweb.ccm.IDL3.DeclarationKind._dk_all)$
 ##  Definition of the mapping for a component when forwarded.
 ##
 #id COMPONENT_FORWARD
-
+\n
 
 ##
 ##  Definition of the mapping for a home.
 ##
 #id HOME
-interface $obj.getName()$ : $moduleName$::$obj.getName()$,\n
+interface $obj.getName()$ : $obj.getAbsoluteName()$,\n
                             Components::HomeConfiguration,\n
                             CdmwCcmCif::CCMHome,\n
                             CdmwCcmCif::KeylessCCMHome\n
@@ -128,7 +137,7 @@ interface $obj.getName()$ : $moduleName$::$obj.getName()$,\n
 ##  Definition of the mapping for an interface.
 ##
 #id INTERFACE
-interface $obj.getName()$ : $moduleName$::$obj.getName()$,\n
+interface $obj.getName()$ : $obj.getAbsoluteName()$,\n
                             CosLifeCycle::LifeCycleObject\n
 {\n
 $self.contents(obj, self.interface_check())$
@@ -368,7 +377,7 @@ $self.contents(obj, self.interface_check())$
 ##  Definition of the mapping for an eventtype.
 ##
 #id EVENT
-interface $obj.getName()$Consumer : $moduleName$::$obj.getName()$Consumer,\n
+interface $obj.getName()$Consumer : $obj.getAbsoluteName()$Consumer,\n
                             CosEventComm::PushConsumer,\n
                             CosLifeCycle::LifeCycleObject\n
 {\n

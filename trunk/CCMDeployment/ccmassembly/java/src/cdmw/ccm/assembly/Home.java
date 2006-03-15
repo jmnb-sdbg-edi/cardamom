@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -152,11 +152,6 @@ class Home {
     private String homeRepid;
     
     /**
-     * ServantClassname to be used for this Home configuration.
-     */
-    private String homeServantClassname;
-    
-    /**
      * map of valuetype factories to be used for this Home configuration.
      */
     private java.util.Map valuetypeFactories;
@@ -166,12 +161,17 @@ class Home {
      */
     private String compRepid;
     
-     /**
+    /**
      * List of names the home has to be registered with.
      */
     private java.util.Collection namingRegistrations;
 
-
+    /**
+     * True if this home has to create Components which are within a FT group.
+     */
+    private boolean hasFTComponents;
+    
+    
     /**
      * Constructor.
      * It automatically add the new SingleComponent to its parent home
@@ -219,9 +219,9 @@ class Home {
         threadPolicy = null;
         homeRepid = null;
         compRepid = null;
-        homeServantClassname = null;
         valuetypeFactories = new cdmw.ccm.deployment.OrderedMap();
         namingRegistrations = new java.util.HashSet();
+        hasFTComponents = false;
 
         parentContainer.addHome(this);
         parentContainer.getParentAssembly().addHome(this);
@@ -625,37 +625,27 @@ class Home {
         return compRepid;
     }
     
-
     /**
-     * Set the ServantClassname to be used as configuration value
-     * for this Home.
-     *
-     * @param lifetime the ServantClassname.
-     *
-     * @exception CreateFailure if a ServantClassname was previously set.
+     * Specifies that this home will create components 
+     * which are within FT groups.
      */
-    public void setHomeServantClassname(String servantClassname)
-        throws CreateFailure
+    public void setHasFTComponents() 
     {
-        if (homeServantClassname != null) {
-            throw new CreateFailure(
-                "A HomeServantClassname is already specified for Home " +
-                getId(),
-                INVALID_CONFIGURATION_FOR_HOME.value);
-        }
-        homeServantClassname = servantClassname;
+        hasFTComponents = true;
     }
-
+    
     /**
-     * Returns the ServantClassname used as configuration value
-     * by this home.
+     * Returns true if this home will create components 
+     * which are within FT groups.
      *
-     * @return the ServantClassname.
+     * @return true if this home will create components 
+     * which are within FT groups.
      */
-    public String getHomeServantClassname() {
-        return homeServantClassname;
+    public boolean hasFTComponents()
+    {
+        return hasFTComponents;
     }
-
+    
     /**
      * Adds a valuetype factory entry point o be used in configuration
      * for this Home.
@@ -691,6 +681,57 @@ class Home {
     public void addNamingRegistration(String name) {
         namingRegistrations.add(name);
     }
+    
+    /**
+     * Computes the home's servant classname according to its RepositoryID
+     * and depending if it has FT components or not.
+     * 
+     * @return the home's servant classname
+     */
+    protected String computeServantClassname() {
+        cdmw.common.Assert.check(homeRepid != null);
+        
+        // Home RepositoryID has following pattern: 
+        //   IDL:<pragma_prefix>/<modules>/<homename>:1.0
+        int firstSlashIndex = homeRepid.indexOf('/');
+        int lastSlashIndex = homeRepid.lastIndexOf('/');
+        String modules = homeRepid.substring(firstSlashIndex+1, lastSlashIndex);
+        int lastColonIndex = homeRepid.lastIndexOf(':');
+        String homename = homeRepid.substring(lastSlashIndex+1, lastColonIndex);
+        
+        // Servant Classname should have following pattern:
+        //    Cdmw.CCM.CIF.Cdmw<modules_separed_with_dots>.<FT_optional><home_kind><homename>_impl
+        String servantClassname = "Cdmw.CCM.CIF.Cdmw";
+        servantClassname += modules.replace('/', '.') + ".";
+        if (hasFTComponents) {
+            servantClassname += "FT";
+        }
+        switch (componentKind.value()) {
+            case ComponentKindValue._SERVICE:
+                servantClassname += "Service";
+                break;
+            case ComponentKindValue._SESSION:
+                servantClassname += "Session";
+                break;
+            case ComponentKindValue._PROCESS:
+                servantClassname += "Process";
+                break;
+            case ComponentKindValue._ENTITY:
+                servantClassname += "Entity";
+                break;
+            case ComponentKindValue._UNCLASSIFIED:
+                break;
+            default:
+                // This shouldn't happend
+                cdmw.common.Assert.assertionFailed();
+        }
+        servantClassname += homename + "_impl";
+        
+        System.out.println("ASSEMBLY INFO:    home servant classname = " + 
+                           servantClassname);
+        return servantClassname;
+    }
+    
     
     /**
      * Returns the configuration values to be used for this
@@ -738,14 +779,15 @@ class Home {
         }
 
         // add HOME_SERVANT_CLASSNAME config
-        if (homeServantClassname != null) {
+        {
+            String homeServantClassname = computeServantClassname();
             ConfigValue c = new ConfigValueImpl();
             c.name = HOME_SERVANT_CLASSNAME.value;
             c.value = AssemblyFactoryImpl.getInstance().getOrb().create_any();
             c.value.insert_string(homeServantClassname);
             configCopy.setConfigValue(c);
         }
-
+        
         // add VALUETYPE_FACTORY_DEPENDENCIES config
         if (valuetypeFactories.size() != 0) {
             ValuetypeFactoryDescription[] factoryList = 
@@ -891,8 +933,8 @@ class Home {
             }
             
             // create NamingInterface
-            cdmw.namingandrepository.NamingInterface naming = 
-                new cdmw.namingandrepository.NamingInterface(nameServ);
+            cdmw.commonsvcs.naming.NamingInterface naming = 
+                new cdmw.commonsvcs.naming.NamingInterface(nameServ);
         
             java.util.Iterator it = namingRegistrations.iterator();
             while (it.hasNext()) {
@@ -946,8 +988,8 @@ class Home {
             }
             
             // create NamingInterface
-            cdmw.namingandrepository.NamingInterface naming = 
-                new cdmw.namingandrepository.NamingInterface(nameServ);
+            cdmw.commonsvcs.naming.NamingInterface naming = 
+                new cdmw.commonsvcs.naming.NamingInterface(nameServ);
         
             java.util.Iterator it = namingRegistrations.iterator();
             while (it.hasNext()) {

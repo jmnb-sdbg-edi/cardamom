@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -40,13 +40,8 @@
 
 // Cdmw CCM Files
 #include <CCMContainer/ccmcommon/Cookie_impl.hpp>
+#include <CCMContainer/ccmcif/Context.hpp>
 
-#ifdef CDMW_USE_FAULTTOLERANCE  
-// Cdmw FT Files
-#include <FaultTolerance/idllib/CdmwFTGroupRepository.stub.hpp>
-#include <FaultTolerance/idllib/CdmwFTCurrent.stub.hpp>
-#include <FaultTolerance/idllib/CdmwFTReplicationManager.stub.hpp>
-#endif
 
 namespace std 
 {
@@ -86,35 +81,72 @@ namespace CIF {
 //
 // IDL:omg.org/Components/CCMObject:1.0
 //
+
+
 class CCMObject_impl : virtual public POA_Components::CCMObject,
                        virtual public OrbSupport::RefCountServantBase
 {
 public:
-
-    CCMObject_impl(const std::string comp_oid,
-                   CdmwCcmContainer::CCM2Context_ptr ctx, 
-                   const std::string rep_id,
-                   CORBA::Object_ptr comp_ref,
-                   bool              is_monolithic=false);
-    ~CCMObject_impl();
+   /**
+    * Purpose:
+    * <p>
+    *   Constructor.
+    *
+    *@param comp_oid       The component oid
+    *@param ctx            The component extended context
+    *@param rep_id         The component repository ID
+    *@param comp_ref       The component reference.
+    *@param is_monolithic  True if the component, its facets and consumers 
+    *                      have a single object reference.
+    */ 
+    CCMObject_impl(const std::string&  comp_oid,
+                   Context*            ctx, 
+                   const std::string&  rep_id,
+                   CORBA::Object_ptr   comp_ref,
+                   bool                is_monolithic=false);
+    
+    virtual ~CCMObject_impl();
 
     virtual CORBA::Object_ptr _get_component();
 
+       
     //
     // IDL:omg.org/Components/CCMObject/get_component_def:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    This operation returns an object reference that supports the
+    * CORBA::ComponentIR::ComponentDef interface, describing the component 
+    * type associated with the home object. The IRObject returned must be 
+    * narrowed to CORBA::ComponentIR::ComponentDef before use.
+    */
     virtual CORBA::IRObject_ptr get_component_def()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/CCMObject/get_ccm_home:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    This operation returns a CCMHome reference to the home that
+    * manages this component.
+    */
     virtual Components::CCMHome_ptr get_ccm_home()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/CCMObject/get_primary_key:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    It returns a primary key value if the component is being managed
+    * by a home which defines a primary key.
+    * @exception the NoKeyAvailable exception shall be raised if the cmponent
+    * is not managed by a home  which defines a primary key.
+    */
     virtual Components::PrimaryKeyBase* get_primary_key()
         throw(Components::NoKeyAvailable,
               CORBA::SystemException);
@@ -122,6 +154,15 @@ public:
     //
     // IDL:omg.org/Components/CCMObject/configuration_complete:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    This operation is called by a configurator to indicate that the
+    * the initial component configuration has completed. 
+    * 
+    * @exception InvalidConfiguration If the component determines that it
+    * is not sufficiently configured to allow normal client access. 
+    */
     virtual void configuration_complete()
         throw(Components::InvalidConfiguration,
               CORBA::SystemException);
@@ -129,6 +170,13 @@ public:
     //
     // IDL:omg.org/Components/CCMObject/remove:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    This operation is used to delete a component.
+    * @exception RemoveFailure exception if application failures occurs 
+    * during remove operation.
+    */
     virtual void remove()
         throw(Components::RemoveFailure,
               CORBA::SystemException);
@@ -136,12 +184,31 @@ public:
     //
     // IDL:omg.org/Components/CCMObject/get_all_ports:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    This operation returns a value of type ComponentPortDescription
+    * containing information about all facets, receptacles, event sinks,
+    * emitted events and published events in the component's inheritance
+    * hierarchy. If a component does not offer a port of any type, the
+    * associated sequence will have length zero.
+    */
     virtual Components::ComponentPortDescription* get_all_ports()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Navigation/provide_facet:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    The provide_facet operation returns a reference to the facet 
+    * denoted by the name parameter.
+    * @param name The name specified in the provides declaration.
+    * @return  the facet reference.
+    * @exception InvalidName If the value of the name parameter does not 
+    * correspond toone of the components facets.
+    */
     virtual CORBA::Object_ptr provide_facet(const char* name)
         throw(Components::InvalidName,
               CORBA::SystemException);
@@ -149,19 +216,52 @@ public:
     //
     // IDL:omg.org/Components/Navigation/get_all_facets:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    This operation returns a sequence of value objects, each of which
+    * contains the RepositoryId of the facet interface and name of the facet,
+    * along with a reference to the facet. 
+    * @return The sequence containing descriptions and references for all of
+    * the facets in the components inheritance hierarchy.
+    * A component that does not provide any facets (e.g., a basic component)
+    * returns a sequence of length zero.
+    */
     virtual Components::FacetDescriptions* get_all_facets()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Navigation/get_named_facets:1.0
     //
-    virtual Components::FacetDescriptions* get_named_facets(const Components::NameList& names)
+    /**
+    * Purpose:
+    * <p>
+    *    This operation returns a sequence of described references (identical
+    * to the sequence returned by get_all_facets), containing descriptions and
+    * references for the facets denoted by the names parameter.
+    * @param names A sequence of name identifying the factes of the component.
+    * @return a sequence of described references.
+    * @exception InvalidName If any name in the names parameter is not a valid
+    * name for a provided interface on the component.
+    */
+    virtual Components::FacetDescriptions* 
+    get_named_facets(const Components::NameList& names)
         throw(Components::InvalidName,
               CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Navigation/same_component:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *    This operation determines reliably whether two references belong to
+    * the same component instance, that is, whether the references are facets
+    * of or directly denote the same component instance.
+    * @param reference The object reference to be compared.
+    * @return true if the two references belong to the same component instance,
+    * false otherwise.
+    */
     virtual CORBA::Boolean same_component(CORBA::Object_ptr object_ref)
         throw(CORBA::SystemException);
 
@@ -180,7 +280,7 @@ public:
     *@return a cookie if receptacle is multiplex, nil otherwise.
     *@exception Components::InvalidName The name parameter does not specify a valid receptacle name.
     *@exception Components::InvalidConnection The object reference in the connection parameter does
-    *           not support the interface declared in the receptacle’s uses statement.
+    *           not support the interface declared in the receptacleÂ’s uses statement.
     *@exception Components::AlreadyConnected The receptacle is a simplex receptacle and it is already connected.
     *@exception Components::ExceededConnectionLimit The receptacle is a multiplex receptacle and the 
                 implementation-defined limit to the number of connections is exceeded.
@@ -227,35 +327,94 @@ public:
     //
     // IDL:omg.org/Components/Receptacles/get_connections:1.0
     //
-    virtual Components::ConnectionDescriptions* get_connections(const char* name)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns a sequence of ConnectionDescription structs.
+    * @name The receptacle name.
+    * @return a sequence of ConnectionDescription structs. Each struct contains
+    * an object reference connected to the receptacle named in the name 
+    * parameter, and a cookie value that denotes the connection.
+    * @exception InvalidName If the name parameter does not specify a valid
+    * receptacle name.
+    */
+    virtual Components::ConnectionDescriptions* 
+    get_connections(const char* name)
         throw(Components::InvalidName,
               CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Receptacles/get_all_receptacles:1.0
     //
-    virtual Components::ReceptacleDescriptions* get_all_receptacles()
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all receptacle ports in the
+    *   component's inheritance hierarchy.
+    *   @return a sequence of ReceptacleDescription values.
+    */
+    virtual Components::ReceptacleDescriptions* 
+    get_all_receptacles()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Receptacles/get_named_receptacles:1.0
     //
-    virtual Components::ReceptacleDescriptions* get_named_receptacles(const Components::NameList& names)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all receptacle ports denoted
+    * by the names parameter.
+    * @param names The list of receptacle names.
+    * @return a sequence of ReceptacleDescription values.
+    * @exception InvalidName If a name in the names parameter is not a valid
+    * name for a receptacle in the  inheritance hierarchy.
+    */
+    virtual Components::ReceptacleDescriptions* 
+    get_named_receptacles(const Components::NameList& names)
         throw(Components::InvalidName,
               CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Events/get_consumer:1.0
     //
-    virtual Components::EventConsumerBase_ptr get_consumer(const char* sink_name)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns the EventConsumerBase interface for the sink 
+    * specified by the sink_name parameter.
+    * return the reference of the EventConsumerBase interface.
+    * @exception InvalidName If the name doesn't specify a valid event sink on
+    * the component.
+    */
+    virtual Components::EventConsumerBase_ptr
+    get_consumer(const char* sink_name)
         throw(Components::InvalidName,
               CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Events/subscribe:1.0
     //
-    virtual Components::Cookie* subscribe(const char* publisher_name,
-                                          Components::EventConsumerBase_ptr subscriber)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation associates the subscriber denoted by the subscriber
+    * parameter with the event source specified by the publisher_name
+    * parameter.
+    * @param publisher_name The event source.
+    * @param subscriber     The event consumer (event sink).
+    * @return a cookie value which can be used to unsubscribe from the source.
+    * @exception InvalidName If the publisher name doesn't specify a valid
+    * event publisher on the component.
+    * @exception InvalidConnection If the object reference in the subscriber
+    * parameter does not support the consumer interface of the eventtype 
+    * declared in the publishes statement.
+    * @exception ExceededConnectionLimit If the implementation-defined limit
+    * to the number of subscribers is exceeded.
+    */
+    virtual Components::Cookie* 
+    subscribe(const char* publisher_name,
+              Components::EventConsumerBase_ptr subscriber)
         throw(Components::InvalidName,
               Components::InvalidConnection,
               Components::ExceededConnectionLimit,
@@ -264,6 +423,18 @@ public:
     //
     // IDL:omg.org/Components/Events/unsubscribe:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *   This operation disassociates the subscriber associated with ck parameter
+    * with the event source specified by the publisher_name parameter.
+    * @param publisher_name The event source.
+    * @param ck The cookie value returned at subscription time.
+    * @exception InvalidName If the publisher name doesn't specify a valid
+    * event publisher on the component.
+    * @exception InvalidConnection If the ck parameter does not identify a
+    * current subscription on the source.
+    */
     virtual void unsubscribe(const char* publisher_name,
                              Components::Cookie* ck)
         throw(Components::InvalidName,
@@ -273,6 +444,21 @@ public:
     //
     // IDL:omg.org/Components/Events/connect_consumer:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *   This operation associates the consumer denoted by the consumer 
+    * parameter with the event source specified by the emitter_name parameter.
+    * @param emitter_name The event source.
+    * @param consumer The event consumer.
+    * @exception InvalidName If the emitter_name doesn't specify a valid event
+    * emitter on the component.
+    * @exception AlreadyConnected If a consumer is already connected to the
+    * emitter.
+    * @exception InvalidConnection If the object reference in the consumer
+    * parameter does not support the consumer interface of the eventtype
+    * declared in the emits statement
+    */
     virtual void connect_consumer(const char* emitter_name,
                                   Components::EventConsumerBase_ptr consumer)
         throw(Components::InvalidName,
@@ -283,7 +469,19 @@ public:
     //
     // IDL:omg.org/Components/Events/disconnect_consumer:1.0
     //
-    virtual Components::EventConsumerBase_ptr disconnect_consumer(const char* source_name)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation disassociates the currently connected consumer from the
+    * event source specified by the source_name parameter.
+    * @param source_name The event source (emitter).
+    * @return a reference to the disconnected consumer.
+    * @exception InvalidName If the source_name parameter does not specify a
+    * valid event source on the component.
+    * @exception NoConnection If there is no consumer connected to the emitter.
+    */
+    virtual Components::EventConsumerBase_ptr 
+    disconnect_consumer(const char* source_name)
         throw(Components::InvalidName,
               Components::NoConnection,
               CORBA::SystemException);
@@ -291,39 +489,92 @@ public:
     //
     // IDL:omg.org/Components/Events/get_all_consumers:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all consumer ports in the
+    * component's inheritance hierarchy.
+    * @return a sequence of ConsumerDescription values.
+    */
     virtual Components::ConsumerDescriptions* get_all_consumers()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Events/get_named_consumers:1.0
     //
-    virtual Components::ConsumerDescriptions* get_named_consumers(const Components::NameList& names)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all consumer ports denoted by
+    * the names parameter.
+    * @return a sequence of ConsumerDescription values.
+    * @exception InvalidName If any name in the names parameter is not a valid
+    * name for an event sink in the component's inheritance hierarchy.
+    */
+    virtual Components::ConsumerDescriptions*
+       get_named_consumers(const Components::NameList& names)
         throw(Components::InvalidName,
               CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Events/get_all_emitters:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all emitter ports in the 
+    * component's inheritance hierarchy.
+    * @return a sequence of EmitterDescription values.
+    */
     virtual Components::EmitterDescriptions* get_all_emitters()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Events/get_named_emitters:1.0
     //
-    virtual Components::EmitterDescriptions* get_named_emitters(const Components::NameList& names)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all emitter ports denoted by
+    * the names parameter.
+    * @param names A sequence of emitter names.
+    * @return a sequence of EmitterDescription values.
+    * @exception InvalidName If any name in the names parameter is not a valid
+    * name for an emitter port in the component's inheritance hierarchy.
+    */
+    virtual Components::EmitterDescriptions* 
+    get_named_emitters(const Components::NameList& names)
         throw(Components::InvalidName,
               CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Events/get_all_publishers:1.0
     //
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all publisher ports in the 
+    * component's inheritance hierarchy.
+    * @return a sequence of PublisherDescription values.
+    */
     virtual Components::PublisherDescriptions* get_all_publishers()
         throw(CORBA::SystemException);
 
     //
     // IDL:omg.org/Components/Events/get_named_publishers:1.0
     //
-    virtual Components::PublisherDescriptions* get_named_publishers(const Components::NameList& names)
+    /**
+    * Purpose:
+    * <p>
+    *   This operation returns information about all emitter ports denoted by
+    * the names parameter.
+    * @param names A sequence of publisher names.
+    * @return a sequence of PublisherDescription values.
+    * @exception InvalidName If any name in the names parameter is not a valid
+    * name for a publisher port in the component's inheritance hierarchy.
+    */
+    virtual Components::PublisherDescriptions* 
+    get_named_publishers(const Components::NameList& names)
         throw(Components::InvalidName,
               CORBA::SystemException);
 
@@ -336,8 +587,22 @@ public:
     *
     *@return <B>true</B> if the object has been removed, <B>false</B> otherwise.
     */ 
-    bool is_removed() const 
-        throw();
+    inline bool is_removed() const
+        throw ()
+    {
+        return m_is_removed;
+    }
+
+    inline void check_is_removed() const
+       throw (CORBA::OBJECT_NOT_EXIST)
+    {
+       if (is_removed())
+       {
+           throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXISTObjectRemoved,
+                                         CORBA::COMPLETED_NO);
+       }
+    }
+
 
     /**
     * Purpose:
@@ -348,7 +613,8 @@ public:
     *
     * @return the proxy consumer of the event service.
     */
-    CosEventComm::PushConsumer_ptr get_proxy_consumer(const char* source_name)
+    CosEventComm::PushConsumer_ptr 
+    get_proxy_consumer(const std::string& source_name)
         throw (CORBA::SystemException);
 
     /**
@@ -361,8 +627,9 @@ public:
     *
     * @return the local push consumer servant.
     */
-    PortableServer::Servant get_local_push_consumer_servant(const char* source_name, 
-                                                            const char* ck_value) 
+    PortableServer::Servant 
+    get_local_push_consumer_servant(const std::string& source_name, 
+                                    const std::string& ck_value) 
         throw (CORBA::SystemException);
 
     /**
@@ -374,7 +641,8 @@ public:
     *
     *@return the facet servant.
     */ 
-    virtual PortableServer::Servant get_facet_servant(const char* facet_name) 
+    virtual PortableServer::Servant 
+    get_facet_servant(const std::string& facet_name) 
         throw (CORBA::SystemException) = 0;
 
 
@@ -399,9 +667,9 @@ protected:
     *@exception AlreadyDoneException
     */ 
 
-    CORBA::Object_ptr declare_facet(const char*  comp_oid,
-                                    const char*  facet_name,
-                                    const char*  rep_id)
+    CORBA::Object_ptr declare_facet(const std::string&  comp_oid,
+                                    const std::string&  facet_name,
+                                    const std::string&  rep_id)
         throw (AlreadyDoneException, InternalErrorException);
 
     /**
@@ -416,9 +684,9 @@ protected:
     *@return void
     *@exception none
     */ 
-    void declare_receptacle(const char*  receptacle_name,
-                            const char*  rep_id,
-                            bool         is_multiplex = false)
+    void declare_receptacle(const std::string&  receptacle_name,
+                            const std::string&  rep_id,
+                            bool                is_multiplex = false)
         throw (AlreadyDoneException);
 
     /**
@@ -433,9 +701,9 @@ protected:
     *@return void
     *@exception AlreadyDoneException
     */ 
-    CORBA::Object_ptr declare_consumer(const char*  comp_oid,
-                                       const char*  consumer_name,
-                                       const char*  rep_id)
+    CORBA::Object_ptr declare_consumer(const std::string&  comp_oid,
+                                       const std::string&  consumer_name,
+                                       const std::string&  rep_id)
         throw (AlreadyDoneException, InternalErrorException);
     /**
     * Purpose:
@@ -448,8 +716,8 @@ protected:
     *@return void
     *@exception AlreadyDoneException
     */ 
-    void declare_emitter(const char*  emitter_name,
-                         const char*  rep_id)
+    void declare_emitter(const std::string&  emitter_name,
+                         const std::string&  rep_id)
         throw (AlreadyDoneException, CORBA::SystemException);
 
     /**
@@ -463,8 +731,8 @@ protected:
     *@return void
     *@exception AlreadyDoneException if the publisher has already been declared.
     */ 
-    void declare_publisher(const char*  publisher_name,
-                           const char*  rep_id)
+    void declare_publisher(const std::string&  publisher_name,
+                           const std::string&  rep_id)
         throw (AlreadyDoneException, CORBA::SystemException);
 
     /**
@@ -478,9 +746,12 @@ protected:
     *@return a reference on the target consumer
     *@exception Components::InvalidConnection if the connection does'nt exist
     */ 
-    Components::EventConsumerBase_ptr get_consumer(const char*  publisher_name,
-                                                   Components::Cookie* ck)
-       throw(Components::InvalidName, Components::InvalidConnection, CORBA::SystemException);
+    Components::EventConsumerBase_ptr 
+    get_consumer(const std::string&  publisher_name,
+                 Components::Cookie* ck)
+       throw(Components::InvalidName, 
+             Components::InvalidConnection, 
+             CORBA::SystemException);
 
     /**
     * Purpose:
@@ -497,14 +768,14 @@ protected:
     /**
     * Purpose:
     * <p>
-    *   return a group reference if the current request is invoked on a FT group reference.
-    *   Otherwise return the same reference.
+    *   returns the corresponding reference of the reference given as parameter. This 
+    *   operation shall be redefined by inherited class to return group reference if needed
+    *   for example.
     * 
     *@param obj_ref       The facet/consumer/component reference.
-    *
     *@return  The reference to be exported to clients
     */ 
-    CORBA::Object_ptr get_group_object_ref_if_FTrequest(const CORBA::Object_ptr obj_ref)
+    CORBA::Object_ptr get_object_ref(const CORBA::Object_ptr obj_ref)
         throw (CORBA::SystemException);
 
 
@@ -515,11 +786,11 @@ protected:
     //                    //
     ////////////////////////
 
-    CdmwCcmContainer::CCM2Context_var   m_context;   // Component Context for CDMW component
-    std::string                         m_rep_id;       // component rep id
-    CORBA::Object_var                   m_comp_ref;     // component reference to be return by _get_component
-    bool                                m_configured;   // set to true when configuration completed
-    std::string                         m_component_oid;  // object Id of the current component
+    Context*            m_context;      // Component Context for CDMW component
+    const std::string   m_rep_id;       // component rep id
+    CORBA::Object_var   m_comp_ref;     // component reference to be return by _get_component
+    bool                m_configured;   // set to true when configuration completed
+    const std::string   m_component_oid;// object Id of the current component
 
 private:
     CCMObject_impl(const CCMObject_impl&);
@@ -603,12 +874,6 @@ private:
 
     bool            m_is_monolithic; // true if component has only one servant for
                                      // it and its facets and consumers.
-
-#ifdef CDMW_USE_FAULTTOLERANCE
-    CdmwFT::Current_var                   m_ft_current;
-    CdmwFT::Location::GroupRepository_var m_ft_group_rep;
-    CdmwFT::ReplicationManager_var        m_ft_rep_mng;
-#endif
 
 
 };  // End CCMObject_impl class

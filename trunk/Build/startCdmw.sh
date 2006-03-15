@@ -1,24 +1,24 @@
 #!/bin/sh
 # =====================================================================
-# This file is part of CARDAMOM (R) which is jointly developed by THALES 
-# and SELEX-SI. 
+# This file is part of CARDAMOM (R) which is jointly developed by THALES
+# and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+# 2000-2003. All rights reserved.
 # 
-# It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
-# All rights reserved.
+# Copyright (C) THALES 2004-2005. All rights reserved
 # 
-# CARDAMOM is free software; you can redistribute it and/or modify it under 
-# the terms of the GNU Library General Public License as published by the
-# Free Software Foundation; either version 2 of the License, or (at your 
-# option) any later version. 
+# CARDAMOM is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 # 
-# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
-# License for more details. 
+# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+# License for more details.
 # 
-# You should have received a copy of the GNU Library General 
-# Public License along with CARDAMOM; see the file COPYING. If not, write to 
-# the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# You should have received a copy of the GNU Library General Public
+# License along with CARDAMOM; see the file COPYING. If not, write to the
+# Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 # =====================================================================
 
 SCRIPTNAME=`basename $0`
@@ -51,6 +51,7 @@ SELECT_CONFIG=
 LOOSE_CHECK_MODE="-Drequire.csci.check.mode=loose"
 STRICT_CHECK_MODE="-Drequire.csci.check.mode=strict"
 PASSIVE_MODE="-Dpassive.mode=true"
+GENERATE_GCOV="-Dgenerate.gcov.infos=true"
 SLOPPY_CHECK="-Dsloppy.check=true"
 HAS_VALIDATION="-Dhas.validation=true"
 HAS_INTEGRATION="-Dhas.integration=true"
@@ -58,6 +59,7 @@ HAS_QUALIFICATION="-Dhas.qualification=true"
 WITHOUT_BINARY_VERSION=
 IGNORE_CCACHE="-Dignore.ccache=true"
 OVERRIDE_OLDCONFIG="-Doverride.oldconfig=true"
+WITHOUT_UNIT_TESTS="-Dwithout.unittests=true"
 CFG_OPTS=
 CPL_OPTS=
 INS_OPTS=
@@ -81,8 +83,8 @@ print_help() {
     S2="validation; integration; qualification"
     S3="sloppycheck; ignoreccache"
     S4="cscis=CSCI_NAME1,CSCI_NAME2,..."
-    S5="host1=name host2=name target1=name"
-    S6="host3=name target2=name target3=name"
+    S5="host1=name host2=name"
+    S6="host3=name host4=name host5=name target1=name target2=name target3=name target4=name target5=name"
     S7="c++; java; ada; timescale=n; CSCI; CSCI/CSC"
     S8="withoutbinaryversion"
     S9="onlyvalidationtest"
@@ -91,6 +93,8 @@ print_help() {
     S12="withouttools"
     S13="onlytools"
     S14="gccdir=<path|none> makedir=<path|none> binutilsdir=<path|none>"
+    S15="generategcov"
+    S16="withoutunittests"
     
     echo "usage: $SCRIPTNAME $GENERIC_TRGT_OPTS $GENERIC_OPTS"
     echo
@@ -109,16 +113,18 @@ print_help() {
     echo "---------------"
     echo "* get the list of needed tools:"
     echo "    needed-tools"
+    echo "* return the version of the product and the version of each CSCIs:"
+    echo "    version"
     echo
     echo "* configure of the build environment:"
-    echo "    configure         | optional: $S1; $S2"
+    echo "    configure         | optional: $S1; $S2; $S15"
     echo "    configure-valid   | optional: $S1"
     echo "    configure-integ   | optional: $S1"
     echo "    configure-qualif  | optional: $S1"
     echo "    reconfigure"
     echo
     echo "* compile the source files:"
-    echo "    compile           | optional: $S3; $S2; $S4"
+    echo "    compile           | optional: $S3; $S2; $S16; $S4"
     echo "    compile-valid     | optional: $S3; $S4"
     echo "    compile-integ     | optional: $S3; $S4"
     echo "    compile-qualif    | optional: $S3; $S4"
@@ -127,8 +133,8 @@ print_help() {
     echo "    install           | optional: $S4 "
     echo "    install-valid     | mandatory: $S5 | optional: $S6; $S4; $S9"
     echo "    install-integ     | mandatory: $S5 | optional: $S6; $S4; $S10"
-    echo "    install-qualif    | mandatory: $S5; $S14 | optional: $S6; $S4; $S11; $S8; $S12; $S13"
-    echo "    install-binary    | mandatory: $S14"
+    echo "    install-qualif    | mandatory: $S5 | optional: $S6; $S4; $S11; $S8; $S12; $S13; $S14"
+    echo "    install-binary    | optional: $S14"
     echo
     echo "* run the test applications:"
     echo "    runtest           | optional: $S7"
@@ -165,6 +171,7 @@ target_already_set() {
 
 check_target() {
     if [ "$1" = "needed-tools" -o \
+         "$1" = "version" -o \
          "$1" = "configure" -o \
          "$1" = "configure-valid" -o \
          "$1" = "configure-integ" -o \
@@ -201,6 +208,13 @@ check_target() {
 parse_target_options() {
     for o in `echo $1 | sed -e 's:;: :g'`; do
         case $o in
+        
+            generategcov)
+                if [ -z "`echo  $CFG_OPTS | grep 'generate.gcov.infos'`" ]; then
+                    CFG_OPTS="$CFG_OPTS $GENERATE_GCOV"
+                fi
+                ;;
+        
             loosecheckmode)
                 if [ -z "`echo $GEN_OPTS | grep 'csci.check.mode'`" ]; then
                     GEN_OPTS="$GEN_OPTS $LOOSE_CHECK_MODE"
@@ -252,6 +266,12 @@ parse_target_options() {
 
             onlytools)
                 ONLY_TOOLS="-Donly.tools=true"
+                ;;
+
+            withoutunittests)
+                if [ -z "`echo $CPL_OPTS | grep 'without.unittests'`" ]; then
+                    CPL_OPTS="$CPL_OPTS $WITHOUT_UNIT_TESTS"
+                fi
                 ;;
 
             validation)
@@ -473,12 +493,8 @@ case "$TARGET" in
         ;;
 
     install-qualif)
-        if [ -z "`echo ${INS_BIN_OPTS} | grep gccdir`" -o \
-             -z "`echo ${INS_BIN_OPTS} | grep makedir`" -o \
-             -z "`echo ${INS_BIN_OPTS} | grep binutilsdir`" -o \
-             -z "`echo ${INS_OPTS} | grep host1`" -o \
-             -z "`echo ${INS_OPTS} | grep host2`" -o \
-             -z "`echo ${INS_OPTS} | grep targethost1`" ]; then
+        if [ -z "`echo ${INS_OPTS} | grep host1`" -o \
+             -z "`echo ${INS_OPTS} | grep host2`" ]; then
 
              print_msg "missing mandatory target options, check the usage"
         fi
@@ -487,8 +503,7 @@ case "$TARGET" in
         ;;
     install-valid | install-integ )
         if [ -z "`echo ${INS_OPTS} | grep host1`" -o \
-             -z "`echo ${INS_OPTS} | grep host2`" -o \
-             -z "`echo ${INS_OPTS} | grep targethost1`" ]; then
+             -z "`echo ${INS_OPTS} | grep host2`" ]; then
 
              print_msg "missing mandatory target options, check the usage"
         fi
@@ -497,13 +512,6 @@ case "$TARGET" in
         ;;
 
     install-binary)
-        if [ -z "`echo ${INS_BIN_OPTS} | grep gccdir`" -o \
-             -z "`echo ${INS_BIN_OPTS} | grep makedir`" -o \
-             -z "`echo ${INS_BIN_OPTS} | grep binutilsdir`" ]; then
-
-             print_msg "missing mandatory target options, check the usage"
-        fi
-
         ALL_TARGET_OPTIONS=$INS_BIN_OPTS
         ;;
 

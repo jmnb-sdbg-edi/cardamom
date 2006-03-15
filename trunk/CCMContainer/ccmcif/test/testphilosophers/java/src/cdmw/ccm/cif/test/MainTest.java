@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -50,7 +50,7 @@ import cdmw.ccm.container.HomeAllocator;
 import cdmw.ccm.container.HomeAllocatorRegistry;
 import cdmw.ccm.container.HomesServantActivator;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 
 public class MainTest {
@@ -403,6 +403,9 @@ public class MainTest {
                        + nameServicePort + "/NameService";
             String[] serverArgs = s.split(" ");
             orb = ORBSupport.ORBInit(serverArgs, orbStrategies);
+
+            // PCR-0049
+            cdmw.orbsupport.Codec.init(orb);
     
             if (unitTests) {
                 // Starting the Name Service
@@ -413,10 +416,10 @@ public class MainTest {
                 OS.sleep(timescale * 3000);
     
                 // Starting the Repository Simulator :
-                String namingCorbaloc = " " + ORBUtils.NAMING_PORT_OPTION + "corbaloc::localhost:" + 
+                String namingCorbaloc = " -ORBInitRef NameService=corbaloc::localhost:" + 
                     nameServicePort + "/NameService";
                 
-                String simRepositoryArgs = " -OAport "+ repositoryPort 
+                String simRepositoryArgs = " -ORBEndpoint iiop://localhost: "+ repositoryPort 
                     + namingCorbaloc 
                     + " -DOM " + Locations.CDMW_SERVICES_NAME_DOMAIN
                     + " -DOM " + Locations.CDMW_EVENT_SERVICE_NAME_DOMAIN
@@ -428,9 +431,8 @@ public class MainTest {
                 System.out.println("Starting Simulated Repository with the following arguments:");
                 System.out.println(simRepositoryArgs);
                 
-                repository = OS.createJavaProcess(
-                    "cdmw.tools.SimRepository " + simRepositoryArgs, 
-                    Testable.getProperties());
+                repository = OS.createProcess(
+                    "cdmw_simulated_repository " + simRepositoryArgs);
                 OS.sleep(timescale * 10000);
                 System.out.println("Simulated Repository started");
     
@@ -499,13 +501,13 @@ public class MainTest {
 
       
             // EventChannelManager Proc URL is CDMW Test Application/PROC_000 
-            com.thalesgroup.CdmwPlatformMngt.Process proc = null;
+            com.thalesgroup.CdmwPlatformMngt.ProcessDelegate proc = null;
             String procURL = "corbaname::localhost:" + nameServicePort
                 + "#CDMW.I/ProcessCallback.simulated/CDMW Test Application/PROC_000";
             obj = orb.string_to_object(procURL);
         
             if (obj != null) {
-                proc = com.thalesgroup.CdmwPlatformMngt.ProcessHelper.narrow(obj);
+                proc = com.thalesgroup.CdmwPlatformMngt.ProcessDelegateHelper.narrow(obj);
             } else {
                 System.exit(-1);
             }

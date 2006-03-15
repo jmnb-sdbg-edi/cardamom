@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -40,7 +40,7 @@
 #include "Foundation/orbsupport/OrbSupport.hpp"
 #include "Foundation/orbsupport/StrategyList.hpp"
 #include "Foundation/orbsupport/ExceptionMinorCodes.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 
 #include "SystemMngt/tools/ProcessAdmin.hpp"
@@ -119,7 +119,7 @@ get_process_callback(CORBA::ORB_ptr orb)
         = CdmwPlatformMngt::ProcessCallback::_nil();
     {
         try {
-            Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
             CORBA::Object_var obj__ = ni.resolve(PROCESS_CALLBACK_BINDING_NAME);
             callback = CdmwPlatformMngt::ProcessCallback::_narrow(obj__.in());
             if (CORBA::is_nil(callback.in())) {
@@ -185,7 +185,7 @@ void initRepository(CORBA::ORB_ptr orb)
         = CdmwNamingAndRepository::Repository::_nil();
     {
         try {
-            Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
             CORBA::Object_var obj__ = ni.resolve(REPOSITORY_NAME);
                 
             rep = CdmwNamingAndRepository::Repository::_narrow(obj__.in());
@@ -222,7 +222,7 @@ run(CORBA::ORB_ptr orb, Cdmw::Tools::ProcessAdmin* proc_admin)
 {
      using namespace Cdmw::Common;
      using namespace Cdmw::NamingAndRepository;
-     using namespace Cdmw::NamingAndRepository;
+     using namespace Cdmw::CommonSvcs::Naming;
      using namespace CdmwEventAdmin;
      using namespace Cdmw::EventAdmin;
     
@@ -409,7 +409,7 @@ int main(int argc, char* argv[])
         OS::sleep(timescale*5000);
         std::cout << "EventChannelProfileManager started" << std::endl;
 
-        CdmwPlatformMngt::Process_var proc = CdmwPlatformMngt::Process::_nil();
+        CdmwPlatformMngt::ProcessDelegate_var proc = CdmwPlatformMngt::ProcessDelegate::_nil();
         std::string proc_url("corbaname::localhost:");
         proc_url += nameServicePort;
         proc_url += "#CDMW.I/ProcessCallback.simulated/CDMW Test Application/PROC_000";
@@ -417,7 +417,7 @@ int main(int argc, char* argv[])
 
         if (!CORBA::is_nil(obj.in())) 
         {
-            proc = CdmwPlatformMngt::Process::_narrow(obj.in());
+            proc = CdmwPlatformMngt::ProcessDelegate::_narrow(obj.in());
         }
         else
         {
@@ -440,6 +440,8 @@ int main(int argc, char* argv[])
         admin.run(commands_is,std::cout);
 
         status = run(orb.in(), &admin);
+        
+        Cdmw::NamingAndRepository::RepositoryInterface::finish();
     }
     catch(const CORBA::Exception& ex)
     {

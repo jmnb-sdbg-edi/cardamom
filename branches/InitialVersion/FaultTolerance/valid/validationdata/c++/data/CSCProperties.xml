@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<config>
+    <csc name="validationdata" owner="FaultTolerance" lang="c++" type="validation-test">
+        <deliveries>
+            <delivery basename="validationdata" type="data" visibility="private">
+                <sourcefiles>                
+                    ../../data/V-FLT-001-1.xml
+                    ../../data/V-FLT-003-1.xml
+                    ../../data/HelloFaultTolerance.xml
+                    ../../data/V-FLT-004-1.xml
+                    ../../data/V-FLT-004-2.xml
+                    ../../data/V-FLT-004-3.xml
+                    ../../data/V-FLT-007-1.xml
+                    ../../data/HelloFaultTolerance2.xml
+                    ../../data/HelloFaultTolerance3.xml
+                    ../../data/HelloFaultTolerance4.xml
+                    ../../data/V-FLT-008-1.xml
+                    ../../data/V-FLT-009-1.xml
+                    ../../data/V-FLT-011-1.xml
+                    ../../data/V-FLT-012-1.xml
+                    ../../data/V-FLT-013-1.xml
+                    ../../data/V-FLT-014-1.xml
+                    ../../data/V-FLT-015-1.xml
+                    ../../data/V-FLT-016-1.xml
+                    ../../data/TestFTManagerReplicationStateless.xml                    
+                    ../../data/TestFTManagerReplicationStatefull.xml
+                    ../../data/HelloFlatTransaction1.xml
+                    ../../data/HelloFlatTransaction2.xml
+                    ../../data/HelloFlatTransaction3.xml
+                    ../../data/V-FLT-017-1.xml
+                    ../../data/V-FLT-018-1.xml
+                    ../../data/V-FLT-019-1.xml                    
+                    ../../data/V-FLT-020-1.xml                    
+                    ../../data/TestFTRequestLogging.xml
+                    ../../data/V-FLT-021-1.xml                    
+                    ../../data/TestFTRequestLogging2.xml
+                    ../../data/V-FLT-022-1.xml                    
+                    ../../data/TestFTRequestLogging3.xml
+                </sourcefiles>
+            </delivery>               
+        </deliveries>
+    </csc>
+</config>
+
+

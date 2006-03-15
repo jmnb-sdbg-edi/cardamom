@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -110,7 +110,7 @@ namespace
         * Purpose:
         * <p>
         * the behaviour for the
-        * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+        * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
         * operation
         */
         virtual 
@@ -152,13 +152,13 @@ namespace
         * Purpose:
         * <p>
         * the behaviour for the
-        * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+        * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
         * operation
         */
         virtual 
             void 
             on_run()
-            throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+            throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
             CORBA::SystemException)
         {
             std::cout << "INFO: cdmw_event_channel_manager run" << std::endl;
@@ -166,7 +166,7 @@ namespace
             if (m_profileManager == NULL)
             {
                 std::cerr << "ERROR: EventChannelProfileManager object not intanciated" << std::endl;
-                throw CdmwPlatformMngt::Process::NotReadyToRun();
+                throw CdmwPlatformMngt::ProcessDelegate::NotReadyToRun();
             }     
         }
         
@@ -174,7 +174,7 @@ namespace
         * Purpose:
         * <p>
         * the behaviour for the
-        * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+        * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
         * operation
         */
         virtual 
@@ -310,7 +310,7 @@ int main(int argc, char** argv)
         {
             std::string msg = "ERROR: Impossible to instantiate the EventChannelProfileManager object";
             std::cerr << msg.c_str() << std::endl;
-            //PlatformInterface::notifyFatalError("cdmw_event_channel_manager", msg.c_str());
+            //PlatformInterface::Notify_fatal_error("cdmw_event_channel_manager", msg.c_str());
         }  
         
         Cdmw::CdmwInit::ProcessControl_var mng_ctrl 

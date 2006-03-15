@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -42,8 +42,8 @@
 
 #include "Foundation/orbsupport/CosNaming.stub.hpp"
 
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 
 #include "Event/eventinterface/EventChannel.hpp"
@@ -122,7 +122,7 @@ void
 EventServiceAdminTool::init()
     throw (InitException)
 {
-    NamingAndRepository::NamingInterface ni(m_namingcontext.in());
+    CommonSvcs::Naming::NamingInterface ni(m_namingcontext.in());
     std::string name;
 
     std::cout << "cdmw_event_admin intialisation ..." << std::endl;
@@ -878,7 +878,7 @@ EventServiceAdminTool::list_created_channel(const std::string &arg,
     CosNaming::BindingList_var     bl;          // Binding list
     std::string ec_context[2] = {m_eventchannel_context, m_typedeventchannel_context};
     int nb_context = 2;
-    NamingAndRepository::NamingInterface ni(m_namingcontext.in());
+    CommonSvcs::Naming::NamingInterface ni(m_namingcontext.in());
     CORBA::Object_var obj;
 
     // List event channels
@@ -898,13 +898,13 @@ EventServiceAdminTool::list_created_channel(const std::string &arg,
             break;
         }
 
-        NamingAndRepository::NamingInterface ec_ni(ecNContext.in());
+        CommonSvcs::Naming::NamingInterface ec_ni(ecNContext.in());
 
         try 
         {       
             int nb_createdChannel = 0;
             // Get first chunk
-            ec_ni.list(NamingAndRepository::NamingInterface::LIST_CHUNK_SIZE,bl.out(),it.out()); 
+            ec_ni.list(CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE,bl.out(),it.out()); 
             
             do
             {
@@ -933,7 +933,7 @@ EventServiceAdminTool::list_created_channel(const std::string &arg,
                 if (CORBA::is_nil(it.in())) 
                     break;
             } 
-            while (it->next_n(NamingAndRepository::NamingInterface::LIST_CHUNK_SIZE, bl));
+            while (it->next_n(CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE, bl));
 
             if (nb_createdChannel == 0)
             {

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -53,7 +53,6 @@
             </os>
             <cscis>
                 Foundation
-                Repository
             </cscis>
         </package>
 
@@ -134,15 +133,7 @@
                     FaultTolerance
                 </cscis>
             </option>
-            <option id="DEFAULT_CONFIGURATION_LB" desc="Load Balancing support">
-                <os>
-                    Linux
-                </os>
-                <cscis>
-                 LoadBalancing
-                </cscis>
-            </option>
-            <option id="DEFAULT_CONFIGURATION_CCM" desc="CCM support">
+           <option id="DEFAULT_CONFIGURATION_CCM" desc="CCM support">
                 <os>
                     Linux
                     SunOS
@@ -154,6 +145,31 @@
             </option>
         </package>
 
+            <package id="LOAD_BALANCING" desc="Load Balancing support">
+                <os>
+                    Linux
+                </os>
+                <cscis>
+                 Foundation
+                 SystemMngt
+                 Repository
+                 LifeCycle
+                 ConfAndPlug
+                 CodeGen
+                 TraceAndPerf
+                 LoadBalancing
+                </cscis>
+              <option id="LOAD_BALANCING_FT" desc="Load Balancing with FaultTolerance support">
+                <os>
+                    Linux
+                </os>
+                <cscis>
+                 FaultTolerance
+                </cscis>
+             </option>
+            </package>
+            
+
         <package id="CODE_GENERATION" desc="Standalone Code Generation Service">
             <os>
                 Linux
@@ -163,7 +179,7 @@
                 CodeGen
             </cscis>
         </package>
-        
+
         <package id="TIME" desc="Time Service">
             <os>
                 Linux
@@ -188,16 +204,16 @@
                 </cscis>
             </option>
         </package>
-        
     </packages>
 
-    
+
     <cscis>
         <csci name="Foundation">
             <interface lang="c++">
                 <tools>
                     CPP-Compiler
                     STL
+                    CPP-Unit
                 </tools>
                 <cscs>
                     <set>
@@ -206,12 +222,17 @@
                         </packageid>
                         <build>
                             common/c++
+                            ossupport/c++
                             testutils/c++
-                            commonsvcs/c++
                         </build>
                         <test>
                             common/test/teststring/c++
                             common/test/testexception/c++
+                            ossupport/test/testossupport/c++
+                            ossupport/test/testprocess/c++
+                         <!--   
+                           can be removed when PCR-0467 will be reverted
+                           ossupport/test/testsleep/c++ -->
                         </test>
                     </set>
                     <set>
@@ -223,6 +244,8 @@
                         </build>
                         <test>
                             osthreads/test/testosthreads/c++
+                            logging/test/testlogging/c++
+                            logging/test/testfunctionlogger/c++
                         </test>
                     </set>
                     <set>
@@ -230,7 +253,8 @@
                             LIFECYCLE
                             SYST_MNGT
                             TIME
-                            DEFAULT_CONFIGURATION  
+                            LOAD_BALANCING
+                            DEFAULT_CONFIGURATION
                         </packageid>
                         <tools>
                             CPP-ORB
@@ -245,6 +269,7 @@
                             NAMING_ITF
                             LIFECYCLE
                             SYST_MNGT
+                            LOAD_BALANCING
                             TIME
                         </packageid>
                         <tools>
@@ -254,20 +279,57 @@
                             osthreads/c++
                             ossupport/c++
                             orbsupport/c++
-                            commonsvcs/c++
+                            commonsvcs/datastore/c++
+                            commonsvcs/federation/c++
+                            commonsvcs/naming/c++
+                            logging/c++
                         </build>
                         <test>
                             osthreads/test/testosthreads/c++
                             ossupport/test/testossupport/c++
                             ossupport/test/testprocess/c++
+                           <!--
+                           can be removed when PCR-0467 will be reverted
+                           ossupport/test/testsleep/c++ -->
                             orbsupport/test/testorbsupport/c++
+                            orbsupport/test/testcodec_lib/c++
+                            orbsupport/test/testcodec/c++
+                            orbsupport/test/testcompilationvalue/c++
+                            commonsvcs/datastore/test/testdatastore/c++
+                            commonsvcs/naming/test/test_lib/c++
+                            commonsvcs/naming/test/test_u/c++
+                            logging/test/testlogging/c++
+                            logging/test/testfunctionlogger/c++
+                            logging/test/testorblogging/c++
+                            orbsupport/test/testidlcompiler/c++
                         </test>
+                        <integration>
+                            commonsvcs/naming/test/test_lib/c++
+                        </integration>
+                        <validation>
+                            valid/validationdata/c++
+                            valid/naminginterface/c++
+                            valid/datastoretest/c++
+                            valid/codec/c++
+                            commonsvcs/naming/test/test_lib/c++
+                            orbsupport/test/testcodec_lib/c++
+                            ossupport/test/testossupport/c++
+                            orbsupport/test/testorbsupport/c++
+                            ossupport/test/testprocess/c++
+                            osthreads/test/testosthreads/c++
+                        </validation>
+                        <qualification>
+                            valid/naminginterface/c++
+                            commonsvcs/naming/test/test_lib/c++
+                        </qualification>
                     </set>
                     <set>
                         <packageid>
                             XMLSVR_STANDALONE
                             XMLSVR_FULL
                             DEFAULT_CONFIGURATION
+                            LOAD_BALANCING
+			    TIME_FT
                         </packageid>
                         <tools>
                             CPP-ORB
@@ -279,21 +341,61 @@
                             osthreads/c++
                             ossupport/c++
                             orbsupport/c++
-                            commonsvcs/c++
+                            commonsvcs/datastore/c++
+                            commonsvcs/federation/c++
+                            commonsvcs/naming/c++
+                            logging/c++
                             idllib/c++
+                            idllib/java
                             common/java
                             testutils/java
                             ossupport/java
                             orbsupport/java
+                            commonsvcs/naming/java
                         </build>
                         <test>
                             osthreads/test/testosthreads/c++
                             ossupport/test/testossupport/c++
                             ossupport/test/testprocess/c++
+                         <!--
+                           can be removed when PCR-0467 will be reverted
+                           ossupport/test/testsleep/c++ -->
+
                             orbsupport/test/testorbsupport/c++
+                            orbsupport/test/testcodec_lib/c++
+                            orbsupport/test/testcodec/c++
+                            orbsupport/test/testcompilationvalue/c++
+                            commonsvcs/datastore/test/testdatastore/c++
+                            commonsvcs/naming/test/test_lib/c++
+                            commonsvcs/naming/test/test_u/c++
+                            logging/test/testlogging/c++
+                            logging/test/testfunctionlogger/c++
+                            logging/test/testorblogging/c++
                             ossupport/test/testossupport/java
                             orbsupport/test/testorbsupport/java
+                            commonsvcs/naming/test/test_lib/java
+                            commonsvcs/naming/test/test_u/java
+                            orbsupport/test/testidlcompiler/c++
                         </test>
+                        <integration>
+                            commonsvcs/naming/test/test_lib/c++
+                        </integration>
+                        <validation>
+                            valid/validationdata/c++
+                            valid/naminginterface/c++
+                            valid/datastoretest/c++
+                            valid/codec/c++
+                            commonsvcs/naming/test/test_lib/c++
+                            orbsupport/test/testcodec_lib/c++
+                            ossupport/test/testossupport/c++
+                            orbsupport/test/testorbsupport/c++
+                            ossupport/test/testprocess/c++
+                            osthreads/test/testosthreads/c++
+                        </validation>
+                        <qualification>
+                            valid/naminginterface/c++
+                            commonsvcs/naming/test/test_lib/c++
+                        </qualification>
                     </set>
                     <set>
                         <packageid>
@@ -324,6 +426,7 @@
                             XMLSVR_STANDALONE
                             XMLSVR_FULL
                             TIME
+                            LOAD_BALANCING
                             DEFAULT_CONFIGURATION
                         </packageid>
                         <tools>
@@ -335,11 +438,28 @@
                             testutils/java
                             ossupport/java
                             orbsupport/java
+                            commonsvcs/naming/java
+                            idllib/java
                         </build>
                         <test>
                             ossupport/test/testossupport/java
                             orbsupport/test/testorbsupport/java
+                            commonsvcs/naming/test/test_lib/java
+                            commonsvcs/naming/test/test_u/java
                         </test>
+                        <validation>
+                            valid/validationdata/java
+                            commonsvcs/naming/test/test_lib/java
+                            valid/naminginterface/java
+                            ossupport/test/testossupport/java
+                            orbsupport/test/testorbsupport/java
+                        </validation>
+                        <qualification>
+                            commonsvcs/naming/test/test_lib/java
+                            valid/naminginterface/java
+                            ossupport/test/testossupport/java
+                            orbsupport/test/testorbsupport/java
+                        </qualification>
                     </set>
                 </cscs>
             </interface>
@@ -357,6 +477,7 @@
                     <set>
                         <packageid>
                             TIME
+                            LOAD_BALANCING
                             DEFAULT_CONFIGURATION
                         </packageid>
                         <build>
@@ -369,7 +490,10 @@
                         </build>
                         <test>
                             tracecollector/test/testtracecollector/c++
+                            tracecollector/test/testgeneratedtrace/c++
+                            tracecollector/test/testtracefilter/c++
                             tracelibrary/test/test1/c++
+                            tracelibrary/test/test2/c++
                             tracelibrary/test/testtracelibrary/c++
                             performancelibrary/test/test1/c++
                             performancelibrary/test/test2/c++
@@ -378,15 +502,19 @@
                         <validation>
                             valid/validationdata/c++
                             valid/traceclient/c++
+                            valid/traceclient2/c++
+                            valid/traceclient3/c++
                             performancelibrary/test/test2/c++
                         </validation>
                         <qualification>
+                            valid/traceclient3/c++
                             performancelibrary/test/test2/c++
                         </qualification>
                     </set>
                     <set>
                         <packageid>
                             XMLSVR_FULL
+                            LOAD_BALANCING
                             DEFAULT_CONFIGURATION
                         </packageid>
                         <tools>
@@ -467,18 +595,18 @@
                 <cscs>
                     <set>
                         <packageid>
-                            TIME
+                            LOAD_BALANCING
+			    TIME
                             DEFAULT_CONFIGURATION
                         </packageid>
                         <tools>
-                            CPP-XML-Parser                            
-			    JAVA-Compiler
-			    JAVA-ORB
+                            CPP-XML-Parser
+                            JAVA-Compiler
+                            JAVA-ORB
                         </tools>
                         <build>
                             idllib/c++
                             namingandrepository/c++
-                            naminginterface/c++
                             propertyserver/c++
                             propertyserverstandalone/c++
                             repositoryadmin/c++
@@ -486,59 +614,31 @@
                             simrepository/c++
                             tools/c++
                             idllib/java
-                            naminginterface/java
                             repositoryinterface/java
                        </build>
                         <test>
-                            naminginterface/test/test_lib/c++
-                            naminginterface/test/test_u/c++
                             repositoryinterface/test/testrepositoryinterface/c++
                             idllib/java
-                            naminginterface/java
                             namingandrepository/test/test1/c++
                             namingandrepository/test/test2/c++
                             namingandrepository/test/test3/c++
                         </test>
-                        <integration>
-                            integ/naminginterface/c++
-                            naminginterface/test/test_lib/c++
-                        </integration>
                         <validation>
                             valid/validationdata/c++
                             namingandrepository/test/test1/c++
-                            valid/naminginterface/c++
-                            naminginterface/test/test_lib/c++
+                            valid/repositoryinterface/c++
                         </validation>
                         <qualification>
                             namingandrepository/test/test1/c++
-                            integ/naminginterface/c++
-                            naminginterface/test/test_lib/c++
                         </qualification>
-                    </set>
-                    <set>
-                        <packageid>
-                            NAMING_ITF
-                        </packageid>
-                        <build>
-                            naminginterface/c++
-                        </build>
-                        <test>
-                            naminginterface/test/test_lib/c++
-                            naminginterface/test/test_u/c++
-                        </test>
                     </set>
                     <set>
                         <packageid>
                             LIFECYCLE
                         </packageid>
                         <build>
-                            naminginterface/c++
                             propertyserverstandalone/c++
                         </build>
-                        <test>
-                            naminginterface/test/test_lib/c++
-                            naminginterface/test/test_u/c++
-                        </test>
                     </set>
                     <set>
                         <packageid>
@@ -550,20 +650,32 @@
                         </tools>
                         <build>
                             idllib/java
-                            naminginterface/java
                             repositoryinterface/java
                         </build>
-                        <test>
-                            naminginterface/test/testnaminginterface/java
-                        </test>
-                        <integration>
-                            integ/naminginterface/c++
-                            naminginterface/test/test_lib/c++
-                        </integration>
                     </set>
                     <set>
                         <packageid>
                             DEFAULT_CONFIGURATION_CCM
+                        </packageid>
+                        <tools>
+                            JAVA-Compiler
+                            JAVA-ORB
+                        </tools>
+                        <build>
+                            idllib/java
+                            repositoryinterface/java
+                            simrepository/java
+                            propertyserver/java
+                            tools/java
+                        </build>
+                        <validation>
+                            valid/validationdata/java
+<!--                            naminginterface/test/testnaminginterface/java  -->
+                            valid/repositoryinterface/java
+                        </validation>
+                    </set>
+                    <set>
+                        <packageid>
                             DEFAULT_CONFIGURATION_FT
                         </packageid>
                         <tools>
@@ -572,22 +684,17 @@
                         </tools>
                         <build>
                             idllib/java
-                            naminginterface/java
                             repositoryinterface/java
                             simrepository/java
                             propertyserver/java
                             tools/java
+                            namingandrepositoryproxy/c++
                         </build>
-                        <test>
-                            naminginterface/test/testnaminginterface/java
-                        </test>
-                        <integration>
-                            integ/naminginterface/c++
-                            naminginterface/test/test_lib/c++
-                        </integration>
                         <validation>
                             valid/validationdata/java
-                            naminginterface/test/testnaminginterface/java
+                            valid/testftrepository/c++
+<!--                            naminginterface/test/testnaminginterface/java  -->
+                            valid/repositoryinterface/java
                         </validation>
                     </set>
                 </cscs>
@@ -601,14 +708,14 @@
                     <set>
                         <packageid>
                             TIME
-                            DEFAULT_CONFIGURATION
+                            LOAD_BALANCING 
+			    DEFAULT_CONFIGURATION
                         </packageid>
                         <tools>
                             JAVA-XML-Parser
                         </tools>
                         <build>
                             idllib/java
-                            naminginterface/java
                             repositoryinterface/java
                             propertyserver/java
                             tools/java
@@ -616,24 +723,12 @@
                             simrepository/java
                         </build>
                         <test>
-                            naminginterface/test/testnaminginterface/java
                             repositoryinterface/test/testrepositoryinterface/java
                         </test>
                         <validation>
                             valid/validationdata/java
-                            naminginterface/test/testnaminginterface/java
+                            valid/repositoryinterface/java
                         </validation>
-                        <qualification>
-                            naminginterface/test/testnaminginterface/java
-                        </qualification>
-                    </set>
-                    <set>
-                        <packageid>
-                            NAMING_ITF
-                        </packageid>
-                        <build>
-                            naminginterface/java
-                        </build>
                     </set>
                     <set>
                         <packageid>
@@ -641,13 +736,9 @@
                         </packageid>
                         <build>
                             idllib/java
-                            naminginterface/java
                             repositoryinterface/java
                             propertyserverstandalone/c++
                         </build>
-                        <test>
-                            naminginterface/test/testnaminginterface/java
-                        </test>
                     </set>
                 </cscs>
             </interface>
@@ -681,7 +772,7 @@
                             xmllibrary/test/testxmllibraryclient/c++
                             xmllibrary/test/testxmllibrarystandalone/c++
                             xmllibrary/test/testxmllibraryclient/java
-                            xmllibrary/test/testxmllibrarystandalone/java                            
+                            xmllibrary/test/testxmllibrarystandalone/java
                         </test>
                     </set>
                     <set>
@@ -781,6 +872,7 @@
                     <set>
                         <packageid>
                             TIME
+                            LOAD_BALANCING
                             DEFAULT_CONFIGURATION
                         </packageid>
                         <build>
@@ -801,6 +893,7 @@
                     <set>
                         <packageid>
                            DEFAULT_CONFIGURATION
+                           LOAD_BALANCING
                            XMLSVR_FULL
                         </packageid>
                         <tools>
@@ -842,8 +935,9 @@
                 <cscs>
                     <set>
                         <packageid>
-                            TIME
                             DEFAULT_CONFIGURATION
+                            TIME
+                            LOAD_BALANCING
                         </packageid>
                         <build>
                             idllib/java
@@ -881,6 +975,7 @@
         <csci name="SystemMngt">
             <interface lang="c++">
                 <tools>
+                    CPP-Unit
                     CPP-Compiler
                     CPP-ORB
                     CPP-XML-Parser
@@ -889,6 +984,7 @@
                     <set>
                         <packageid>
                             SYST_MNGT
+                            LOAD_BALANCING
                             TIME
                             DEFAULT_CONFIGURATION
                         </packageid>
@@ -898,9 +994,13 @@
                             platformsupervisionobserver/c++
                             platformlibrary/c++
                             platforminterface/c++
+                            platformfaultdetector/c++
                             platformagent/c++
+                            platformdaemonlibrary/c++
                             platformdaemon/c++
+                            platformelementlibrary/c++
                             platformapplicationlibrary/c++
+                            platformsystemlibrary/c++
                             platformsystem/c++
                             platformadmin/c++
                             tools/c++
@@ -914,6 +1014,8 @@
                             platforminterface/test/testmonitoring/c++
                             platforminterface/test/testplatforminterface/c++
                             platformdaemon/test/testplatformdaemon/c++
+                            platformfaultdetector/test/testplatformfaultdetector/c++
+                            platformsystem/test/testsupervision/c++
                         </test>
                         <validation>
                             valid/common/c++
@@ -927,6 +1029,8 @@
                     <set>
                         <packageid>
                             DEFAULT_CONFIGURATION_FT
+                            LOAD_BALANCING_FT
+                            TIME_FT
                         </packageid>
                         <build>
                             idllib/c++
@@ -934,11 +1038,18 @@
                             platformsupervisionobserver/c++
                             platformlibrary/c++
                             platforminterface/c++
+                            platformfaultdetector/c++
                             platformagent/c++
+                            platformdaemonlibrary/c++
                             platformdaemon/c++
+                            platformelementlibrary/c++
                             platformapplicationlibrary/c++
-                            platformsystem/c++
+                            platformftaccessorlibrary/c++
+                            platformsystemlibrary/c++
+                            platformftsystem/c++                            
+                            platformftsystemstarter/c++
                             platformadmin/c++
+                            platformftproxy/c++                            
                             tools/c++
                             processadmin/c++
                         </build>
@@ -950,16 +1061,59 @@
                             platforminterface/test/testmonitoring/c++
                             platforminterface/test/testplatforminterface/c++
                             platformdaemon/test/testplatformdaemon/c++
-                            platformsystem/test/testFTSupervision/c++
+                            platformftsystem/test/testFTSupervision/c++
+                            platformftproxy/test/testbasic/c++
+                            platformftsystemstarter/test/teststarter/c++
+                            platformfaultdetector/test/testplatformfaultdetector/c++
+                            platformftaccessorlibrary/test/testplatformftaccessorlibrary/c++
+			    platformsystemlibrary/test/teststdattributes_System/c++
+			    platformapplicationlibrary/test/teststdattributes_Process/c++
+			    platformapplicationlibrary/test/teststdattributes_Process_Managed/c++
+			    platformsystemlibrary/test/teststdattributes_Host/c++
+                            platformsystemlibrary/test/testfacade_System/c++
+                            platformsystemlibrary/test/testfacade_Host/c++
+                            platformapplicationlibrary/test/testfacade_Application/c++
+                            platformapplicationlibrary/test/testfacade_Process/c++
+                            platformelementlibrary/test/testuserdefinedattributes/c++
+                            platformelementlibrary/test/testpersistenceuserdefinedattributes/c++
+                            platformsystemlibrary/test/testnavigability/c++
+                            platformsystemlibrary/test/testentitynavigability/c++
                         </test>
+                        <validation>
+                            platformsystemlibrary/test/teststdattributes_Host/c++
+                            platformsystemlibrary/test/teststdattributes_System/c++
+                            platformapplicationlibrary/test/teststdattributes_Application/c++
+                            platformapplicationlibrary/test/teststdattributes_Process/c++
+                            platformapplicationlibrary/test/teststdattributes_Process_Managed/c++
+                            platformdaemon/test/daemonkiller/c++
+                            valid/perfdaemon/c++
+                            valid/testnotificationreception/c++
+                            valid/testexceptions/c++
+                            platformelementlibrary/test/testuserdefinedattributes/c++
+                            platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++
+                            platformelementlibrary/test/testpersistenceuserdefinedattributes/c++
+                            platformsystemlibrary/test/testvalidnavigability/c++
+                            platformsystemlibrary/test/testentitynavigability/c++
+                        </validation>
                         <qualification>
+                            platformelementlibrary/test/testuserdefinedattributes/c++
+                            platformelementlibrary/test/testpersistenceuserdefinedattributes/c++
+                            platformelementlibrary/test/testvalidpersistenceuserdefinedattributes/c++
                             platforminterface/test/testmanagedprocess/c++
-                        </qualification>                        
+                            platformsystemlibrary/test/teststdattributes_Host/c++
+                            platformsystemlibrary/test/teststdattributes_System/c++
+                            platformapplicationlibrary/test/teststdattributes_Application/c++
+                            platformapplicationlibrary/test/teststdattributes_Process/c++
+                            platformapplicationlibrary/test/teststdattributes_Process_Managed/c++
+                            platformsystemlibrary/test/testvalidnavigability/c++
+                            platformsystemlibrary/test/testentitynavigability/c++
+                        </qualification>
                     </set>
                     <set>
                         <packageid>
                             XMLSVR_FULL
                             DEFAULT_CONFIGURATION
+                            LOAD_BALANCING
                         </packageid>
                         <tools>
                             JAVA-Compiler
@@ -981,7 +1135,7 @@
                         </validation>
                         <qualification>
                             platforminterface/test/testmanagedprocess/java
-                        </qualification>                        
+                        </qualification>
                     </set>
                 </cscs>
             </interface>
@@ -996,6 +1150,7 @@
                         <packageid>
                             SYST_MNGT
                             TIME
+                            LOAD_BALANCING
                             DEFAULT_CONFIGURATION
                         </packageid>
                         <build>
@@ -1044,7 +1199,8 @@
                         <packageid>
                             SYST_MNGT
                             TIME
-                            DEFAULT_CONFIGURATION
+                            LOAD_BALANCING
+			    DEFAULT_CONFIGURATION
                         </packageid>
                         <build>
                             cdmwinit/c++
@@ -1056,7 +1212,8 @@
                      <set>
                         <packageid>
                             XMLSVR_FULL
-                            DEFAULT_CONFIGURATION
+                            LOAD_BALANCING
+			    DEFAULT_CONFIGURATION
                         </packageid>
                         <tools>
                             JAVA-Compiler
@@ -1084,7 +1241,8 @@
                             SYST_MNGT
                             XMLSVR_FULL
                             TIME
-                            DEFAULT_CONFIGURATION
+                            LOAD_BALANCING
+			    DEFAULT_CONFIGURATION
                         </packageid>
                         <build>
                             cdmwinit/java
@@ -1238,18 +1396,24 @@
                         </packageid>
                         <build>
                             clockservice/c++
-                            clocksvcs/c++
                         </build>
                         <test>
+                            clockservice/test/testcommon/c++
                             clockservice/test/testclockservice/c++
+                            clockservice/test/testcontrolledexecutor/c++
+                            clockservice/test/testpolicies/c++
                         </test>
                         <validation>
                             valid/validationdata/c++
+                            clockservice/test/testcommon/c++
                             clockservice/test/testclockservice/c++
+                            clockservice/test/testcontrolledexecutor/c++
                         </validation>
                         <qualification>
                             valid/validationdata/c++
+                            clockservice/test/testcommon/c++
                             clockservice/test/testclockservice/c++
+                            clockservice/test/testcontrolledexecutor/c++
                         </qualification>
                     </set>
                     <set>
@@ -1266,12 +1430,20 @@
                         <validation>
                             valid/validationdata/c++
                             valid/ftclockclient/c++
+			    valid/federatedclock/c++	
+                            clockservice/test/testcommon/c++
                             clockservice/test/testclockservice/c++
+                            clockservice/test/testpolicies/c++
+                            clockservice/test/testcontrolledexecutor/c++
                         </validation>
                         <qualification>
                             valid/validationdata/c++
                             valid/ftclockclient/c++
+			    valid/federatedclock/c++
+                            clockservice/test/testcommon/c++
                             clockservice/test/testclockservice/c++
+                            clockservice/test/testpolicies/c++
+                            clockservice/test/testcontrolledexecutor/c++
                         </qualification>
                     </set>
                 </cscs>
@@ -1288,13 +1460,15 @@
                 <cscs>
                     <set>
                         <packageid>
-                            TIME_FT
+                            LOAD_BALANCING_FT
+			    TIME_FT
                         </packageid>
                         <build>
                             idllib/c++
                             ftcommon/c++
                             ftreplicationmanager/c++
                             ftmanager/c++
+                            ftrequestlogging/c++
                             ftlocationmanager/c++
                             ftinit/c++
                             ftmonitoring/common/c++
@@ -1307,6 +1481,8 @@
                     <set>
                         <packageid>
                             DEFAULT_CONFIGURATION_FT
+                            LOAD_BALANCING_FT
+			    TIME_FT
                         </packageid>
                         <build>
                             idllib/c++
@@ -1314,12 +1490,14 @@
                             ftreplicationmanager/c++
                             ftmanager/c++
                             ftlocationmanager/c++
+                            ftrequestlogging/c++
                             ftinit/c++
                             ftmonitoring/common/c++
                             ftmonitoring/simplemonitoring/c++
                             ftmonitoring/mutualmonitoring/c++
                             ftmonitoring/c++
                             ftstatemanager/c++
+                            ftgroupcreator/c++
                         </build>
                         <test>
                             ftcommon/test/testftcommon/c++
@@ -1338,9 +1516,15 @@
                             ftmonitoring/test/testacknowledgingsimple/c++
                             ftmonitoring/test/testinterrogatingsimple/c++
                             ftmonitoring/test/testcdmwsupervision/c++
+                            ftstatemanager/test/testmiop/c++
+                            ftstatemanager/test/testbackupinsertion/c++
+                            ftstatemanager/test/testontimeout/c++
+                            ftstatemanager/test/testtxdatastore/c++
                             ftstatemanager/test/teststorageinterface/c++
                             ftstatemanager/test/testtransengine/c++
-                            ftstatemanager/test/testbackupinsertion/c++
+                            ftrequestlogging/test/testretentionid/c++
+                            ftrequestlogging/test/testftlogging/c++
+                            ftgroupcreator/test/testgroupcreator/c++
                         </test>
                         <validation>
                             valid/validationdata/c++
@@ -1358,6 +1542,12 @@
                             valid/testftbackupinsertionprimaryfailure/c++
                             valid/testftmanagerreplication/c++
                             valid/testftmanagerreplication2/c++
+                            valid/testflattransaction/c++
+                            valid/testflattransaction2/c++
+                            valid/testflattransaction3/c++
+                            valid/testftrequestlogging/c++
+                            valid/testftrequestlogging2/c++
+                            valid/testftrequestlogging3/c++
                         </validation>
                     </set>
                     <set>
@@ -1374,6 +1564,7 @@
                             ftcommon/c++
                             ftreplicationmanager/c++
                             ftmanager/c++
+                            ftrequestlogging/c++
                             ftlocationmanager/c++
                             ftinit/c++
                             ftmonitoring/common/c++
@@ -1398,9 +1589,13 @@
                             ftmonitoring/test/testacknowledgingsimple/c++
                             ftmonitoring/test/testinterrogatingsimple/c++
                             ftmonitoring/test/testcdmwsupervision/c++
+                            ftstatemanager/test/testmiop/c++
+                            ftstatemanager/test/testbackupinsertion/c++
+                            ftstatemanager/test/testontimeout/c++
+                            ftstatemanager/test/testtxdatastore/c++
                             ftstatemanager/test/teststorageinterface/c++
                             ftstatemanager/test/testtransengine/c++
-                            ftstatemanager/test/testbackupinsertion/c++
+                            ftgroupcreator/test/testgroupcreator/c++
                         </test>
                         <validation>
                             valid/validationdata/c++
@@ -1410,7 +1605,13 @@
                             valid/Supervisioncollaborationtest/c++
                             valid/testftstatetransfer/c++
                             valid/testftstatetransfer2/c++
+                            valid/testflattransaction/c++
+                            valid/testflattransaction2/c++
+                            valid/testflattransaction3/c++
                         </validation>
+                        <qualification>
+                            valid/datastoretest/c++
+                        </qualification>
                     </set>
                 </cscs>
             </interface>
@@ -1429,7 +1630,7 @@
                 <cscs>
                     <set>
                         <packageid>
-                           DEFAULT_CONFIGURATION_LB
+                           LOAD_BALANCING
                         </packageid>
                         <build>
                             idllib/c++
@@ -1447,19 +1648,71 @@
                         </test>
                         <validation>
                             valid/validationdata/c++
+                            valid/loadbalancingclient/c++
                             valid/loadbalancingserver/c++
-                            valid/loadbalancingclient4/c++
                             lbinit/test/testlbinit/c++
                             lbstrategy/test/testlbstrategy/c++
                             lbgroupmanager/test/testlbgroupmanager/c++
                         </validation>
                         <qualification>
-                            valid/validationdata/c++
+                            valid/loadbalancingclient/c++
                             valid/loadbalancingserver/c++
-                            valid/loadbalancingclient4/c++
+                            lbinit/test/testlbinit/c++
                             lbstrategy/test/testlbstrategy/c++
                         </qualification>
                     </set>
+                    <set>
+                        <packageid>
+                           LOAD_BALANCING_FT
+                        </packageid>
+                        <build>
+                            idllib/c++
+                            idllib/java
+                            lbcommon/c++
+                            lbgroupmanager/c++
+                            lbgroupmanagerft/c++
+                            lbinit/c++
+                            lbstrategy/c++
+                        </build>
+                        <test>
+                          lbgroupmanager/test/testlbgroupmanager/c++
+                          lbcommon/test/testlbcommon/c++
+                          lbinit/test/testlbinit/c++
+                          lbstrategy/test/testlbstrategy/c++
+                        </test>
+                        <validation>
+                            valid/validationdata/c++
+                            valid/loadbalancingserverft/c++                            
+                            valid/loadbalancingclientft/c++
+                            lbinit/test/testlbinit/c++
+                            valid/loadbalancingclient/c++
+                            valid/loadbalancingserver/c++
+                            lbstrategy/test/testlbstrategy/c++
+                            lbgroupmanager/test/testlbgroupmanager/c++
+                        </validation>
+                        <qualification>
+                            valid/loadbalancingserverft/c++                            
+                            valid/loadbalancingclient/c++
+                            valid/loadbalancingserver/c++
+                            valid/loadbalancingclientft/c++
+                            lbinit/test/testlbinit/c++
+                            lbstrategy/test/testlbstrategy/c++
+                        </qualification>
+                    </set>
+                    <set>
+                         <packageid>
+                           LOAD_BALANCING + DEFAULT_CONFIGURATION_CCM
+                        </packageid>
+                        <build/>
+                        <validation>
+                            valid/ccm_lb/c++
+                            valid/ccm_lb_data/c++
+                        </validation>
+                        <qualification>
+                            valid/ccm_lb/c++
+                            valid/ccm_lb_data/c++
+                        </qualification>
+                    </set>   
                 </cscs>
             </interface>
         </csci>
@@ -1473,7 +1726,7 @@
                     JAVA-Compiler
                     JAVA-ORB
                     JAVA-XML-Parser
-                    JAVA-FTP
+                    FTP-SERVER
                     JAVA-XSLT-Processor
                     Time-Service-ORB
                 </tools>
@@ -1485,7 +1738,7 @@
                     JAVA-Compiler
                     JAVA-ORBacus
                     JAVA-XML-Parser
-                    JAVA-FTP
+                    FTP-SERVER
                     JAVA-XSLT-Processor
                     JAVA-ZIP
                 </tools>
@@ -1543,7 +1796,7 @@
                     JAVA-Compiler
                     JAVA-ORB
                     JAVA-XML-Parser
-                    JAVA-FTP
+                    FTP-SERVER
                     JAVA-XSLT-Processor
                     Time-Service-ORB
                 </tools>
@@ -1552,7 +1805,7 @@
                     JAVA-Compiler
                     JAVA-ORBacus
                     JAVA-XML-Parser
-                    JAVA-FTP
+                    FTP-SERVER
                     JAVA-XSLT-Processor
                     JAVA-ZIP
                 </tools>
@@ -1573,7 +1826,7 @@
                             ccmserveractivator/java
                             ccmcif/java
                         </build>
-                        <test>
+                        <test>                           
                             ccmcif/test/testccmcif/java
                             ccmcif/test/testphilosophers/java
                             ccmcontainer/test/testccmcontainer/java
@@ -1640,7 +1893,7 @@
                     </set>
                     <set>
                         <packageid>
-                            DEFAULT_CONFIGURATION_CCM+DEFAULT_CONFIGURATION_LB
+                            DEFAULT_CONFIGURATION_CCM+LOAD_BALANCING
                         </packageid>
                         <build/>
                         <test>
@@ -1741,6 +1994,10 @@
                             qualif/lifecycle/lifecycleserver1/c++
                             qualif/lifecycle/lifecycleserver2/c++
                             qualif/traceclient/c++
+                            qualif/traceclient2/c++
+                            qualif/systemmngt/testcdmwprocess/c++
+                            qualif/systemmngt/testprocessattributes/c++
+                            qualif/systemmngt/testcrashtimedetection/c++
                         </qualification>
                     </set>
                     <set>
@@ -1753,16 +2010,15 @@
                             demos/demo_philosophers/c++
                         </build>
                         <integration>
-                            integ/ccm/c++
-                            integ/ccm_philo/c++
                         </integration>
                         <qualification>
-                            integ/ccm/c++
+                            qualif/ccm/c++
                             qualif/ccm_data/c++
-                            integ/ccm_philo/c++
+                            qualif/ccm_philo/c++
                             qualif/ccm_philo_data/c++
                             qualif/ccm_unaware/c++
                             qualif/ccm_unaware_data/c++
+                            qualif/ccm_logging/c++
                         </qualification>
                     </set>
                     <set>
@@ -1791,7 +2047,13 @@
                             qualif/faulttolerance/testftinitsequencing/c++
                             qualif/faulttolerance/testftmanagerreplication/c++
                             qualif/faulttolerance/testftmanagerreplication2/c++
+                            qualif/faulttolerance/testftrequestlogging/c++
                             qualif/systemmngt/navigation/c++
+                            qualif/repository/testftrepository/c++
+                            qualif/systemmngt/testnotificationreception/c++
+                            qualif/systemmngt/perfdaemon/c++
+                            qualif/repository/testperfbinder/c++
+                            qualif/systemmngt/starttime/c++
                         </qualification>
                     </set>
                     <set>
@@ -1806,19 +2068,30 @@
                             qualif/ccm_ft_data/c++
                             qualif/ccm_ft_datastore/c++
                             qualif/ccm_ft_datastore_data/c++
+                            qualif/ccm_ft_request_logging/c++
+                            qualif/ccm_ft_request_logging_data/c++
                         </qualification>
                     </set>
                     <set>
                         <packageid>
-                            DEFAULT_CONFIGURATION_CCM+DEFAULT_CONFIGURATION_LB
+                            TIME
                         </packageid>
-                        <build />
+                        <build>
+                            demos/federated_controlled_executor/c++
+                        </build>
+                    </set>
+                    <set>
+                        <packageid>
+                            TIME_FT+DEFAULT_CONFIGURATION_CCM+DEFAULT_CONFIGURATION_FT
+                        </packageid>
+                        <build>
+                        </build>
                         <qualification>
-                            qualif/ccm_lb/c++
-                            qualif/ccm_lb_data/c++
+                            qualif/ccm_ft_timers/c++ 
+                            qualif/ccm_ft_timers_data/c++
                         </qualification>
                     </set>
-                </cscs>
+                   </cscs>
             </interface>
             <interface lang="java">
                 <tools>
@@ -1834,6 +2107,7 @@
                         </packageid>
                         <build/>
                         <qualification>
+                            qualif/common/java
                             qualif/xmlclient/java
                         </qualification>
                     </set>
@@ -1849,11 +2123,13 @@
                         <test>
                         </test>
                         <qualification>
+                            qualif/common/java
                             qualif/eventclient/java
                             qualif/lifecycle/lifecycleclient/java
                             qualif/lifecycle/lifecycleserver1/java
                             qualif/lifecycle/lifecycleserver2/java
                             qualif/xmlclient/java
+                            qualif/systemmngt/testcdmwprocess/java
                         </qualification>
                     </set>
                     <set>
@@ -1866,13 +2142,11 @@
                             demos/demo_philosophers/java
                         </build>
                         <integration>
-                            integ/ccm/java
-                            integ/ccm_philo/java
                         </integration>
                         <qualification>
-                            integ/ccm/java
+                            qualif/ccm/java
                             qualif/ccm_data/java
-                            integ/ccm_philo/java
+                            qualif/ccm_philo/java
                             qualif/ccm_philo_data/java
                         </qualification>
                     </set>
@@ -1881,7 +2155,7 @@
         </csci>
     </cscis>
 
-    
+
     <toolsets>
         <toolset id="CPP-Compiler" lang="c++" type="compiler">
             <tool name="GCC" desc="GNU C++ compiler" os.list="Linux SunOS"/>
@@ -1934,8 +2208,8 @@
             <tool name="OpenCCM" desc="OpenCCM" os.list="Linux SunOS"/>
         </toolset>
 
-        <toolset id="JAVA-FTP" lang="java">
-            <tool name="FtpJAVA" desc="Java FTP implementation" os.list="Linux SunOS"/>
+        <toolset id="FTP-SERVER" lang="java">
+            <tool name="Ftp" desc="FTP server" os.list="Linux SunOS"/>
         </toolset>
 
         <toolset id="Charles" lang="ada">
@@ -1956,5 +2230,6 @@
 
     </toolsets>
 </config>
+
 
 

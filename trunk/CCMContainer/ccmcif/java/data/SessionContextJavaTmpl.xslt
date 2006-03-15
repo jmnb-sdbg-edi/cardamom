@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -190,7 +190,7 @@ public class <xsl:value-of select="$_contextImplClassname"/> extends SessionCont
          <!--
             Receptacles.
          -->
-   
+
          <xsl:call-template name="findAllJavaComponentReceptacles">
             <xsl:with-param name="_componentName" select="$_componentName"/>
             <xsl:with-param name="_template" select="'session_context_java.content.1'"/>
@@ -199,7 +199,7 @@ public class <xsl:value-of select="$_contextImplClassname"/> extends SessionCont
          <!--
             Emitters.
          -->
-         
+
          <xsl:call-template name="findAllJavaComponentEmitters">
             <xsl:with-param name="_componentName" select="$_componentName"/>
             <xsl:with-param name="_template" select="'session_context_java.content.2'"/>
@@ -219,7 +219,7 @@ public class <xsl:value-of select="$_contextImplClassname"/> extends SessionCont
    <!--
       The code generation stops here.
    -->
-   
+
 </xsl:template> <!-- end of template session_context_java.content -->
 
 
@@ -229,16 +229,16 @@ public class <xsl:value-of select="$_contextImplClassname"/> extends SessionCont
 <xsl:template name="session_context_java.content.1">
    <xsl:param name="_receptacleTypeName"/>
    <xsl:param name="_receptacleName"/>
-   
+
    <xsl:variable name="scopedReturnType">
       <xsl:call-template name="getScopedName">
          <xsl:with-param name="_name" select="$_receptacleTypeName"/>
          <xsl:with-param name="_lang" select="'java'"/>
       </xsl:call-template>
    </xsl:variable>
-   
+
    <xsl:value-of select="concat($lf, 'public ', $scopedReturnType, ' get_connection_', $_receptacleName, '() {', $lf)"/>
-   <xsl:value-of select="$scopedReturnType"/> recep = 
+   <xsl:value-of select="$scopedReturnType"/> recep =
          this.component.get_connection_<xsl:value-of select="$_receptacleName"/>();
       return recep;
    }
@@ -261,16 +261,19 @@ public class <xsl:value-of select="$_contextImplClassname"/> extends SessionCont
 
    <xsl:value-of select="concat($lf, 'public void push_', $_eventName, '(', $scopedReturnType, ' event) {', $lf)"/>
       // insert event into an any
+      /* PCR-0049
       org.omg.CORBA.Any data = org.omg.CORBA.ORB.init().create_any();
       <xsl:value-of select="$scopedReturnType"/>Helper.insert(data, event);
-
+      */
+      cdmw.orbsupport.Codec codec = new cdmw.orbsupport.Codec();
+      org.omg.CORBA.Any data = codec.encode(event);
       // find proxy to push event
       org.omg.CosEventComm.PushConsumer proxyConsumer =
          this.component.get_proxy_consumer("<xsl:value-of select="$_eventName"/>");
 
       if (proxyConsumer == null) {
           throw new org.omg.CORBA.INTERNAL(
-             ExceptionMinorCodes.INTERNAL, 
+             ExceptionMinorCodes.INTERNAL,
              org.omg.CORBA.CompletionStatus.COMPLETED_NO);
       }
 
@@ -278,7 +281,7 @@ public class <xsl:value-of select="$_contextImplClassname"/> extends SessionCont
           proxyConsumer.push(data);
       } catch (org.omg.CosEventComm.Disconnected d) {
           throw new org.omg.CORBA.INTERNAL(
-             ExceptionMinorCodes.INTERNAL, 
+             ExceptionMinorCodes.INTERNAL,
              org.omg.CORBA.CompletionStatus.COMPLETED_NO);
       }
    }
@@ -287,5 +290,3 @@ public class <xsl:value-of select="$_contextImplClassname"/> extends SessionCont
 
 
 </xsl:stylesheet>
-
-

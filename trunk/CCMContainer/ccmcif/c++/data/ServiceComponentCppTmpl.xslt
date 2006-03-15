@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -477,7 +477,7 @@
    </xsl:call-template>
 
    // Constructor
-   <xsl:value-of select="concat($componentImplClassname, $cppSep, $componentImplClassname)"/>(const std::string comp_oid,
+   <xsl:value-of select="concat($componentImplClassname, $cppSep, $componentImplClassname)"/>(const <![CDATA[std::string&]]> comp_oid,
                          CdmwCcmContainer::CCM2Context_ptr ctx,
                          Components::EnterpriseComponent*   executor,
                          bool is_created_by_factory_operation)
@@ -848,10 +848,9 @@
    <xsl:choose>
       <xsl:when test="$hasFacets = 'true' or $hasConsumers = 'true'">
          PortableServer::Servant
-         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const char* facet_name) 
+         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const <![CDATA[std::string&]]> facet_name) 
             throw (CORBA::SystemException)
          {
-            std::string facet = facet_name;
             PortableServer::ServantBase_var facet_servant;
           
             <xsl:if test="$hasFacets = 'true'">
@@ -879,10 +878,9 @@
       </xsl:when>
       <xsl:otherwise>
          PortableServer::Servant
-         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const char* facet_name) 
+         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const <![CDATA[std::string&]]> facet_name) 
             throw (CORBA::SystemException)
          {
-            std::string facet = facet_name;
             PortableServer::ServantBase_var facet_servant;
         
             // No facet with this name define for that component
@@ -1064,7 +1062,7 @@
    try
    {
       CORBA::Object_var <xsl:value-of select="$_facetName"/>_facet
-         = declare_facet(comp_oid.c_str(), 
+         = declare_facet(comp_oid, 
                          FACET_<xsl:value-of select="$uppercaseFacetName"/>_NAME, 
                          FACET_<xsl:value-of select="$uppercaseFacetName"/>_REP_ID);
                          
@@ -1157,7 +1155,7 @@
    
    <xsl:variable name="uppercaseFacetName" select="translate($_facetName, $lcase, $ucase)"/>
 
-   if (facet == FACET_<xsl:value-of select="$uppercaseFacetName"/>_NAME)
+   if (facet_name == FACET_<xsl:value-of select="$uppercaseFacetName"/>_NAME)
    {
       facet_servant 
          = new <xsl:value-of select="concat($_facetTypeName, '_impl')"/>(m_executor_locator, 
@@ -1567,7 +1565,7 @@
    
    <xsl:variable name="uppercaseConsumerName" select="translate($_consumerName, $lcase, $ucase)"/>
 
-   declare_consumer(comp_oid.c_str(), <xsl:value-of select="concat('CONSUMER_', $uppercaseConsumerName,'_NAME, CONSUMER_', $uppercaseConsumerName,'_REP_ID')"/>);
+   declare_consumer(comp_oid, <xsl:value-of select="concat('CONSUMER_', $uppercaseConsumerName,'_NAME, CONSUMER_', $uppercaseConsumerName,'_REP_ID')"/>);
 </xsl:template> <!-- end of template service_component_cpp.content.21 -->
 
 
@@ -1630,7 +1628,7 @@
    
    <xsl:variable name="uppercaseConsumerName" select="translate($_consumerName, $lcase, $ucase)"/>
 
-   if (facet == CONSUMER_<xsl:value-of select="$uppercaseConsumerName"/>_NAME)
+   if (facet_name == CONSUMER_<xsl:value-of select="$uppercaseConsumerName"/>_NAME)
    {
       facet_servant 
          = new <xsl:value-of select="concat($_consumerTypeName, 'Consumer_impl')"/>(m_executor_locator, 

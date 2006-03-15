@@ -1,24 +1,24 @@
-#!/bin/bash
+#!/bin/sh
 # =====================================================================
-# This file is part of CARDAMOM (R) which is jointly developed by THALES 
-# and SELEX-SI. 
+# This file is part of CARDAMOM (R) which is jointly developed by THALES
+# and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+# 2000-2003. All rights reserved.
 # 
-# It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
-# All rights reserved.
+# Copyright (C) THALES 2004-2005. All rights reserved
 # 
-# CARDAMOM is free software; you can redistribute it and/or modify it under 
-# the terms of the GNU Library General Public License as published by the
-# Free Software Foundation; either version 2 of the License, or (at your 
-# option) any later version. 
+# CARDAMOM is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 # 
-# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
-# License for more details. 
+# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+# License for more details.
 # 
-# You should have received a copy of the GNU Library General 
-# Public License along with CARDAMOM; see the file COPYING. If not, write to 
-# the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# You should have received a copy of the GNU Library General Public
+# License along with CARDAMOM; see the file COPYING. If not, write to the
+# Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 # =====================================================================
 
 
@@ -34,6 +34,7 @@ usage() {
     echo "                        CVS repository"
     echo "    -e csci_export_dir  directory containing the files of a CSCI"
     echo "                        exported from the CVS repository"
+    echo "    -f ECR_PCR_ref      ECR/PCR form id"
     echo "    -t tag              tag name to set when committing to CVS"
     echo "    -c csci             name of the CSCI to work on (necessary only"
     echo "                        if it cannot be guessed from csci_export_dir"
@@ -46,9 +47,10 @@ csci_export_dir=
 csci=
 tag=
 my_cvsroot=
+ecrpcr=
 
 ## Parse command line arguments.
-while getopts b:e:c:t:r: option; do
+while getopts b:e:f:c:t:r: option; do
     case $option in
         b) branch=$OPTARG ;;
         e) if [ ! -d "$OPTARG" ]; then
@@ -57,6 +59,7 @@ while getopts b:e:c:t:r: option; do
            fi
            # Remove possible trailing slash.
            csci_export_dir=`cd $OPTARG; pwd` ;;
+        f) ecrpcr=$OPTARG ;;
         c) csci=$OPTARG ;;
         t) tag=$OPTARG ;;
         r) my_cvsroot=$OPTARG ;;
@@ -71,8 +74,8 @@ if [ -z "$csci" ]; then
   fi
 fi
 
-## All the arguments are mandatory.
-if [ -z "$csci_export_dir" -o -z "$csci" ]; then
+## Check mandatory arguments.
+if [ -z "$csci_export_dir" -o -z "$csci" -o -z "$ecrpcr" ]; then
     usage
 fi
 
@@ -165,7 +168,7 @@ done
 
 ## Commit the changes into the branch and tag it.
 echo "---------------- Committing $csci into the branch"
-cvs commit -m "Update delivery branch with $tag delivery"
+cvs commit -m "$ecrpcr: Update delivery branch with $tag delivery"
 
 echo "---------------- Tagging branch with tag $tag"
 cvs tag $tag .

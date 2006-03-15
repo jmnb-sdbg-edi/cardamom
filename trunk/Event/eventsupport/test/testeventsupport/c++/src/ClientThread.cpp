@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -31,8 +31,8 @@
 #include "testeventsupport/ClientThread.hpp"
 
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 
 #include "Foundation/common/System.hpp"
 #include "Foundation/common/Locations.hpp"
@@ -77,13 +77,11 @@ ClientThread::~ClientThread() throw()
 void ClientThread::run() throw()
 {
     using namespace Cdmw::Common;
-    using namespace Cdmw::NamingAndRepository;
-    using namespace Cdmw::NamingAndRepository;
     using namespace CdmwEvent;
     using namespace Cdmw::OsSupport;
 
     // init main server of this test: PROC_000
-    CdmwPlatformMngt::Process_var proc = CdmwPlatformMngt::Process::_nil();
+    CdmwPlatformMngt::ProcessDelegate_var proc = CdmwPlatformMngt::ProcessDelegate::_nil();
     std::string proc_url("corbaname::localhost:");
     proc_url += m_nameServicePort;
     proc_url += "#CDMW.I/ProcessCallback.simulated/CDMW Test Application/PROC_000";
@@ -91,7 +89,7 @@ void ClientThread::run() throw()
     
     if (!CORBA::is_nil(obj.in())) 
     {
-        proc = CdmwPlatformMngt::Process::_narrow(obj.in());
+        proc = CdmwPlatformMngt::ProcessDelegate::_narrow(obj.in());
     }
     else
     {
@@ -119,7 +117,7 @@ void ClientThread::run() throw()
     //
     // Get NamingInterface object from RepositoryInterface
     //
-    Cdmw::NamingAndRepository::NamingInterface ni
+    Cdmw::CommonSvcs::Naming::NamingInterface ni
         = Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface(Locations::CDMW_SERVICES_NAME_DOMAIN);
     
     // I) TEST UNTYPED EVENT CHANNEL FACTORY
@@ -168,14 +166,14 @@ void ClientThread::run() throw()
     // EventChannelManager Proc URL is CDMW Test Application/PROC_001 while main 
     // of this test is PROC_000
     std::cout << " Getting eventchannelmanager ProcessCallback" << std::endl;
-    CdmwPlatformMngt::Process_var proc_ec_mng = CdmwPlatformMngt::Process::_nil();
+    CdmwPlatformMngt::ProcessDelegate_var proc_ec_mng = CdmwPlatformMngt::ProcessDelegate::_nil();
     proc_url = "corbaname::localhost:" + m_nameServicePort;
     proc_url += "#CDMW.I/ProcessCallback.simulated/CDMW Test Application/PROC_001";
     obj = m_orb->string_to_object(proc_url.c_str());
     
     if (!CORBA::is_nil(obj.in())) 
     {
-       proc_ec_mng  = CdmwPlatformMngt::Process::_narrow(obj.in());
+       proc_ec_mng  = CdmwPlatformMngt::ProcessDelegate::_narrow(obj.in());
     }
     else
     {
@@ -264,7 +262,7 @@ void ClientThread::run() throw()
     OS::sleep(timescale*10000);
     std::cout << "EventChannelManager started" << std::endl;
 
-    proc = CdmwPlatformMngt::Process::_nil();
+    proc = CdmwPlatformMngt::ProcessDelegate::_nil();
     // EventChannelManager Proc URL shall be incremented (stoppped, then restarted)
     // and is now CDMW Test Application/PROC_002
     proc_url = "corbaname::localhost:" + m_nameServicePort;
@@ -273,7 +271,7 @@ void ClientThread::run() throw()
     
     if (!CORBA::is_nil(obj.in())) 
     {
-        proc = CdmwPlatformMngt::Process::_narrow(obj.in());
+        proc = CdmwPlatformMngt::ProcessDelegate::_narrow(obj.in());
     }
     else
     {

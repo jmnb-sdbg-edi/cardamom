@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -43,20 +43,21 @@
 
 namespace
 {
-    const char* COMP_WITH_FACET_HOME_REP_ID = "IDL:thalesgroup.com/TestFtCcmCif/ComponentWithFacetHome:1.0";
-    const char* COMP_WITH_FACET_HOME_SERVANT_NAME = "Cdmw.CCM.CIF.CdmwTestFtCcmCif.SessionComponentWithFacetHome_impl";
+    const char* COMP_WITH_FACET_HOME_REP_ID = "IDL:acme.com/TestFtCcmCif/ComponentsModule/ComponentWithFacetHome:1.0";
+    const char* FT_COMP_WITH_FACET_HOME_SERVANT_NAME = "Cdmw.CCM.CIF.CdmwTestFtCcmCif.ComponentsModule.FTSessionComponentWithFacetHome_impl";
     const char* COMP_WITH_FACET_HOME_UID = "ComponentWithFacetHome_1";
     const char* COMP_WITH_FACET_HOME_ENTRY_POINT = "create_CCM_ComponentWithFacetHome";
 
-    const char* COMP_WITH_CONSUMER_HOME_REP_ID = "IDL:thalesgroup.com/TestFtCcmCif/ComponentWithConsumerHome:1.0";
-    const char* COMP_WITH_CONSUMER_HOME_SERVANT_NAME = "Cdmw.CCM.CIF.CdmwTestFtCcmCif.SessionComponentWithConsumerHome_impl";
+    const char* COMP_WITH_CONSUMER_HOME_REP_ID = "IDL:acme.com/TestFtCcmCif/ComponentsModule/ComponentWithConsumerHome:1.0";
+    const char* COMP_WITH_CONSUMER_HOME_SERVANT_NAME = "Cdmw.CCM.CIF.CdmwTestFtCcmCif.ComponentsModule.SessionComponentWithConsumerHome_impl";
+    const char* FT_COMP_WITH_CONSUMER_HOME_SERVANT_NAME = "Cdmw.CCM.CIF.CdmwTestFtCcmCif.ComponentsModule.FTSessionComponentWithConsumerHome_impl";
     const char* COMP_WITH_CONSUMER_HOME_UID = "ComponentWithConsumerHome_1";
     const char* COMP_WITH_CONSUMER_HOME_ENTRY_POINT = "create_CCM_ComponentWithConsumerHome";
 
     const char* TEST_FACET_NAME = "the_facet";
     const char* TEST_CONSUMER_NAME = "the_consumer";
 
-    const char* TEST_EVENT_REP_ID = "IDL:thalesgroup.com/TestFtCcmCif/TestEvent:1.0";
+    const char* TEST_EVENT_REP_ID = "IDL:acme.com/TestFtCcmCif/EventTypeModule/TestEvent:1.0";
     const char* TEST_EVENT_ENTRYPOINT = "createTestEventFactory";
 
 }; // End anonymous namespace
@@ -106,15 +107,15 @@ TestNavigationWithFT::TestNavigationWithFT(
 
 
 
-ComponentWithFacet_ptr
+ComponentsModule::ComponentWithFacet_ptr
 TestNavigationWithFT::create_ComponentWithFacet(Components::Deployment::Container_ptr container, 
-                                                ComponentWithFacet_ptr componentWithFacetGroup)
+                                                ComponentsModule::ComponentWithFacet_ptr componentWithFacetGroup)
     throw (CORBA::Exception)
 {
     add_nbOfRequestedTestOK(2);
     
     Components::CCMHome_var componentWithFacetHome;
-    ComponentWithFacet_var  componentWithFacet = ComponentWithFacet::_nil();
+    ComponentsModule::ComponentWithFacet_var  componentWithFacet = ComponentsModule::ComponentWithFacet::_nil();
 
     TEST_INFO("  Install a FT componentWithFacetHome");
     try
@@ -146,7 +147,7 @@ TestNavigationWithFT::create_ComponentWithFacet(Components::Deployment::Containe
                 CdmwDeployment::HOME_REPOSITORY_ID, 
                 value);
 
-        value <<= COMP_WITH_FACET_HOME_SERVANT_NAME;
+        value <<= FT_COMP_WITH_FACET_HOME_SERVANT_NAME;
         config_values[4] =
             new Cdmw::CCM::Container::ConfigValue_impl(
                 CdmwDeployment::HOME_SERVANT_CLASSNAME, 
@@ -208,10 +209,10 @@ TestNavigationWithFT::create_ComponentWithFacet(Components::Deployment::Containe
                 keyless_componentWithFacetHome->create_component_with_config_values(config_values);
 
             componentWithFacet = 
-                ComponentWithFacet::_narrow(obj.in());
+                ComponentsModule::ComponentWithFacet::_narrow(obj.in());
 
             if (CORBA::is_nil(componentWithFacet.in())) {
-                TEST_INFO("ERROR: Created component is not a TestFtCcmCif::ComponentWithFacet!");
+                TEST_INFO("ERROR: Created component is not a TestFtCcmCif::ComponentsModule::ComponentWithFacet!");
                 TEST_FAILED();
             } else {
                 TEST_SUCCEED();
@@ -237,16 +238,16 @@ TestNavigationWithFT::create_ComponentWithFacet(Components::Deployment::Containe
 
 
 
-ComponentWithConsumer_ptr
+ComponentsModule::ComponentWithConsumer_ptr
 TestNavigationWithFT::create_ComponentWithConsumer(Components::Deployment::Container_ptr container, 
-                                                   ComponentWithConsumer_ptr componentWithConsumerGroup)
+                                                   ComponentsModule::ComponentWithConsumer_ptr componentWithConsumerGroup)
     throw (CORBA::Exception)
 {
     add_nbOfRequestedTestOK(7);
     
     Components::CCMHome_var componentWithConsumerHome;
     Components::CCMHome_var FTComponentWithConsumerHome;
-    ComponentWithConsumer_var componentWithConsumer = ComponentWithConsumer::_nil();
+    ComponentsModule::ComponentWithConsumer_var componentWithConsumer = ComponentsModule::ComponentWithConsumer::_nil();
 
     try
     {
@@ -306,6 +307,12 @@ TestNavigationWithFT::create_ComponentWithConsumer(Components::Deployment::Conta
                                     config_values);
 
         config_values.length(7);
+        value <<= FT_COMP_WITH_CONSUMER_HOME_SERVANT_NAME;
+        config_values[4] = 
+            new Cdmw::CCM::Container::ConfigValue_impl(
+                CdmwDeployment::HOME_SERVANT_CLASSNAME, 
+                value);
+
         value <<= CdmwDeployment::WARM_PASSIVE;
         config_values[6] =
             new Cdmw::CCM::Container::ConfigValue_impl(
@@ -534,10 +541,10 @@ TestNavigationWithFT::create_ComponentWithConsumer(Components::Deployment::Conta
                 keyless_componentWithConsumerHome->create_component_with_config_values(config_values);
 
             componentWithConsumer = 
-                ComponentWithConsumer::_narrow(obj.in());
+                ComponentsModule::ComponentWithConsumer::_narrow(obj.in());
 
             if (CORBA::is_nil(componentWithConsumer.in())) {
-                TEST_INFO("ERROR: Created component is not a TestFtCcmCif::ComponentWithConsumer!");
+                TEST_INFO("ERROR: Created component is not a TestFtCcmCif::ComponentsModule::ComponentWithConsumer!");
                 TEST_FAILED();
             } else {
                 TEST_SUCCEED();
@@ -581,9 +588,9 @@ TestNavigationWithFT::call_ConfigurationComplete(Components::CCMObject_ptr compo
         TEST_FAILED();
     }
 
-    ComponentWithFacet_var facetComponent; 
+    ComponentsModule::ComponentWithFacet_var facetComponent; 
     try {
-        facetComponent = ComponentWithFacet::_narrow(component);
+        facetComponent = ComponentsModule::ComponentWithFacet::_narrow(component);
 
         if (CORBA::is_nil(facetComponent.in())) 
         {
@@ -614,14 +621,14 @@ TestNavigationWithFT::call_ConfigurationComplete(Components::CCMObject_ptr compo
             }
         }
     } catch (const CORBA::Exception& e) {
-        std::cerr << "Error while narrowing group to ComponentWithFacet: " 
+        std::cerr << "Error while narrowing group to ComponentsModule::ComponentWithFacet: " 
                   << e << std::endl;
         TEST_FAILED();
         throw;
     }
 }
 
-ComponentWithFacet_ptr
+ComponentsModule::ComponentWithFacet_ptr
 TestNavigationWithFT::create_ComponentWithFacetGroup()
     throw (CORBA::Exception)
 {
@@ -668,7 +675,7 @@ TestNavigationWithFT::create_ComponentWithFacetGroup()
     ft_criteria[0].nam[0].id="org.omg.ft.FTProperties";
     ft_criteria[0].val <<= prop;
 
-    const char * repId = "IDL:thalesgroup.com/Cdmw_TestFtCcmCif/ComponentWithFacet:1.0";
+    const char * repId = "IDL:thalesgroup.com/Cdmw_TestFtCcmCif/ComponentsModule/ComponentWithFacet:1.0";
     CORBA::Object_var group;
     ::FT::GenericFactory::FactoryCreationId_var creationId;
     
@@ -686,9 +693,9 @@ TestNavigationWithFT::create_ComponentWithFacetGroup()
         throw;
     }
 
-    ComponentWithFacet_var componentGroup; 
+    ComponentsModule::ComponentWithFacet_var componentGroup; 
     try {
-        componentGroup = ComponentWithFacet::_narrow(group.in());
+        componentGroup = ComponentsModule::ComponentWithFacet::_narrow(group.in());
     } catch (const CORBA::Exception& e) {
         std::cerr << "Error while narrowing group to ComponentWithFacet: " 
                   << e << std::endl;
@@ -707,11 +714,11 @@ TestNavigationWithFT::create_ComponentWithFacetGroup()
 
 }
     
-ComponentWithFacet_ptr
+CORBA::Object_ptr
 TestNavigationWithFT::addMembers_ToComponentWithFacetGroup(
-        ComponentWithFacet_ptr componentWithFacetGroup,
-        ComponentWithFacet_ptr componentWithFacetOnPrimary,
-        ComponentWithFacet_ptr componentWithFacetOnBackup)
+        ComponentsModule::ComponentWithFacet_ptr componentWithFacetGroup,
+        ComponentsModule::ComponentWithFacet_ptr componentWithFacetOnPrimary,
+        ComponentsModule::ComponentWithFacet_ptr componentWithFacetOnBackup)
     throw (CORBA::Exception)
 {
     add_nbOfRequestedTestOK(1);
@@ -731,6 +738,7 @@ TestNavigationWithFT::addMembers_ToComponentWithFacetGroup(
         TEST_FAILED();
         throw;
     }
+
     try {
         group = m_replicationManager->add_member(group.in(),
                                                  m_backupLocation,
@@ -742,29 +750,13 @@ TestNavigationWithFT::addMembers_ToComponentWithFacetGroup(
         throw;
     }
     
-    ComponentWithFacet_var componentGroup; 
-    try {
-        componentGroup = ComponentWithFacet::_narrow(group.in());
-    } catch (const CORBA::Exception& e) {
-        std::cerr << "Error while narrowing group to ComponentWithFacet: " 
-                  << e << std::endl;
-        TEST_FAILED();
-        throw;
-    }
-            
-    if (CORBA::is_nil(componentGroup.in())) {
-        std::cerr << "Error: componentGroup is null." << std::endl;
-        TEST_FAILED();
-        throw CORBA::INTERNAL();
-    }
-
     TEST_SUCCEED(); 
-    return componentGroup._retn();
+    return group._retn();
 }
 
 
 
-ComponentWithConsumer_ptr
+ComponentsModule::ComponentWithConsumer_ptr
 TestNavigationWithFT::create_ComponentWithConsumerGroup()
     throw (CORBA::Exception)
 {
@@ -811,7 +803,7 @@ TestNavigationWithFT::create_ComponentWithConsumerGroup()
     ft_criteria[0].nam[0].id="org.omg.ft.FTProperties";
     ft_criteria[0].val <<= prop;
 
-    const char * repId = "IDL:thalesgroup.com/Cdmw_TestFtCcmCif/ComponentWithConsumer:1.0";
+    const char * repId = "IDL:thalesgroup.com/Cdmw_TestFtCcmCif/ComponentsModule/ComponentWithConsumer:1.0";
     CORBA::Object_var group;
     ::FT::GenericFactory::FactoryCreationId_var creationId;
 
@@ -829,9 +821,9 @@ TestNavigationWithFT::create_ComponentWithConsumerGroup()
         throw;
     }
 
-    ComponentWithConsumer_var componentGroup; 
+    ComponentsModule::ComponentWithConsumer_var componentGroup; 
     try {
-        componentGroup = ComponentWithConsumer::_narrow(group.in());
+        componentGroup = ComponentsModule::ComponentWithConsumer::_narrow(group.in());
     } catch (const CORBA::Exception& e) {
         std::cerr << "Error while narrowing group to ComponentWithConsumer: " 
                   << e << std::endl;
@@ -850,11 +842,11 @@ TestNavigationWithFT::create_ComponentWithConsumerGroup()
 }
 
 
-ComponentWithConsumer_ptr
+ComponentsModule::ComponentWithConsumer_ptr
 TestNavigationWithFT::addMembers_ToComponentWithConsumerGroup(
-        ComponentWithConsumer_ptr componentWithConsumerGroup,
-        ComponentWithConsumer_ptr componentWithConsumerOnPrimary,
-        ComponentWithConsumer_ptr componentWithConsumerOnBackup)
+        ComponentsModule::ComponentWithConsumer_ptr componentWithConsumerGroup,
+        ComponentsModule::ComponentWithConsumer_ptr componentWithConsumerOnPrimary,
+        ComponentsModule::ComponentWithConsumer_ptr componentWithConsumerOnBackup)
     throw (CORBA::Exception)
 {
     add_nbOfRequestedTestOK(1);
@@ -885,9 +877,9 @@ TestNavigationWithFT::addMembers_ToComponentWithConsumerGroup(
         throw;
     }
     
-    ComponentWithConsumer_var componentGroup; 
+    ComponentsModule::ComponentWithConsumer_var componentGroup; 
     try {
-        componentGroup = ComponentWithConsumer::_narrow(group.in());
+        componentGroup = ComponentsModule::ComponentWithConsumer::_narrow(group.in());
     } catch (const CORBA::Exception& e) {
         std::cerr << "Error while narrowing group to ComponentWithConsumer: " 
                   << e << std::endl;
@@ -917,7 +909,8 @@ TestNavigationWithFT::isGroupReference(CORBA::Object_ptr obj)
         std::cout << str << std::endl;
         std::cout << " -------------------------------------" << std::endl;
         
-        m_replicationManager->get_object_group_id(obj);
+        ::FT::ObjectGroupId group_id = m_replicationManager->get_object_group_id(obj);
+        std::cout << "--------- isGroupReference group_id = " << group_id << std::endl;
         return true;
             
     } catch (const FT::ObjectGroupNotFound& e) {
@@ -933,9 +926,9 @@ TestNavigationWithFT::isGroupReference(CORBA::Object_ptr obj)
 
 
 void 
-TestNavigationWithFT::testNavigationInterface(ComponentWithFacet_ptr group,
-                                              ComponentWithFacet_ptr primary,
-                                              ComponentWithFacet_ptr backup)
+TestNavigationWithFT::testNavigationInterface(ComponentsModule::ComponentWithFacet_ptr group,
+                                              ComponentsModule::ComponentWithFacet_ptr primary,
+                                              ComponentsModule::ComponentWithFacet_ptr backup)
     throw (CORBA::Exception)
 {
     TEST_INFO("  test provide_facet()");
@@ -1050,9 +1043,9 @@ TestNavigationWithFT::testNavigationInterface(ComponentWithFacet_ptr group,
 
 
 void 
-TestNavigationWithFT::testTypedNavigationInterface(ComponentWithFacet_ptr group,
-                                                   ComponentWithFacet_ptr primary,
-                                                   ComponentWithFacet_ptr backup)
+TestNavigationWithFT::testTypedNavigationInterface(ComponentsModule::ComponentWithFacet_ptr group,
+                                                   ComponentsModule::ComponentWithFacet_ptr primary,
+                                                   ComponentsModule::ComponentWithFacet_ptr backup)
     throw (CORBA::Exception)
 {
     TEST_INFO("  test provide_the_facet()");
@@ -1091,9 +1084,9 @@ TestNavigationWithFT::testTypedNavigationInterface(ComponentWithFacet_ptr group,
 
 
 void 
-TestNavigationWithFT::testEventsInterface(ComponentWithConsumer_ptr group,
-                                          ComponentWithConsumer_ptr primary,
-                                          ComponentWithConsumer_ptr backup)
+TestNavigationWithFT::testEventsInterface(ComponentsModule::ComponentWithConsumer_ptr group,
+                                          ComponentsModule::ComponentWithConsumer_ptr primary,
+                                          ComponentsModule::ComponentWithConsumer_ptr backup)
     throw (CORBA::Exception)
 {
     TEST_INFO("  test get_consumer()");
@@ -1207,30 +1200,30 @@ TestNavigationWithFT::testEventsInterface(ComponentWithConsumer_ptr group,
 
 
 void 
-TestNavigationWithFT::testTypedEventsInterface(ComponentWithConsumer_ptr group,
-                                               ComponentWithConsumer_ptr primary,
-                                               ComponentWithConsumer_ptr backup)
+TestNavigationWithFT::testTypedEventsInterface(ComponentsModule::ComponentWithConsumer_ptr group,
+                                               ComponentsModule::ComponentWithConsumer_ptr primary,
+                                               ComponentsModule::ComponentWithConsumer_ptr backup)
     throw (CORBA::Exception)
 {
     TEST_INFO("  test get_consumer_the_consumer()()");
     try {
         add_nbOfRequestedTestOK(3);
 
-        TestFtCcmCif::TestEventConsumer_var consumerGroup = 
+        TestFtCcmCif::EventTypeModule::TestEventConsumer_var consumerGroup = 
             group->get_consumer_the_consumer();
         if (isGroupReference(consumerGroup.in()))
             TEST_SUCCEED();
         else
             TEST_FAILED();
 
-        TestFtCcmCif::TestEventConsumer_var consumerPrimary = 
+        TestFtCcmCif::EventTypeModule::TestEventConsumer_var consumerPrimary = 
             primary->get_consumer_the_consumer();
         if (isGroupReference(consumerPrimary.in()))
             TEST_FAILED();
         else
             TEST_SUCCEED();
 
-        TestFtCcmCif::TestEventConsumer_var consumerBackup = 
+        TestFtCcmCif::EventTypeModule::TestEventConsumer_var consumerBackup = 
             backup->get_consumer_the_consumer();
         if (isGroupReference(consumerBackup.in()))
             TEST_FAILED();
@@ -1264,12 +1257,12 @@ void TestNavigationWithFT::do_tests()
     {
     }
     
-    ComponentWithFacet_var  componentWithFacetOnPrimary;
-    ComponentWithConsumer_var componentWithConsumerOnPrimary;
-    ComponentWithFacet_var  componentWithFacetOnBackup;
-    ComponentWithConsumer_var componentWithConsumerOnBackup;
-    ComponentWithFacet_var  componentWithFacetGroup;
-    ComponentWithConsumer_var componentWithConsumerGroup;
+    ComponentsModule::ComponentWithFacet_var  componentWithFacetOnPrimary;
+    ComponentsModule::ComponentWithConsumer_var componentWithConsumerOnPrimary;
+    ComponentsModule::ComponentWithFacet_var  componentWithFacetOnBackup;
+    ComponentsModule::ComponentWithConsumer_var componentWithConsumerOnBackup;
+    ComponentsModule::ComponentWithFacet_var  componentWithFacetGroup;
+    ComponentsModule::ComponentWithConsumer_var componentWithConsumerGroup;
 
     try {
         TEST_INFO("Create ComponentWithFacet group");
@@ -1304,17 +1297,41 @@ void TestNavigationWithFT::do_tests()
         call_ConfigurationComplete(componentWithFacetOnBackup.in());
         call_ConfigurationComplete(componentWithConsumerOnBackup.in());
 
+
         TEST_INFO("Add members to ComponentWithFacet group");
-        componentWithFacetGroup = 
+        CORBA::Object_var componentWithFacetGroupObject =
             addMembers_ToComponentWithFacetGroup(componentWithFacetGroup.in(),
                                                  componentWithFacetOnPrimary.in(),
                                                  componentWithFacetOnBackup.in());
-        
+
+        TEST_INFO("_is_equivalent ComponentWithFacet group and primary ref");
+        add_nbOfRequestedTestOK(1);
+        if (componentWithFacetGroupObject->_is_equivalent(componentWithFacetOnPrimary.in()))
+            TEST_FAILED();
+        else
+            TEST_SUCCEED();
+
         TEST_INFO("Add members ComponentWithConsumer group");
         componentWithConsumerGroup = 
             addMembers_ToComponentWithConsumerGroup(componentWithConsumerGroup.in(),
                                                     componentWithConsumerOnPrimary.in(),
                                                     componentWithConsumerOnBackup.in());
+
+        try {
+           componentWithFacetGroup = ComponentsModule::ComponentWithFacet::_narrow(
+                     componentWithFacetGroupObject.in());
+        } catch (const CORBA::Exception& e) {
+           std::cerr << "Error while narrowing group to ComponentWithFacet: " 
+                     << e << std::endl;
+           TEST_FAILED();
+           throw;
+        }
+       
+        add_nbOfRequestedTestOK(1);
+        if (CORBA::is_nil(componentWithFacetGroup.in()))
+            TEST_FAILED();
+        else
+            TEST_SUCCEED();
 
         TEST_INFO("Has primary ComponentWithFacet been activated ?");
         add_nbOfRequestedTestOK(1);
