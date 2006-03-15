@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI.
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * All rights reserved.
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Library General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General
+ * Public License along with CARDAMOM; see the file COPYING. If not, write to
+ * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * =========================================================================== *
+-->
+
+<!DOCTYPE System SYSTEM "@cdmw_home@/share/CdmwPlatformMngtSystem.dtd">
+
+
+<!-- ***************** -->
+<!-- System definition -->
+<!--                   -->
+<!-- ***************** -->
+<System Name="integ_local" Port="@SystemMngt_port@">
+
+    <!-- Default timeouts for processes of the entire system -->
+	<Timeout Init="20000" Run="20000" Stop="20000"/>
+
+    <!-- Default monitorings for the entire system -->
+	<Host-monitoring Pull-interval="10000" Pull-timeout="3000"/>
+	<App-monitoring  Pull-interval="0" Pull-timeout="0"/>
+    <Proc-monitoring Model="NO_MONITORING"
+                     Pull-interval="0" Pull-timeout="0"
+                     Push-interval="0" Push-timeout="0"/>
+
+    <!-- Services of the system -->
+	<Service Name="NamingAndRepositoryService"
+             App-name="CdmwServices"
+             Process-name="Repository"/>
+
+    <!-- Hosts of the system -->
+	<Host
+        Name="@host_name@"
+        App-exec-path="./cdmw_platform_application"
+        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
+
+	<Host
+        Name="@host_name2@"
+        App-exec-path="./cdmw_platform_application"
+        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
+
+    <!-- ********************** -->
+    <!-- Application definition -->
+    <!--                        -->
+    <!-- ********************** -->
+	<Application
+        Name="CdmwServices"
+        Host-name="@host_name@"
+        Agent-port="-1"
+        App-port="-1">
+
+		<Managed-process
+            Name="Repository"
+            Host-name="@host_name@"
+            Type="SERVICE-PROVIDER"
+            Autoended="FALSE"
+            Exec-path="@cdmw_home@/bin/cdmw_naming_and_repository"
+            Args="--CdmwProcessPort=42561 --CdmwLocalisationService=42562 --id=GlobalRepository --conf=@prefix@/data/Cdmw_nar.xml"
+            Port="-1">
+			<Init-step Name="initialisation"/>
+		</Managed-process>
+
+        <!-- Init graph of processes of this application -->
+        <Init-graph>
+            <Graph-element Name="Repository"/>
+
+            <Graph-element-root Name="Repository"/>
+        </Init-graph>
+
+    <!-- ***************************** -->
+    <!--                               -->
+    <!-- End of application definition -->
+    <!-- ***************************** -->
+	</Application>
+
+	    <!-- ************************************* -->
+    <!-- Application definitions of the system -->
+    <!--                                       -->
+    <!-- ************************************* -->
+
+    <Application 
+	     Name="SPLICEApplication"
+        Host-name="@host_name@"
+        Agent-port="-1"
+        App-port="-1">
+
+		  <!-- Default timeouts for processes of this application -->
+	     <Timeout Init="20000" Run="20000" Stop="20000"/>
+
+        <!-- ***************************** -->
+        <!-- Processes of this application -->
+        <!--                               -->
+        <!-- ***************************** -->
+        
+        
+        <Unmanaged-process Name="spliced1"
+                         Host-name="@host_name@"
+                         Autoended="FALSE"
+								 Exec-path="./sdds.sh"
+                         Args="start"/>
+                         
+
+        <Unmanaged-process Name="spliced2"
+                         Host-name="@host_name2@"
+                         Autoended="FALSE"
+                         Exec-path="@prefix@/run/sdds.sh"
+								 Args="start"/>
+                         
+
+        <!-- ************************** -->
+        <!--                            -->
+        <!-- End of process definitions -->
+        <!-- ************************** -->
+
+        <!-- Init graph of processes of this application -->
+		<Init-graph>
+		      <Graph-element Name="spliced1"/>
+				<Graph-element Name="spliced2"/>
+
+            <Graph-element-root Name="spliced1"/>
+            <Graph-element-root Name="spliced2"/>
+    	</Init-graph>
+
+	</Application>
+
+
+    <!-- ************************************* -->
+    <!-- Application definitions of the system -->
+    <!--                                       -->
+    <!-- ************************************* -->
+	<Application
+        Name="FTApplication"
+        Host-name="@host_name@"
+        Agent-port="21870"
+        App-port="-1">
+
+        <!-- Default timeouts for processes of the entire system -->
+        <Timeout Init="65000" Run="15000" Stop="15000"/>
+
+		<Managed-process
+            Name="hello1"
+            Host-name="@host_name@"
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="./server.sh"
+            Args="--CdmwXMLFile=@prefix@/data/Server.xml --validateXML -Splice-port=21920"
+            Port="-1">
+            <Init-step Name="step0"/>
+            <Init-step Name="step1"/>
+		</Managed-process>
+                         
+        <Managed-process
+            Name="hello2"
+            Host-name="@host_name2@"
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="@prefix@/run/server.sh"
+            Args="--CdmwXMLFile=@prefix@/data/Server.xml --validateXML -Splice-port=21920"
+            Port="-1">
+            <Init-step Name="step0"/>
+            <Init-step Name="step1"/>
+		</Managed-process>
+
+		<Managed-process
+            Name="group_creator"
+            Host-name="@host_name@"
+            Type="MANAGED-PROCESS"
+            Autoended="TRUE"
+            Exec-path="./group_creator.sh"
+            Args="--CdmwXMLFile=@prefix@/data/GroupCreator.xml --validateXML"
+            Port="-1">
+            <Init-step Name="step0"/>
+		</Managed-process>
+                         
+		<Managed-process
+            Name="client"
+            Host-name="@host_name@"
+            Type="MANAGED-PROCESS"
+            Autoended="TRUE"
+            Exec-path="./client.sh"
+            Args="--CdmwXMLFile=@prefix@/data/Client.xml --validateXML"
+            Port="-1">
+            <Init-step Name="step0"/>
+		</Managed-process>
+                         
+        <!-- Init graph of processes of this application -->
+        <Init-graph>
+			<Graph-element Name="hello1" Step="0">
+			    <Graph-element-successor Name="group_creator" Step="0"/>
+            </Graph-element>
+			<Graph-element Name="hello2" Step="0">
+			    <Graph-element-successor Name="group_creator" Step="0"/>
+            </Graph-element>
+   		    <Graph-element Name="group_creator" Step="0">
+                <Graph-element-successor Name="hello1" Step="1"/>
+                <Graph-element-successor Name="hello2" Step="1"/>
+            </Graph-element>
+
+			<Graph-element Name="hello1" Step="1">
+			    <Graph-element-successor Name="client" Step="0"/>
+            </Graph-element>
+			<Graph-element Name="hello2" Step="1">
+			    <Graph-element-successor Name="client" Step="0"/>
+            </Graph-element>
+            <Graph-element-root Name="hello1"/>
+            <Graph-element-root Name="hello2"/>
+ 	</Init-graph>
+
+    <!-- ****************************** -->
+    <!--                                -->
+    <!-- End of application definitions -->
+    <!-- ****************************** -->
+	</Application>
+
+    <!-- Init graph of applications of the system-->
+    <Init-graph>
+        <Graph-element Name="SPLICEApplication"/> 
+        <Graph-element Name="CdmwServices"> 
+            <Graph-element-successor Name="FTApplication"/>
+        </Graph-element>
+
+        <Graph-element-root Name="CdmwServices"/>
+        <Graph-element-root Name="SPLICEApplication"/>
+    </Init-graph>
+
+<!-- ************************ -->
+<!--                          -->
+<!-- End of system definition -->
+<!-- ************************ -->
+</System>
+

@@ -1,0 +1,9 @@
+DinnerRegistration:com.acme.DinnerRegistration
+DinnerEvents:com.acme.DinnerEvents
+Dinner:com.acme.Dinner
+UserDinner:com.thalesgroup.UserDinner
+Cdmw_DinnerRegistration:com.thalesgroup.Cdmw_DinnerRegistration
+Cdmw_DinnerEvents:com.thalesgroup.Cdmw_DinnerEvents
+Cdmw_Dinner:com.thalesgroup.Cdmw_Dinner
+CdmwCcmCif:com.thalesgroup.CdmwCcmCif
+CdmwLifeCycle:com.thalesgroup.CdmwLifeCycle

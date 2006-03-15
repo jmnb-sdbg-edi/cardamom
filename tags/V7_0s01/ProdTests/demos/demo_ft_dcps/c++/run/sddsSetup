@@ -1,0 +1,17 @@
+unset LD_ASSUME_KERNEL
+
+#SITE_CONFIG=../site.mk
+DIRECTORY="`dirname $0`"
+SITE_CONFIG="$DIRECTORY/../site.mk"
+
+if test ! -f "$SITE_CONFIG"
+then
+    $echo "$SITE_CONFIG file is missing. Run '../configure.sh' and restart $0 "
+    exit 1
+fi
+
+# CDMW installation folder
+CDMW_HOME="`cat $SITE_CONFIG | grep CDMW_HOME |cut -d= -f2`"
+
+SPLICE_DDS_URI=file://$CDMW_HOME/demos/demo_ft_dcps/c++/run/splice_default.xml
+export SPLICE_DDS_URI

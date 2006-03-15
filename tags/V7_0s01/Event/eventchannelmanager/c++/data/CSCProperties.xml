@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<config>
+    <csc name="eventchannelmanager" owner="Event" lang="c++">
+        <deliveries>
+            <delivery basename="cdmw_event_channel_manager" type="exe" visibility="public">
+                <prerequisites>
+                    <libraries>
+                        Foundation/common
+                        Foundation/commonidl
+                        Foundation/pullmonitorableidl
+                        Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
+                        Foundation/orbsupport
+                        Repository/repositoryidl
+                        Repository/repositoryinterface
+                        Foundation/commonsvcsnaming
+                        LifeCycle/lifecycleidl
+                        LifeCycle/lifecycle
+                        LifeCycle/lifecycleinit
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
+                        SystemMngt/platformvaluetypes
+                        SystemMngt/platformlibrary
+                        SystemMngt/platforminterface
+                        ConfAndPlug/cdmwinit
+                        idllib/eventidl
+                        eventsupport/eventsupport
+                        eventinterface/eventinterface
+                    </libraries>
+                    <generatedfilesfrom>
+                        CodegenConf.xml
+                    </generatedfilesfrom>
+                </prerequisites>
+                <sourcefiles>
+                    *
+                </sourcefiles>
+                <idlfiles>
+                    <server/>
+                    <client/>
+                    <requireidlsfrom>
+                        Foundation
+                        LifeCycle
+                    </requireidlsfrom>
+                </idlfiles>
+                <addldflags>
+                    -l@config.Repository.ORB.Lib.Prefix@CosEvent -l@config.Repository.ORB.Lib.Prefix@CosProperty
+                </addldflags>
+            </delivery>
+            <delivery basename="eventchannelmanager" type="lib" visibility="private">
+                <prerequisites>
+                    <libraries>
+                        Foundation/common
+                        Foundation/commonidl
+                        Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
+                        Foundation/orbsupport
+                    </libraries>
+                </prerequisites>
+                <sourcefiles>
+                        EventChannelConfiguration.cpp
+                </sourcefiles>
+            </delivery>
+            <delivery basename="eventchannelmanager_conf_files" type="data" visibility="public">
+                <sourcefiles>
+                    ../../data/EventChannelManager.xml
+                    ../../data/EventChannel_Desc.dtd
+                </sourcefiles>
+            </delivery>
+        </deliveries>
+    </csc>
+</config>
+
+
