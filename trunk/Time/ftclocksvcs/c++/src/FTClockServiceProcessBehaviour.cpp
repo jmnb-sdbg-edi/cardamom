@@ -1,33 +1,37 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
  
 // Cdmw Files
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/ossupport/OS.hpp>
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
-#include <Repository/naminginterface/NamingUtil.hpp>
+#include <Foundation/commonsvcs/naming/NamingUtil.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 // Demo Files
-#include "Time/ftclocksvcs/FTClockServiceProcessBehaviour.hpp"
-#include "Time/clockservice/StateTransferConfig.hpp"
+#include "ftclocksvcs/FTClockServiceProcessBehaviour.hpp"
+#include "clockservice/StateTransferConfig.hpp"
 
 #include "ace/Thread.h"
 #include "ace/Thread_Manager.h"
@@ -79,7 +83,7 @@ void Cdmw::clock::svcs::FTClockServiceProcessBehaviour::on_initialise
 {
     // Get process name
     m_process_name =
-        Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+        Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
     std::cout << "   -------- Server " << m_process_name << " on_initialise --------" << std::endl;
     
     // get root POA            
@@ -167,13 +171,13 @@ void Cdmw::clock::svcs::FTClockServiceProcessBehaviour::on_initialise
 
     
 void Cdmw::clock::svcs::FTClockServiceProcessBehaviour::on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
 {
 }
 
 void Cdmw::clock::svcs::FTClockServiceProcessBehaviour::on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
 {
     std::cout << "   -------- Server " << m_process_name << " running --------" << std::endl;
@@ -183,7 +187,7 @@ void Cdmw::clock::svcs::FTClockServiceProcessBehaviour::on_stop()
     throw( CORBA::SystemException )
 {    
     std::cout << "   -------- Server " << m_process_name << " stopping --------" << std::endl;
-    m_orb->shutdown();
+    m_orb->shutdown(false);
 }
 
     
@@ -207,7 +211,7 @@ void Cdmw::clock::svcs::FTClockServiceProcessBehaviour::add_executor_to_group()
     
     // Get this process' location
     ::FT::Location_var the_location = m_group_repository->the_location();
-    m_location = Cdmw::NamingAndRepository::NamingInterface::to_string(
+    m_location = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(
         the_location.in() );
     std::cout << "       ---- Server " << m_process_name << ": location is " << m_location << std::endl;
     
@@ -341,7 +345,7 @@ Cdmw::clock::svcs::FTClockServiceProcessBehaviour::getExecutorGroup()
         = Cdmw::NamingAndRepository::RepositoryInterface::get_repository();
     
     // Get NamingInterface to object_groups (for reading)
-    Cdmw::NamingAndRepository::NamingInterface objGroupsInterface =
+    Cdmw::CommonSvcs::Naming::NamingInterface objGroupsInterface =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface(REPOSITORY_CLOCK_GROUP_NAME.c_str());
 
     // Get Executor Object Group

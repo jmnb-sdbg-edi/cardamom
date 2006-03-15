@@ -1,23 +1,27 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
-#include <Time/clockservice/ClockCatalog_impl.hpp>
+#include "clockservice/ClockCatalog_impl.hpp"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +64,7 @@ Cdmw::clock::ClockCatalog_impl::get_entry(const char * with_name)
 Cdmw::clock::ClockCatalog_impl::available_entries()
     throw (CORBA::SystemException)
 {
-    ClockMapT::size_type clockMapLength = catalog_.size();
+    unsigned int clockMapLength = (unsigned int)catalog_.size();
     ::CosClockService::ClockCatalog::ClockEntries*
      clockEntries = new ::CosClockService::ClockCatalog::ClockEntries;
 
@@ -68,7 +72,7 @@ Cdmw::clock::ClockCatalog_impl::available_entries()
     {
         clockEntries->length(clockMapLength);
         ClockMapT_CI cmIter = catalog_.begin();
-        for (ClockMapT::size_type i = 0; i < clockMapLength; ++i,++cmIter) 
+        for (unsigned int i = 0; i < clockMapLength; ++i,++cmIter) 
         {
             (*clockEntries)[i].name = CORBA::string_dup(cmIter->first.c_str());
             (*clockEntries)[i].subject = cmIter->second;

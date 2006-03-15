@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 package cdmw.trace;
@@ -71,6 +73,32 @@ public class Tracer {
         // Stream.getInstance() return a specific stream object 
         // for each calling thread.
         traceWithStream(Stream.getInstance(),
+                        "", // ECR-0123
+                        domain,
+                        level,
+                        str);
+    }
+
+
+    /**
+     * Add a new trace to be send to collectors if
+     * domain and level are actives.
+     *
+     * @param componentName The component name.
+     * @param domain The domain of the trace.
+     * @param level  The level of the trace.
+     * @param str    The message to be traced.
+     */
+    // ECR-0123
+    public static void trace(String componentName,
+                             String domain, 
+                             short  level, 
+                             String str) 
+    {
+        // Stream.getInstance() return a specific stream object 
+        // for each calling thread.
+        traceWithStream(Stream.getInstance(),
+                        componentName,
                         domain,
                         level,
                         str);
@@ -85,11 +113,13 @@ public class Tracer {
      * wich must be only used by current thread.
      *
      * @param stream The stream for trace construction.
+     * @param componentName The component name.
      * @param domain The domain of the trace.
      * @param level  The level of the trace.
      * @param str    The message to be traced.
      */
     public static void traceWithStream(Stream stream, 
+                                       String componentName, // ECR-0123
                                        String domain, 
                                        short    level, 
                                        String str) 
@@ -97,6 +127,7 @@ public class Tracer {
         if (FlushAreaMngr.isToBeTraced(domain, level)) {
             stream.setLine(0);
             stream.setFile("");
+            stream.setComponentName(componentName);
             stream.setUserDomain(domain);
             stream.setUserLevel(level);
             stream.setMessage(str); 

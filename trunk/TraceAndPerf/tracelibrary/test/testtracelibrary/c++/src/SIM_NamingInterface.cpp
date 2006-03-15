@@ -1,34 +1,38 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/InvalidNameException.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/InvalidNameException.hpp"
 
 namespace Cdmw
 {
-namespace NamingAndRepository
+namespace CommonSvcs
 {
-
+namespace Naming
+{
+    
 // Default chunk size for CosNaming::NamingContext::list operation
 const CORBA::ULong NamingInterface::LIST_CHUNK_SIZE(100);
 
@@ -51,7 +55,8 @@ InvalidNameException::InvalidNameException(const InvalidNameException& rhs)
 {
 }
 
-}; // End namespace NamingAndRepository
+}; // End namespace Naming
+}; // End namespace CommonSvcs
 }; // End namespace Cdmw
 
 
@@ -60,7 +65,9 @@ InvalidNameException::InvalidNameException(const InvalidNameException& rhs)
 
 namespace Cdmw
 {
-namespace NamingAndRepository
+namespace CommonSvcs
+{
+namespace Naming
 {
 
 CORBA::Object_ptr the_AdminInterfaceObject(CORBA::Object::_nil());
@@ -368,7 +375,8 @@ CosNaming::Name* NamingInterface::to_name(const std::string& s)
     return NULL;
 }
 
-}; // End namespace NamingAndRepository
+}; // End namespace Naming
+}; // End namespace CommonSvcs
 }; // End namespace Cdmw
 
 

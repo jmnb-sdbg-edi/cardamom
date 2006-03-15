@@ -1,21 +1,25 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 // Standard Files 
@@ -39,10 +43,11 @@ using namespace std;
 int main( int argc, char* argv[] )
 {
 
+    CORBA::ORB_var orb;
     try
     {
         // Initialise FT service (to be done before ORB_init)
-        Cdmw::FT::FTServiceInit::init( argc, argv, true );
+        Cdmw::FT::FTServiceInit::Init( argc, argv, true );
 
         // Set ORB strategies
         Cdmw::OrbSupport::StrategyList strategyList;
@@ -50,7 +55,7 @@ int main( int argc, char* argv[] )
             strategyList.add_PoaThreadPerConnection();
 
         // Initialises the ORB
-        CORBA::ORB_var orb = Cdmw::OrbSupport::OrbSupport::ORB_init(
+        orb = Cdmw::OrbSupport::OrbSupport::ORB_init(
             argc, argv, strategyList );
 
         // Get the root POA
@@ -94,6 +99,38 @@ int main( int argc, char* argv[] )
     {
         std::cerr << "Unexpected exception" << std::endl;
         return EXIT_FAILURE;
+    }
+
+    // ========================================================
+    // program stopping
+    // ========================================================
+
+    // ===================================================
+    // Call generated Cardamom cleanup
+    // ===================================================
+    Cdmw::CdmwInit::CDMW_cleanup(orb.in());
+
+    // ===================================================
+    // Call ORB cleanup
+    // ===================================================
+    Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+
+    // ===================================================
+    // destroy orb
+    // ===================================================
+
+    if (!CORBA::is_nil(orb.in()))
+    {
+        try
+        {
+            orb -> destroy();
+        }
+        catch(const CORBA::Exception& ex)
+        {
+            std::cerr << ex << std::endl;
+            return EXIT_FAILURE;
+
+        }
     }
 
     return EXIT_SUCCESS;

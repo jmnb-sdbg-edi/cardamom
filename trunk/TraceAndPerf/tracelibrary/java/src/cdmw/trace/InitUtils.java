@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 package cdmw.trace;
@@ -32,7 +34,7 @@ import cdmw.ossupport.OS;
 import cdmw.orbsupport.CORBASystemExceptionWrapper;
 import cdmw.orbsupport.ExceptionMinorCodes;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 
 import cdmw.platformmngt.PlatformInterface;
@@ -45,7 +47,6 @@ import com.thalesgroup.CdmwTrace.TraceProducerPackage.CollectorData;
 import com.thalesgroup.CdmwTrace.TraceProducer;
 
 import org.omg.CORBA.CompletionStatus;
-
 import org.omg.PortableServer.POA;
 
 
@@ -65,6 +66,7 @@ public class InitUtils {
      * @param applicationName The name of the application
      * @param processName The name of the CDMW Process
      * @param flushingTime The flushing time for the Flush Area Manager
+     * @param msgThreshold The message threshold for the Flush Area Manager
      * @param nbFlushArea The number of flushing areas
      * for the Flush Area Manager
      * @param sizeFlushArea The size of a flush area for the Flush Area Manager
@@ -88,6 +90,7 @@ public class InitUtils {
                                         String applicationName, 
                                         String processName, 
                                         int flushingTime,
+                                        int msgThreshold,
                                         int nbFlushArea,
                                         int sizeFlushArea, 
                                         java.util.Vector collectorNameList) 
@@ -96,7 +99,23 @@ public class InitUtils {
         // create the initial collector list
         java.util.Vector collList = new java.util.Vector();
 
+        // get the "AdminRootContext" root context.
+        org.omg.CosNaming.NamingContext adminRoot = null;
         try {
+            Repository rep = RepositoryInterface.getRepository();
+            adminRoot = rep.resolve_root_context(Locations.ADMIN_ROOT_CONTEXT_ID);
+        } catch (com.thalesgroup.CdmwNamingAndRepository.RepositoryPackage.NoRootContext nrc) {
+            throw new CORBASystemExceptionWrapper(
+                new org.omg.CORBA.INTERNAL(
+                    ExceptionMinorCodes.INTERNALCdmwRepositoryError,
+                    CompletionStatus.COMPLETED_NO),
+                nrc.getMessage());
+        } catch(org.omg.CORBA.SystemException se) {
+            throw new CORBASystemExceptionWrapper(se, se.getMessage());
+        }
+
+        try {
+        /* PCR597 ON ECR145
           // set trace collector location under default root context
           // Pattern is :
           //    CDMW/SERVICES/TRACE/COLLECTORS/"
@@ -108,34 +127,55 @@ public class InitUtils {
           NamingInterface niCollector =
                     RepositoryInterface
                         .getDomainNamingInterface(collectorDomainStr);
-
+        */
           int collectorNb = collectorNameList.size();
           Object[] collNameList = collectorNameList.toArray();
-          boolean collectorFound;
+        
 
+        // PCR597 ON ECR-0145: there is only one local collector per node.
+        // the pattern is: hostname/SERVICES/TRACE/COLLECTORS/<collector_name>
+        // where collector_name is either the first name in collectorNameList
+        // or "LocalCollector" if collectorNameList is empty.
+          String collectorName = "LocalCollector";
+          if (collectorNb > 0)
+          {
+              collectorName = (String) collNameList[0];
+          }
+
+          NamingInterface niCollector = new NamingInterface(adminRoot);
+          boolean collectorFound = true;
+
+        /* PCR597 ON ECR145
           for (int collector_ix=0 ; collector_ix < collectorNb ; collector_ix++) {
               collectorFound = true;
 
               // get collector name
               String collectorName = (String) collNameList[collector_ix];
+        */
               Collector collector = null;
-
+              String collectorDomainStr = OS.getHostname() + "/SERVICES/" +
+                  Locations.TRACE_COLLECTORS_NAME_DOMAIN + "/" + collectorName;
               try {
                 // We call each Collector, and we notify them of our creation
-                org.omg.CORBA.Object obj = niCollector.resolve(collectorName);
+                org.omg.CORBA.Object obj = niCollector.resolve(collectorDomainStr);
                 collector = CollectorHelper.narrow(obj);
               } catch (org.omg.CosNaming.NamingContextPackage.NotFound nf) {
                 // ignore if collector not registered in repository
                 collectorFound = false;
+                /* PCR597 ON ECR145
                 System.out.println("Trace Collector " + collectorName
                           + " is not found in repository");
+                */
+                System.out.println("The local trace Collector "
+                                   + collectorDomainStr
+                                   + " is not found in repository");
               }
               
-
               if (collectorFound) {
                 // create collector mnemonic name
                 String mnemoName = COLLECTOR_INI_MNEMONAME 
-                                    + String.valueOf(collector_ix);
+                    // PCR597 ON ECR145 + String.valueOf(collector_ix);
+                    + String.valueOf(0);
 
                 // create collector data structure
                 CollectorData collectorData = new CollectorData();
@@ -146,8 +186,8 @@ public class InitUtils {
                 // insert collector data in list
                 collList.add(collectorData);
               }
-          }
-        
+          //PCR597 ON ECR145}
+              /* PCR597 ON ECR145
         } catch(com.thalesgroup.CdmwNamingAndRepository.NoNameDomain nnd) {
             throw new CORBASystemExceptionWrapper(
                 new org.omg.CORBA.INTERNAL(
@@ -160,6 +200,7 @@ public class InitUtils {
                     ExceptionMinorCodes.INTERNALInvalidTraceCollectorsLocation,
                     CompletionStatus.COMPLETED_NO),
                 in.getMessage());
+              */
         } catch(org.omg.CosNaming.NamingContextPackage.InvalidName in) {
             throw new CORBASystemExceptionWrapper(
                 new org.omg.CORBA.INTERNAL(
@@ -186,14 +227,19 @@ public class InitUtils {
         TraceProducer traceProducer = null;
 
         try {
-            traceProducer = FlushAreaMngr.init(tracePOA,
-                                                 collectorList,
-                                                 com.thalesgroup.CdmwTrace.ALL_DOMAINS.value, 
-                                                 com.thalesgroup.CdmwTrace.ALL_VALUES.value,
-                                                 processName,
-                                                 flushingTime,
-                                                 nbFlushArea,
-                                                 sizeFlushArea);
+            traceProducer = FlushAreaMngr.init(
+                                tracePOA,
+                                collectorList,
+                                com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value, // ECR-0123
+                                com.thalesgroup.CdmwTrace.ALL_DOMAINS.value, 
+                                com.thalesgroup.CdmwTrace.ALL_VALUES.value,
+                                applicationName,
+                                processName,
+                                flushingTime,
+                                nbFlushArea,
+                                sizeFlushArea,
+                                FlushAreaMngr.DEFAULT_AREA_NB_MESSAGES,
+                                msgThreshold);
 
         } catch (BadParameterException bpe) {
             throw new CORBASystemExceptionWrapper(
@@ -208,7 +254,7 @@ public class InitUtils {
                     CompletionStatus.COMPLETED_NO),
                 iee.what());
         }
-
+        /* PCR597 ON ECR145
         // Get "AdminRootContext" root context and then
         // register TraceProducer object
         org.omg.CosNaming.NamingContext adminRoot = null;
@@ -224,17 +270,19 @@ public class InitUtils {
         } catch(org.omg.CORBA.SystemException se) {
             throw new CORBASystemExceptionWrapper(se, se.getMessage());
         }
-        
+        */
 
         try {
+            
             // Build the name of the Trace Producer object
             // Pattern is :
             //    hostname/appliName/processName/TRACE/TraceProducer
             String traceProducerName = OS.getHostname()
                 + "/" + applicationName
                 + "/" + processName + "/TRACE/TraceProducer";
-            
+
             NamingInterface ni = new NamingInterface(adminRoot);
+
             // If already registered, force its registration
             ni.bind(traceProducerName, traceProducer, true);
         } catch(org.omg.CosNaming.NamingContextPackage.NotFound nf) {
@@ -268,7 +316,6 @@ public class InitUtils {
             throw new CORBASystemExceptionWrapper(se, se.getMessage());
         }
         
-
     }
     
 }

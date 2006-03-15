@@ -1,757 +1,937 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
-#include "TraceAndPerf/tracelibrary/FilterMngr.hpp"
+#include <functional>
 
-#include "Foundation/osthreads/MutexGuard.hpp"
+#include <Foundation/osthreads/MutexGuard.hpp>
+
+#include <TraceAndPerf/tracelibrary/FilterMngr.hpp>
+
+
+/**
+ * ECR-0123
+ * In addition to the addition of a new field (the component name) to
+ * the traces, the handling of trace levels has been completely rewritten.
+ * The main difference with the previous implementation is that the number
+ * of possible levels is now fixed and equals to the constant NB_BITS.
+ */
+
+
+// {{{ functors
+
+namespace
+{
+    /**
+     * Check a bitmask against the bitmask of a Filter.
+     */
+    template <typename T1, typename T2>
+    struct bitmask_equal_to: public std::binary_function<T1, T2, bool>
+    {
+        bool
+        operator()(const T1& fmask, const T2& mask) const
+        {
+            return fmask.get_levels() == mask;
+        }
+    };
+
+
+    /**
+     * Check if a Filter equals another Filter while ignoring
+     * their respective bitmasks.
+     */
+    template <typename T1, typename T2>
+    struct filter_equal_to: public std::binary_function<T1, T2, bool>
+    {
+        bool
+        operator()(const T1& f1, const T2& f2) const
+        {
+            return ((f1.get_component_name() == f2.get_component_name()) &&
+                    (f1.get_domain() == f2.get_domain()));
+        }
+    };
+}
+
+// }}}
 
 
 namespace Cdmw
 {
+
 namespace Trace
 {
 
+
+// {{{ functor is_contained
+
 /**
-*Implementation notes: [if no pertinent write none ]
-*<p>
-*Portability issues: [if no pertinent write none ]
-*<p>
-*/
-
-
-    
-//
-// Ctor
-//
-Filter::Filter (const std::string& domain, long level)
-   : m_domain(domain),
-     m_level(level)
+ * Check if a Filter (f1) is contained in another Filter (f2).
+ */
+template <typename T1, typename T2>
+struct is_contained: public std::binary_function<T1, T2, bool>
 {
-   
+    bool
+    operator()(const T1& f1, const T2& f2) const
+    {
+        if ((f2.get_component_name() == CdmwTrace::ALL_COMPONENT_NAMES) ||
+            (f2.get_component_name() == f1.get_component_name()))
+        {
+            if ((f2.get_domain() == CdmwTrace::ALL_DOMAINS) ||
+                (f2.get_domain() == f1.get_domain()))
+            {
+                // bitwise AND
+                // if all the levels defined in f1 are contained in f2
+                // then the result of AND equals the levels of f1
+                if ((f2.get_levels() & f1.get_levels()) == f1.get_levels()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+};
+
+// }}}
+
+
+// {{{1 implementation of operations from the Filter class
+
+
+// {{{2 constructors
+
+/**
+ * Create a new Filter with a generic component name and
+ * a generic domain.
+ */
+Filter::Filter(void)
+    : m_componentName(CdmwTrace::ALL_COMPONENT_NAMES),
+      m_domain(CdmwTrace::ALL_DOMAINS)
+{
+    bitmask mask;
+    m_levels = mask;
 }
 
 
-
-//
-// Allow the the Filter to be sorted by STL
-//
-bool operator < (const Filter& lhs, const Filter& rhs) 
+/**
+ * Create a new Filter.
+ *
+ * @param domain the domain to match
+ */
+Filter::Filter(const std::string& domain)
+    : m_componentName(CdmwTrace::ALL_COMPONENT_NAMES),
+      m_domain(domain)
 {
-   if (lhs.m_domain < rhs.m_domain) 
-   {
-        return true;
-   } 
-   else if (lhs.m_domain == rhs.m_domain) 
-   {
-        return lhs.m_level < rhs.m_level;
-   }
-    
-   return false;
+    bitmask mask;
+    m_levels = mask;
 }
 
 
-const std::string& Filter::get_domain () const
+/**
+ * Create a new Filter.
+ *
+ * @param domain the domain to match
+ * @param levels bit mask for the trace levels
+ */
+Filter::Filter(const std::string& domain,
+               const bitmask levels)
+    : m_componentName(CdmwTrace::ALL_COMPONENT_NAMES),
+      m_domain(domain),
+      m_levels(levels)
 {
-  return m_domain;
+    // NOOP
 }
 
-const long Filter::get_level() const
+
+/**
+ * Create a new Filter.
+ *
+ * @param componentName the component name to match
+ * @param domain the domain to match
+ */
+Filter::Filter(const std::string& componentName,
+               const std::string& domain)
+    : m_componentName(componentName),
+      m_domain(domain)
 {
-  return m_level;
+    bitmask mask;
+    m_levels = mask;
 }
 
-//
-// Ctor
-//
-FilterMngr::FilterMngr()
-    // FIXME: map may throw, but no way to catch it without
-    //  function body try/catch
+
+/**
+ * Create a new Filter.
+ *
+ * @param componentName the component name to match
+ * @param domain the domain to match
+ * @param levels bit mask for the trace levels
+ */
+Filter::Filter(const std::string& componentName,
+               const std::string& domain,
+               const bitmask levels)
+    : m_componentName(componentName),
+      m_domain(domain),
+      m_levels(levels)
+{
+    // NOOP
+}
+
+// }}}2
+
+
+// }}}1
+
+
+// {{{1 implementation of operations from the FilterMngr class
+
+
+// {{{2 constructor
+
+/**
+ * Constructor.
+ */
+FilterMngr::FilterMngr(void)
     throw()
-	: m_all_domains_levels(false),
-	  m_all_domains(false),
-	  m_all_levels(false)
 {
-
+    // NOOP
 }
 
+// }}}2
 
+// {{{2 destructor
 
-
-//
-// Dtor
-//
+/**
+ * Destructor.
+ */
 FilterMngr::~FilterMngr()
     throw()
 {
+    // NOOP
+}
 
+// }}}2
+
+// {{{2 activate_level()
+
+/**
+ * Activate the specified level.
+ * If the level is not valid, this operation does nothing.
+ *
+ * @param domain activate the specified level of this domain.
+ * @param level the level to activate.
+ *
+ * @exception OutOfMemoryException
+ */
+void
+FilterMngr::activate_level(const std::string& domain,
+                           const long level)
+    throw(OutOfMemoryException)
+{
+    activate_level(CdmwTrace::ALL_COMPONENT_NAMES, domain, level);
 }
 
 
-
-//
-// Define the specified level as activated
-//
-void FilterMngr::activate_level (const std::string& domain, const long level) 
-    throw (OutOfMemoryException)
-
+/**
+ * Activate the specified level.
+ * If the level is not valid, this operation does nothing.
+ *
+ * @param componentName the component to which the domain is associated.
+ * @param domain activate the specified level of this domain.
+ * @param level the level to activate.
+ *
+ * @exception OutOfMemoryException
+ */
+void
+FilterMngr::activate_level(const std::string& componentName,
+                           const std::string& domain,
+                           const long level)
+    throw(OutOfMemoryException)
 {
-    CDMW_MUTEX_GUARD (m_filterMngr_mtx);
+    // acquire mutex
+    CDMW_MUTEX_GUARD(m_filterMngr_mtx);
 
-    try 
-	{	    
-	   // if all domains and levels to activate : all messages are traced
-	   if (domain == CdmwTrace::ALL_DOMAINS && level == CdmwTrace::ALL_VALUES)
-	   {
-	     m_all_domains_levels = true;
-	     
-	     // suppress all filters of map
-	     m_filters.clear();
-	     m_all_domains = false;
-	     m_all_levels = false;
-
-	   }
-	
-	   // if all domains filter or all levels filter to activate
-	   else if (domain == CdmwTrace::ALL_DOMAINS || level == CdmwTrace::ALL_VALUES)
-       {	       
-	     // set insertion flag : false if all domains and levels activated
-	     //   (may be not necessary to insert this filter)
-	     bool insert_filter = true;	
-	     if (m_all_domains_levels == true)
-	     {
-	       insert_filter = false;
-	     }
-	     
-	     long level_of_filter;
-	     std::string domain_of_filter;
-
-	     // if all domains to activate : activate all defined filters with the specified level 
-		 // if filter with all level is found with high order, set its order to low
-		 //   and force insertion flag to true if it was deactivated to override it
-	     if (domain == CdmwTrace::ALL_DOMAINS)
-	     {
-           FilterCtr::iterator itrFilter = m_filters.begin(); 
-	       for ( ; itrFilter != m_filters.end(); itrFilter++)
-	       {
-	         level_of_filter = ((*itrFilter).first).get_level();
-	         domain_of_filter = ((*itrFilter).first).get_domain();
-
-	         if (level_of_filter == level)
-	         {
-	           (*itrFilter).second.activation = true;
-	           (*itrFilter).second.order = 4;
-	         }
-			 else if (level_of_filter == CdmwTrace::ALL_VALUES)
-	         {
-	           if ((*itrFilter).second.order != 0)
-	           {
-			     // set low order for all levels filter if different of all domains / all levels
-			     // if it is equivalent it can be inhibited
-                 if ((*itrFilter).second.activation == m_all_domains_levels)
-                 {
-                   (*itrFilter).second.order = 0;
-				 }
-				 else
-                 {
-                   (*itrFilter).second.order = 1;
-                 }
-                 
-                 if ((*itrFilter).second.activation == false)
-                 {
-                   insert_filter = true;
-                 }  
-               }
-	         }
-	       }
-	       
-	       m_all_domains = true;
-	     }
-	     
-	     // if all levels to activate : activate all defined filters with the specified domain
-		 // if filter with all domain is found with high order, set its order to low
-		 //   and force insertion flag to true if it was deactivated to override it
-	     else
-	     {
-           FilterCtr::iterator itrFilter = m_filters.begin(); 
-	       for ( ; itrFilter != m_filters.end(); itrFilter++)
-	       {
-	         level_of_filter = ((*itrFilter).first).get_level();
-	         domain_of_filter = ((*itrFilter).first).get_domain();
-
-	         if (domain_of_filter == domain)
-	         {
-	           (*itrFilter).second.activation = true;
-	           (*itrFilter).second.order = 4;
-	         }
-			 else if (domain_of_filter == CdmwTrace::ALL_DOMAINS)
-	         {
-               if ((*itrFilter).second.order != 0)
-	           {
-			     // set low order for all levels filter if different of all domains / all levels
-			     // if it is equivalent it can be inhibited
-                 if ((*itrFilter).second.activation == m_all_domains_levels)
-                 {
-                   (*itrFilter).second.order = 0;
-				 }
-				 else
-                 {
-                   (*itrFilter).second.order = 1;
-                 }
-                 
-                 if ((*itrFilter).second.activation == false)
-                 {
-                   insert_filter = true;
-                 }
-               }
-	         }
-	       }
-	       
-	       m_all_levels = true;
-		 }
-		 	 
-
-         // if filter to insert
-         if (insert_filter == true)
-         {
-           // create filter if does not exist and activate it
-           FilterData data;
-           data.activation = true;
-           data.order = 2;
-        
-           m_filters[Filter(domain,level)] = data;
-         }
- 
-         // filter has not to be inserted as it does not change filtering
-         // but if it exists in map, inhibit it        
-         else
-         {
-           // find the filter
-           FilterCtr::iterator itr = m_filters.find (Filter(domain,level));
-         
-           // If it exists, inhibit it with order 0
-           if (itr != m_filters.end())
-	       {
-	         itr->second.order = 0;
-	         itr->second.activation = true;
-	       }
-         }
-       }
-       
-       // else specific domain/level filter to activate
-       else
-	   {
-		 // if filter already activated, ignore the command	
-	     if (check_activated_filter (domain, level) == true)
-	     {
-	       return;
-	     } 
-	       
-
-         // search if filter already created
-         FilterCtr::iterator itr = m_filters.find (Filter(domain,level));
-         
-         // If it exists, check if it is necessary for filtering
-         if (itr != m_filters.end())
-	     {
-	       // first step inhibit filter and check result filtering
-	       itr->second.order = 0;
-	       itr->second.activation = true;
-	       
-	       // if request filtering not activated, inhibited specific filter
-	       // must be activated with high order	
-	       if (check_activated_filter (domain, level) == false)
-	       {
-	         itr->second.order = 3;
-	       } 
-	       // else set high order but not visible
-	       else
-	       {
-	         itr->second.order = 4;
-	       }	      
-	     }
-	     
-	     // create filter if does not exist and activate it
-	     else
-	     {
-           FilterData data;
-           data.activation = true;
-           data.order = 3;
-
-           m_filters[Filter(domain,level)] = data;
-         }
-       }
-    }
-   
-   
-    catch (std::bad_alloc&) 
+    // check the level
+    if ((level != CdmwTrace::ALL_VALUES) &&
+        !((level >= 0) && ((unsigned long)level < NB_BITS)))
     {
-      CDMW_THROW (OutOfMemoryException);
+        return;
     }
-}
 
+    // if we have already activated everything
+    // there is no need to add a filter that activates level(s)
 
-
-
-//
-// Define the specified level as de-activated
-//
-void FilterMngr::deactivate_level (const std::string& domain, const long level)
-    throw (OutOfMemoryException)
-
-{
-   CDMW_MUTEX_GUARD (m_filterMngr_mtx);
-
-   try 
-   {    
-	   // if all domains and levels to deactivate : no message are traced
-	   if (domain == CdmwTrace::ALL_DOMAINS && level == CdmwTrace::ALL_VALUES)
-	   {
-	     m_all_domains_levels = false;
-
-	     // suppress all filters of map
-	     m_filters.clear();
-	     m_all_domains = false;
-	     m_all_levels = false;
-	   }
-	   
-	   // if all domains filter or all levels filter to deactivate
-	   else if (domain == CdmwTrace::ALL_DOMAINS || level == CdmwTrace::ALL_VALUES)
-       {	       
-	     // set insertion flag : false if all domains and levels deactivated
-	     //   (may be not necessary to insert this filter)
-	     bool insert_filter = true;	
-	     if (m_all_domains_levels == false)
-	     {
-	       insert_filter = false;
-	     }
-	     
-	   	         
-	     long level_of_filter;
-	     std::string domain_of_filter;
-
-	     // if all domains to deactivate : deactivate all filters with the specified level 
-	     // if filter with all level is found, set its order to low
-	     //   and force insertion flag to true if it was activated to override it
-	     if (domain == CdmwTrace::ALL_DOMAINS)
-	     {
-           FilterCtr::iterator itrFilter = m_filters.begin(); 
-	       for ( ; itrFilter != m_filters.end(); itrFilter++)
-	       {
-	         level_of_filter = ((*itrFilter).first).get_level();
-	         domain_of_filter = ((*itrFilter).first).get_domain();
-
-	         if (level_of_filter == level)
-	         {
-	           (*itrFilter).second.activation = false;
-	           (*itrFilter).second.order = 4;
-	         }
-			 else if (level_of_filter == CdmwTrace::ALL_VALUES)
-	         {
-	           if ((*itrFilter).second.order != 0)
-	           {
-			     // set low order for all levels filter if different of all domains / all levels
-			     // if it is equivalent it can be inhibited
-                 if ((*itrFilter).second.activation == m_all_domains_levels)
-                 {
-                   (*itrFilter).second.order = 0;
-				 }
-				 else
-                 {
-                   (*itrFilter).second.order = 1;
-                 }
-                 
-                 if ((*itrFilter).second.activation == true)
-                 {
-                   insert_filter = true;
-                 }
-               }
-	         }
-	       }
-	       
-	       m_all_domains = true;
-	     }
-	     
-	     // if all levels to deactivate : deactivate all filters with the specified domain
-		 // if filter with all domain is found, set its order to low
-		 //   and force insertion flag to true if it was deactivated to override it
-	     else if (level == CdmwTrace::ALL_VALUES)
-	     {
-           FilterCtr::iterator itrFilter = m_filters.begin(); 
-	       for ( ; itrFilter != m_filters.end(); itrFilter++)
-	       {
-	         level_of_filter = ((*itrFilter).first).get_level();
-	         domain_of_filter = ((*itrFilter).first).get_domain();
-
-	         if (domain_of_filter == domain)
-	         {
-	           (*itrFilter).second.activation = false;
-	           (*itrFilter).second.order = 4;
-	         }
-			 else if (domain_of_filter == CdmwTrace::ALL_DOMAINS)
-	         {
-	           if ((*itrFilter).second.order != 0)
-	           {            
-			     // set low order for all levels filter if different of all domains / all levels
-			     // if it is equivalent it can be inhibited
-                 if ((*itrFilter).second.activation == m_all_domains_levels)
-                 {
-                   (*itrFilter).second.order = 0;
-				 }
-				 else
-                 {
-                   (*itrFilter).second.order = 1;
-                 }
-                 
-	             if ((*itrFilter).second.activation == true)
-                 {
-                   insert_filter = true;
-                 }
-               }
-	         }
-	       }
-	       
-	       m_all_levels = true;
-         }
-         
-         
-         // if filter to insert
-         if (insert_filter == true)
-         {
-           // create filter if does not exist and deactivate it
-           FilterData data;
-           data.activation = false;
-           data.order = 2;
-
-           m_filters[Filter(domain,level)] = data;          
-         }
- 
-         // filter has not to be inserted as it does not change filtering
-         // but if it exists in map, inhibit it        
-         else
-         {
-           // find the filter
-           FilterCtr::iterator itr = m_filters.find (Filter(domain,level));
-         
-           // If it exists, inhibit it with order 0
-           if (itr != m_filters.end())
-	       {
-	         itr->second.order = 0;
-	         itr->second.activation = false;
-	       }
-         }		
-       }
-       
-       
-       // else specific domain/level filter to deactivate
-       else
-	   {
-		 // if filter already deactivated, ignore it	
-	     if (check_activated_filter (domain, level) == false)
-	     {
-	       return;
-	     } 
-	       
-	       
-	     // search if filter already created
-         FilterCtr::iterator itr = m_filters.find (Filter(domain,level));
-         
-         // If it exists, check if it is necessary for filtering
-         if (itr != m_filters.end())
-	     {
-	       // first step inhibit filter and check result filtering
-	       itr->second.order = 0;
-	       itr->second.activation = false;
-	       
-	       // if request filtering not deactivated, inhibited specific filter
-	       // must be deactivated with high order	
-	       if (check_activated_filter (domain, level) == true)
-	       {
-	         itr->second.order = 3;
-	       } 
-	       // else set high order but not visible
-	       else
-	       {
-	         itr->second.order = 4;
-	       }	      
-	     }
-	     
-	     // create filter if does not exist and deactivate it
-	     else
-	     {
-           FilterData data;
-           data.activation = false;
-           data.order = 3;
-
-           m_filters[Filter(domain,level)] = data;
-         }
-       }
-    }
-   
-   
-    catch (std::bad_alloc&) 
+    // bitset<bits>::count() returns the number of bits set to 1
+    if ((m_filters.size() == 0) &&
+        (m_filter_any.get_levels().count() == NB_BITS))
     {
-      CDMW_THROW (OutOfMemoryException);
+        return;
     }
-}
 
+    try {
+        if (componentName == CdmwTrace::ALL_COMPONENT_NAMES) {
+            // activate the level(s) of any domain of any component
+            if (domain == CdmwTrace::ALL_DOMAINS) {
+                if (level == CdmwTrace::ALL_VALUES) {
+                    // activate all the levels of the most generic filter
+                    m_filter_any.activate_all_levels();
 
-//
-// Get the activated or not level filters
-//
-CdmwTrace::TraceFilterSeq* FilterMngr::get_trace_filters ()
-    throw (OutOfMemoryException)
-{
-    try
-	{
-	  // allocate the level sequence with the number of activated levels
-      CdmwTrace::TraceFilterSeq* p_filterSeq = new CdmwTrace::TraceFilterSeq;
+                    // and discard everything from the list as anything is
+                    // activated from now on
+                    m_filters.clear();
+                }
+                // activate a particular level of any domain of any component
+                else {
+                    // update the level of the most generic filter
+                    m_filter_any.activate_level(level);
 
-      // set sequence length
-      unsigned int seq_len = m_filters.size() + 1;    
-      p_filterSeq->length(seq_len);
-       
-      // add all domains / all values levels
-      (*p_filterSeq)[0].the_value = CdmwTrace::ALL_VALUES;
-	  (*p_filterSeq)[0].the_domain = CORBA::string_dup(CdmwTrace::ALL_DOMAINS);
-	  (*p_filterSeq)[0].activation = m_all_domains_levels;
-    
-      // initialize sequence index
-      unsigned int inx = 1;
-      
-      
-      FilterCtr::iterator itrFilter;
- 
-      // first fill sequence with filter D*,L or D,L* having low order
-      // then  fill sequence with filter D*,L or D,L* having medium order
-      // then  fill sequence with filter D,L having high order but visible
-      for (int order = 1 ; order <= 3 ; order++)
-      {         
-        itrFilter = m_filters.begin(); 
-	    for ( ; itrFilter != m_filters.end(); itrFilter++)
-	    {
-		  if ((*itrFilter).second.order == order)
-          {
-		    // extract domain and level to store in sequence
-		    (*p_filterSeq)[inx].the_value = ((*itrFilter).first).get_level();
-	        (*p_filterSeq)[inx].the_domain = CORBA::string_dup(((*itrFilter).first).get_domain().c_str());
-	        (*p_filterSeq)[inx].activation = (*itrFilter).second.activation;
-	        inx++;
-          }
+                    // update the level of all the other filters (if any)
+                    FilterCtr::iterator it = m_filters.begin();
+                    FilterCtr::iterator it_end = m_filters.end();
+
+                    for (; it != it_end; ++it) {
+                        (*it).activate_level(level);
+                    }
+                }
+            }
+
+            // activate the level(s) of a particular domain of any component
+            else {
+                FilterCtr::iterator it = m_filters.begin();
+                FilterCtr::iterator it_end = m_filters.end();
+
+                // update the level(s) of the filters that
+                // correspond to the specified domain
+                for (; it != it_end; ++it) {
+                    if ((*it).get_domain() == domain) {
+                        if (level == CdmwTrace::ALL_VALUES) {
+                            (*it).activate_all_levels();
+                        }
+                        else {
+                            (*it).activate_level(level);
+                        }
+                    }
+                }
+
+                // add the filter (C*, D, mask) to the list
+                // if it already exists then it will be moved to the tail
+                // of the list
+                add_filter(CdmwTrace::ALL_COMPONENT_NAMES, domain, level);
+            }
         }
-      }  
-      
-      // resize sequence to correct length with selected filter
-	  if (inx < seq_len)
-      {
-	    p_filterSeq->length(inx);
-      }
 
-      return p_filterSeq;
+        // componentName != CdmwTrace::ALL_COMPONENT_NAMES
+        else {
+            // activate level(s) of any domain of a particular component
+            if (domain == CdmwTrace::ALL_DOMAINS) {
+                FilterCtr::iterator it = m_filters.begin();
+                FilterCtr::iterator it_end = m_filters.end();
+
+                // update the level(s) of the filters of the list that
+                // correspond to the specified component name
+                for (; it != it_end; ++it) {
+                    if ((*it).get_component_name() == componentName) {
+                        if (level == CdmwTrace::ALL_VALUES) {
+                            (*it).activate_all_levels();
+                        }
+                        else {
+                            (*it).activate_level(level);
+                        }
+                    }
+                }
+
+                // add the filter (C, D*, mask) to the list
+                // if it already exists then it will be moved to the tail
+                // of the list
+                add_filter(componentName, CdmwTrace::ALL_DOMAINS, level);
+            }
+
+            // activate level(s) of a particular domain of a particular component
+            else {
+                // add the filter (C, D, mask) to the list
+                // if it already exists then it will be moved to the tail
+                // of the list
+                add_filter(componentName, domain, level);
+            }
+        }
     }
-    catch (std::bad_alloc&)
+    catch (std::bad_alloc&) {
+        CDMW_THROW(OutOfMemoryException);
+    }
+}
+
+// }}}2
+
+// {{{2 deactivate_level()
+
+/**
+ * Deactivate the specified level.
+ * If the level is not valid, this operation does nothing.
+ *
+ * @param domain deactivate the specified level of this domain.
+ * @param level the level to activate.
+ *
+ * @exception OutOfMemoryException
+ */
+void
+FilterMngr::deactivate_level(const std::string& domain,
+                             const long level)
+    throw(OutOfMemoryException)
+{
+    deactivate_level(CdmwTrace::ALL_COMPONENT_NAMES, domain, level);
+}
+
+
+/**
+ * Deactivate the specified level.
+ * If the level is not valid, this operation does nothing.
+ *
+ * @param componentName the component to which the domain is associated.
+ * @param domain activate the specified level of this domain.
+ * @param level the level to activate.
+ *
+ * @exception OutOfMemoryException
+ */
+void
+FilterMngr::deactivate_level(const std::string& componentName,
+                             const std::string& domain,
+                             const long level)
+    throw(OutOfMemoryException)
+{
+    // acquire mutex
+    CDMW_MUTEX_GUARD(m_filterMngr_mtx);
+
+    // check the level
+    if ((level != CdmwTrace::ALL_VALUES) &&
+        !((level >= 0) && ((unsigned long)level < NB_BITS)))
     {
-      CDMW_THROW (OutOfMemoryException);
-	}
+        return;
+    }
+
+    // if we have already deactivated everything
+    // there is no need to add a filter that deactivates level(s)
+
+    // bitset<bits>::count() returns the number of bits set to 1
+    if ((m_filters.size() == 0) &&
+        (m_filter_any.get_levels().count() == 0))
+    {
+        return;
+    }
+
+    try {
+        if (componentName == CdmwTrace::ALL_COMPONENT_NAMES) {
+            // deactivate the level(s) of any domain of any component
+            if (domain == CdmwTrace::ALL_DOMAINS) {
+                if (level == CdmwTrace::ALL_VALUES) {
+                    // deactivate all the levels of the most generic filter
+                    m_filter_any.deactivate_all_levels();
+
+                    // and discard everything from the list as anything is
+                    // deactivated from now on
+                    m_filters.clear();
+                }
+                // deactivate a particular level of any domain of any component
+                else {
+                    // update the level of the most generic filter
+                    m_filter_any.deactivate_level(level);
+
+                    // update the level of all the other filters (if any)
+                    FilterCtr::iterator it = m_filters.begin();
+                    FilterCtr::iterator it_end = m_filters.end();
+
+                    for (; it != it_end; ++it) {
+                        (*it).deactivate_level(level);
+                    }
+                }
+            }
+
+            // deactivate level(s) of a particular domain of any component
+            else {
+                FilterCtr::iterator it = m_filters.begin();
+                FilterCtr::iterator it_end = m_filters.end();
+
+                // update the level(s) of the filters that
+                // correspond to the specified domain
+                for (; it != it_end; ++it) {
+                    if ((*it).get_domain() == domain) {
+                        if (level == CdmwTrace::ALL_VALUES) {
+                            (*it).deactivate_all_levels();
+                        }
+                        else {
+                            (*it).deactivate_level(level);
+                        }
+                    }
+                }
+
+                // add the filter (C*, D, mask) to the list
+                // if it already exists then it will be moved to the tail
+                // of the list
+                add_filter(CdmwTrace::ALL_COMPONENT_NAMES,
+                           domain,
+                           level,
+                           false);
+            }
+        }
+
+        // componentName != CdmwTrace::ALL_COMPONENT_NAMES
+        else {
+            // deactivate level(s) of any domain of a particular component
+            if (domain == CdmwTrace::ALL_DOMAINS) {
+                FilterCtr::iterator it = m_filters.begin();
+                FilterCtr::iterator it_end = m_filters.end();
+
+                // update the level(s) of the filters of the list that
+                // correspond to the specified component name
+                for (; it != it_end; ++it) {
+                    if ((*it).get_component_name() == componentName) {
+                        if (level == CdmwTrace::ALL_VALUES) {
+                            (*it).deactivate_all_levels();
+                        }
+                        else {
+                            (*it).deactivate_level(level);
+                        }
+                    }
+                }
+
+                // add the filter (C, D*, mask) to the list
+                // if it already exists then it will be moved to the tail
+                // of the list
+                add_filter(componentName,
+                           CdmwTrace::ALL_DOMAINS,
+                           level,
+                           false);
+            }
+
+            // deactivate level(s) of a particular domain of a particular component
+            else {
+                // add the filter (C, D, mask) to the list
+                // if it already exists then it will be moved to the tail
+                // of the list
+                add_filter(componentName, domain, level, false);
+            }
+        }
+    }
+    catch (std::bad_alloc&) {
+        CDMW_THROW(OutOfMemoryException);
+    }
 }
-    
 
-//
-// Returns if the specified level is activated
-//
-bool FilterMngr::is_activated (const std::string& domain, long level) 
-    throw (OutOfMemoryException)
+// }}}2
 
+// {{{2 get_trace_filters()
+
+/**
+ * @return a sequence of filters whether activated or not.
+ *
+ * @exception OutOfMemoryException
+ */
+CdmwTrace::TraceFilterSeq*
+FilterMngr::get_trace_filters(void)
+    throw(OutOfMemoryException)
 {
-   CDMW_MUTEX_GUARD (m_filterMngr_mtx);
+    // create a sequence of filters
+    CdmwTrace::TraceFilterSeq* p_filterSeq = new CdmwTrace::TraceFilterSeq;
 
-   return check_activated_filter (domain, level) ;
+    try {
+        bitmask mask_filter_any = m_filter_any.get_levels();
+
+        // the most generic filter is considered activated
+        // if at least half of the bits in the mask is set (bit = 1)
+        bool filter_any_is_activated =
+            (mask_filter_any.count() >= (NB_BITS / 2));
+
+        // set sequence length
+/*
+        unsigned int seq_len = m_filters.size() + 1;
+        if (filter_any_is_activated) {
+            seq_len += NB_BITS - mask_filter_any.count();
+        }
+        else {
+            seq_len += mask_filter_any.count();
+        }
+        p_filterSeq->length(seq_len);
+*/
+        p_filterSeq->length(1);
+
+        // add the most generic filter first
+        (*p_filterSeq)[0].the_component_name =
+            CORBA::string_dup(CdmwTrace::ALL_COMPONENT_NAMES);
+        (*p_filterSeq)[0].the_domain =
+            CORBA::string_dup(CdmwTrace::ALL_DOMAINS);
+        (*p_filterSeq)[0].the_value = CdmwTrace::ALL_VALUES;
+        (*p_filterSeq)[0].activation = filter_any_is_activated;
+
+        // then add the generic filters than are deduced from mask_filter_any
+        int seq_idx = 1;
+        if ((mask_filter_any.count() != 0) &&
+            (mask_filter_any.count() != NB_BITS))
+        {
+            for (size_t bit = 0; bit < NB_BITS; ++bit) {
+                if (filter_any_is_activated && !mask_filter_any.test(bit)) {
+                    CORBA::ULong seq_len = p_filterSeq->length() + 1;
+                    p_filterSeq->length(seq_len);
+
+                    (*p_filterSeq)[seq_idx].the_component_name =
+                        CORBA::string_dup(CdmwTrace::ALL_COMPONENT_NAMES);
+                    (*p_filterSeq)[seq_idx].the_domain =
+                        CORBA::string_dup(CdmwTrace::ALL_DOMAINS);
+                    (*p_filterSeq)[seq_idx].the_value = bit;
+                    (*p_filterSeq)[seq_idx].activation = false;
+
+                    seq_idx++;
+                }
+                else if (!filter_any_is_activated && mask_filter_any.test(bit)) {
+                    CORBA::ULong seq_len = p_filterSeq->length() + 1;
+                    p_filterSeq->length(seq_len);
+
+                    (*p_filterSeq)[seq_idx].the_component_name =
+                        CORBA::string_dup(CdmwTrace::ALL_COMPONENT_NAMES);
+                    (*p_filterSeq)[seq_idx].the_domain =
+                        CORBA::string_dup(CdmwTrace::ALL_DOMAINS);
+                    (*p_filterSeq)[seq_idx].the_value = bit;
+                    (*p_filterSeq)[seq_idx].activation = true;
+
+                    seq_idx++;
+                }
+            }
+        }
+
+        // now add the filters from the list (if any)
+        FilterCtr::iterator it = m_filters.begin();
+        FilterCtr::iterator it_end = m_filters.end();
+        for (; it != it_end; ++it) {
+            bitmask mask = (*it).get_levels();
+
+            if (mask != mask_filter_any) {
+                // the filter is considered activated
+                // if at least half of the bits in the mask is set
+                bool filter_is_activated = (mask.count() >= (NB_BITS / 2));
+
+                if (filter_is_activated != filter_any_is_activated) {
+                    CORBA::ULong seq_len = p_filterSeq->length() + 1;
+                    p_filterSeq->length(seq_len);
+
+                    (*p_filterSeq)[seq_idx].the_component_name =
+                        CORBA::string_dup((*it).get_component_name().c_str());
+                    (*p_filterSeq)[seq_idx].the_domain =
+                        CORBA::string_dup((*it).get_domain().c_str());
+                    (*p_filterSeq)[seq_idx].the_value = CdmwTrace::ALL_VALUES;
+                    (*p_filterSeq)[seq_idx].activation = filter_is_activated;
+
+                    seq_idx++;
+                }
+
+                if ((mask.count() != 0) && (mask.count() != NB_BITS)) {
+                    for (size_t bit = 0; bit < NB_BITS; ++bit) {
+                        if ((mask[bit] != mask_filter_any[bit]) ||
+                            ((mask[bit] == mask_filter_any[bit]) &&
+                             (filter_is_activated != filter_any_is_activated)))
+                        {
+                            if (filter_is_activated && !mask.test(bit)) {
+                                CORBA::ULong seq_len = p_filterSeq->length() + 1;
+                                p_filterSeq->length(seq_len);
+
+                                (*p_filterSeq)[seq_idx].the_component_name =
+                                    CORBA::string_dup(
+                                        (*it).get_component_name().c_str());
+                                (*p_filterSeq)[seq_idx].the_domain =
+                                    CORBA::string_dup(
+                                        (*it).get_domain().c_str());
+                                (*p_filterSeq)[seq_idx].the_value = bit;
+                                (*p_filterSeq)[seq_idx].activation = false;
+
+                                seq_idx++;
+                            }
+                            else if (!filter_is_activated && mask.test(bit)) {
+                                CORBA::ULong seq_len = p_filterSeq->length() + 1;
+                                p_filterSeq->length(seq_len);
+
+                                (*p_filterSeq)[seq_idx].the_component_name =
+                                    CORBA::string_dup(
+                                        (*it).get_component_name().c_str());
+                                (*p_filterSeq)[seq_idx].the_domain =
+                                    CORBA::string_dup(
+                                        (*it).get_domain().c_str());
+                                (*p_filterSeq)[seq_idx].the_value = bit;
+                                (*p_filterSeq)[seq_idx].activation = true;
+
+                                seq_idx++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    catch (std::out_of_range&) {
+        // not possible as we iterate only NB_BITS times
+    }
+    catch (std::bad_alloc&) {
+        CDMW_THROW(OutOfMemoryException);
+    }
+
+    return p_filterSeq;
 }
 
-//
-// Check if filter is activated (no Mutex used)
-//
-bool FilterMngr::check_activated_filter (const std::string& domain, long level) 
-    throw (OutOfMemoryException)
+// }}}2
 
+// {{{2 is_activated()
+
+/**
+ * Check if the specified level is activated.
+ *
+ * @param domain activate the specified level of this domain.
+ * @param level the level to activate.
+ *
+ * @return true or false.
+ *
+ * @exception BadParameterException
+ * @exception OutOfMemoryException
+ */
+bool
+FilterMngr::is_activated(const std::string& domain,
+                         const long level)
+    throw(BadParameterException,
+          OutOfMemoryException)
 {
-   // WARNING : Mutex m_filterMngr_mtx must have been previously acquired !!
-   
-   try 
-   {    
-	   // by default message is not traced
-	   bool trace_mesg = false;
+    // acquire mutex
+    CDMW_MUTEX_GUARD(m_filterMngr_mtx);
 
-       // filter value = -1 if undefined
-       //              = 0  if deactivated
-       //              = 1  if activated
-       int all_domain_filter = -1;
-       int all_level_filter  = -1;
-       
-       // filter order = inhibited
-       //              = low order
-       //              = medium order
-       //              = high order
-       int all_domain_order = -1;
-       int all_level_order = -1;
-       
-       bool filter_found = false;
-       
-       FilterCtr::iterator itr;    
-         
-       // find the specific domain level filter activation
-       itr = m_filters.find (Filter(domain,level));
-         
-       // If the specific domain / level exists and not inhibited: 
-       //   get its boolean status
-       if (itr != m_filters.end())
-	   {
-	     if (itr->second.order != 0)
-	     {
-	       trace_mesg = itr->second.activation;
-	       filter_found = true;
-	     }
-       }
-       
-       // if no specific filter has been found
-       if (filter_found == false)
-       {     
-         if (m_all_domains == true)
-         {
-           // find the all domains filter activation
-           itr = m_filters.find (Filter(CdmwTrace::ALL_DOMAINS,level));
-         
-           // If the all domain / specific level exist : is it activated ?
-           //   get its boolean status
-           if (itr != m_filters.end())
-	       {
-	         if (itr->second.order != 0)
-	         {
-               all_domain_filter = 0;
-               if (itr->second.activation == true)
-               {
-                 all_domain_filter = 1;
-               }  
-           
-               all_domain_order = itr->second.order;
-             }
-           }
-         }
-    
-         if (m_all_levels == true)
-         {
-           // find the all levels filter activation
-           itr = m_filters.find (Filter(domain,CdmwTrace::ALL_VALUES));
-         
-           // If the specific domain / all level exist : is it activated ?
-           //   get its boolean status
-           if (itr != m_filters.end())
-	       {
-	         if (itr->second.order != 0)
-	         {
-               all_level_filter = 0;
-               if (itr->second.activation == true)
-               {
-                 all_level_filter = 1;
-               }  
-           
-               all_level_order = itr->second.order;
-             }
-           }
-         }
-       
-       
-         // if D*,L and D,L* filters exist
-	     if (all_domain_filter != -1 && all_level_filter != -1)
-	     {
-	       // if D*,L filter has the highest order (it is the latest)
-	       if (all_domain_order == 2)
-	       {
-	         if (all_domain_filter == 0)
-	         {
-	           trace_mesg = false;
-	         }
-	         else
-	         {
-	           trace_mesg = true;
-	         }
-	       }
-	       // else D,L* filter has the highest order (it is the latest)
-	       else
-	       {
-	         if (all_level_filter == 0)
-	         {
-	           trace_mesg = false;
-	         }
-	         else
-	         {
-	           trace_mesg = true;
-	         }
-	       }
-	     }
-	   
-	     // if D*,L filter exist, gets its activation
-	     else if (all_domain_filter != -1)
-	     {
-	       if (all_domain_filter == 0)
-	       {
-	         trace_mesg = false;
-	       }
-	       else
-	       {
-	         trace_mesg = true;
-	       }
-	     }
-	    
-	     // if D,L* filter exist, get its activation
-	     else if (all_level_filter != -1)
-	     {
-	       if (all_level_filter == 0)
-	       {
-	         trace_mesg = false;
-	       }
-	       else
-	       {
-	         trace_mesg = true;
-	       }
-	     }
-	    
-	     // else no filter for this domain and this level
-	     // then get all domain / all level *,* filter activation
-	     else
-	     {
-	       trace_mesg = m_all_domains_levels;
-	     }
-	   }
-	   
-       return trace_mesg;
-   } 
-   catch (std::bad_alloc&) 
-   {
-        CDMW_THROW (OutOfMemoryException);
-   }
+    return _is_activated(CdmwTrace::ALL_COMPONENT_NAMES, domain, level);
 }
+
+
+/**
+ * Check if the specified level is activated.
+ *
+ * @param componentName component to which the domain is associated.
+ * @param domain activate the level for this domain.
+ * @param level level to activate.
+ *
+ * @return true or false.
+ *
+ * @exception BadParameterException
+ * @exception OutOfMemoryException
+ */
+bool
+FilterMngr::is_activated(const std::string& componentName,
+                         const std::string& domain,
+                         const long level)
+    throw(BadParameterException,
+          OutOfMemoryException)
+{
+    // acquire mutex
+    CDMW_MUTEX_GUARD(m_filterMngr_mtx);
+
+    return _is_activated(componentName, domain, level);
+}
+
+
+/**
+ * Check if the specified level is activated.
+ * Not thread-safe.
+ *
+ * @param componentName component to which the domain is associated.
+ * @param domain activate the level for this domain.
+ * @param level level to activate.
+ *
+ * @return true or false.
+ *
+ * @exception BadParameterException
+ * @exception OutOfMemoryException
+ */
+bool
+FilterMngr::_is_activated(const std::string& componentName,
+                          const std::string& domain,
+                          const long level)
+    throw(BadParameterException,
+          OutOfMemoryException)
+{
+    try {
+        // first, try to find a filter with the matching component name
+        // and domain (the levels are ignored)
+        Filter f(componentName, domain);
+        FilterCtr::iterator it =
+            std::find_if(m_filters.begin(),
+                         m_filters.end(),
+                         bind2nd(filter_equal_to<Filter, Filter>(), f));
+
+        if (it != m_filters.end()) {
+            return (*it).is_activated(level);
+        }
+        else {
+            // we could not find it previously therefore we are going to
+            // apply all the filters that matches either the specified
+            // componentName or domain from the most recent to the oldest
+            bitmask mask;
+            bool first = true;
+            bool none_applied = true;
+
+            FilterCtr::reverse_iterator it = m_filters.rbegin();
+            FilterCtr::reverse_iterator it_end = m_filters.rend();
+
+            for (; it != it_end; ++it) {
+                std::string componentName_ = (*it).get_component_name();
+                std::string domain_ = (*it).get_domain();
+
+                if ((componentName_ == CdmwTrace::ALL_COMPONENT_NAMES) ||
+                    (componentName_ == componentName))
+                {
+                    if ((domain_ == CdmwTrace::ALL_DOMAINS) ||
+                        (domain_ == domain))
+                    {
+                        if (first) {
+                            mask = (*it).get_levels();
+                            first = false;
+                        }
+                        else {
+                            mask |= (*it).get_levels();
+                        }
+
+                        none_applied = false;
+                    }
+                }
+            }
+
+            return (none_applied ? m_filter_any.is_activated(level)
+                                 : mask[level]);
+        }
+    }
+    catch (std::out_of_range&) {
+        std::ostringstream oss;
+        oss << level << std::ends;
+        CDMW_THROW2(BadParameterException, "level", oss.str());
+    }
+    catch (std::bad_alloc&) {
+        CDMW_THROW(OutOfMemoryException);
+    }
+}
+
+// }}}2
+
+// {{{2 add_filter()
+
+/**
+ * Add a new Filter.
+ *
+ * @param componentName the component to which the domain is associated.
+ * @param domain activate the specified level of this domain.
+ * @param level the level to activate/deactivate
+ * @param activate if true the level will be deactivated
+ *
+ * @exception OutOfMemoryException
+ */
+void
+FilterMngr::add_filter(const std::string& componentName,
+                       const std::string& domain,
+                       const long level,
+                       bool activate)
+    throw(OutOfMemoryException)
+{
+    try {
+        Filter f(componentName, domain);
+
+        // look for the filter
+        FilterCtr::iterator it =
+            std::find_if(
+                m_filters.begin(),
+                m_filters.end(),
+                bind2nd(filter_equal_to<Filter, Filter>(), f)
+            );
+
+        bool is_new_filter = true;
+
+        // found
+        if (it != m_filters.end()) {
+            // make a copy of it
+            f = (*it);
+            // remove it from the list
+            m_filters.erase(it);
+
+            is_new_filter = false;
+        }
+
+        // update the level(s)
+        if (level == CdmwTrace::ALL_VALUES) {
+            if (activate) {
+                f.activate_all_levels();
+            }
+            else {
+                f.deactivate_all_levels();
+            }
+        }
+        else {
+            if (is_new_filter) {
+                // the initial mask of the new filter is the mast that results
+                // from all the filters in the list that can to the specified
+                // componentName and domain
+
+                // init the mask with the mask from the most generic filter
+                bitmask mask = m_filter_any.get_levels();
+
+                FilterCtr::const_iterator it = m_filters.begin();
+                FilterCtr::const_iterator it_end = m_filters.end();
+
+                for (; it != it_end; ++it) {
+                    std::string componentName_ = (*it).get_component_name();
+                    std::string domain_ = (*it).get_domain();
+
+                    if ((componentName_ == CdmwTrace::ALL_COMPONENT_NAMES) ||
+                        (componentName_ == componentName))
+                    {
+                        if ((domain_ == CdmwTrace::ALL_DOMAINS) ||
+                            (domain_ == domain))
+                        {
+                            mask |= (*it).get_levels();
+                        }
+                    }
+                }
+
+                f.set_levels(mask);
+            }
+
+            if (activate) {
+                f.activate_level(level);
+            }
+            else {
+                f.deactivate_level(level);
+            }
+        }
+
+        // append it to the list
+        m_filters.push_back(f);
+    }
+    catch (std::bad_alloc&) {
+        CDMW_THROW(OutOfMemoryException);
+    }
+}
+
+// }}}2
+
+
+// }}}1
+
 
 } // End namespace Trace
+
 } // End namespace Cdmw
-
-

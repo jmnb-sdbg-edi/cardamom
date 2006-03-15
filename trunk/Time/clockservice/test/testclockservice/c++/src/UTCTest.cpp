@@ -1,36 +1,40 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
-
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+ 
 /**
 * @file UTCTest.cpp
 * @brief unit tests for EVoT UTC valuetype.
 * 
-* @author Fabrizio Morciano
-* @author Lello Mele
+* @author Fabrizio Morciano <fmorciano@selex-si.com>
+* @author Raffaele Mele <rmele@progesi.it>
+* @author Copyright (C) 2004-2005 SELEX-SI
 */
-
-#include "Time/testclockservice/UTCTest.hpp"
-#include "Time/clockservice/UTC_impl.hpp"
-#include "Time/clockservice/TimeSpan_impl.hpp"
-#include "Time/testclockservice/CORBAManager.hpp"
+#include "testclockservice/UTCTest.hpp"
+#include "clockservice/UTC_impl.hpp"
+#include "clockservice/TimeSpan_impl.hpp"
+#include "Time/clockservice/test/testcommon/TimeTestManager.hpp"
 #include "Time/clockservice/Macro.hpp"
-#include "ace/Get_Opt.h"
+
 #include "tao/ORB_Core.h"
 
 #include <iostream>
@@ -46,6 +50,7 @@ using Cdmw::clock::macro::Mask48;
 ///////////////////////////////////////////////////////////////////////////////
 
 CPPUNIT_TEST_SUITE_REGISTRATION (UTCTest);
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(UTCTest, "testclockservice");
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -76,16 +81,28 @@ UTCTest::tearDown ()
 void
 UTCTest::inaccuracy()
 {
-    TimeBase::TimeT time = 6000;
-    CORBA::ULong inacclo = 4563,inacclo_;
-    CORBA::UShort inacchi= 2671,inacchi_;
-    TimeBase::TdfT tdf = 0;
+    TimeBase::TimeT 
+        time = 6000;
+    
+    CORBA::ULong 
+        inacclo = 4563,
+        inacclo_;
+        
+    CORBA::UShort 
+        inacchi= 2671,
+        inacchi_;
+        
+    TimeBase::TdfT 
+        tdf = 0;
 
     UTC_var
         utc = utc_factory_->compose (time, inacclo, inacchi, tdf);
 
-    TimeBase::InaccuracyT inaccuracy = utc->inaccuracy();
-    TimeBase::TimeT res = inaccuracy & Mask48;
+    TimeBase::InaccuracyT 
+        inaccuracy = utc->inaccuracy();
+    TimeBase::TimeT 
+        res = inaccuracy & Mask48;
+        
     res&=Mask32;
 
     inacclo_ = static_cast<unsigned long>(res);
@@ -250,14 +267,14 @@ UTCTest::UTCTest()
         is_initialised_  = true;
         alias_name_ = "ClockService";
 
-        CORBAManager::instance ()->add (alias_name_);
+        Cdmw::TestUtils::CORBATestManager::instance ()->add (alias_name_);
 
         bool exce = false;
         try
         {
-            obj_ = CORBAManager::instance ()->get_object (alias_name_);
+            obj_ = Cdmw::TestUtils::CORBATestManager::instance ()->get_object (alias_name_);
         }
-        catch (CORBAManager::InvalidObject &)
+        catch (Cdmw::TestUtils::CORBATestManager::InvalidObject &)
         {
             exce = true;
         }
@@ -267,7 +284,7 @@ UTCTest::UTCTest()
         }
 
         if( exce )
-            CPPUNIT_FAIL ("CORBAManager::InvalidObject");
+            CPPUNIT_FAIL ("Cdmw::TestUtils::CORBATestManager::InvalidObject");
 
         try 
         {

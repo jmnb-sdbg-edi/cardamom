@@ -1,49 +1,315 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
-
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 #ifndef _CDMW_TIME_IDL_
 #define _CDMW_TIME_IDL_
 
 #include <CosClockService.idl>
+#include <CdmwClockState.idl>
 
-module Cdmw	{	module	clock	{
+module Cdmw     {       module  clock   {
 
-	/**
-	 * ControlledClockEx extends ControlledClock to have a 
-	 *	way to recover fixed rate.
-	 */
-	interface ControlledClockEx : 
-		CosClockService::ControlledClock
-	{
-		float	get_rate() raises (NotSupported);
-	};
-		
-	/**
-	 * ControlledExecutor extends Executor to have a 
-	 *	virtual time.
-	 */
-	interface ControlledExecutor: 
-		ControlledClockEx, 
-		CosClockService::PeriodicExecution::Executor
-	{
-	};
+    interface ControllerEx;
 
-}; /*clock*/ }; /*Cdmw*/	
+    module policy    {
+
+        typedef short ControllerUpdateID;
+   
+        const ControllerUpdateID  UNDEFINED        =-1; 
+        const ControllerUpdateID  CANCEL_ALL       = 0;
+        const ControllerUpdateID  ENFORCE_INTERVAL = 1;
+        const ControllerUpdateID  ENFORCE_DEADLINE = 2;
+        const ControllerUpdateID  USER_DEFINED_0   = 3;
+        const ControllerUpdateID  USER_DEFINED_1   = 4;
+        const ControllerUpdateID  USER_DEFINED_2   = 5;
+     
+        /**
+         * @brief A <code>ControllerUpdate</code> is an abstraction which
+         * is meant to represent stateless functor.
+         *
+         * The functors are used by controllers
+         * in order to update their expiration time upon clock characteristic
+         * changes.
+         *
+         * @note <code>ControllerUpdate</code> are flightweigh and
+         *       are shared between all the controllers and clock that
+         *       are configured to use the same policy.
+         *
+         */
+        interface ControllerUpdate
+        {
+            /**
+             * @brief Called when set method of ControlledClock is executed.
+             * @param controller The controlled that needs to be updated.
+             */
+            void on_set(in ControllerEx controller);
+
+            /**
+             * @brief Called when set_rate method of ControlledClock is executed.
+             * @param controller The controlled that needs to be updated.
+             */
+            void on_set_rate(in ControllerEx controller);
+            
+            /**
+             * @brief Called when pause method of ControlledClock is executed.
+             * @param controller The controlled that needs to be updated.
+             */
+            void on_pause(in ControllerEx controller);
+
+    /**
+             * @brief Called when terminate method of ControlledClock is executed.
+             * @param controller The controlled that needs to be updated.
+             */
+            void on_terminate(in ControllerEx controller);
+            
+            /**
+             * @brief Called when resume method of ControlledClock is executed.
+             * @param controller The controlled that needs to be updated.
+     */
+            void on_resume(in ControllerEx controller);
+        };
+   
+        /**
+         * @brief This interface provides a programmatic way of registering user
+         * defined controller update policies. 
+         *
+         * At start-up it contains
+         * factories for all the update policies defined by CARDAMOM.
+     *
+         * @note CARDAMOM default policies cannot be changed, 
+     *              i.e., the user cannot overrride nor unregistered them.
+     */
+
+    /*local */
+        interface ControllerUpdateAdmin
+        {
+            exception AlreadyExist {};
+            exception Unavailable {};
+            exception OperationNotAllow {}; 
+            
+            /**
+             *  Add the <code>policy<\code> in the Admin list of policies.
+             *  @param id The identifyer of policy.
+             *  @param policy The reference to policy object.
+             *  @exception <code>AlreadyExist<\code> is raised if entry is
+             *             already in list.
+             */
+            void register(in ControllerUpdateID id,
+                          in ControllerUpdate policy)
+                raises (AlreadyExist);
+
+        
+            /**
+             *  Remove <code>policy<\code> in the Admin list of policies.
+             *  @param id The identifyer of policy.
+             *  @exception <code>Unavailable<\code> is raised if entry is
+             *             not in list.
+             *  @exception <code>OperationNotAllow<\code> is raised if client
+             *             try to remove a system policy.
+             */
+            void unregister(in ControllerUpdateID id)
+                raises (Unavailable,OperationNotAllow);
+
+            /**
+             *  Retrieve <code>policy<\code> in the Admin list of policies.
+             *  @param id The identifyer of policy.
+             *  @exception <code>Unavailable<\code> is raised if entry is
+             *             not in list.
+             */
+            ControllerUpdate get_policy(in ControllerUpdateID id)
+                raises (Unavailable);
+        };
+    }; /* policy */
+
+    /**
+     * Observer interface. This interface can be used to
+     *  realise an observer class that reacts when 
+     *  a specifyed event in a <code>ControlledClock<\code> occur. 
+     */
+    interface ClockObserver
+    {
+    	/**
+         * @brief Called when set method of ControlledClock is executed.
+         * @param params The parametes passed when an attach was used.
+         */    
+        void    handle_set      (in any params);
+
+    	/**
+         * @brief Called when set_rate method of ControlledClock is executed.
+         * @param params The parametes passed when an attach was used.
+         */    
+        void    handle_set_rate (in any params);
+
+    	/**
+         * @brief Called when pause method of ControlledClock is executed.
+         * @param params The parametes passed when an attach was used.
+         */    
+        void    handle_pause    (in any params);
+        
+    	/**
+         * @brief Called when resume method of ControlledClock is executed.
+         * @param params The parametes passed when an attach was used.
+         */    
+        void    handle_resume   (in any params);
+        
+    	/**
+         * @brief Called when terminate method of ControlledClock is executed.
+         * @param params The parametes passed when an attach was used.
+         */    
+        void    handle_terminate(in any params);
+        };
+     
+    /**
+     *  <code>ControlledClockEx<\code> interface has some new methods
+     *  to manage properely the insertion and deletion of
+     *  a <code>ClockObserver<\code>.
+     */     
+    interface ControlledClockEx : 
+        CosClockService::ControlledClock
+        {
+        exception   UnknownEntry{};
+        exception   AlreadyPresentEntry{};
+        
+        /**
+         * Return the rate of <code>ControlledClock<\code>.
+         */
+        float get_rate() 
+            raises (NotSupported);
+        
+        /**
+         * Return offset characteristics of <code>ControlledClock<\code>.
+         * @param realTime The <code>TimeBase::TimeT<\code> 
+         *                  when a <code>set<\code> method was called.
+         * @param virtualTime The <code>realTime<\code> that has been mapped 
+         *                    using the <code>ControlledClock<\code> parameters.
+         */
+            void    get_time_origins(out TimeBase::TimeT real_time ,
+                               out TimeBase::TimeT virtual_time) 
+                raises (NotSupported);
+
+        /**
+         * Add <code>observer<\code> in the list of object
+         *  that need to have a notify.
+         *  @param observer The reference to <code>ClockObserver<\code>
+         *                  to remove.
+         *  @param id The event mask.
+         *  @note It is possible to use different <code>params<\code> for 
+         *        different events. If <code>params<\code> is provided for ALL
+         *        the last one overwrites the previous.
+         *  @exception AlreadyPresentEntry The exception is thrown when entry is
+         *             already in with the same mask.
+         *  @exception NotSupported The exception thrown when mask is wrong.
+         */
+        void    attach( in ControlledClockEvent id,
+                        in ClockObserver observer,
+                        in any params)
+            raises (AlreadyPresentEntry,NotSupported);
+
+        /**
+         * Remove ClockObserver from list of object
+         *  that need to have a notify.
+         *  @param observer The refernce to ClockObserver to remove.
+         *  @param id The event mask.
+         *  @exception NotSupported The exception is thrown when mask is wrong.
+         *  @note observer will be deleted only if the <code>id<\code> is the 
+         *    same mask used in attach or ALL.
+         */
+        void    detach( in ControlledClockEvent id,
+                        in ClockObserver observer)
+			raises (NotSupported);
+                        
+        };
+                
+    /**
+     * ControlledExecutor extends Executor to have a 
+     *  virtual time.
+     */
+    interface ControlledExecutor: 
+        ControlledClockEx, 
+        CosClockService::PeriodicExecution::Executor
+        {
+            /**
+             * Create a controller with a specific update policy.
+             * This update policy overrides the one defined by the
+             * Clock.
+             */
+            CosClockService::PeriodicExecution::Controller
+                enable_periodic_execution_with_policy(in CosClockService::PeriodicExecution::Periodic on,
+                                                  in policy::ControllerUpdateID id)
+            raises (policy::ControllerUpdateAdmin::Unavailable);
+
+            /**
+             * Set the default policy for controller created
+             * with <code>enable_periodic_execution</code>. This update policy can
+             * be overridden on a per-controller basis by using the
+             * <code>enable_periodic_execution_ex</code>.
+             */
+        void set_controller_update_policy(in policy::ControllerUpdateID id)
+             raises (policy::ControllerUpdateAdmin::Unavailable);
+
+            /**
+             * Get the controlled update policy.
+             */
+        policy::ControllerUpdateID get_controller_update_policy();
+        };
+
+    interface ControlledClockObserver;
+
+    /**
+     *  This interface extends Controller to manage Policies.
+     */
+    interface ControllerEx :
+        CosClockService::PeriodicExecution::Controller
+    {
+        /**
+         * Override the update policy.
+         */
+        void set_update_policy(in policy::ControllerUpdateID id)
+             raises (policy::ControllerUpdateAdmin::Unavailable);
+
+        /**
+         * Get the update policy.
+         */
+        policy::ControllerUpdateID get_update_policy();
+         
+        /**
+         * Retrieve the <code>TimeBase::TimeT<\code> when the controller
+         * started.
+         */
+	     TimeBase::TimeT get_controller_time_origin();
+
+        /**
+         * Fix the <code>TimeBase::TimeT<\code> when the controller
+         * started.
+         */
+	     void set_controller_time_origin(in TimeBase::TimeT time_origin);
+    };
+
+    interface MonotonicityNotificationHandler
+        {
+        void handle_monotonicity_violation(in ControllerEx clock,
+                                              in long violation_interval
+                                              /* other info such as delta, etc.*/);
+        };
+}; /*Time*/ }; /*Cdmw*/        
 
 #endif /* _CDMW_TIME_IDL_ */

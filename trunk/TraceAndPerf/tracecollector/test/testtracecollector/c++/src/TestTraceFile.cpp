@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include <cstdlib>
@@ -188,10 +190,10 @@ void TestTraceFile::test_log_file()
 
         }
         
-        else     // horizontal format
+        else     // vertical format
         {
             min_counter = 4;
-            max_counter = 341;
+            max_counter = 365; // ECR-0123
     
             // current index of trace message in one sequence
             int sequence = 0;
@@ -200,7 +202,7 @@ void TestTraceFile::test_log_file()
 		    int i; 
 
 		    // max index of trace message in sequence
-            const int msg_seq_inx = 12;
+            const int msg_seq_inx = 13;
 		    
 		    std::string* label_table[msg_seq_inx];
 
@@ -210,6 +212,8 @@ void TestTraceFile::test_log_file()
 		    std::string label_seq2a = "Application Name";
 		    std::string label_seq3  = "Process Name";
 		    std::string label_seq3a = "Process Id";
+            // ECR-0123
+            std::string label_seq3b = "Component Name";
 		    std::string label_seq4  = "Domain";
 		    std::string label_seq5  = "Level";
 		    std::string label_seq6  = "Thread Id";
@@ -223,12 +227,14 @@ void TestTraceFile::test_log_file()
             label_table[3] = &label_seq2a;
             label_table[4] = &label_seq3;
             label_table[5] = &label_seq3a;
-            label_table[6] = &label_seq4;
-            label_table[7] = &label_seq5;
-            label_table[8] = &label_seq6;
-            label_table[9] = &label_seq7;
-            label_table[10] = &label_seq8;
-            label_table[11] = &label_seq9;
+            // ECR-0123
+            label_table[6] = &label_seq3b;
+            label_table[7] = &label_seq4;
+            label_table[8] = &label_seq5;
+            label_table[9] = &label_seq6;
+            label_table[10] = &label_seq7;
+            label_table[11] = &label_seq8;
+            label_table[12] = &label_seq9;
 
 	        while (result.getline (line,MAX_LINE))
 	        {

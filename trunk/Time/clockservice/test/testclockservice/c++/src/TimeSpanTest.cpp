@@ -1,39 +1,41 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
-
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+ 
 /**
 * @file TimeSpanTest.cpp
 * @brief unit test of EVoT TimeSpan valuetype implementation.
 * 
-* @author Fabrizio Morciano 
-* @author Lello Mele
+* @author Fabrizio Morciano <fmorciano@selex-si.com>
+* @author Raffaele Meloe <rmele@progesi.it>
+* @author Copyright (C) 2004-2005 SELEX-SI
 */
-
-#include "Time/testclockservice/TimeSpanTest.hpp"
-#include "Time/clockservice/TimeSpan_impl.hpp"
-#include "Time/clockservice/UTC_impl.hpp"
-#include "Time/testclockservice/CORBAManager.hpp"
-
-#include "ace/Get_Opt.h"
-#include "tao/ORB_Core.h"
+#include "testclockservice/TimeSpanTest.hpp"
+#include "clockservice/TimeSpan_impl.hpp"
+#include "clockservice/UTC_impl.hpp"
+#include "clockservice/test/testcommon/TimeTestManager.hpp"
 
 #include <iostream>
+#include "tao/ORB_Core.h"
 
 using namespace Cdmw::clock;
 using namespace CosClockService;
@@ -48,6 +50,7 @@ CORBA::Object_ptr TimeSpanCppTest::obj_;
 ///////////////////////////////////////////////////////////////////////////////
 
 CPPUNIT_TEST_SUITE_REGISTRATION (TimeSpanCppTest);
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(TimeSpanCppTest, "testclockservice");
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -57,14 +60,14 @@ TimeSpanCppTest::TimeSpanCppTest()
     {
         is_initialized_ = true;
         alias_name_ = "ClockService";
-        CORBAManager::instance ()->add (alias_name_);
+        Cdmw::TestUtils::CORBATestManager::instance ()->add (alias_name_);
 
         bool exce = false;
         try
         {
-            obj_ = CORBAManager::instance ()->get_object (alias_name_);
+            obj_ = Cdmw::TestUtils::CORBATestManager::instance ()->get_object (alias_name_);
         }
-        catch (CORBAManager::InvalidObject &)
+        catch (Cdmw::TestUtils::CORBATestManager::InvalidObject &)
         {
             exce = true;
         }
@@ -74,7 +77,7 @@ TimeSpanCppTest::TimeSpanCppTest()
         }
 
         if( exce )
-            CPPUNIT_FAIL ("CORBAManager::InvalidObject");
+            CPPUNIT_FAIL ("Cdmw::TestUtils::CORBATestManager::InvalidObject");
 
                 try 
         {
@@ -97,7 +100,6 @@ TimeSpanCppTest::TimeSpanCppTest()
 
         TAO_OBV_REGISTER_FACTORY (UTC_impl_init, UTC);
         TAO_OBV_REGISTER_FACTORY (TimeSpan_impl_init, TimeSpan);
-
     }
 }
 

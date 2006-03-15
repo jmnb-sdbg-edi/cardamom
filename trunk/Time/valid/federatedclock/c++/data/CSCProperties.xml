@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. All rights reserved.
+ * 
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<config>
+    <csc name="federatedclock" owner="Time" lang="c++">
+        <deliveries>
+            <delivery basename="TimeAdmin" type="exe" visibility="public">
+		<prerequisites>
+		<libraries>
+			Foundation/common
+			Foundation/commonidl
+                        Foundation/commonsvcsfederation
+			Foundation/orbsupport
+			Foundation/ossupport
+                        Foundation/logging
+			Foundation/osthreads
+			clockservice/clockservice	
+		</libraries>
+		</prerequisites>
+		<sourcefiles>
+			TimeAdmin.cpp
+		</sourcefiles>
+                <addcflags>
+                        @config.Time.ORB.incl@
+			-D_GNU_SOURCE
+                </addcflags>
+                <addldflags>
+                    -l@config.Time.ORB.Lib.Prefix@CosProperty  -luuid 
+                </addldflags>
+            </delivery>               
+            <delivery basename="TimeReader" type="exe" visibility="public">
+		<prerequisites>
+		<libraries>
+			Foundation/common
+			Foundation/commonidl
+                        Foundation/commonsvcsfederation
+			Foundation/orbsupport
+			Foundation/ossupport
+                        Foundation/logging
+			Foundation/osthreads
+			clockservice/clockservice	
+		</libraries>
+		</prerequisites>
+		<sourcefiles>
+			TimeReader.cpp
+		</sourcefiles>
+                <addcflags>
+                        @config.Time.ORB.incl@
+                </addcflags>
+                <addldflags>
+                    -l@config.Time.ORB.Lib.Prefix@CosProperty  -luuid 
+                </addldflags>
+            </delivery>
+        </deliveries>
+    </csc>
+</config>
+
+

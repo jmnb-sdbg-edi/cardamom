@@ -1,27 +1,31 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include <iostream>
 
 // Cdmw Files
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 #include "ftclockclient/ClientClockProcessBehaviour.hpp"
@@ -59,7 +63,7 @@ throw( CORBA::SystemException )
     std::cout << "   -------- Client initialisation -----------" << std::endl;
         
     // get NamingInterface to object_groups (for reading)
-    Cdmw::NamingAndRepository::NamingInterface objGroupsNamingInterface =
+    Cdmw::CommonSvcs::Naming::NamingInterface objGroupsNamingInterface =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface(REPOSITORY_CLOCK_GROUP_NAME.c_str());
         
     // get reference to Database ObjectGroup from NamingInterface
@@ -100,7 +104,7 @@ throw( CORBA::SystemException )
         
 void
 Cdmw::clock::valid::ClientClockProcessBehaviour::on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
 {
 }
@@ -108,7 +112,7 @@ Cdmw::clock::valid::ClientClockProcessBehaviour::on_next_step()
     
 void
 Cdmw::clock::valid::ClientClockProcessBehaviour::on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
 {
     std::cout << "   -------- Client is runing ----------------" << std::endl;

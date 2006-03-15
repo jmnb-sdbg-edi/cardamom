@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 package cdmw.trace;
@@ -146,10 +148,12 @@ public class FlushArea {
      */     
     public synchronized int addMessage(MessageHeader header, String body) {
         int messageSize = body.length() + header.threadId.length() +
-                          header.fileName.length() + header.userDomain.length();
+                          header.fileName.length() + header.userDomain.length() +
+                          header.componentName.length(); // ECR-0123
         
         // if message is greater than area buffer
         if (messageSize > maxSize) {
+
             return MESSAGE_TOO_BIG;
         }
         
@@ -206,9 +210,11 @@ public class FlushArea {
     {
         // Information about the user defined characteristic
         com.thalesgroup.CdmwTrace.Trace_Filter level = 
-            new com.thalesgroup.CdmwTrace.Trace_Filter(message.getHeader().userLevel,
-                                                        message.getHeader().userDomain,
-                                                        true);
+            new com.thalesgroup.CdmwTrace.Trace_Filter(
+                    message.getHeader().userLevel,
+                    message.getHeader().userDomain,
+                    message.getHeader().componentName, // ECR-0123
+                    true);
                                                  
         // When the message has been produced (stamping)
         com.thalesgroup.CdmwTrace.Timeval timeval = 
@@ -270,7 +276,6 @@ public class FlushArea {
             
         // fill the sequence            
         for (int i=0; i < messageSeq.length; i++) {
-            
             // create FormattedMessage
             messageSeq[i] = createFormattedMessage(messages[i]);
                     
@@ -301,6 +306,10 @@ public class FlushArea {
         // process id not available with Java
         messagesHeader.the_process_id = 0;
         
+        // set application name
+        messagesHeader.the_application_name = 
+            FlushAreaMngr.getInstance().getApplicationName();
+        
         // set process name
         messagesHeader.the_process_name = 
             FlushAreaMngr.getInstance().getProcessName();
@@ -316,14 +325,17 @@ public class FlushArea {
      */     
     public synchronized void storeOutFlushAreaMsg(String errmsg) {
         MessageHeader messageHeader = 
-            new MessageHeader(Thread.currentThread().getName(),
-                              com.thalesgroup.CdmwTrace.ALL_DOMAINS.value,
-                              com.thalesgroup.CdmwTrace.ALL_VALUES.value,
-                              cdmw.ossupport.OS.getTime());
+            new MessageHeader(
+                    Thread.currentThread().getName(),
+                    com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value, // ECR-0123
+                    com.thalesgroup.CdmwTrace.ALL_DOMAINS.value,
+                    com.thalesgroup.CdmwTrace.ALL_VALUES.value,
+                    cdmw.ossupport.OS.getTime());
         
         int messageSize = errmsg.length() + messageHeader.threadId.length() +
                           messageHeader.fileName.length() + 
-                          messageHeader.userDomain.length();
+                          messageHeader.userDomain.length() +
+                          messageHeader.componentName.length(); // ECR-0123
 
         messages[indexFreeMessage].setMessage(messageHeader, errmsg);
         indexFreeMessage++;
