@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -43,7 +43,7 @@
 #include "Foundation/osthreads/MutexGuard.hpp"
 #include "Foundation/ossupport/OS.hpp"
 
-
+#include "orbsupport/AceTaoLogger.hpp"
 
 namespace Cdmw
 {
@@ -61,8 +61,8 @@ namespace Cdmw
 
 
 
-        RTCORBA::RTORB_var OrbTaoImpl::rt_orb(RTCORBA::RTORB::_nil());
-        RTCORBA::Current_var OrbTaoImpl::current(RTCORBA::Current::_nil());
+        //RTCORBA::RTORB_var OrbTaoImpl::rt_orb(RTCORBA::RTORB::_nil());
+        //RTCORBA::Current_var OrbTaoImpl::current(RTCORBA::Current::_nil());
 
         std::map<CORBA::ORB_ptr, OrbTaoThreadPool*> OrbTaoImpl::OrbToThreadPool;
 
@@ -82,10 +82,16 @@ namespace Cdmw
         int OrbTaoThreadPool::svc()
         {
             // increase the number of threads
-            ++nbThreads;
+            {
+                CDMW_MUTEX_GUARD(m_nbThreadsMutex);
+                ++nbThreads;
+            }
             orb_->run();
             // decrease the number of threads
-            --nbThreads;
+            {
+                CDMW_MUTEX_GUARD(m_nbThreadsMutex);
+                --nbThreads;
+            }
             return 0;
         };
 
@@ -104,6 +110,8 @@ namespace Cdmw
         throw( CORBA::SystemException )
         {
 
+
+
             // Initialise service repository with signal set to SIGINT instead of default SIGHUP
             // to allow the process terminates when its father terminates
             ACE_Service_Config service_config (1,
@@ -111,7 +119,11 @@ namespace Cdmw
                                                SIGUSR1);
 
 
-
+            // Init CARDAMOM Logging library (log manager) first for use as a backed for ACE Logging
+            Cdmw::Logging::LogManager::Init(argc, argv);
+            (void)ACE_Log_Msg::msg_backend (new AceTaoLogger());
+            ACE_Log_Msg * ace = ACE_Log_Msg::instance ();
+            ace->set_flags (ACE_Log_Msg::CUSTOM);
 
             CORBA::ORB_var theOrb = CORBA::ORB::_nil();
             size_t nbThreads = 0;
@@ -311,13 +323,13 @@ namespace Cdmw
                         CDMW_THROW(InternalErrorException);
                 }
 
-                CORBA::Object_var object_rt_orb
+/*                CORBA::Object_var object_rt_orb
                 = theOrb->resolve_initial_references("RTORB");
                 rt_orb = RTCORBA::RTORB::_narrow(object_rt_orb.in());
 
                 CORBA::Object_var object_current
                 = theOrb->resolve_initial_references("RTCurrent");
-                current = RTCORBA::Current::_narrow(object_current.in());
+                current = RTCORBA::Current::_narrow(object_current.in());*/
             }
             else if (strategyList.is_PoaThreadPerRequest ())
             {
@@ -330,7 +342,7 @@ namespace Cdmw
                 if (orbTaoThreadPool->activate(THR_NEW_LWP , M_nbThreads) != 0)
                     CDMW_THROW(InternalErrorException);
 
-                CORBA::Object_var object_rt_orb
+/*                CORBA::Object_var object_rt_orb
                 = theOrb->resolve_initial_references("RTORB");
 
                 rt_orb = RTCORBA::RTORB::_narrow(object_rt_orb.in());
@@ -338,18 +350,18 @@ namespace Cdmw
                 CORBA::Object_var object_current
                 = theOrb->resolve_initial_references("RTCurrent");
 
-                current = RTCORBA::Current::_narrow(object_current.in());
+                current = RTCORBA::Current::_narrow(object_current.in());*/
             }
             else if (strategyList.is_PoaThreadPerConnection ())
             {
 
-                CORBA::Object_var object_rt_orb
+/*                CORBA::Object_var object_rt_orb
                 = theOrb->resolve_initial_references("RTORB");
                 rt_orb = RTCORBA::RTORB::_narrow(object_rt_orb.in());
 
                 CORBA::Object_var object_current
                 = theOrb->resolve_initial_references("RTCurrent");
-                current = RTCORBA::Current::_narrow(object_current.in());
+                current = RTCORBA::Current::_narrow(object_current.in());*/
             }
 
             return theOrb._retn();
@@ -389,7 +401,54 @@ namespace Cdmw
             // Do we use a thread pool for the POAs ?
             if (strategyList.is_PoaThreadPool( nbThreads ))
             {
-                // configure the threadpool parameter
+					 if (nbThreads == 1)
+					 {
+						 bool is_single_thread_policy_already_defined = false;
+						 
+						 // Thread pool strategy with only one thread
+						 // The user want to have a serialyzed strategy
+						 // Check the user has not already declared an 
+						 // incompatible policy or a the SINGLE THREAD policy
+						 for (CORBA::ULong p_i=0 ; 
+								 p_i< TAOpolicies.length() ;
+								 p_i++)
+						 {
+							 CORBA::Policy_var a_policy = TAOpolicies[p_i];
+							 if (a_policy->policy_type() == 
+									 PortableServer::THREAD_POLICY_ID)
+							 {
+								  PortableServer::ThreadPolicy_var thread_policy =
+									  PortableServer::ThreadPolicy::_narrow(TAOpolicies[p_i]);
+								  if (thread_policy->value() == 
+										  PortableServer::ORB_CTRL_MODEL)
+								  {
+									   // incompatible policy given by the user 
+									   // with this strategies
+									   throw PortableServer::POA::InvalidPolicy();
+								  }
+
+								  if (thread_policy->value() == 
+										  PortableServer::SINGLE_THREAD_MODEL)
+								  {
+									  is_single_thread_policy_already_defined = true;
+									  break;
+								  }
+							 }
+						 }
+
+						 // add single thread policy is not already defined
+						 if (!is_single_thread_policy_already_defined)
+						 {
+							  TAOpolicies.length (TAOpolicies.length () + 1);
+
+							  TAOpolicies[TAOpolicies.length() - 1] = 
+								  parentPOA->create_thread_policy(
+										  PortableServer::SINGLE_THREAD_MODEL);
+						 }
+					 }
+				}
+
+/*                // configure the threadpool parameter
                 CORBA::ULong stacksize = 30000;
                 CORBA::Boolean allow_request_buffering = 0;
                 CORBA::ULong max_buffered_requests = 0;
@@ -449,7 +508,7 @@ namespace Cdmw
                 TAOpolicies[TAOpolicies.length() - 2]
                 = CORBA::Policy::_duplicate(threadpool_policy_1.in());
             }
-
+*/
 
             // We have inserted our proprietary policies, we create the POA
             return parentPOA->create_POA(adapter_name, the_POAManager.in(), TAOpolicies);
@@ -502,10 +561,6 @@ namespace Cdmw
                                              const std::string& corbaloc_name )
         throw( CORBA::SystemException )
         {
-            // The Id must be defined by us
-            CORBA::Object_var obj =
-                orb->string_to_object( corbaloc_name.c_str() );
-
             CORBA::Object_var iorTableObj =
                 orb->resolve_initial_references( "IORTable" );
 
@@ -519,10 +574,7 @@ namespace Cdmw
 
             try
             {
-                CORBA::String_var ior_string
-                = orb->object_to_string( obj.in() );
-
-                iorTable->unbind( ior_string.in() );
+                iorTable->unbind( corbaloc_name.c_str() );
             }
             catch ( const IORTable::NotFound & )
             {

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,6 +29,7 @@
 #include <string>
 #include <list>
 #include <map>
+#include <stdexcept>
 #include "Foundation/common/MacroDefs.h"
 
 #include "Foundation/common/Exception.hpp"
@@ -170,6 +171,41 @@ namespace Cdmw
                     * microsecond part of current time
                     */
                     long microseconds;
+                    
+                    Timeval()
+                    :seconds(0)
+                    ,microseconds(0)
+                    {
+                    }
+                   
+                    Timeval(long pSec, long pmSec)
+                    :seconds(pSec)
+                    ,microseconds(pmSec)
+                    {
+                    }
+ 
+                    Timeval(const Timeval& tv)
+                    :seconds(tv.seconds)
+                    ,microseconds(tv.microseconds)
+                    {
+                    }
+                    
+                    Timeval& operator=(const Timeval& tv)
+                    {
+                        seconds = tv.seconds;
+                        microseconds = tv.microseconds;
+                        return *this;                        
+                    }
+                    
+#ifndef         _WIN32
+                    Timeval(const timeval& tv )
+                    :seconds(tv.tv_sec)
+                    ,microseconds(tv.tv_usec)
+                    {
+                    }
+#else
+#error  Please add implementation
+#endif
 
                     bool operator==(const Timeval& tv) const
                     {
@@ -227,8 +263,6 @@ namespace Cdmw
                 throw (OutOfMemoryException,
                        InternalErrorException);
 
-
-
                 /**
                 * Purpose:
                 * <p> The calling thread is blocked during the specified
@@ -245,6 +279,26 @@ namespace Cdmw
                 sleep (unsigned int milliseconds)
                 throw (InterruptedException,
                        InternalErrorException);
+
+
+                /**
+                * Purpose:
+                * <p> The calling is blocked during the specified
+                * time expressed in seconds and nanoseconds.
+                *
+                * @param seconds time to sleep expressed in
+                *        seconds
+                * @param nanoseconds time to sleep expressed in 
+                *        nanoseconds
+                * @exception range error if seconds or nanoseconds 
+                *           are out of range (i.e. seconds is negative or 
+                *           nanoseconds is not in [0,999 999 999].
+                */
+                static
+                void
+                sleep (unsigned int seconds,
+                       unsigned int nanoseconds)
+		throw (std::range_error);
 
                 /**
                 * Purpose:
@@ -303,6 +357,27 @@ namespace Cdmw
 
                 /**
                 * Purpose:
+                * <p> create a new directory
+                *
+                * @param path name of the directory
+                * 
+                * @exception BadParameterException the specified path is not valid
+                * @exception PermissionDeniedException the caller has not enough
+                *            right to access the directory
+                * @exception InterruptedException a signal has been received and
+                *            has interrupted the operation
+                * @exception InternalErrorException
+                */
+                static
+                void
+                mkdir (const std::string& path, unsigned short mode)
+                throw (BadParameterException,
+                       PermissionDeniedException,
+                       InterruptedException,
+                       InternalErrorException);
+
+                /**
+                * Purpose:
                 * <p> Return the absolute path associated to the current
                 *   working directory and specified path
                 *
@@ -334,6 +409,39 @@ namespace Cdmw
                 */
                 static void set_process_attributes(uid_t uid, gid_t gid);
 
+
+                /**
+                 * Purpose:
+                 * <p> Get the uid attribute
+                 *
+                 * @return  the uid
+                 */
+                 static uid_t get_uid();
+
+
+                /**
+                 * Purpose:
+                 * <p> Get the gid attribute
+                 *
+                 * @return  the uid
+                 */
+                 static gid_t get_gid();
+
+                /**
+                 * Purpose:
+                 * <p> change the owner of a file
+                 *
+                 * @exception BadParameterException
+                 * @exception OutOfMemoryException
+                 * @exception InternalErrorException
+                 * 
+                 */
+                 static void chown(const std::string& path, uid_t uid, gid_t gid)
+                     throw (PermissionDeniedException,
+                            BadParameterException,
+                            OutOfMemoryException,
+                            InternalErrorException);
+            
 #       endif
 
 
@@ -433,7 +541,6 @@ namespace Cdmw
                 throw (BadParameterException,
                        InterruptedException,
                        InternalErrorException);
-
 
                 /**
                 * Purpose:
@@ -687,7 +794,11 @@ namespace Cdmw
                 throw();
 
 
-
+           // Workaround for PCR-0562:
+           // Daemon needs to explicitly call cleanup_processNotifierThread
+           // before its ORB shutdown.
+           public:
+           
                 /**
                 * Purpose:
                 * <p> Destroying the monitoring thread, when the process is

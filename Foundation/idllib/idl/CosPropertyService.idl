@@ -1,0 +1,250 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef COS_PROPERTY_IDL
+#define COS_PROPERTY_IDL
+
+#ifdef __OpenCCM__
+
+#ifndef __CORBA_Imported__
+#define __CORBA_Imported__
+import CORBA;
+#endif
+
+#elif defined(ORBACUS)
+#pragma TypeCode
+#else
+#include <orb.idl>
+#endif
+
+#pragma prefix "omg.org"
+
+module CosPropertyService
+{
+    typedef string PropertyName;
+
+    struct Property
+    {
+        PropertyName property_name;
+        any property_value;
+    };
+
+    enum PropertyModeType
+    {
+        normal,
+        read_only,
+        fixed_normal,
+        fixed_readonly,
+        undefined
+    };
+
+    struct PropertyDef
+    {
+        PropertyName property_name;
+        any property_value;
+        PropertyModeType property_mode;
+    };
+
+    struct PropertyMode
+    {
+        PropertyName property_name;
+        PropertyModeType property_mode;
+    };
+
+    typedef sequence<PropertyName> PropertyNames;
+    typedef sequence<Property> Properties;
+    typedef sequence<PropertyDef> PropertyDefs;
+    typedef sequence<PropertyMode> PropertyModes;
+    typedef sequence<CORBA::TypeCode> PropertyTypes;
+    interface PropertyNamesIterator;
+    interface PropertiesIterator;
+    interface PropertySetFactory;
+    interface PropertySetDef;
+    interface PropertySet;
+
+    exception ConstraintNotSupported {};
+    exception InvalidPropertyName {};
+    exception ConflictingProperty {};
+    exception PropertyNotFound {};
+    exception UnsupportedTypeCode {};
+    exception UnsupportedProperty {};
+    exception UnsupportedMode {};
+    exception FixedProperty {};
+    exception ReadOnlyProperty {};
+
+    enum ExceptionReason
+    {
+        invalid_property_name,
+        conflicting_property,
+        property_not_found,
+        unsupported_type_code,
+        unsupported_property,
+        unsupported_mode,
+        fixed_property,
+        read_only_property
+    };
+
+    struct PropertyException
+    {
+        ExceptionReason reason;
+        PropertyName failing_property_name;
+    };
+
+    typedef sequence<PropertyException> PropertyExceptions;
+
+    exception MultipleExceptions
+    {
+        PropertyExceptions exceptions;
+    };
+
+    interface PropertySetFactory
+    {
+        PropertySet create_propertyset();
+        PropertySet create_constrained_propertyset(
+            in PropertyTypes allowed_property_types,
+            in Properties allowed_properties)
+                raises(ConstraintNotSupported);
+        PropertySet create_initial_propertyset(
+            in Properties initial_properties)
+                raises(MultipleExceptions);
+    };
+
+    interface PropertySetDefFactory
+    {
+        PropertySetDef create_propertysetdef();
+        PropertySetDef create_constrained_propertysetdef(
+            in PropertyTypes allowed_property_types,
+            in PropertyDefs allowed_property_defs)
+                raises(ConstraintNotSupported);
+        PropertySetDef create_initial_propertysetdef(
+            in PropertyDefs initial_property_defs)
+                raises(MultipleExceptions);
+    };
+
+    interface PropertySet
+    {
+        void define_property(in PropertyName property_name,
+                     in any property_value)
+            raises(InvalidPropertyName,
+               ConflictingProperty,
+               UnsupportedTypeCode,
+               UnsupportedProperty,
+               ReadOnlyProperty);
+
+        void define_properties(in Properties nproperties)
+            raises(MultipleExceptions);
+
+        unsigned long get_number_of_properties();
+
+        void get_all_property_names(in unsigned long how_many,
+                        out PropertyNames property_names,
+                        out PropertyNamesIterator rest);
+
+        any get_property_value(in PropertyName property_name)
+            raises(PropertyNotFound, InvalidPropertyName);
+
+        boolean get_properties(in PropertyNames property_names,
+                       out Properties nproperties);
+
+        void get_all_properties(in unsigned long how_many,
+                    out Properties nproperties,
+                    out PropertiesIterator rest);
+
+        void delete_property(in PropertyName property_name)
+            raises(PropertyNotFound, InvalidPropertyName, FixedProperty);
+
+        void delete_properties(in PropertyNames property_names)
+            raises(MultipleExceptions);
+
+        boolean delete_all_properties();
+
+        boolean is_property_defined(in PropertyName property_name)
+            raises(InvalidPropertyName);
+    };
+
+    interface PropertySetDef : PropertySet
+    {
+        void get_allowed_property_types(out PropertyTypes property_types);
+
+        void get_allowed_properties(out PropertyDefs property_defs);
+
+        void define_property_with_mode(in PropertyName property_name,
+                           in any property_value,
+                           in PropertyModeType property_mode)
+            raises(InvalidPropertyName,
+               ConflictingProperty,
+               UnsupportedTypeCode,
+               UnsupportedProperty,
+               UnsupportedMode,
+               ReadOnlyProperty);
+
+        void define_properties_with_modes(in PropertyDefs property_defs)
+            raises(MultipleExceptions);
+
+        PropertyModeType get_property_mode(in PropertyName property_name)
+            raises(PropertyNotFound, InvalidPropertyName);
+
+        boolean get_property_modes(in PropertyNames property_names,
+                       out PropertyModes property_modes);
+
+        void set_property_mode(in PropertyName property_name,
+                       in PropertyModeType property_mode)
+            raises(InvalidPropertyName, PropertyNotFound, UnsupportedMode);
+
+        void set_property_modes(in PropertyModes property_modes)
+            raises(MultipleExceptions);
+    };
+
+    interface PropertyNamesIterator
+    {
+        void reset();
+
+        boolean next_one(out PropertyName property_name);
+
+        boolean next_n(in unsigned long how_many,
+                   out PropertyNames property_names);
+
+        void destroy();
+    };
+
+    interface PropertiesIterator
+    {
+        void reset();
+
+        boolean next_one(out Property aproperty);
+
+        boolean next_n(in unsigned long how_many,
+                   out Properties nproperties);
+
+        void destroy();
+    };
+};
+
+
+#pragma prefix ""
+
+#endif
+
+

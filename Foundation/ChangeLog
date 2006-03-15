@@ -1,3 +1,365 @@
+PCR-0397 Mon Nov 28 15:21:00 2005  Marco Macellari <mmacellari@progesi.it>
+
+	* commonsvcs/federation/c++/incl/LocalTopicUpdateManager.hpp
+	* commonsvcs/federation/c++/incl/SimpleMiopUpdateProtocolHandler.hpp
+	* commonsvcs/federation/c++/incl/UpdateProtocolHandler.hpp
+	* commonsvcs/federation/c++/src/LocalTopicUpdateManager.cpp
+	* commonsvcs/federation/c++/src/SimpleMiopUpdateProtocolHandler.cpp
+	* commonsvcs/federation/idl/TopicUpdateManager.idl:
+	Removed problem related to set_rate with enforce_deadline.
+	
+
+ECR-0206 -- Fry Nov 22 20:10:00 2005  Fabrizio Morciano <fmorciano@selex-si.com>
+	* testutils/c++/incl/TestManager.hpp
+        * testutils/c++/src/TestManager.cpp:
+	Minor changes to fix problems in SMG and TMG.
+
+ECR-0206 -- Fry Nov 18 19:10:00 2005  Fabrizio Morciano <fmorciano@selex-si.com>
+
+	* ossupport/c++/incl/OS.hpp
+	* testutils/c++/incl/CORBATestManager.hpp
+	* testutils/c++/incl/TestManager.hpp
+	* testutils/c++/src/CORBATestManager.cpp
+	* testutils/c++/src/TestManager.cpp:
+	Minor changes to fix problems in SMG.
+
+ECR-0206 -- Thu Nov 17 19:10:00 2005  Fabrizio Morciano <fmorciano@selex-si.com>
+	
+	* testutils/c++/incl/CORBATestManager.hpp
+	* testutils/c++/incl/TestManager.hpp
+	* testutils/c++/src/CORBATestManager.cpp
+	* testutils/c++/src/TestManager.cpp:
+	
+	Implemented enhanced TestManager for cppunit integration.
+
+	* common/test/teststring/c++/data/CSCProperties.xml
+	* orbsupport/test/testcompilationvalue/c++/data/CSCProperties.xml
+	* osthreads/test/testosthreads/c++/data/CSCProperties.xml
+	* testutils/c++/data/CSCProperties.xml:
+	Updated properties files to use enhanced version of TestManager.
+
+PCR-0460 -- Thu Nov 17 19:00:00 2005  Fabrizio Morciano <fmorciano@selex-si.com>
+
+	* ossupport/c++/incl/OS.hpp
+	* ossupport/c++/src/OS.cpp
+	* ossupport/test/testsleep/c++/data/CSCProperties.xml
+	* ossupport/test/testsleep/c++/localincl/SleepTest.hpp
+	* ossupport/test/testsleep/c++/src/SleepTest.cpp
+	* ossupport/test/testsleep/c++/src/main.cpp:
+	Implemented a new sleep to reach nanoseconds and added test.
+
+
+PCR-0487 -- Thu Sep  8 12:00:00 2005  Fabrizio Morciano <fmorciano@selex-si.com>
+	* orbsupport/test/testcompilationvalue/c++/src/TestCompilationValue.cpp:
+	Changes for PCR-0487, patch integration (patch provided by SC2).
+
+ECR-0164 -- Wed Aug  3 14:00:00 2005  Fabrizio Morciano <fmorciano@selex-si.com>
+	* common/c++/src/Options.cpp:
+	* common/c++/incl/Options.hpp:
+	Changes for ECR-0164
+
+ECR-0136 -- Fri Jun 10 18:00:00 2005  Fabrizio Morciano <fmorciano@selex-si.com>
+
+	*  idllib/idl/CosProperty.idl
+
+	Files removed for merge in AMS_V2_IBB2 branch.
+
+	*  valid/codec/c++/data/CSCProperties.xml
+	*  valid/codec/c++/src/decoder.cpp
+	*  valid/codec/c++/src/encoder.cpp
+	*  valid/validationdata/data/V-FDS-004-1.xml
+	*  valid/validationdata/data/V-FDS-005-1.xml
+	*  valid/validationdata/data/V-FDS-005-2.xml
+	*  valid/validationdata/data/V-FDS-006-1.xml
+	*  valid/validationdata/data/V-FDS-007-1.xml
+	*  valid/validationdata/data/V-FDS-007-2.xml
+	*  valid/validationdata/data/V-FDS-008-1.xml
+	*  valid/validationdata/data/V-FDS-009-1.xml
+	*  valid/validationdata/data/V-FDS-009-2.xml
+	*  valid/validationdata/data/V-FDS-010-1.xml
+	*  valid/validationdata/data/V-FDS-010-2.xml
+	*  valid/validationdata/data/V-FDS-011-1.xml
+	*  valid/validationdata/data/V-FDS-011-2.xml
+	*  valid/validationdata/java/data/cdmw_orbsupport_test.sh
+	*  valid/validationdata/java/data/cdmw_ossupport_test.sh
+	*  idllib/idl/CdmwServiceLocator.idl
+	*  idllib/idl/CosPropertyService.idl
+	*  idllib/idl/FTPullMonitorable.idl
+	*  idllib/java/data/CSCProperties.xml
+	*  orbsupport/test/testcodec/c++/data/CSCProperties.xml
+	*  orbsupport/test/testcodec/c++/src/decoder.cpp
+	*  orbsupport/test/testcodec/c++/src/encoder.cpp
+	*  orbsupport/test/testcodec_lib/c++/data/CSCProperties.xml
+	*  orbsupport/test/testcodec_lib/c++/localincl/DataManager.hpp
+	*  orbsupport/test/testcodec_lib/c++/localincl/DataTransfer_impl.hpp
+	*  orbsupport/test/testcodec_lib/c++/localincl/DecoderInit.hpp
+	*  orbsupport/test/testcodec_lib/c++/localincl/TestEncoder.hpp
+	*  orbsupport/test/testcodec_lib/c++/src/DataManager.cpp
+	*  orbsupport/test/testcodec_lib/c++/src/DataTransfer_impl.cpp
+	*  orbsupport/test/testcodec_lib/c++/src/DecoderInit.cpp
+	*  orbsupport/test/testcodec_lib/c++/src/TestEncoder.cpp
+	*  orbsupport/test/testcodec_lib/idl/TestCodec.idl
+	*  orbsupport/test/testcompilationvalue/c++/data/CSCProperties.xml
+	*  orbsupport/test/testcompilationvalue/c++/localincl/TestCompilationValue.hpp
+	*  orbsupport/test/testcompilationvalue/c++/src/TestCompilationValue.cpp
+	*  orbsupport/test/testcompilationvalue/c++/src/main.cpp
+	*  ossupport/test/testossupport/c++/localincl/TestOSProcessDriver.hpp
+	*  ossupport/test/testossupport/c++/src/TestOSProcessDriver.cpp
+
+	Files added for merge in AMS_V2_IBB2 branch.
+
+
+	*  commonsvcs/datastore/c++/incl/StorageHome.hpp
+	*  commonsvcs/datastore/c++/incl/StorageObject.hpp
+	*  commonsvcs/federation/c++/incl/CommandBasedTopicUpdateHandler.hpp
+	*  commonsvcs/naming/c++/incl/NamingInterface.hpp
+	*  commonsvcs/naming/c++/localincl/NameParser.hpp
+	*  commonsvcs/naming/c++/src/NamingInterface.cpp
+	*  data/CSCIProperties.xml
+	*  idllib/c++/data/CSCProperties.xml
+	*  orbsupport/c++/incl/Codec.hpp
+	*  orbsupport/c++/incl/TypeTraits.hpp
+	*  ossupport/test/testossupport/c++/src/TestOSDriver.cpp
+	*  orbsupport/test/testorbsupport/c++/data/CSCProperties.xml
+	*  orbsupport/test/testorbsupport/c++/localincl/TestOrbSupportDriver.hpp
+	*  orbsupport/test/testorbsupport/c++/src/TestOrbSupportDriver.cpp
+	*  orbsupport/test/testorbsupport/c++/src/main.cpp
+	*  orbsupport/test/testorbsupport/idl/ORBSupportServer.idl
+	*  orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/MainTest.java
+	*  orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/ORBSupportServerImpl.java
+	*  orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/ORBSupportTest.java
+	*  orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/ServerProcess.java
+	*  ossupport/test/testossupport/c++/data/CSCProperties.xml
+	*  ossupport/test/testossupport/c++/localincl/TestOSDriver.hpp
+	*  ossupport/test/testossupport/c++/src/main.cpp
+	*  ossupport/test/testossupport/java/src/cdmw/ossupport/test/BarrierTest.java
+	*  ossupport/test/testossupport/java/src/cdmw/ossupport/test/MainTest.java
+	*  ossupport/test/testossupport/java/src/cdmw/ossupport/test/MutexTest.java
+	*  ossupport/test/testossupport/java/src/cdmw/ossupport/test/OSTest.java
+	*  ossupport/test/testossupport/java/src/cdmw/ossupport/test/ReadWriteLockTest.java
+	*  osthreads/test/testosthreads/c++/data/CSCProperties.xml
+	*  osthreads/test/testosthreads/c++/localincl/TestBarrierDriver.hpp
+	*  osthreads/test/testosthreads/c++/localincl/TestConditionDriver.hpp
+	*  osthreads/test/testosthreads/c++/localincl/TestMutexThreadDriver.hpp
+	*  osthreads/test/testosthreads/c++/localincl/TestReaderWriterLockDriver.hpp
+	*  osthreads/test/testosthreads/c++/localincl/TestThreadDriver.hpp
+	*  osthreads/test/testosthreads/c++/src/TestBarrierDriver.cpp
+	*  osthreads/test/testosthreads/c++/src/TestConditionDriver.cpp
+	*  osthreads/test/testosthreads/c++/src/TestMutexThreadDriver.cpp
+	*  osthreads/test/testosthreads/c++/src/TestReaderWriterLockDriver.cpp
+	*  osthreads/test/testosthreads/c++/src/TestThreadDriver.cpp
+	*  osthreads/test/testosthreads/c++/src/main.cpp
+
+	Files changed for merge in AMS_V2_IBB2 branch.
+
+
+MERGE SC2_6_5 and AMS_6_6 -- Fry Jun  10 16:30:00  2005  Fabrizio Morciano<fmorciano@selex-si.com>
+
+	* commonsvcs/datastore/c++/incl/StorageHome.hpp
+	* commonsvcs/datastore/c++/incl/StorageObject.hpp
+	* commonsvcs/naming/c++/incl/NamingInterface.hpp
+	* commonsvcs/naming/c++/localincl/NameParser.hpp
+	* commonsvcs/naming/c++/src/NamingInterface.cpp
+	Fixes after merge.	Wrong automatic cvs merge recover action.
+
+MERGE SC2_6_5 and AMS_6_6 -- Fry Jun  10 9:40:00  2005  Fabrizio Morciano<fmorciano@selex-si.com>
+
+	* data/CSCIProperties.xml
+	* idllib/c++/data/CSCProperties.xml
+	* idllib/idl/CdmwServiceLocator.idl
+	* idllib/idl/CosProperty.idl
+	* idllib/idl/CosPropertyService.idl
+	* idllib/idl/FTPullMonitorable.idl
+	* idllib/java/data/CSCProperties.xml
+	* orbsupport/c++/incl/TypeTraits.hpp
+	* orbsupport/test/testcodec/c++/data/CSCProperties.xml
+	* orbsupport/test/testcodec/c++/src/decoder.cpp
+	* orbsupport/test/testcodec/c++/src/encoder.cpp
+	* orbsupport/test/testcodec_lib/c++/data/CSCProperties.xml
+	* orbsupport/test/testcodec_lib/c++/localincl/DataManager.hpp
+	* orbsupport/test/testcodec_lib/c++/localincl/DataTransfer_impl.hpp
+	* orbsupport/test/testcodec_lib/c++/localincl/DecoderInit.hpp
+	* orbsupport/test/testcodec_lib/c++/localincl/TestEncoder.hpp
+	* orbsupport/test/testcodec_lib/c++/src/DataManager.cpp
+	* orbsupport/test/testcodec_lib/c++/src/DataTransfer_impl.cpp
+	* orbsupport/test/testcodec_lib/c++/src/DecoderInit.cpp
+	* orbsupport/test/testcodec_lib/c++/src/TestEncoder.cpp
+	* orbsupport/test/testcodec_lib/idl/TestCodec.idl
+	* orbsupport/test/testcompilationvalue/c++/data/CSCProperties.xml
+	* orbsupport/test/testcompilationvalue/c++/localincl/TestCompilationValue.hpp
+	* orbsupport/test/testcompilationvalue/c++/src/TestCompilationValue.cpp
+	* orbsupport/test/testcompilationvalue/c++/src/main.cpp
+	* orbsupport/test/testorbsupport/c++/data/CSCProperties.xml
+	* orbsupport/test/testorbsupport/c++/localincl/TestOrbSupportDriver.hpp
+	* orbsupport/test/testorbsupport/c++/src/TestOrbSupportDriver.cpp
+	* orbsupport/test/testorbsupport/c++/src/main.cpp
+	* orbsupport/test/testorbsupport/idl/ORBSupportServer.idl
+	* orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/MainTest.java
+	* orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/ORBSupportServerImpl.java
+	* orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/ORBSupportTest.java
+	* orbsupport/test/testorbsupport/java/src/cdmw/orbsupport/test/ServerProcess.java
+	* ossupport/test/testossupport/c++/data/CSCProperties.xml
+	* ossupport/test/testossupport/c++/localincl/TestOSDriver.hpp
+	* ossupport/test/testossupport/c++/localincl/TestOSProcessDriver.hpp
+	* ossupport/test/testossupport/c++/src/TestOSDriver.cpp
+	* ossupport/test/testossupport/c++/src/TestOSProcessDriver.cpp
+	* ossupport/test/testossupport/c++/src/main.cpp
+	* ossupport/test/testossupport/java/src/cdmw/ossupport/test/BarrierTest.java
+	* ossupport/test/testossupport/java/src/cdmw/ossupport/test/MainTest.java
+	* ossupport/test/testossupport/java/src/cdmw/ossupport/test/MutexTest.java
+	* ossupport/test/testossupport/java/src/cdmw/ossupport/test/OSTest.java
+	* ossupport/test/testossupport/java/src/cdmw/ossupport/test/ReadWriteLockTest.java
+	* osthreads/test/testosthreads/c++/data/CSCProperties.xml
+	* osthreads/test/testosthreads/c++/localincl/TestBarrierDriver.hpp
+	* osthreads/test/testosthreads/c++/localincl/TestConditionDriver.hpp
+	* osthreads/test/testosthreads/c++/localincl/TestMutexThreadDriver.hpp
+	* osthreads/test/testosthreads/c++/localincl/TestReaderWriterLockDriver.hpp
+	* osthreads/test/testosthreads/c++/localincl/TestThreadDriver.hpp
+	* osthreads/test/testosthreads/c++/src/TestBarrierDriver.cpp
+	* osthreads/test/testosthreads/c++/src/TestConditionDriver.cpp
+	* osthreads/test/testosthreads/c++/src/TestMutexThreadDriver.cpp
+	* osthreads/test/testosthreads/c++/src/TestReaderWriterLockDriver.cpp
+	* osthreads/test/testosthreads/c++/src/TestThreadDriver.cpp
+	* osthreads/test/testosthreads/c++/src/main.cpp
+	* valid/codec/c++/data/CSCProperties.xml
+	* valid/codec/c++/src/decoder.cpp
+	* valid/codec/c++/src/encoder.cpp
+	* valid/validationdata/data/V-FDS-004-1.xml
+	* valid/validationdata/data/V-FDS-005-1.xml
+	* valid/validationdata/data/V-FDS-005-2.xml
+	* valid/validationdata/data/V-FDS-006-1.xml
+	* valid/validationdata/data/V-FDS-007-1.xml
+	* valid/validationdata/data/V-FDS-007-2.xml
+	* valid/validationdata/data/V-FDS-008-1.xml
+	* valid/validationdata/data/V-FDS-009-1.xml
+	* valid/validationdata/data/V-FDS-009-2.xml
+	* valid/validationdata/data/V-FDS-010-1.xml
+	* valid/validationdata/data/V-FDS-010-2.xml
+	* valid/validationdata/data/V-FDS-011-1.xml
+	* valid/validationdata/data/V-FDS-011-2.xml
+	* valid/validationdata/java/data/cdmw_orbsupport_test.sh
+	* valid/validationdata/java/data/cdmw_ossupport_test.sh
+
+	  Merge with SC2 delivery.
+
+ECR-0116 -- Wed Jun  8 10:57:52 2005  Angelo Corsaro  <acorsaro@selex-si.com>
+
+	* commonsvcs/federation/c++/incl/CommandBasedTopicUpdateHandler.hpp: 
+	
+	  Added missing & to m_codec member variable, since the real intention
+	  of this class was to get the coded by reference.
+	  
+	* orbsupport/c++/incl/Codec.hpp:
+
+	  Added Ctor that allows to pass an ORB reference.
+
+	  The Codec mow always uses a private reference to the ORB which
+	  is either a duplicate of the class member pointer to the ORB or
+	  a duplicate of the ORB passed as reference in the added Ctor.
+
+	  Made copy ctor and assignment operator private. 
+	  
+
+Wed May 18 08:16:43 2005  Fabrizio Morciano  <fmorciano@amsjv.it>
+
+	* orbsupport/c++/incl/Codec.hpp: Fixed TAO version problem.
+
+Fry Apr 15 10:30:00 2005 Fabrizio Morciano <fmorciano@amsjv.it>
+	
+	* Merge:
+	Between AMS_V2_IBB1_DEV_SUPPORT and AMS_V2_IBB2_DEV_SUPPORT
+	in AMS_V2_IBB2_DEV_SUPPORT
+
+
+Thu Mar 24 20:30:30 2005  Angelo Corsaro  <acorsaro@amsjv.it>
+
+	* commonsvcs/federation/idl/TopicUpdateManager.idl: 
+	* commonsvcs/federation/c++/src/UpdateProtocolHandler.cpp: 
+	* commonsvcs/federation/c++/src/TopicUpdateHandler.cpp: 
+	* commonsvcs/federation/c++/src/TopicEncoder.cpp: 
+	* commonsvcs/federation/c++/src/SimpleMiopUpdateProtocolHandler.cpp: 
+	* commonsvcs/federation/c++/src/MiopTopicUpdateManager_impl.cpp: 
+	* commonsvcs/federation/c++/src/LocalTopicUpdateManager.cpp: 
+	* commonsvcs/federation/c++/incl/UpdateProtocolHandler.hpp: 
+	* commonsvcs/federation/c++/incl/TopicWriter.hpp: 
+	* commonsvcs/federation/c++/incl/TopicUpdateHandler.hpp: 
+	* commonsvcs/federation/c++/incl/TopicEncoder.hpp: 
+	* commonsvcs/federation/c++/incl/SimpleMiopUpdateProtocolHandler.hpp: 
+	* commonsvcs/federation/c++/incl/ParametricCommand.hpp: 
+	* commonsvcs/federation/c++/incl/MiopTopicUpdateManager_impl.hpp: 
+	* commonsvcs/federation/c++/incl/LocalTopicUpdateManager.hpp: 
+	* commonsvcs/federation/c++/incl/CommandBasedTopicUpdateHandler.hpp: 
+	* commonsvcs/federation/c++/data/CSCProperties.xml:
+
+	  These files were moved from commonsvcs.
+
+Thu Mar 24 20:26:12 2005  Angelo Corsaro  <acorsaro@amsjv.it>
+
+	* commonsvcs/c++/src/UpdateProtocolHandler.cpp: 
+	* commonsvcs/c++/src/TopicUpdateHandler.cpp: 
+	* commonsvcs/c++/src/TopicEncoder.cpp: 
+	* commonsvcs/c++/src/SimpleMiopUpdateProtocolHandler.cpp: 
+	* commonsvcs/c++/src/MiopTopicUpdateManager_impl.cpp: 
+	* commonsvcs/c++/src/LocalTopicUpdateManager.cpp: 
+	* commonsvcs/c++/incl/UpdateProtocolHandler.hpp: 
+	* commonsvcs/c++/incl/TopicWriter.hpp: 
+	* commonsvcs/c++/incl/TopicUpdateHandler.hpp: 
+	* commonsvcs/c++/incl/TopicEncoder.hpp: 
+	* commonsvcs/c++/incl/SimpleMiopUpdateProtocolHandler.hpp: 
+	* commonsvcs/c++/incl/ParametricCommand.hpp: 
+	* commonsvcs/c++/incl/MiopTopicUpdateManager_impl.hpp: 
+	* commonsvcs/c++/incl/LocalTopicUpdateManager.hpp: 
+	* commonsvcs/c++/incl/CommandBasedTopicUpdateHandler.hpp: 
+	* commonsvcs/idl/TopicUpdateManager.idl:
+
+	  Removed.
+
+Thu Mar 24 17:55:46 2005  Angelo Corsaro  <acorsaro@amsjv.it>
+
+	* common/c++/incl/Config.hpp: Added CARDAMOM configuration file.
+	  Currently this file contains only contains macros used to
+	  support both the inclusion and the export template model.
+
+Thu Mar 24 15:08:03 2005  Angelo Corsaro  <acorsaro@amsjv.it>
+
+	* orbsupport/c++/incl/CodecImpl.hpp: This file incldues part of
+	  the implementation of the Codec class. Eventually all the
+	  implementation should be moved here, even if we use the
+	  inclusion model for templates.
+
+	* orbsupport/c++/src/Codec.cpp: 
+	* orbsupport/c++/incl/Codec.hpp:
+	  Added workaround for making code compile and link fine with GCC
+	  versions >= 3.2.3. The issue is caused by the buggy support that
+	  GCC 3.2.3 provides for full template specialization.
+
+	  
+Mon Mar 21 19:21:57 2005  Angelo Corsaro  <acorsaro@amsjv.it>
+
+	* common/c++/incl/Void.hpp: Class useful for representing void
+	  types in template meta-programming.
+
+	* osthreads/c++/incl/Guard.hpp: 
+	* osthreads/c++/src/Guard.cpp:
+
+	  Added generic Guard class.
+
+	* osthreads/c++/incl/MutexGuard.hpp: Removed useless virtual in dtor.
+
+Fri Mar 18 16:59:12 2005  Angelo Corsaro  <acorsaro@amsjv.it>
+
+	* commonsvcs/c++/src/LocalTopicUpdateManager.cpp:
+
+	  Added missing #include <assert.h>.
+
+	* orbsupport/c++/incl/Codec.hpp: 
+	* orbsupport/c++/src/Codec.cpp:
+
+	  Moved implementation of fully specialized templates from .hpp to
+	  cpp. This closes the PCR-0281 (which I raised and fixed myself
+	  :-).
+
+
 Mon Feb  7 11:55:20 2005  Angelo Corsaro  <corsaro@cse.wustl.edu>
 
 	* orbsupport/c++/src/OrbTaoImpl.cpp: Replaced locking strategy for
