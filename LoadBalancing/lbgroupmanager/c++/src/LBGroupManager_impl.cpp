@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief A Group Manager implementation
@@ -24,18 +28,15 @@
  */
 
 #include "lbgroupmanager/LBGroupManager_impl.hpp"
-#include "lbgroupmanager/LBUtils.hpp"
 
 #include <Foundation/osthreads/MutexGuard.hpp>
 #include <Foundation/orbsupport/OrbSupport.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
-
 #include <iostream>
 #include "Foundation/common/Exception.hpp"
-
-#include "LoadBalancing/idllib/PortableGroup.stub.hpp"
-
+#include <LoadBalancing/lbcommon/StateTransferConfig.hpp>
+#include <LoadBalancing/lbcommon/LBConfiguration.hpp>
 #include <sstream>
 
 #if CDMW_ORB_VDR == tao
@@ -46,11 +47,6 @@
 #endif
 #define ECHO_HEADER() \
     "[CDMW LB Group Manager] (file: " << __FILE__ << ", line: " << __LINE__ << ")\n -->"
-
-#define ECHO_ERROR(comment) \
-do {\
-    std::cerr << ECHO_HEADER() << " --> " << comment << std::endl;\
-} while(0)
 
 
 #ifndef ENABLE_LB_DEBUG_DUMP
@@ -71,6 +67,8 @@ do {\
 } while(0)
 
 #endif
+
+
 
 /**
  *
@@ -108,6 +106,14 @@ Compare_Locations(const ::PortableGroup::Location& l1, const ::PortableGroup::Lo
     return true;
 }
 
+bool OGDTrueFunction(const std::pair< Cdmw::OrbSupport::type_traits< ::PortableGroup::ObjectGroupId >::_var_type, 
+                     Cdmw::OrbSupport::type_traits< ::CdmwLB::ObjectGroupData >::_var_type >)
+{
+    return true;
+}
+
+static size_t send_repetition = 2;
+static const int TOPIC_ID = 1003;
 
 namespace Cdmw
 {
@@ -120,18 +126,26 @@ namespace LB
      *
      * @param lb_domain_id The load balancing domain id.
      */
-    LBGroupManager_impl::LBGroupManager_impl(CORBA::ORB_ptr orb,
-                                             PortableServer::POA_ptr poa,
-                                             const PortableGroup::GroupDomainId lb_domain_id,
-                                             std::ostream & os)
+      LBGroupManager_impl::LBGroupManager_impl(CORBA::ORB_ptr orb,
+                                               PortableServer::POA_ptr poa,
+                                               const char* lb_domain_id)
         throw(CORBA::SystemException)
-        : m_object_group_id(0L),
-          m_orb(CORBA::ORB::_duplicate(orb)),
+	: m_miop_corbaloc(Cdmw::LB::LBConfiguration::miop_corbaloc),
+	  m_orb(CORBA::ORB::_duplicate(orb)),
+          m_parent_poa(PortableServer::POA::_duplicate(poa)),
+          m_object_group_id(0L),
           m_lb_domain_id(lb_domain_id),
-          m_ostream(os)
-        
-    {
-	PortableServer::POAManager_var poa_mgr = poa->the_POAManager();
+          m_group_cache(orb, m_codec),
+          m_protocol_handler(orb,
+                             poa,
+                             m_miop_corbaloc,
+                             send_repetition),
+          m_set_command(m_group_cache),
+          m_remove_command(m_group_cache),
+          m_topic_update_handler(m_codec) 
+      {
+      
+        PortableServer::POAManager_var poa_mgr = poa->the_POAManager();
 
         CORBA::PolicyList policies;
         policies.length(6);
@@ -143,28 +157,47 @@ namespace LB
             poa->create_servant_retention_policy(PortableServer::NON_RETAIN);
         policies[3] =
             poa->create_id_uniqueness_policy(PortableServer::MULTIPLE_ID);
-	policies[4] = 
-	    poa->create_request_processing_policy(PortableServer::USE_DEFAULT_SERVANT);
-	policies[5] = 
-	    poa->create_implicit_activation_policy(PortableServer::NO_IMPLICIT_ACTIVATION);
-	
+        policies[4] = 
+            poa->create_request_processing_policy(PortableServer::USE_DEFAULT_SERVANT);
+        policies[5] = 
+            poa->create_implicit_activation_policy(PortableServer::NO_IMPLICIT_ACTIVATION);
+        
 
         m_poa = poa->create_POA("ReplicationManagerPOA", poa_mgr.in(), policies);
 
-      
+	// create Fallback default servant
+        m_defaultServant = new Cdmw::LB::GroupManager::Fallback_impl(m_orb.in(), m_poa.in());
+
+	
+	// set default servant
+	m_poa->set_servant(m_defaultServant);
+
 	m_iogr_factory = new TAO_LB_IOGRFactory(std::cout, m_orb.in());
+        
+        m_objectgroupDataStorageHome =
+            new Cdmw::LB::ObjectGroupDataStorageHome(OBJECT_GROUP_DATA_IDENTIFIER);
+        ::Cdmw::CommonSvcs::LocalTopicUpdateManager::init(&m_protocol_handler);
+        
+        m_topic_update_handler.register_command(::CdmwLB::SET,
+                                                &m_set_command);
+
+        m_topic_update_handler.register_command(::CdmwLB::REMOVE,
+                                                &m_remove_command);
+
+        
+        ::Cdmw::CommonSvcs::LocalTopicUpdateManager::instance().set_topic_handler(TOPIC_ID,
+                                                                                  &m_topic_update_handler);
+
     }
-    
+  
     /**
      * Destroys a group manager.
      */
     
     LBGroupManager_impl::~LBGroupManager_impl()
     {
-        for (m_group_pos=m_group_map.begin(); m_group_pos!=m_group_map.end();++m_group_pos)
-        {
-            delete m_group_pos->second;
-        }
+      delete m_objectgroupDataStorageHome;
+      delete m_defaultServant;
     }
     
     /**
@@ -219,12 +252,12 @@ namespace LB
          
          CORBA::Object_var object_group = CORBA::Object::_nil();
          // Create an ObjectGroupData object
-         CdmwLB::ObjectGroupData * group_data = new CdmwLB::ObjectGroupData();
+         CdmwLB::ObjectGroupData_var group_data = new CdmwLB::ObjectGroupData();
          CORBA::ULong object_group_ref_version = 0L;
          CdmwLB::MemberInfos no_members;
          no_members.length(0 );
          ++m_object_group_id;
-	 PortableGroup::ObjectGroupRefVersion group_version = object_group_ref_version + 1;
+         PortableGroup::ObjectGroupRefVersion group_version = object_group_ref_version + 1;
          
          std::ostringstream oss;
 
@@ -240,8 +273,6 @@ namespace LB
          CdmwLB::Objects_var fallBack = new CdmwLB::Objects;
          fallBack->length(1);
          fallBack[0L] = CORBA::Object::_duplicate(group_manager_ref.in());
-
-
 
          // Look for a criterion named LBProperties and if it is found
          // then extract load balancing policy
@@ -296,11 +327,15 @@ namespace LB
          group_data->object_group_ref = CORBA::Object::_duplicate(object_group.in());
          group_data->object_group_ref_version = object_group_ref_version;
          group_data->lb_policy = lb_policy.c_str();
-         m_group_map.insert(std::make_pair(m_object_group_id, group_data));
          
+         // Copy the ObjectGroupData local instance
+         m_objectgroupDataStorageHome->create(m_object_group_id, group_data.in());
+         m_group_cache.set(m_object_group_id, object_group_ref_version, CORBA::Object::_duplicate(object_group.in()));
+
          CORBA::Any factory_id;
          factory_id <<= m_object_group_id;
          factory_creation_id = new CORBA::Any(factory_id);
+         
          return object_group._retn();
          
      }
@@ -335,17 +370,19 @@ namespace LB
 
          if (factory_creation_id >>= object_group_id)
          {
-             m_group_pos = m_group_map.find(object_group_id);
-             if(m_group_pos!=m_group_map.end())
-                 m_group_map.erase(m_group_pos);
-             else
+             try
              {
-                DEBUG_DUMP("");
-                DEBUG_ECHO("delete_object(factory_creation_id=" << object_group_id << ")': \n");
-                DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
+                 // cleanup the ObjectGroupData data store
+                 m_objectgroupDataStorageHome->remove(object_group_id);
+                 m_group_cache.remove(object_group_id);
+             } catch(const Cdmw::Common::NotFoundException&)
+             {
+                 DEBUG_DUMP("");
+                 DEBUG_ECHO("delete_object(factory_creation_id=" << object_group_id << ")': \n");
+                 DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
                  throw PortableGroup::ObjectNotFound();
              }
-         }
+	 }
      }
     
     /**
@@ -387,37 +424,33 @@ namespace LB
                 CORBA::SystemException)
      {
          CDMW_MUTEX_GUARD (m_mutex);
-         PortableGroup::ObjectGroup_var new_object_group = PortableGroup::ObjectGroup::_nil();
-         CdmwLB::ObjectGroupData * group_data = 0;
-         PortableGroup::ObjectGroupId object_group_id = get_object_group_id( object_group );
-         m_group_pos = m_group_map.find(object_group_id);
-
-         const std::string s_the_location =
-             Cdmw::NamingAndRepository::NamingInterface::to_string(the_location);
-
-         if(m_group_pos!=m_group_map.end())
-             group_data = m_group_pos->second;
-         else
-         {
-           DEBUG_DUMP("");
-           DEBUG_ECHO("add_member(" << s_the_location << ")': Object group Not Found.\n");
-           DEBUG_ECHO("Raising ObjectGroupNotFound() exception.\n");
-             throw PortableGroup::ObjectGroupNotFound();
+	 PortableGroup::ObjectGroup_var new_object_group = PortableGroup::ObjectGroup::_nil();
+         PortableGroup::ObjectGroupRefVersion group_version;
+         CdmwLB::ObjectGroupData_var group_data;
+	 PortableGroup::ObjectGroupId object_group_id;
+         try{
+             object_group_id = get_object_group_id( object_group );
+	     Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+             group_data = objStorageObject.get();
+         }catch (const PortableGroup::ObjectGroupNotFound& ) {
+             DEBUG_DUMP("");
+             DEBUG_ECHO("add_member(" << s_the_location << ")': Object group Not Found.\n");
+             DEBUG_ECHO("Raising ObjectGroupNotFound() exception.\n");
+             throw; 
          }
-         
-         CdmwLB::ObjectGroupData group_data_tmp(*group_data);
+         const std::string s_the_location =
+             Cdmw::CommonSvcs::Naming::NamingInterface::to_string(the_location);
          
          // type id
-         std::string rep_id = std::string(group_data_tmp.repository_id);
+         std::string rep_id = std::string(group_data->repository_id);
          
-         CORBA::ULong locations_length = group_data_tmp.members.length();
+         CORBA::ULong locations_length = group_data->members.length();
          
          for (CORBA::ULong i = 0;i <locations_length;++i)
          {
              std::string s_member_loc =
-                 Cdmw::NamingAndRepository::NamingInterface::to_string
-                 (group_data_tmp.members[i].the_location);
-         
+                 Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                 (group_data->members[i].the_location);
              if (s_member_loc == s_the_location)
              {
                 DEBUG_DUMP("");
@@ -436,33 +469,33 @@ namespace LB
              throw PortableGroup::ObjectNotAdded();
          }
          //Add the member
-         group_data_tmp.members.length(locations_length + 1);
+         group_data->members.length(locations_length + 1);
          CdmwLB::MemberInfo member_info;
          member_info.the_reference = CORBA::Object::_duplicate(replica);
          member_info.the_location = the_location;
-         group_data_tmp.members[locations_length] = member_info;
+         group_data->members[locations_length] = member_info;
          try
          {
              // Build an oid using the pattern : group_id/group_ver.
-             PortableGroup::ObjectGroupRefVersion group_version = group_data_tmp.object_group_ref_version + 1;
+             group_version = group_data->object_group_ref_version + 1;
              std::ostringstream oss;
              oss << object_group_id << "/" << group_version;
              PortableServer::ObjectId_var oid =
                  PortableServer::string_to_ObjectId(oss.str().c_str());
              
              CORBA::Object_var group_manager_ref =
-                 m_poa->create_reference_with_id(oid.in(),std::string(group_data_tmp.repository_id).c_str());
+                 m_poa->create_reference_with_id(oid.in(),std::string(group_data->repository_id).c_str());
              
              CdmwLB::Objects_var fallBack = new ::CdmwLB::Objects;
              fallBack->length(1);
              fallBack[0L] = CORBA::Object::_duplicate(group_manager_ref.in());
              
-             new_object_group = m_iogr_factory->build_iogr(group_data_tmp.members,
+             new_object_group = m_iogr_factory->build_iogr(group_data->members,
                                                            object_group_id,
-                                                           std::string(group_data_tmp.repository_id).c_str(),
+                                                           std::string(group_data->repository_id).c_str(),
                                                            m_lb_domain_id.in(),
-                                                           group_data_tmp.lb_policy,
-                                                           group_data_tmp.object_group_ref_version,
+                                                           group_data->lb_policy,
+                                                           group_data->object_group_ref_version,
                                                            fallBack.in());
          } catch (const PortableGroup::ObjectNotCreated & )
          {
@@ -471,8 +504,12 @@ namespace LB
              DEBUG_ECHO("Raising ObjectNotAdded() exception.\n");
              throw PortableGroup::ObjectNotAdded();
          }
-         group_data_tmp.object_group_ref = new_object_group;
-         *group_data = group_data_tmp;
+         group_data->object_group_ref = new_object_group;
+         
+	 Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+	 objStorageObject.set(group_data.in());
+        
+         m_group_cache.set(object_group_id, group_version, CORBA::Object::_duplicate(new_object_group.in()));
          return new_object_group._retn();
      }
 
@@ -508,41 +545,78 @@ namespace LB
          CDMW_MUTEX_GUARD (m_mutex);
          // Get object group's known data
          // May raise ObjectGroupNotFound.
-         PortableGroup::ObjectGroupId object_group_id = get_object_group_id( object_group );
-         CdmwLB::ObjectGroupData * group_data = 0;
-
-         using namespace Cdmw::NamingAndRepository;
-         
+         PortableGroup::ObjectGroupId object_group_id;
+         using namespace Cdmw::CommonSvcs::Naming;
+         CdmwLB::ObjectGroupData_var group_data;
          const std::string s_loc = NamingInterface::to_string(the_location);
-         
-         m_group_pos = m_group_map.find(object_group_id);
-         if(m_group_pos!=m_group_map.end())
-             group_data = m_group_pos->second;
-         else
-         {
+         try{
+	     object_group_id = get_object_group_id( object_group );
+	     Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+             group_data = objStorageObject.get();
+         }catch(const PortableGroup::ObjectGroupNotFound&) 
+         { 
              DEBUG_DUMP("");
              DEBUG_ECHO("remove_member(" << s_loc << ")': \n");
              DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
-             throw PortableGroup::ObjectGroupNotFound();
+             throw;
          }
-         CdmwLB::ObjectGroupData group_data_tmp(*group_data);
-         //Remove the member from group_data
-         // May raise PortableGroup::MemberNotFound
-         try
-         {
-             remove_member(object_group_id,
-                           group_data_tmp,
-                           the_location);
-         }catch(const ::PortableGroup::MemberNotFound &)
-         {
-            DEBUG_DUMP("");
-            DEBUG_ECHO("remove_member(" << s_loc << ")': \n");
-            DEBUG_ECHO("Raising MemberNotFound() exception.\n");
-             throw ;
-         }
-         
-         PortableGroup::ObjectGroup_var new_object_group = PortableGroup::ObjectGroup::_duplicate(group_data_tmp.object_group_ref.in());
-         *group_data = group_data_tmp;   
+        
+        // I) Is there a member on that location?
+        const CORBA::ULong members_length = group_data->members.length();
+        CdmwLB::MemberInfos new_members;
+        CORBA::ULong idx = 0L;
+        bool location_found=false;
+        CORBA::ULong l1_len = the_location.length();
+        if (l1_len == 0)
+            throw PortableGroup::MemberNotFound();
+            
+        for (CORBA::ULong i = 0L;i <members_length;++i)
+        {
+        
+            ::PortableGroup::Location member_location = group_data->members[i].the_location;
+            if (Compare_Locations(the_location, member_location, l1_len))
+            {
+                location_found=true;
+            } else
+            {
+
+                new_members.length(idx + 1);
+                new_members[idx++] = group_data->members[i];
+            }
+        }
+        if (!location_found) 
+            throw PortableGroup::MemberNotFound();
+
+            //Build a new IOGR
+            // may throw PortableGroup::ObjectNotCreated
+            // Build an oid using the pattern : group_id/group_ver.
+            PortableGroup::ObjectGroupRefVersion group_version = group_data->object_group_ref_version + 1;
+            std::ostringstream oss;
+            oss << object_group_id << "/" << group_version;
+            PortableServer::ObjectId_var oid =
+                PortableServer::string_to_ObjectId(oss.str().c_str());
+
+            CORBA::Object_var group_manager_ref =
+                m_poa->create_reference_with_id(oid.in(),std::string(group_data->repository_id).c_str());
+            CdmwLB::Objects_var fallBack = new CdmwLB::Objects;
+            fallBack->length(1);
+            fallBack[0L] = CORBA::Object::_duplicate(group_manager_ref.in());
+
+            group_data->members = new_members;
+            group_data->object_group_ref =
+                m_iogr_factory->build_iogr(group_data->members,
+                                           object_group_id,
+                                           std::string(group_data->repository_id).c_str(),
+                                           m_lb_domain_id.in(),
+                                           group_data->lb_policy,
+                                           group_data->object_group_ref_version,
+                                           fallBack.in());        
+        
+         PortableGroup::ObjectGroup_var new_object_group = PortableGroup::ObjectGroup::_duplicate(group_data->object_group_ref.in());
+	 Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+	 // Save the new ObjectGroupData in the datastore
+         objStorageObject.set(group_data.in());
+	 m_group_cache.set(object_group_id, group_version, CORBA::Object::_duplicate(new_object_group.in()));
          return new_object_group._retn();
      }
 
@@ -599,14 +673,9 @@ namespace LB
                PortableGroup::CannotMeetCriteria,
                CORBA::SystemException)
      {
-         CDMW_MUTEX_GUARD (m_mutex);
-
          // NOTE: factories are not supported yet.
          throw CORBA::NO_IMPLEMENT(
-             ::Cdmw::OrbSupport::NO_IMPLEMENTNotYetImplemented,
-             CORBA::COMPLETED_NO);
-
-         return PortableGroup::ObjectGroup::_nil();
+             ::Cdmw::OrbSupport::NO_IMPLEMENTNotYetImplemented, CORBA::COMPLETED_NO);
      }
 
 
@@ -647,16 +716,15 @@ namespace LB
          {
             DEBUG_DUMP("");
             DEBUG_ECHO("locations_of_members(object_group_id=" << object_group_id << ")': \n");
-            DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
+            DEBUG_ECHO("Raising ObjectGroupNotFound() exception.\n");
              throw ;
          }
              
-         CdmwLB::ObjectGroupData * group_data = 0;
+         CdmwLB::ObjectGroupData_var group_data;
               
-         m_group_pos = m_group_map.find(object_group_id);
-         if(m_group_pos!=m_group_map.end())
-             group_data = m_group_pos->second;
-         
+	 Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+	 group_data = objStorageObject.get();
+	 
          // Get the location of each member and return the list of locations.
          const CORBA::ULong members_length = group_data->members.length();
          PortableGroup::Locations_var locations = new PortableGroup::Locations(members_length);
@@ -692,19 +760,15 @@ namespace LB
          try
          {
              lb_group_tag = m_iogr_factory->decode_profile_with_group_tag(CORBA::Object::_duplicate(object_group), 0);
-         }catch(const CdmwLB::ProfileNotFound&)
-         {
-             throw CORBA::INV_OBJREF(OrbSupport::INV_OBJREF, CORBA::COMPLETED_NO);
-         }
-         catch(const CdmwLB::TagNotFound&)
+         }catch(const CdmwLB::TagNotFound&)
          {
              throw CORBA::INV_OBJREF(OrbSupport::INV_OBJREF, CORBA::COMPLETED_NO);
          }
          PortableGroup::ObjectGroupId object_group_id = lb_group_tag->object_group_id;
 
-         m_group_pos = m_group_map.find(object_group_id);
-
-         if(m_group_pos==m_group_map.end())
+         try{
+             Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+         }catch(const Cdmw::Common::NotFoundException&) 
          {
              throw PortableGroup::ObjectGroupNotFound();
          }
@@ -749,18 +813,9 @@ namespace LB
              DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
              throw PortableGroup::ObjectGroupNotFound();
          }
-         CdmwLB::ObjectGroupData* group_data = 0;
-        
-         m_group_pos = m_group_map.find(object_group_id);
-         if(m_group_pos!=m_group_map.end())
-             group_data = m_group_pos->second;
-         else
-         {
-             DEBUG_DUMP("");
-             DEBUG_ECHO("get_object_group_ref(object_group_id=" << object_group_id << ")': \n");
-             DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
-             throw PortableGroup::ObjectGroupNotFound();
-         }
+         CdmwLB::ObjectGroupData_var group_data;
+	 Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+	 group_data = objStorageObject.get();
          
          PortableGroup::ObjectGroup_var obj = group_data->object_group_ref;
          return obj._retn();
@@ -794,7 +849,7 @@ namespace LB
          // Get object group's known data
          // May raise ObjectGroupNotFound.
          // Is the object group known?
-         using namespace Cdmw::NamingAndRepository;
+         using namespace Cdmw::CommonSvcs::Naming;
          PortableGroup::ObjectGroupId object_group_id;
          const std::string s_loc = NamingInterface::to_string(loc);
 
@@ -808,20 +863,10 @@ namespace LB
              DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
              throw PortableGroup::ObjectGroupNotFound();
          }
-         CdmwLB::ObjectGroupData* group_data = 0;
-         
-         m_group_pos = m_group_map.find(object_group_id);
-         if(m_group_pos!=m_group_map.end())
-             group_data = m_group_pos->second;
-         else
-         {
-             DEBUG_DUMP("");
-             DEBUG_ECHO("get_member_ref(" << s_loc << ")': \n");
-             DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
-             throw PortableGroup::ObjectGroupNotFound();
-             
-         }
-         // Find the member at the given location.
+         CdmwLB::ObjectGroupData_var group_data;
+	 Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+	 group_data = objStorageObject.get();
+	 // Find the member at the given location.
          CORBA::Object_var member = CORBA::Object::_nil();
          CORBA::ULong i = 0;
          const CORBA::ULong members_length = group_data->members.length();
@@ -860,7 +905,7 @@ namespace LB
  *         given object group id.
  */
     PortableGroup::ObjectGroup_ptr
-    LBGroupManager_impl::get_object_group_ref_from_gid(
+    LBGroupManager_impl::get_object_group_ref_from_id(
         PortableGroup::ObjectGroupId  object_group_id)
         throw(PortableGroup::ObjectGroupNotFound,
               CORBA::SystemException)
@@ -870,22 +915,23 @@ namespace LB
          // Get object group's known data
          // May raise ObjectGroupNotFound.
          // Is the object group known?
-        CdmwLB::ObjectGroupData* group_data = 0;
-        
-        m_group_pos = m_group_map.find(object_group_id);
-        if(m_group_pos!=m_group_map.end())
-            group_data = m_group_pos->second;
-        else
-        {
+        CdmwLB::ObjectGroupData_var group_data;
+         try{
+             Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+             group_data = objStorageObject.get();
+         }catch(const Cdmw::Common::NotFoundException&)
+         {
             DEBUG_DUMP("");
-            DEBUG_ECHO("get_object_group_ref_from_gid(object_group_id=" << object_group_id << ")': \n");
+            DEBUG_ECHO("get_object_group_ref_from_id(object_group_id=" << object_group_id << ")': \n");
             DEBUG_ECHO("Raising ObjectNotFound() exception.\n");
             throw PortableGroup::ObjectGroupNotFound();
             
         }
         PortableGroup::ObjectGroup_var obj = group_data->object_group_ref;
+
         return obj._retn();       
     }
+    
     
     PortableGroup::ObjectGroups* LBGroupManager_impl::groups_at_location (const PortableGroup::Location& the_location)
         throw (CORBA::SystemException)
@@ -913,22 +959,23 @@ namespace LB
                   CORBA::SystemException)
         {
             CDMW_MUTEX_GUARD (m_mutex);
-            CdmwLB::ObjectGroupData * group_data = 0;
-            PortableGroup::ObjectGroupId object_group_id = get_object_group_id( object_group );
-            m_group_pos = m_group_map.find(object_group_id);
-            if(m_group_pos!=m_group_map.end())
-                group_data = m_group_pos->second;
-            else
-            {
-                DEBUG_DUMP("");
-                DEBUG_ECHO("get_object_group_version_from_ref(" << object_group_id << ")': Object group Not Found.\n");
-                DEBUG_ECHO("Raising ObjectGroupNotFound() exception.\n");
-                throw PortableGroup::ObjectGroupNotFound();
-            }
-            PortableGroup::ObjectGroupRefVersion group_version = group_data->object_group_ref_version;
-            return group_version;
+            CdmwLB::ObjectGroupData_var group_data;
+            PortableGroup::ObjectGroupId object_group_id;
+	    try{
+		object_group_id = get_object_group_id( object_group );
+	    }catch(const PortableGroup::ObjectGroupNotFound&)
+	    {
+		DEBUG_DUMP("");
+		DEBUG_ECHO("get_object_group_version_from_ref(" << object_group_id << ")': Object group Not Found.\n");
+		DEBUG_ECHO("Raising ObjectGroupNotFound() exception.\n");
+		throw PortableGroup::ObjectGroupNotFound();
+	    }
+	    Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+	    group_data = objStorageObject.get();
             
-        }
+	    PortableGroup::ObjectGroupRefVersion group_version = group_data->object_group_ref_version;
+	    return group_version;
+	}
 
         /**
          * IDL:CdmwLB/
@@ -949,19 +996,19 @@ namespace LB
                   CORBA::SystemException)
         {
             CDMW_MUTEX_GUARD (m_mutex);
-            CdmwLB::ObjectGroupData * group_data = 0;
-            m_group_pos = m_group_map.find(object_group_id);
-            if(m_group_pos!=m_group_map.end())
-                group_data = m_group_pos->second;
-            else
-            {
-                DEBUG_DUMP("");
-                DEBUG_ECHO("get_object_group_version_from_gid(" << object_group_id << ")': Object group Not Found.\n");
-                DEBUG_ECHO("Raising ObjectGroupNotFound() exception.\n");
-                throw PortableGroup::ObjectGroupNotFound();
-            }
-            PortableGroup::ObjectGroupRefVersion group_version = group_data->object_group_ref_version;
-            return group_version;
+            CdmwLB::ObjectGroupData_var group_data;
+             try{
+             Cdmw::LB::ObjectGroupDataStorageObject objStorageObject = m_objectgroupDataStorageHome->find_by_oid(object_group_id);
+             group_data = objStorageObject.get();
+             }catch(const Cdmw::Common::NotFoundException&)
+             {
+                 DEBUG_DUMP("");
+                 DEBUG_ECHO("get_object_group_version_from_gid(" << object_group_id << ")': Object group Not Found.\n");
+                 DEBUG_ECHO("Raising ObjectGroupNotFound() exception.\n");
+                 throw PortableGroup::ObjectGroupNotFound();
+             }
+             PortableGroup::ObjectGroupRefVersion group_version = group_data->object_group_ref_version;
+             return group_version;
 
         }
 
@@ -991,58 +1038,7 @@ namespace LB
         throw(PortableGroup::MemberNotFound,
               CORBA::SystemException)
     {
-        // Working on a copy to insure some exception safety!
-        // I) Is there a member on that location?
-        const CORBA::ULong members_length = group_data_tmp.members.length();
-        CdmwLB::MemberInfos new_members;
-        CORBA::ULong idx = 0L;
-        bool location_found=false;
-        CORBA::ULong l1_len = the_location.length();
-        if (l1_len == 0)
-            throw PortableGroup::MemberNotFound();
-            
-        for (CORBA::ULong i = 0L;i <members_length;++i)
-        {
-        
-            ::PortableGroup::Location member_location = group_data_tmp.members[i].the_location;
-            if (Compare_Locations(the_location, member_location, l1_len))
-            {
-                location_found=true;
-            } else
-            {
 
-                new_members.length(idx + 1);
-                new_members[idx++] = group_data_tmp.members[i];
-            }
-        }
-        if (!location_found) 
-            throw PortableGroup::MemberNotFound();
-
-            //Build a new IOGR
-            // may throw PortableGroup::ObjectNotCreated
-            // Build an oid using the pattern : group_id/group_ver.
-            PortableGroup::ObjectGroupRefVersion group_version = group_data_tmp.object_group_ref_version + 1;
-            std::ostringstream oss;
-            oss << object_group_id << "/" << group_version;
-            PortableServer::ObjectId_var oid =
-                PortableServer::string_to_ObjectId(oss.str().c_str());
-
-            CORBA::Object_var group_manager_ref =
-                m_poa->create_reference_with_id(oid.in(),std::string(group_data_tmp.repository_id).c_str());
-            CdmwLB::Objects_var fallBack = new CdmwLB::Objects;
-            fallBack->length(1);
-            fallBack[0L] = CORBA::Object::_duplicate(group_manager_ref.in());
-
-            group_data_tmp.members = new_members;
-            group_data_tmp.object_group_ref =
-                m_iogr_factory->build_iogr(group_data_tmp.members,
-                                           object_group_id,
-                                           std::string(group_data_tmp.repository_id).c_str(),
-                                           m_lb_domain_id.in(),
-                                           group_data_tmp.lb_policy,
-                                           group_data_tmp.object_group_ref_version,
-                                           fallBack.in());
-            
     }   
 
     void
@@ -1063,7 +1059,7 @@ namespace LB
                 = CdmwPlatformMngt::HostStatusChange::_downcast(
                     an_event );
             
-            if( event->host_status() == CdmwPlatformMngt::HOST_NOT_RESPONDING )
+            if( event->host_status() == CdmwPlatformMngt::HOST_UNREACHABLE )
             {
                 location.length( 1 );
                 location[0].kind = CORBA::string_dup( "hostname" );
@@ -1074,24 +1070,6 @@ namespace LB
             }
             else
                 return;
-        }
-        break;
-        
-        case CdmwPlatformMngt::APPLICATION_AGENT_DEATH :
-        {
-            CdmwPlatformMngt::ApplicationAgentDeath* event
-                = CdmwPlatformMngt::ApplicationAgentDeath::_downcast(
-                    an_event );
-            location.length( 2 );
-            location[0].kind = CORBA::string_dup( "hostname" );
-            location[0].id = CORBA::string_dup( event->host_name() );
-            location[1].kind = CORBA::string_dup( "applicationname" );
-            location[1].id = CORBA::string_dup(  event->application_name() );
-
-            const std::string applicationname(location[1].id);
-            const std::string hostname(location[0].id);
-                
-            handle_application_failure(hostname,applicationname, location);
         }
         break;
         
@@ -1114,7 +1092,7 @@ namespace LB
             {
                 location.length( 3 );
                 location[0].kind = CORBA::string_dup( "hostname" );
-                location[0].id = CORBA::string_dup( event->host_name() );
+                location[0].id = CORBA::string_dup( event->process_id().host_name );
                 location[1].kind = CORBA::string_dup( "applicationname" );
                 location[1].id = CORBA::string_dup(  event->process_id().application_name );
                 location[2].kind = CORBA::string_dup( "processname" );
@@ -1136,7 +1114,6 @@ namespace LB
         }
     }
 
-
     void 
     LBGroupManager_impl::handle_process_failure(const std::string &    hostname,
                                                 const std::string &    applicationname,
@@ -1144,51 +1121,29 @@ namespace LB
                                                 const ::PortableGroup::Location & the_location)
         throw (CORBA::SystemException)
     {
-        GroupMap::iterator resultObject = m_group_map.begin();
-
-        while(resultObject != m_group_map.end())
+        //Remove the member from group_data
+        // May raise PortableGroup::MemberNotFound
+        std::vector<ObjectGroupDataStorageObject> ogd_list;
+        m_objectgroupDataStorageHome->find_if(OGDTrueFunction, std::back_inserter(ogd_list)); 
+        for (CORBA::ULong i = 0; i<ogd_list.size(); i++) 
         {
-            PortableGroup::ObjectGroupId object_group_id = resultObject->first;
-            CdmwLB::ObjectGroupData* resultOGD = resultObject->second;
-            CdmwLB::ObjectGroupData group_data_tmp(*resultOGD);
-            
-            //Remove the member from group_data
-            // May raise PortableGroup::MemberNotFound
             try
             {
-                remove_member(object_group_id,
-                              group_data_tmp,
-                              the_location);
-
- 
-            *resultOGD = group_data_tmp;
-            
+                
+                remove_member((ogd_list[i].get()->object_group_ref).in(), the_location);
             } catch (const ::PortableGroup::ObjectGroupNotFound &) {
-            // TODO: Add trace information
-                DEBUG_DUMP("");
-                DEBUG_ECHO("handle_process_failure("
-                           << hostname << "," << applicationname << "," << processname
-                           << "): Caught an ObjectGroupNotFound exception.\n"
-                           << "Raising CORBA::INTERNAL() exception." << std::endl);
-                throw CORBA::INTERNAL(::Cdmw::OrbSupport::INTERNAL,
-                                      CORBA::COMPLETED_NO);
-        } 
-            catch (const ::PortableGroup::MemberNotFound &) {
                 // TODO: Add trace information
                 DEBUG_DUMP("");
                 DEBUG_ECHO("handle_process_failure("
                            << hostname << "," << applicationname << "," << processname
-                           << "): Caught a MemberNotFound exception.\n"
-                           << "Raising CORBA::INTERNAL() exception." << std::endl);
-                throw CORBA::INTERNAL(::Cdmw::OrbSupport::INTERNAL,
-                                      CORBA::COMPLETED_NO);
-            } catch (const CORBA::INTERNAL &) {
+                           << "): Caught an ObjectGroupNotFound exception.\n" << std::endl);
+            }catch (const ::PortableGroup::MemberNotFound &) {
                 // TODO: Add trace information
-                throw;
-            } catch (const CORBA::NO_MEMORY &) {
-                // TODO: Add trace information
-                throw;
-            } catch (const CORBA::SystemException & ex) {
+                DEBUG_DUMP("");
+                DEBUG_ECHO("handle_process_failure("
+                           << hostname << "," << applicationname << "," << processname
+                           << "): Caught a MemberNotFound exception.\n" << std::endl);
+           } catch (const CORBA::SystemException & ex) {
                 // TODO: Add trace information
                 DEBUG_DUMP("");
                 DEBUG_ECHO("handle_process_failure("
@@ -1198,91 +1153,31 @@ namespace LB
                 // TODO: Trigger a reconfiguration? (check that member is non faulty?)
             }
             
-            resultObject++;
         }
     }
     
-    void 
-    LBGroupManager_impl::handle_application_failure(const std::string & hostname,
-                                                        const std::string & applicationname,
-                                                        const ::PortableGroup::Location & the_location)
-        throw (CORBA::SystemException)
-    {
-        GroupMap::iterator resultObject = m_group_map.begin();
-
-        while(resultObject != m_group_map.end())
-        {
-            CdmwLB::ObjectGroupData * resultOGD = resultObject->second;
-            // Found a group!
-            try {
-                // Remove the member from ogd
-                // May raise ::Portable::MemberNotFound
-                remove_member((resultOGD->object_group_ref).in(), the_location);
-            } catch (const ::PortableGroup::ObjectGroupNotFound &) {
-            // TODO: Add trace information
-                DEBUG_DUMP("");
-                DEBUG_ECHO("handle_application_failure("
-                           << hostname << "," << applicationname 
-                           << "): Caught an ObjectGroupNotFound exception.\n"
-                           << "Raising CORBA::INTERNAL() exception." << std::endl);
-                throw CORBA::INTERNAL(::Cdmw::OrbSupport::INTERNAL,
-                                      CORBA::COMPLETED_NO);
-            } catch (const ::PortableGroup::MemberNotFound &) {
-            } catch (const CORBA::INTERNAL &) {
-                // TODO: Add trace information
-                throw;
-            } catch (const CORBA::NO_MEMORY &) {
-                // TODO: Add trace information
-                throw;
-            } catch (const CORBA::SystemException & ex) {
-                // TODO: Add trace information
-                DEBUG_DUMP("");
-                DEBUG_ECHO("handle_application_failure("
-                           << hostname << "," << applicationname 
-                           << "): Caught a system exception.\n"
-                           << "Exception:" << ex << std::endl);
-                // TODO: Trigger a reconfiguration? (check that member is non faulty?)
-            }
-            resultObject++;
-        }
-
-
-    }
-
-
+ 
     void 
     LBGroupManager_impl::handle_host_failure(const std::string & hostname,
                                                  const ::PortableGroup::Location & the_location)
 
         throw (CORBA::SystemException)
     {
-        GroupMap::iterator resultObject = m_group_map.begin();
-
-        while(resultObject != m_group_map.end())
+        std::vector<ObjectGroupDataStorageObject> ogd_list;
+        m_objectgroupDataStorageHome->find_if(OGDTrueFunction, std::back_inserter(ogd_list)); 
+        for (CORBA::ULong i = 0; i<ogd_list.size(); i++) 
         {
-            CdmwLB::ObjectGroupData * resultOGD = resultObject->second;
-            // Found a group!
-            try {
-                // Remove the member from ogd
-                // May raise ::Portable::MemberNotFound
-                remove_member((resultOGD->object_group_ref).in(), the_location);
+            try
+            {
+                remove_member((ogd_list[i].get()->object_group_ref).in(), the_location);
             } catch (const ::PortableGroup::ObjectGroupNotFound &) {
             // TODO: Add trace information
                 DEBUG_DUMP("");
                 DEBUG_ECHO("handle_host_failure("
                            << hostname 
-                           << "): Caught an ObjectGroupNotFound exception.\n"
-                           << "Raising CORBA::INTERNAL() exception." << std::endl);
-                throw CORBA::INTERNAL(::Cdmw::OrbSupport::INTERNAL,
-                                      CORBA::COMPLETED_NO);
+                           << "): Caught an ObjectGroupNotFound exception.\n" << std::endl);
             } catch (const ::PortableGroup::MemberNotFound &) {
                 // TODO: Add trace information
-            } catch (const CORBA::INTERNAL &) {
-                // TODO: Add trace information
-                throw;
-            } catch (const CORBA::NO_MEMORY &) {
-                // TODO: Add trace information
-                throw;
             } catch (const CORBA::SystemException & ex) {
                 // TODO: Add trace information
                 DEBUG_DUMP("");
@@ -1292,7 +1187,6 @@ namespace LB
                            << "Exception:" << ex << std::endl);
                 // TODO: Trigger a reconfiguration? (check that member is non faulty?)
             }
-            resultObject++;
         }
     }
 }//close namespace LB

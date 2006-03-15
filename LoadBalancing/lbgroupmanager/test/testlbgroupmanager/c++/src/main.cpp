@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief The main for test lbgroupmanager.
@@ -25,12 +29,13 @@
  */
 #ifndef LBGROUPMANAGER_PLUGIN_EXPORTS
 #include <string>
+#include <Foundation/common/String.hpp>
+#include <Foundation/common/Options.hpp>
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/orbsupport/OrbSupport.hpp>
 #include <Foundation/orbsupport/StrategyList.hpp>
 #include <Foundation/osthreads/Thread.hpp>
 #include <Foundation/ossupport/OS.hpp>
-#include <idllib/PortableGroup.stub.hpp>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/TestResult.h>
@@ -42,52 +47,46 @@
 #include <fstream>
 #include <LoadBalancing/lbgroupmanager/LBGroupManager_impl.hpp>
 #include "testlbgroupmanager/CORBAManager.hpp"
+#include <Foundation/commonsvcs/datastore/StdMapDataStoreFactory.hpp>
+#include <LoadBalancing/lbcommon/StateTransferConfig.hpp>
+#define ECHO_HEADER() \
+    "[Debug] "
+
+#define ECHO_ERROR(comment) \
+do {\
+    std::cerr << ECHO_HEADER() << " --> " << comment << std::endl;\
+} while(0)
+
+
+#ifndef ENABLE_LB_DEBUG_DUMP
+
+#   define DEBUG_DUMP(comment)
+#   define DEBUG_ECHO(comment)
+
+#else
+
+#   define DEBUG_DUMP(comment) \
+do {\
+    std::cerr << ECHO_HEADER() << " --> " << comment << std::endl;\
+} while(0)
+
+#   define DEBUG_ECHO(comment) \
+do {\
+    std::cerr << comment ;\
+} while(0)
+
+#endif
+
+
+typedef Cdmw::CommonSvcs::DataStore::StdMapDataStoreFactory
+< PortableGroup::ObjectGroupId,
+  CdmwLB::ObjectGroupData> 
+DefaultDataStoreFactory;
 
 using namespace std;
 
 using namespace Cdmw;
 
-class GroupManagerThread : public OsSupport::Thread {
-
-public:
-        
-    GroupManagerThread( int argc, char* argv[], CORBA::ORB_ptr orb, PortableServer::POA_ptr rootPOA)
-    {
-        
-        m_orb = CORBA::ORB::_duplicate(orb);
-	
-	// create the Replication Manager
- 	Cdmw::LB::LBGroupManager_impl* groupManager = new Cdmw::LB::LBGroupManager_impl(m_orb.in(), rootPOA, CORBA::string_dup("LB_DOMAIN_ID"), std::cerr);
-        CdmwLB::LBGroupManager_var gm  = groupManager->_this();
-
-        orb->register_initial_reference("LBGroupManager", gm.in());
-    }
-        
-    ~GroupManagerThread() throw() {} ;
-
-
-    void
-    shutdown() 
-    {
-        m_orb->shutdown(true);
-        m_orb->destroy();
-    }
-
-protected:
-
-    void
-    run() throw() 
-    {
-        m_orb->run();   
-    }
-
-        
-public:
-
-    CORBA::ORB_var  m_orb;
-    //  CdmwLB::LBGroupManager_var gm;
-
-};
 int main( int argc, char* argv[] )
 {
     char *outFileName = "res.xml";
@@ -96,19 +95,47 @@ int main( int argc, char* argv[] )
     {
         Cdmw::OrbSupport::StrategyList strategyList;
         strategyList.add_OrbThreaded(); // Mandatory in OrbSupport::ORB_init
-        strategyList.add_multicast();
-        // Initialises the ORB
+	//        strategyList.add_multicast();
+	strategyList.add_PoaThreadPerConnection();
+	strategyList.add_multicast();
+
+	// set LBGroupManager Initial Reference
+        char** ORB_init_argv = 0;
+        int ORB_init_argc(0);
+        std::string arguments = "-ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr";
+        std::string strArgv = argv[0] + std::string(" ") + arguments;
+        ORB_init_argv = Common::String::to_char_array (Common::String::to_strings(strArgv));
+        ORB_init_argc = 3;
+
+
+	// Initialises the ORB
         CORBA::ORB_var orb =
-          Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList);
-        // Get the root POA
+          Cdmw::OrbSupport::OrbSupport::ORB_init(ORB_init_argc,ORB_init_argv , strategyList);
+	// Get the root POA
         CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
         PortableServer::POA_var rootPOA = PortableServer::POA::_narrow(obj.in());
         PortableServer::POAManager_var poaMgr = rootPOA->the_POAManager();
         poaMgr->activate();
-  
-        // Start the ReplicationManagerThread 
-        GroupManagerThread GMThread(argc, argv, orb.in(), rootPOA.in());
-        GMThread.start();
+	DEBUG_DUMP("Try to start LBGroupManager process without specify the XML configuration file");
+	DEBUG_DUMP("The LBGroupManager process should be stopped with an error message...");
+	Cdmw::OsSupport::OS::ProcessId group_manager_id 
+	  = Cdmw::OsSupport::OS::create_process("cdmw_lb_group_manager", "");
+	OsSupport::OS::sleep(3000);
+
+	DEBUG_DUMP("Try to start LBGroupManager process using the XML LB configuration file option but without specify an XML configuration file");
+	DEBUG_DUMP("The LBGroupManager process should be stopped with an error message...");
+	group_manager_id  = Cdmw::OsSupport::OS::create_process("cdmw_lb_group_manager", "--CdmwLBXMLFile");
+	OsSupport::OS::sleep(3000);
+	
+	DEBUG_DUMP("Try to start LBGroupManager process specifying a wrong XML configuration file");
+	DEBUG_DUMP("The LBGroupManager process should be stopped with an error message...");
+	group_manager_id  = Cdmw::OsSupport::OS::create_process("cdmw_lb_group_manager", "--CdmwLBXMLFile=CdmwLBGroupManager_not_exist_conf.xml");
+	OsSupport::OS::sleep(3000);
+
+	DEBUG_DUMP("Try to start LBGroupManager process specifying a right XML configuration file");
+	DEBUG_DUMP("The LBGroupManager process should be started without errors...");
+	group_manager_id = Cdmw::OsSupport::OS::create_process("cdmw_lb_group_manager", "--CdmwLBXMLFile=CdmwLBGroupManager_test_conf.xml");
+	OsSupport::OS::sleep(2000);
 
     try
         {
@@ -117,7 +144,7 @@ int main( int argc, char* argv[] )
         }
     catch(std::logic_error& e)
         {
-            std::cerr<<e.what()<<std::endl;
+            ECHO_ERROR(e.what());
             return -1;
         }
     catch(...)
@@ -151,9 +178,7 @@ int main( int argc, char* argv[] )
         }
     catch ( std::invalid_argument &e )  // Test path not resolved
         {
-            std::cerr  <<  std::endl
-                       <<  "ERROR: "  <<  e.what()
-                       << std::endl;
+            ECHO_ERROR( "ERROR: "  <<  e.what());
             return -1;
             }
     int total_fails = result.testFailuresTotal ();
@@ -174,11 +199,11 @@ int main( int argc, char* argv[] )
 #ifdef WIN32
     system("PAUSE");
 #endif
-   // Stop the ReplicationManagerThread 
-     GMThread.shutdown();
-     GMThread.join();
 
-     return result.wasSuccessful() ? 0 : 1;
+    Cdmw::OsSupport::OS::kill_process(group_manager_id);
+    orb->destroy();
+       	
+    return result.wasSuccessful() ? 0 : 1;
 }
     catch( const CORBA::Exception &e )
     {

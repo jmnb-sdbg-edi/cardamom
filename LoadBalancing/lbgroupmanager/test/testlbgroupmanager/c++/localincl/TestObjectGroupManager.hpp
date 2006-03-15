@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 #ifndef INCL_TEST_OBJECT_GROUP_MANAGER_HPP
 #define INCL_TEST_OBJECT_GROUP_MANAGER_HPP
@@ -30,6 +34,7 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 #include "idllib/CdmwLBGroupManager.stub.hpp"
+#include "testlbgroupmanager/TestHello_impl.hpp"
 #include "testlbgroupmanager/TestHello.skel.hpp"
 
 class TestObjectGroupManager : public CppUnit::TestFixture
@@ -39,6 +44,8 @@ class TestObjectGroupManager : public CppUnit::TestFixture
     CPPUNIT_TEST( remove_member );
     CPPUNIT_TEST( get_object_group_id );
     CPPUNIT_TEST( get_object_group_ref );
+    CPPUNIT_TEST( get_object_group_version_from_ref );
+    CPPUNIT_TEST( get_object_group_version_from_gid );
     CPPUNIT_TEST( get_member_ref );
     CPPUNIT_TEST( locations_of_members );
     CPPUNIT_TEST_SUITE_END( );
@@ -85,10 +92,26 @@ public:
     virtual void get_member_ref();
 
     /**
+     * @brief test get object group version from object group reference operation.
+     *
+     */
+    virtual void get_object_group_version_from_ref();
+
+    /**
+     * @brief test get object group version from object group id operation.
+     *
+     */
+    virtual void get_object_group_version_from_gid();
+
+    /**
      * @brief test locations of members operation.
      *
      */
     virtual void locations_of_members();
+
+    Cdmw::HelloInterface1_impl* obj1_impl;
+    Cdmw::HelloInterface1_impl* obj3_impl;
+    Cdmw::HelloInterface2_impl* obj2_impl;
 };
 #endif //INCL_TEST_OBJECT_GROUP_MANAGER_HPP
 

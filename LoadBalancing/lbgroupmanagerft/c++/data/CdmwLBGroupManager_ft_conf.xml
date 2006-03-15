@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. All rights reserved.
+ * 
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+<!DOCTYPE CdmwLBGroupManager SYSTEM "CdmwLBGroupManager.dtd">
+
+
+<CdmwLBGroupManager>
+
+    <!--
+    Port used for state transfer
+    -->
+    <StateTransferPort>19888</StateTransferPort>
+   
+    <!--
+    LBGroupManager Domain
+    -->
+    <LBGroupManagerDomainID>CDMW_@LOGNAME@LBGroupManagerDomain</LBGroupManagerDomainID>
+
+    <!--
+    Register Option
+    -->
+    <RegisterOption>yes</RegisterOption>
+
+    <!--
+    Unregister Option
+    -->
+    <UnregisterOption>yes</UnregisterOption>
+
+    <!--
+    The observer name
+    -->
+    <ObserverName>lb_observer</ObserverName>
+
+    <!--
+    Cohort timeout : max time between the reception of a prepared operation and
+    the commit operation
+    -->
+    <CohortTimeOut>2000</CohortTimeOut>
+
+    <!--
+    Coordinator timeout : max time between the send of a prepared operation (or a commit) 
+    and the answer of all the cohort
+    -->
+    <CoordinatorTimeOut>2000</CoordinatorTimeOut>
+
+    <!--
+    Max transaction in progress : max transaction treated by the coordinator in the same time
+    -->
+    <MaxTransactionInProgress>100</MaxTransactionInProgress>
+    
+    <!--
+    Max transaction done : max transaction done and save by the coordinator to preserve the history
+    -->
+    <MaxTransactionDone>100</MaxTransactionDone>
+   
+    
+</CdmwLBGroupManager>
+

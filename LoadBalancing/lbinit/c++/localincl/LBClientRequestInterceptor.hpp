@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief Implementation for Client Request Interceptor.
@@ -54,8 +58,6 @@ public:
     /// Constructor.
     ClientRequestInterceptor_impl (CORBA::ORB_ptr orb,
                                    const char *name, 
-                                   const PortableInterceptor::SlotId recurseId,
-                                   const PortableInterceptor::Current_ptr pi_current,
                                    Cdmw::LB::IOGRFactory* iogr_factory);
     //
     // IDL to C++ Mapping
@@ -90,35 +92,32 @@ public:
             PortableInterceptor::ForwardRequest);
     
 private:
-    // The flag for the forward request
-    int i;
-
     // The orb reference
     CORBA::ORB_var m_orb;
     
     // The name of this interceptor.
     CORBA::String_var m_name;
 
-    // current object request recurse id slot id
-    PortableInterceptor::SlotId m_recurseId;
 
-    // current object
-    PortableInterceptor::Current_var m_pi_current;
     Cdmw::LB::IOGRFactory* m_iogr_factory;
     
     CdmwLB::StrategyFactory* m_lb_factory;
 
+    int m_isIn;
+  
+  
+    struct LBDataStructure
+    {
+	CdmwLB::Strategy_ptr  strategy_ptr ;
+	IOP::ServiceContext   svc_cxt;
+	PortableGroup::ObjectGroupRefVersion obj_group_version;
+	int isLB;
+    };
 
-    // Map containing load balancing strategies associated to IOGRs
-    typedef std::map<PortableGroup::ObjectGroupId, CdmwLB::Strategy_ptr> StrategyMap;
-    StrategyMap m_strategy_map;
-    StrategyMap::iterator  m_strategy_pos;
-
-    // Map containing object group version associated to IOGRs
-    typedef std::map<PortableGroup::ObjectGroupId, PortableGroup::ObjectGroupRefVersion> VersionMap;
-    VersionMap m_version_map;
-    VersionMap::iterator  m_version_pos;
-    
+  
+    typedef std::map <size_t , LBDataStructure *> LBCache;
+    LBCache m_lb_cache;
+    LBCache::iterator m_lb_cache_pos; 
 };
     
 };//End of namespace LBInit

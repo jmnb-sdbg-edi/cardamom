@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief The main for test lbinit.
@@ -31,7 +35,6 @@
 #include <Foundation/orbsupport/StrategyList.hpp>
 #include <Foundation/osthreads/Thread.hpp>
 #include <Foundation/ossupport/OS.hpp>
-#include <idllib/PortableGroup.stub.hpp>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/TestResult.h>
@@ -71,7 +74,7 @@ int main( int argc, char* argv[] )
 
         using namespace Cdmw::OsSupport;
         OS::ProcessId groupMngt_id
-            = OS::create_process ("groupMngt_process"," ");
+            = OS::create_process ("cdmw_lb_group_manager","--CdmwLBXMLFile=CdmwLBGroupManager_conf.xml ");
 
         OsSupport::OS::sleep(5000);
 
@@ -154,7 +157,7 @@ int main( int argc, char* argv[] )
                                         loc,
                                         hello_object.in());
     
-        hello_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "hello4");
+	     hello_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "hello4");
         loc[0].id = "HOST4";
         obj = group_manager->add_member(obj.in(),
                                         loc,
@@ -195,19 +198,13 @@ int main( int argc, char* argv[] )
                                         loc,
                                         hello_object.in());
         
-        hello_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "hello3");
+	       hello_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "hello3");
         loc[0].id = "HOST3";
         obj = group_manager->add_member(obj.in(),
                                         loc,
                                         hello_object.in());
         
-        hello_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "hello4");
-        loc[0].id = "HOST4";
-        obj = group_manager->add_member(obj.in(),
-                                        loc,
-                                        hello_object.in());
-        
-        // export the object reference to a file
+	// export the object reference to a file
         file_name = "hello_group_random";
         ref_string = orb->object_to_string(obj.in());
         std::ofstream os2(file_name.c_str());
@@ -278,6 +275,7 @@ int main( int argc, char* argv[] )
         
 #ifdef WIN32
         system("PAUSE");
+
 #endif
         // clean created file
         OsSupport::OS::unlink("hello1");
@@ -293,7 +291,8 @@ int main( int argc, char* argv[] )
         OS::kill_process(test_server_id1);
         
         OS::kill_process(groupMngt_id );
-
+	orb->shutdown(1);
+	orb->destroy();
         return result.wasSuccessful() ? 0 : 1;
         
     }

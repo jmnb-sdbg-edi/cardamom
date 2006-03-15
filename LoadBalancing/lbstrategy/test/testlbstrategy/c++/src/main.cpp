@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief The main for test lbstrategy.
@@ -31,7 +35,6 @@
 #include <Foundation/orbsupport/StrategyList.hpp>
 #include <Foundation/osthreads/Thread.hpp>
 #include <Foundation/ossupport/OS.hpp>
-#include <idllib/PortableGroup.stub.hpp>
 #include <cppunit/extensions/TestFactoryRegistry.h>
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/TestResult.h>
@@ -47,7 +50,8 @@
 using namespace std;
 
 using namespace Cdmw;
-
+using namespace Cdmw::OsSupport;
+	
 namespace
 {
     const std::string GROUP_MANAGER_PORT = "5040";
@@ -59,18 +63,24 @@ int main( int argc, char* argv[] )
     char *outFileName = "res.xml";
     try
     {
-        // Initialises the ORB
+	OS::ProcessId groupMngt_id = 0;
+	std::string lb_gm_conf = Cdmw::OsSupport::OS::get_option_value(argc,argv,"--CdmwLBXMLFile");
+	std::string state_transfer_port = Cdmw::OsSupport::OS::get_option_value(argc,argv,"--CdmwLBStateTransferPort");
+	if(!(state_transfer_port.compare("yes") && state_transfer_port.compare("no")))
+	    state_transfer_port = "";
+	    
+	// Initialises the ORB
         Cdmw::OrbSupport::StrategyList strategyList;
         strategyList.add_OrbThreaded();
         strategyList.add_PoaThreadPerConnection();
-
-
+	strategyList.add_multicast();
+	
         CORBA::ORB_var orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList);
 
-        using namespace Cdmw::OsSupport;
-        OS::ProcessId groupMngt_id
-            = OS::create_process ("groupMngt_process"," ");
-
+        if(!(lb_gm_conf.compare("yes") && lb_gm_conf.compare("no")))
+	    lb_gm_conf = "CdmwLBGroupManager_conf.xml";
+	
+	groupMngt_id = OS::create_process ("cdmw_lb_group_manager", "--CdmwLBXMLFile="+lb_gm_conf);    
         OsSupport::OS::sleep(5000);
 
         // Get the LB Group Manager IOR
@@ -82,29 +92,33 @@ int main( int argc, char* argv[] )
         
         OS::ProcessId test_server_id1
             = OS::create_process ("test_server_strategy",
-                                  " --FilePath=pingServer1 --HostName=host1 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
+                                  " --CdmwLBStateTransferPort="+state_transfer_port + " --FilePath=pingServer1 --HostName=host1 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
 
         OS::ProcessId test_server_id2
             = OS::create_process ("test_server_strategy",
-                                  "--FilePath=pingServer2 --HostName=host2 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
+                                  "--CdmwLBStateTransferPort="+state_transfer_port + " --FilePath=pingServer2 --HostName=host2 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
         
         OS::ProcessId test_server_id3
             = OS::create_process ("test_server_strategy",
-                                  "--FilePath=pingServer3 --HostName=host3 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
+                                  "--CdmwLBStateTransferPort="+state_transfer_port + " --FilePath=pingServer3 --HostName=host3 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
         
         OS::ProcessId test_server_id4
             = OS::create_process ("test_server_strategy",
-                                  "--FilePath=pingServer4 --HostName=host4 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
+                                  "--CdmwLBStateTransferPort="+state_transfer_port + " --FilePath=pingServer4 --HostName=host4 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
 
-        OS::ProcessId test_server_id5
-            = OS::create_process ("test_server_strategy",
-                                  "--FilePath=pingServer5 --HostName=host5 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
-
-
-        OsSupport::OS::sleep(5000);
-        std::string lb_policy = "RoundRobin";
+  	OS::ProcessId test_server_id5
+	    = OS::create_process ("test_server_strategy",
+				  "--CdmwLBStateTransferPort="+state_transfer_port + " --FilePath=pingServer5 --HostName=host5 -ORBInitRef LBGroupManager=corbaloc::localhost:5040/group_mgr");
  
-        //
+	std::string file_id5="pingServer5ID";
+	std::ofstream os(file_id5.c_str());
+        os << test_server_id5;
+        os.close();
+	OsSupport::OS::sleep(5000);
+        std::string lb_policy = "RoundRobin";
+
+
+	//
         // Create a group with RoundRobin load balancing policy
         //
         ::PortableGroup::Properties prop;
@@ -124,7 +138,6 @@ int main( int argc, char* argv[] )
         obj = group_manager->create_object(rep_id_ping,
                                            crit,
                                            factory_creation_id1.out());
-
         // Add replicas
         CORBA::Object_var pingable_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "pingServer1");
         ::PortableGroup::Location loc;
@@ -140,25 +153,22 @@ int main( int argc, char* argv[] )
         obj = group_manager->add_member(obj.in(),
                                         loc,
                                         pingable_object.in());
-
         pingable_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "pingServer2");
         loc[0].id = "HOST2";
         obj = group_manager->add_member(obj.in(),
                                         loc,
                                         pingable_object.in());
-        
         pingable_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "pingServer3");
         loc[0].id = "HOST3";
         obj = group_manager->add_member(obj.in(),
                                         loc,
                                         pingable_object.in());
-    
         pingable_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "pingServer4");
         loc[0].id = "HOST4";
         obj = group_manager->add_member(obj.in(),
                                         loc,
                                         pingable_object.in());
-        // export the object reference to a file
+	 // export the object reference to a file
         std::string file_name = "pingable_group_round_robin";
         CORBA::String_var ref_string = orb->object_to_string(obj.in());
         std::ofstream os1(file_name.c_str());
@@ -199,13 +209,7 @@ int main( int argc, char* argv[] )
                                         loc,
                                         pingable_object.in());
         
-        pingable_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "pingServer4");
-        loc[0].id = "HOST4";
-        obj = group_manager->add_member(obj.in(),
-                                        loc,
-                                        pingable_object.in());
-        
-        // export the object reference to a file
+	  // export the object reference to a file
         file_name = "pingable_group_random";
         ref_string = orb->object_to_string(obj.in());
         std::ofstream os2(file_name.c_str());
@@ -285,15 +289,17 @@ int main( int argc, char* argv[] )
         OsSupport::OS::unlink("pingServer5");
         OsSupport::OS::unlink("pingable_group_round_robin");
         OsSupport::OS::unlink("pingable_group_random");
-        OsSupport::OS::unlink("group_manager.ior");
+
        
         OS::kill_process(test_server_id2);
         OS::kill_process(test_server_id3);
         OS::kill_process(test_server_id4);
-        OS::kill_process(test_server_id1);
-        OS::kill_process(test_server_id5);        
+	OS::kill_process(test_server_id1);
         OS::kill_process(groupMngt_id );
-
+	
+	orb->shutdown(1);
+	orb->destroy();
+       
         return result.wasSuccessful() ? 0 : 1;
         
     }

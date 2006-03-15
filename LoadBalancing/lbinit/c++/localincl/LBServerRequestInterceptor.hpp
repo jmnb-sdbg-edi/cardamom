@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief Implementation for Server Request Interceptor.
@@ -35,6 +39,18 @@
 #include <LoadBalancing/lbcommon/LBConfiguration.hpp>
 #include <LoadBalancing/idllib/CdmwLBGroupManager.stub.hpp>
 #include <map>
+#include <LoadBalancing/lbcommon/GroupRefCache_impl.hpp>
+
+#include <Foundation/orbsupport/OrbSupport.hpp>
+#include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
+#include <Foundation/orbsupport/StrategyList.hpp>
+
+#include "Foundation/commonsvcs/federation/SimpleMiopUpdateProtocolHandler.hpp"
+#include "Foundation/commonsvcs/federation/LocalTopicUpdateManager.hpp"
+#include "LoadBalancing/lbcommon/GroupRefCacheMessageCodec.hpp"
+#include "LoadBalancing/lbcommon/GroupRefTopicUpdateHandler.hpp"
+#include "LoadBalancing/lbcommon/GroupRefCache_impl.hpp"
+#include "LoadBalancing/lbcommon/UpdateCommandHandler.hpp"
 
 
 namespace Cdmw
@@ -53,6 +69,7 @@ public:
 
     /// Constructor.
     ServerRequestInterceptor_impl (CORBA::ORB_ptr orb,
+				   PortableServer::POA_ptr poa,
                                    const char *name, 
                                    Cdmw::LB::IOGRFactory* iogr_factory);
     //
@@ -87,19 +104,29 @@ public:
     
     
 private:
+    
+    std::string m_miop_corbaloc;
+
     // The orb reference
     CORBA::ORB_var m_orb;
-    
+
     // The name of this interceptor.
     CORBA::String_var m_name;
     
     Cdmw::LB::IOGRFactory* m_iogr_factory;
 
+private:
+    ::Cdmw::LB::GroupRefUpdateMessageCodec_t              m_codec; 
 
-    // Map containing load balancing strategies associated to IOGRs
-    typedef std::map<PortableGroup::ObjectGroupId, CdmwLB::Strategy_ptr> StrategyMap;
-    StrategyMap m_strategy_map;
-    StrategyMap::iterator  m_strategy_pos;
+    // The Group Cache Map
+    Cdmw::LB::GroupRefCache_impl  m_group_cache;
+
+    // Group Cache Federation Members
+    ::Cdmw::CommonSvcs::SimpleMiopUpdateProtocolHandler   m_protocol_handler;
+    ::Cdmw::LB::SetCommand                                m_set_command;
+    ::Cdmw::LB::RemoveCommand                             m_remove_command;
+    ::Cdmw::LB::GroupRefTopicUpdateHandler_t              m_topic_update_handler;
+    
 };
     
 };//End of namespace LBInit
