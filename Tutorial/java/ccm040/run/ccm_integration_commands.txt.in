@@ -1,4 +1,0 @@
-install_assembly @prefix@/@cdmw_platform@/Hello.aar
-create_assembly HelloAssembly myAssembly
-build_assembly myAssembly
-

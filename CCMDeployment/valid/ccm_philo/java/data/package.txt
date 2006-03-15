@@ -1,3 +1,0 @@
-Dinner:com.acme.Dinner
-UserDinner:com.thalesgroup.UserDinner
-Cdmw_Dinner:com.thalesgroup.Cdmw_Dinner

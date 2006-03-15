@@ -1,5 +1,0 @@
-verbose
-install_assembly @prefix@/@cdmw_platform@/CcmPerf_1host.aar
-create_assembly CcmPerfAssembly myAssembly
-build_assembly myAssembly
-exit
