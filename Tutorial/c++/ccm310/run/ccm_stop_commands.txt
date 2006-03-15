@@ -1,5 +1,0 @@
-destroy_assembly myAssembly
-remove_assembly HelloAssembly
-remove_component Client 1,0,1,0
-remove_component Server 1,0,1,0
-exit
