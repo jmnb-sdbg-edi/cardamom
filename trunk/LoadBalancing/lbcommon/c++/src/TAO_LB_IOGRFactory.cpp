@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @file
@@ -25,18 +29,12 @@
  */
 
 #include "lbcommon/TAO_LB_IOGRFactory.hpp"
-
+#include "lbcommon/TAO_LB_IOGRProperty.hpp"
 #include <sstream>
 
 
 #define ECHO_HEADER() \
    "[IOGR Factory] (file: " << __FILE__ << ", line: " << __LINE__ << ")\n -->"
-
-
-#define ECHO_ERROR(comment) \
-do {\
-    std::cerr << ECHO_HEADER() << " --> " << comment << std::endl;\
-} while(0)
 
 
 #ifndef ENABLE_LB_DEBUG_DUMP
@@ -86,8 +84,8 @@ namespace LB
     
     TAO_LB_IOGRFactory::~TAO_LB_IOGRFactory()
         throw()
-    {
-    }
+    {}
+    
 
     /**
      * Build the iogr
@@ -390,9 +388,7 @@ namespace LB
             DEBUG_ECHO("Raising ProfileNotFound() exception.\n");
             throw  CdmwLB::ProfileNotFound();
         }
-        
-        CdmwLB::TagLBGroupTaggedComponent* result = new CdmwLB::TagLBGroupTaggedComponent();
-        
+             
         
         const TAO_Tagged_Components &tagged_components =
             mprofile.get_profile (profile)->tagged_components ();
@@ -409,7 +405,7 @@ namespace LB
             // decode the cdr
             if ((cdr >> ACE_InputCDR::to_boolean (byte_order)) == 0)
             {
-                DEBUG_ECHO(ECHO_HEADER());
+		DEBUG_ECHO(ECHO_HEADER());
                 DEBUG_ECHO("decode_profile_with_group_tag (profile n. " << profile << ")': ");
                 DEBUG_ECHO("Failed to decode TAG_LB_GROUP Component.\n");
                 DEBUG_ECHO("Raising TagNotFound() exception.\n");
@@ -417,20 +413,72 @@ namespace LB
             }
             
             cdr.reset_byte_order (ACE_static_cast(int,byte_order));
-            
+            CdmwLB::TagLBGroupTaggedComponent* result = new CdmwLB::TagLBGroupTaggedComponent();
             // Extract the group component
             cdr >> *result;
             return result;
             
         }else
          {
-             DEBUG_ECHO(ECHO_HEADER());
+	     DEBUG_ECHO(ECHO_HEADER());
              DEBUG_ECHO("decode_profile_with_group_tag (profile n. " << profile << ")': ");
              DEBUG_ECHO("Failed to decode TAG_LB_GROUP Component.\n");
              DEBUG_ECHO("Raising TagNotFound() exception.\n");
              throw CdmwLB::TagNotFound(); 
          }
     }
+
+    /**
+     * Extract the LBGroupTaggedComponent structure from the TaggedComponent
+     *
+     * @param tag_cmp The TaggedComponent to decode
+     *
+     * @return the CdmwLB::TagLBGroupTaggedComponent structure
+     *
+     * @exception TagNotFound if the TAG_LB_GROUP is not found 
+     * 
+     */
+
+    
+  
+CdmwLB::TagLBGroupTaggedComponent*  TAO_LB_IOGRFactory::get_lb_tagged_components(const IOP::TaggedComponent & tag_cmp)
+    throw (CORBA::SystemException, CdmwLB::TagNotFound)
+{
+    TAO_Tagged_Components tagged_components;
+    tagged_components.set_component (tag_cmp);
+    IOP::TaggedComponent tagged;
+    tagged.tag = CdmwLB::TAG_LB_GROUP;
+    if (tagged_components.get_component (tagged) == 1)
+    {
+	TAO_InputCDR cdr ( reinterpret_cast <const char*> (tagged.component_data.get_buffer ()), tagged.component_data.length ());
+	CORBA::Boolean byte_order;
+	if ((cdr >> ACE_InputCDR::to_boolean (byte_order)) == 0)
+	{
+	    DEBUG_ECHO(ECHO_HEADER());
+	    DEBUG_ECHO("get_lb_tagged_components ");
+	    DEBUG_ECHO("Failed to decode TAG_LB_GROUP Component.\n");
+	    DEBUG_ECHO("Raising TagNotFound() exception.\n");
+	    throw CdmwLB::TagNotFound(); 
+	} 
+	
+	cdr.reset_byte_order (static_cast<int> (byte_order));
+	CdmwLB::TagLBGroupTaggedComponent* result = new CdmwLB::TagLBGroupTaggedComponent();   
+ 	// Extract the group component
+	cdr >> *result;
+	return result;
+	
+    }
+    else   
+    {
+	DEBUG_ECHO(ECHO_HEADER());
+	DEBUG_ECHO("get_lb_tagged_components ");
+	DEBUG_ECHO("Failed to decode TAG_LB_GROUP Component.\n");
+	DEBUG_ECHO("Raising TagNotFound() exception.\n");
+	throw CdmwLB::TagNotFound(); 
+    }
+}
+
+
 
     /**
      * decode the specified profile to extract the CdmwLB::TagFallbackTaggedComponent

@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief Random Strategy Implementation
@@ -34,14 +38,6 @@ namespace Cdmw
 namespace LB
 {
 
-    // Default  Constructor.
-    Random_impl::Random_impl()
-        :m_next(0),
-         m_replicaNumber(0),
-         m_og_version(0)
-    {
-    }
-
     // Costructor with arguments
     Random_impl::Random_impl(PortableGroup::ObjectGroup_ptr og,
                              Cdmw::LB::IOGRFactory* iogr_factory,
@@ -59,6 +55,7 @@ namespace LB
             delete (m_og_members[i]);
         for(CORBA::ULong i = 0; i < m_fallback_members.size(); i++)
             delete (m_fallback_members[i]);
+	delete m_iogr_factory;
     }
 
     // IDL specific methods
@@ -75,6 +72,9 @@ namespace LB
     CORBA::Object_ptr Random_impl::next_member(PortableInterceptor::ClientRequestInfo_ptr request)
         throw(CORBA::SystemException)
     {
+	if(m_replicaNumber == 0)
+	    return CORBA::Object::_duplicate(m_fallback_members[0]);
+
         m_next = rand() % m_replicaNumber;
         return CORBA::Object::_duplicate(m_og_members[m_next]);
     }
@@ -94,11 +94,7 @@ namespace LB
                 {
                     m_iogr_factory->decode_profile_with_fallback_tag(CORBA::Object::_duplicate(og), index);
                     m_fallback_members.push_back(m_iogr_factory->get_member_ref(CORBA::Object::_duplicate(og), index));
-                }catch(const CdmwLB::ProfileNotFound&)
-                {
-                    throw CORBA::INV_OBJREF(OrbSupport::INV_OBJREF, CORBA::COMPLETED_NO);
-                }
-                catch(const PortableGroup::MemberNotFound&)
+                }catch(const PortableGroup::MemberNotFound&)
                 {
                     throw CORBA::INV_OBJREF(OrbSupport::INV_OBJREF, CORBA::COMPLETED_NO);
                 }
@@ -112,11 +108,7 @@ namespace LB
                         throw CORBA::INV_OBJREF(OrbSupport::INV_OBJREF, CORBA::COMPLETED_NO);
                     }
                 }
-        }catch(const CdmwLB::ProfileNotFound&)
-        {
-            throw CORBA::INV_OBJREF(OrbSupport::INV_OBJREF, CORBA::COMPLETED_NO);
-        }
-        catch(const CdmwLB::TagNotFound&)
+        }catch(const CdmwLB::TagNotFound&)
         {
             throw CORBA::INV_OBJREF(OrbSupport::INV_OBJREF, CORBA::COMPLETED_NO);
         }

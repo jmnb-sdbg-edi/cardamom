@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
  
 #ifndef INCL_CDMW_LB_GROUP_MANAGER_H_
 #define INCL_CDMW_LB_GROUP_MANAGER_H_
@@ -26,13 +30,29 @@
  */
 
 #include "Foundation/osthreads/Mutex.hpp"
+#include <Foundation/osthreads/MutexGuard.hpp>
+#include <Foundation/orbsupport/OrbSupport.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
+#include <Foundation/common/NotFoundException.hpp>
+#include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
 
-#include <map>
 #include <memory>
+
+#include "Foundation/commonsvcs/federation/SimpleMiopUpdateProtocolHandler.hpp"
+#include "Foundation/commonsvcs/federation/LocalTopicUpdateManager.hpp"
+
+#include "LoadBalancing/lbcommon/GroupRefCacheMessageCodec.hpp"
+#include "LoadBalancing/lbcommon/GroupRefTopicUpdateHandler.hpp"
+#include "LoadBalancing/lbcommon/GroupRefCache_impl.hpp"
+#include "LoadBalancing/lbcommon/UpdateCommandHandler.hpp"
+
 
 #include "LoadBalancing/idllib/CdmwLBGroupManager.skel.hpp"
 #include "LoadBalancing/idllib/CdmwLBCommon.stub.hpp"
 #include <LoadBalancing/lbcommon/LB_IOGRFactory.hpp>
+#include <LoadBalancing/lbgroupmanager/GroupManagerDataStore.hpp>
+#include "LoadBalancing/lbgroupmanager/Fallback_impl.hpp"
+#include <LoadBalancing/lbcommon/GroupRefCache_impl.hpp>
 
 
 namespace Cdmw
@@ -40,17 +60,18 @@ namespace Cdmw
 
 namespace LB {
 
-    class LBGroupManager_impl : public virtual POA_CdmwLB::LBGroupManager
+    class LBGroupManager_impl : public virtual POA_CdmwLB::LBGroupManager,
+                                public virtual Cdmw::OrbSupport::RefCountServantBase
     {
     public:
-        LBGroupManager_impl (CORBA::ORB_ptr orb, 
-                             PortableServer::POA_ptr poa,
-                             const PortableGroup::GroupDomainId,
-                             std::ostream & os)
+
+      LBGroupManager_impl (CORBA::ORB_ptr orb, 
+                           PortableServer::POA_ptr poa,
+                           const char*)
             throw(CORBA::SystemException);
         
         virtual ~LBGroupManager_impl();
-        
+      
     public:
         /**
          * IDL:omg.org/PortableGroup/GenericFactory/create_object:1.0
@@ -333,9 +354,8 @@ namespace LB {
         virtual PortableGroup::ObjectGroups* groups_at_location (const PortableGroup::Location & the_location)
             throw (CORBA::SystemException);
 
-        /**
-         * IDL:/CdmwLB/
-         *      ReplicationManager/get_object_group_ref_from_gid:1.0
+      /**
+         * IDL:omg.org/PortableGroup/ObjectGroupManager/get_object_group_ref_from_id:1.0
          *
          * Returns the object group reference from the object group id.
          *
@@ -347,10 +367,12 @@ namespace LB {
          *         the given object group id.
          */
         virtual PortableGroup::ObjectGroup_ptr
-        get_object_group_ref_from_gid(PortableGroup::ObjectGroupId  object_group_id)
+        get_object_group_ref_from_id(PortableGroup::ObjectGroupId  object_group_id)
             throw(PortableGroup::ObjectGroupNotFound,
                   CORBA::SystemException);
         
+    
+    
         /**
          *Purpose:
          *<p>
@@ -398,8 +420,13 @@ namespace LB {
             throw(::PortableGroup::ObjectGroupNotFound,
                   CORBA::SystemException);
 
+    protected:
+        Cdmw::LB::ObjectGroupDataStorageHome*  m_objectgroupDataStorageHome;
+      //        Cdmw::LB::ObjectGroupDataStore* m_objectgroupDataStore;
+
         
-        
+
+
     private:
         
         /**
@@ -421,21 +448,6 @@ namespace LB {
                                const ::PortableGroup::Location & the_location)
             throw (CORBA::SystemException);
         /**
-         * Handles the failure of a CDMW application agent (location).
-         * All group members within the process managed by the
-         * application on the considered host will be considered faulty.
-         *
-         * @param hostname The Host hosting the failed process
-         * @param applicationname The CDMW application managing the failed process
-         *
-         */
-        void 
-        handle_application_failure(const std::string & hostname,
-                                   const std::string & applicationname,
-                                   const ::PortableGroup::Location & the_location)
-            throw (CORBA::SystemException);
-
-        /**
          * Handles the failure of a CDMW platform daemon.
          * All members of object groups within this host 
          * will be considered faulty.
@@ -451,34 +463,46 @@ namespace LB {
         
 
     private:
+
+	std::string m_miop_corbaloc;
+
+        // The ORB pseudo-object.
+        CORBA::ORB_var m_orb;
+
+	// The Fallback default servant
+	Cdmw::LB::GroupManager::Fallback_impl* m_defaultServant;
+
         /**
          * The mutex used for changing the functioning mode.
          */
         OsSupport::Mutex m_mutex;  
         
+        // The parent POA.
+        PortableServer::POA_var m_parent_poa;
+              
         // The parent POA for fallback IORs.
         PortableServer::POA_var m_poa;
         
         // The current object group id
         PortableGroup::ObjectGroupId m_object_group_id;
         
-        // The ORB pseudo-object.
-        CORBA::ORB_var m_orb;
-        
         // IOGR Factory
         Cdmw::LB::IOGRFactory* m_iogr_factory;
         
         // The load balancing domain
         CORBA::String_var m_lb_domain_id;
+      
+
+    private:
+        // The Group Cache Map
+        ::Cdmw::LB::GroupRefUpdateMessageCodec_t             m_codec; 
+        Cdmw::LB::GroupRefCache_impl                         m_group_cache;
+        ::Cdmw::CommonSvcs::SimpleMiopUpdateProtocolHandler  m_protocol_handler;
+        ::Cdmw::LB::SetCommand                               m_set_command;
+        ::Cdmw::LB::RemoveCommand                            m_remove_command;
+        ::Cdmw::LB::GroupRefTopicUpdateHandler_t             m_topic_update_handler;
         
-        // A reference to an output stream for debug and trace information
-        std::ostream & m_ostream;
-        
-        
-        // Maps an object group id to an ObjectGroupData structure.
-        typedef std::map<PortableGroup::ObjectGroupId,CdmwLB::ObjectGroupData*> GroupMap;
-        GroupMap m_group_map;
-        GroupMap::iterator m_group_pos;
+    private:        
         /**
          * This operation removes a member from group_data and updates
          * it with a new object group reference and members list.

@@ -1,118 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
-
+<!-- ===================================================================== -->
 <!--
- * =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== *
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
+<!-- ===================================================================== -->
 
 <config>
     <csc name="lbgroupmanager" owner="LoadBalancing" lang="c++">
         <deliveries>
-            <delivery basename="cdmw_lb_group_admin" type="exe" visibility="public">
+            <delivery basename="lbgroupmanagerfile" type="data" visibility="public">                
+                <sourcefiles>
+                    CdmwLBGroupManager_conf.xml
+                    CdmwLBGroupManager.dtd
+                </sourcefiles>
+            </delivery>
+         <delivery basename="lbgroupmanager" type="lib" visibility="public">
                 <prerequisites>
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
-                        Repository/naminginterface
+                        Foundation/commonsvcsdatastore
+                        Foundation/commonsvcsnaming
+                        Foundation/commonsvcsfederation
+                        Repository/repositoryidl
+                        Repository/repositoryinterface
+                        ConfAndPlug/cdmwinit
+                        LifeCycle/lifecycleidl
                         SystemMngt/platformvaluetypes
-                        SystemMngt/platformidl
-                        SystemMngt/systemmngtidl
+                        SystemMngt/platforminterface
+                        SystemMngt/platformlibrary
+                        SystemMngt/smginterfaceidl
+                        SystemMngt/smgcommonidl
                         lbcommon/lbcommon
                         idllib/loadbalancingidl
                         idllib/groupmanageridl
                     </libraries>
                 </prerequisites>
                 <sourcefiles>
+                    Fallback_impl.cpp
+                    TypeRepository_impl.cpp
+                    ConfigurationMngr.cpp 
                     LBGroupManager_impl.cpp
-                    LBGroupAdmin.cpp
-                </sourcefiles>
+               </sourcefiles>
                 <idlfiles>
                  <server />
                  <client />
                     <requireidlsfrom>
+                        Foundation/commonsvcs/federation
                         Foundation
                         LoadBalancing
-                        SystemMngt
                     </requireidlsfrom>
                 </idlfiles>
                 <addcflags>
-                       @config.LoadBalancing.ORB.incl@
+	              @config.LoadBalancing.ORB.incl@ -I@config.Foundation.location@/delivery/incl/c++/Foundation/commonsvcs
                 </addcflags>
                 <addldflags>
                        @config.LoadBalancing.ORB.Libs@
                 </addldflags>
             </delivery>
-            <delivery basename="lbgroupmanager" type="lib" visibility="public">
+            <delivery basename="cdmw_lb_group_manager" type="exe" visibility="public">
                 <prerequisites>
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/commonsvcsfederation
+                        Foundation/commonsvcsdatastore
+                        Repository/repositoryidl
+                        Repository/repositoryinterface
+                        ConfAndPlug/cdmwinit
+                        LifeCycle/lifecycleidl
                         SystemMngt/platformvaluetypes
-                        SystemMngt/platformidl
-                        SystemMngt/systemmngtidl
+                        SystemMngt/smginterfaceidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/platforminterface
+                        SystemMngt/platformlibrary
                         lbcommon/lbcommon
+                        lbgroupmanager/lbgroupmanager
+                        lbinit/lbinit
+                        lbstrategy/lbstrategy
                         idllib/loadbalancingidl
                         idllib/groupmanageridl
                     </libraries>
                 </prerequisites>
                 <sourcefiles>
-                    LBGroupManager_impl.cpp
+                        LBGroupManager.cpp
                 </sourcefiles>
                 <idlfiles>
                  <server />
                  <client />
                     <requireidlsfrom>
+                        Foundation/commonsvcs/federation
                         Foundation
                         LoadBalancing
-                        SystemMngt
                     </requireidlsfrom>
                 </idlfiles>
                 <addcflags>
-	              @config.LoadBalancing.ORB.incl@ 
+                       @config.LoadBalancing.ORB.incl@ -I@config.Foundation.location@/delivery/incl/c++/Foundation/commonsvcs
                 </addcflags>
                 <addldflags>
-                       @config.LoadBalancing.ORB.Libs@
+                       @config.LoadBalancing.ORB.Libs@ 
                 </addldflags>
             </delivery>
-            <delivery basename="start_lb_group_manager_observer" type="exe" visibility="public">
+               <delivery basename="start_lb_group_manager_observer" type="exe" visibility="public">
                 <prerequisites>
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
-                        Repository/naminginterface
+                        Foundation/commonsvcsfederation
+                        Foundation/commonsvcsnaming
+                        Repository/repositoryidl
+                        Repository/repositoryinterface
+                        ConfAndPlug/cdmwinit
+                        LifeCycle/lifecycleidl
+                        Foundation/commonsvcsdatastore
+                        SystemMngt/platforminterface
+                        SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
-                        SystemMngt/platformidl
-                        SystemMngt/systemmngtidl
+                        SystemMngt/smginterfaceidl
+                        SystemMngt/smgcommonidl
                         lbcommon/lbcommon
                         idllib/loadbalancingidl
                         idllib/groupmanageridl
                         lbgroupmanager/lbgroupmanager
+                        lbinit/lbinit
+                        lbstrategy/lbstrategy
                     </libraries>
                 </prerequisites>
                 <sourcefiles>
@@ -123,18 +166,19 @@
                  <client />
                     <requireidlsfrom>
                         Foundation
+                        Foundation/commonsvcs/federation
                         LoadBalancing
                         SystemMngt
                     </requireidlsfrom>
                 </idlfiles>
                 <addcflags>
-	             @config.LoadBalancing.ORB.incl@   
+	             @config.LoadBalancing.ORB.incl@   -I@config.Foundation.location@/delivery/incl/c++/Foundation/commonsvcs
                 </addcflags>
                 <addldflags>
-                       @config.LoadBalancing.ORB.Libs@
+                       @config.LoadBalancing.ORB.Libs@ 
                 </addldflags>
             </delivery>
-        </deliveries>
+         </deliveries>
     </csc>
 </config>
 

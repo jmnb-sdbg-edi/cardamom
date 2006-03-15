@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
 <!--
- * =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== *
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
+<!-- ===================================================================== -->
 
 <config>
     <csc name="idllib" owner="LoadBalancing" lang="c++">
@@ -26,7 +28,6 @@
             <delivery basename="loadbalancingidl" type="lib" visibility="public">
                 <idlfiles>
                     <server>
-                        PortableGroup.idl
                         CdmwLBCommon.idl
                         CdmwLBService.idl
                     </server>
@@ -35,23 +36,35 @@
                 <addcflags>
                     @config.LoadBalancing.ORB.incl@
                 </addcflags>
+                <addldflags>
+                       @config.LoadBalancing.ORB.Libs@
+                </addldflags>
+                <addidlflags>
+                     @config.LoadBalancing.ORB.incl@  
+                 </addidlflags>
             </delivery>
             <delivery basename="groupmanageridl" type="lib" visibility="public">
                 <idlfiles>
                     <server>
+                        CdmwLBTypeRepository.idl
                         CdmwLBGroupManager.idl
                         CdmwLBIOGRFactory.idl
                     </server>
                     <client/>
                 <requireidlsfrom>
                         SystemMngt
+                        Foundation
                 </requireidlsfrom>
                 </idlfiles>
                  <addcflags>
 	              @config.LoadBalancing.ORB.incl@ 
 		</addcflags>
+                <addldflags>
+                       @config.LoadBalancing.ORB.Libs@
+                </addldflags>
                  <addidlflags>
-                      -Wb,export_include=tao/IOP_IORA.h
+                       @config.LoadBalancing.ORB.incl@
+                       -Wb,export_include=tao/IOP_IORA.h
                  </addidlflags>
             </delivery>
         </deliveries>

@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @file Activate the Load Balancing Service
@@ -46,7 +50,8 @@ namespace LB
     std::string  LBConfiguration::M_override_lb_policy;
     CORBA::Boolean LBConfiguration::M_override_lb_policy_default;
     CORBA::Boolean LBConfiguration::M_override_lb_policy_force;
-    
+    CORBA::Boolean LBConfiguration::M_useRepository;
+    std::string LBConfiguration::miop_corbaloc;
     /**
      * Get the Strategy Registry containing the Load Balancing strategies
      *
@@ -72,8 +77,16 @@ namespace LB
     {
         M_override_lb_policy_default=false;
         M_override_lb_policy_force=false;
+	M_useRepository=false;
+
+	std::string str=Cdmw::OsSupport::OS::get_option_value(argc,argv,"--CdmwUseRepository");
         
-        std::string str=Cdmw::OsSupport::OS::get_option_value(argc,argv,"--CdmwLBPolicyDefault");
+        if (str.compare("no"))
+	{
+	    M_useRepository = true;
+	}
+   
+        str=Cdmw::OsSupport::OS::get_option_value(argc,argv,"--CdmwLBPolicyDefault");
         
         if (str.compare("yes")&&str.compare("no"))
             {
@@ -91,6 +104,14 @@ namespace LB
                         M_override_lb_policy_force=true;
                     };
             };
+	str="";
+	str=Cdmw::OsSupport::OS::get_option_value(argc,argv,"--CdmwLBStateTransferPort");
+	if ((str.compare("no")) && (str.compare("yes")) )
+	{
+	    miop_corbaloc ="corbaloc:miop:1.0@1.0-TopicUpdateManager-1/225.1.1.225:" + str;
+	}
+	else
+	    miop_corbaloc="corbaloc:miop:1.0@1.0-TopicUpdateManager-1/225.1.1.225:19888"; 
     }
 
     /**

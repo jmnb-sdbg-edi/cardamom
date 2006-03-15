@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 /**
  * @brief _implementation for TestLBCommon with cppUnit library.
@@ -32,7 +36,7 @@
 #include "Foundation/ossupport/OS.hpp"
 #include <LoadBalancing/idllib/CdmwLBCommon.stub.hpp>
 #include <LoadBalancing/idllib/CdmwLBIOGRFactory.stub.hpp>
-#include "testlbcommon/TestHello_impl.hpp"
+
 #include "testlbcommon/CORBAManager.hpp"
 
 #if CDMW_ORB_VDR == tao
@@ -88,14 +92,14 @@ CORBA::ORB_var TestLBCommon::M_orb;
 void
 TestLBCommon::setUp()
 {
-    
+ 
     M_orb = CORBAManager::instance()->get_orb();
     // create two object hello1
-    Cdmw::HelloInterface1_impl* obj1_impl = new Cdmw::HelloInterface1_impl();
-    Cdmw::HelloInterface1_impl* obj2_impl = new Cdmw::HelloInterface1_impl();
+    obj1_impl = new Cdmw::HelloInterface1_impl();
+    obj2_impl = new Cdmw::HelloInterface1_impl();
 
     // create one object hello2
-    Cdmw::HelloInterface2_impl* obj3_impl = new Cdmw::HelloInterface2_impl();
+    obj3_impl = new Cdmw::HelloInterface2_impl();
 
     M_obj1 = obj1_impl->_this();
     M_obj2 = obj2_impl->_this();

@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 #include <fstream>
 
@@ -28,7 +32,7 @@
 #include <Foundation/orbsupport/StrategyList.hpp>
 #include <Foundation/osthreads/Thread.hpp>
 #include <Foundation/ossupport/OS.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
@@ -38,7 +42,6 @@
 #include "LoadBalancing/lbinit/LBServiceInit.hpp"
 #include <loadbalancingserver/TestHello_impl.hpp>
 #include <loadbalancingserver/MyProcessHelloServerBehaviour.hpp>
-#include <idllib/PortableGroup.stub.hpp>
 #include <idllib/CdmwLBGroupManager.stub.hpp>
 
 using namespace Cdmw;
@@ -68,7 +71,8 @@ usage(std::ostream & os, const std::string &program_name)
 
 int main( int argc, char* argv[] )
 {
-    // help argument
+  CORBA::ORB_var orb;
+  // help argument
     if (argc <=2)
     {
         usage (std::cerr, argv[0]);
@@ -103,9 +107,10 @@ int main( int argc, char* argv[] )
         Cdmw::OrbSupport::StrategyList strategyList;
         strategyList.add_OrbThreaded();
         strategyList.add_PoaThreadPerConnection();
+	strategyList.add_multicast();
 
-        CORBA::ORB_var orb
-            = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList);
+        
+        orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList);
 
         // Get the root POA
         CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
@@ -138,6 +143,20 @@ int main( int argc, char* argv[] )
             cerr << "Uncaught exception" << endl;
             return -1;
         }
+
+    if ( !CORBA::is_nil( orb.in() ) )
+    {
+        try
+	{
+	    Cdmw::CdmwInit::CDMW_cleanup(orb.in());  
+	    Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+	    //            orb->destroy();
+        }
+        catch ( const CORBA::Exception &e )
+        {
+            std::cerr << e << std::endl;
+        }
+    }
 
     return 0;
 }
