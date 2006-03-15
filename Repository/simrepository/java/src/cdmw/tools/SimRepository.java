@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -27,7 +27,7 @@ package cdmw.tools;
 
 import cdmw.orbsupport.ORBSupport;
 import cdmw.orbsupport.ORBUtils;
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.platformmngt.ServiceNames;
 
 /**
@@ -47,8 +47,6 @@ public class SimRepository {
         = "process-callback.simulated";
     public static final String SERVICE_BROKER_USER_OBJECT_ID 
         = "service-broker.simulated";
-    public static final String ENTITY_OBSERVER_USER_OBJECT_ID 
-        = "entity-observer.simulated";
     public static final String PROCESS_MESSAGE_BROKER_USER_OBJECT_ID 
         = "process-message-broker.simulated";
 
@@ -194,24 +192,7 @@ public class SimRepository {
             singlethreadPoa.activate_object_with_id(oid, logger);
             com.thalesgroup.CdmwSimulatedRepository.MessageLogger loggerRef
                 = logger._this();
-
-            // Create a ProcessMessageBroker object
-            SimProcessMessageBrokerImpl messageBroker 
-                = new SimProcessMessageBrokerImpl(multithreadPoa,loggerRef);
-
-            oid = PROCESS_MESSAGE_BROKER_USER_OBJECT_ID.getBytes();
-            multithreadPoa.activate_object_with_id(oid, messageBroker);
-            com.thalesgroup.CdmwPlatformMngt.ProcessMessageBroker messageBrokerRef
-                = messageBroker._this();
-
-            // Create an EntityObserver object
-            SimEntityObserverImpl entityObserver 
-                = new SimEntityObserverImpl(multithreadPoa,loggerRef);
-
-            oid = ENTITY_OBSERVER_USER_OBJECT_ID.getBytes();
-            multithreadPoa.activate_object_with_id(oid, entityObserver);
-            com.thalesgroup.CdmwPlatformMngtEntity.EntityObserver entityObserverRef
-                = entityObserver._this();
+                
                 
             // Create a ServiceBroker object
             NamingInterface serviceBrokerNiBase 
@@ -232,6 +213,19 @@ public class SimRepository {
             multithreadPoa.activate_object_with_id(oid, serviceBroker);
             com.thalesgroup.CdmwPlatformMngtService.ServiceBroker serviceBrokerRef 
                 = serviceBroker._this();
+                
+
+            // Create a ProcessMessageBroker object
+            SimProcessMessageBrokerImpl messageBroker 
+                = new SimProcessMessageBrokerImpl(multithreadPoa, 
+                                                  serviceBrokerRef, loggerRef);
+
+            oid = PROCESS_MESSAGE_BROKER_USER_OBJECT_ID.getBytes();
+            multithreadPoa.activate_object_with_id(oid, messageBroker);
+            com.thalesgroup.CdmwPlatformMngt.ProcessMessageBroker messageBrokerRef
+                = messageBroker._this();
+    
+            
 
             // Create a ProcessCallback object
             NamingInterface processCallbackNiBase
@@ -240,7 +234,7 @@ public class SimRepository {
                 = processCallbackNiBase.getNamingContext();
             SimProcessCallbackImpl processCallback
                 = new SimProcessCallbackImpl(singlethreadPoa,
-                processCallbackNc, messageBrokerRef, entityObserverRef,
+                processCallbackNc, messageBrokerRef,
                 serviceBrokerRef, loggerRef, DEFAULT_APPLICATION_NAME);
 
             oid = PROCESS_CALLBACK_USER_OBJECT_ID.getBytes();

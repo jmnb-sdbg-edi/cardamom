@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,7 +29,8 @@
 #include "Foundation/orbsupport/CORBA.hpp"
 #include "Foundation/orbsupport/CosNaming.skel.hpp"
 #include "namingandrepository/Exceptions.hpp"
-
+#include "namingandrepository/Strings.hpp"
+#include "Repository/idllib/CdmwNamingAndRepository.skel.hpp"
 
 namespace Cdmw
 {
@@ -54,8 +55,9 @@ class PersistentNamingContext;
 *@see RONamingContext_impl
 *@see NameDomainContext_impl
 */
-class NamingContext_impl : virtual public POA_CosNaming::NamingContextExt,
-        virtual public PortableServer::RefCountServantBase
+class NamingContext_impl 
+    : virtual public POA_CdmwNamingAndRepository::ProxyFeatureNamingContextExt,
+      virtual public PortableServer::RefCountServantBase
 {
 
     friend class NamingContextActivator_impl;
@@ -83,7 +85,15 @@ public:
     */
     static const int PREFIX_LENGTH;
     
-
+    /**
+    * Purpose:
+    * <p>
+    * Implements the
+    * IDL:thales.com/CdmwNamingAndRepository/ProxyFeatureNamingContextExt/get_id:1.0
+    * operation
+    */
+    virtual char* get_id() throw (CORBA::SystemException);
+    
     /**
     * Purpose:
     * <p>
@@ -351,6 +361,9 @@ public:
             throw (AssertionFailedException, InternalErrorException);
 
 
+    static Strings findWithPrefix(const std::string& prefix)
+        throw (OutOfResourcesException, InternalErrorException); 
+
 protected:
 
     /**
@@ -484,8 +497,19 @@ private:
     static NamingContext_impl* findServantById(
             const std::string& id)
             throw (NotFoundException, OutOfResourcesException, InternalErrorException);
-
   
+
+    /// Return 1 if the character is alphanumeric or a non-scaped
+    /// punctuation.
+    static int to_url_is_alnum_or_punctuation (char c);
+
+    /// Validate the to_url() method input, and compute the size of the
+    /// returned URL address.
+    static size_t to_url_validate_and_compute_size (const char *add,
+						    const char *sn)
+      throw(CosNaming::NamingContextExt::InvalidAddress,
+	    CosNaming::NamingContext::InvalidName);
+
 }; //End of NamingContext_impl
 
 } // End of namespace NamingAndRepository

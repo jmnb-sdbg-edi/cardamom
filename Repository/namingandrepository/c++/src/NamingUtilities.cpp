@@ -1,30 +1,30 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 #include "namingandrepository/NamingUtilities.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 
 namespace Cdmw
@@ -57,9 +57,9 @@ std::string NamingUtilities::to_string(const CosNaming::Name& n)
     try
     {
         // get the string form of the name
-        str_name = Cdmw::NamingAndRepository::NamingInterface::to_string(n);
+        str_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(n);
     }
-    catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+    catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
     {
         // the empty string will be returned
     }
@@ -81,7 +81,7 @@ bool NamingUtilities::isSimpleName(const char* sn, std::string& reason)
 
         try
         {
-            CosNaming::Name_var name = Cdmw::NamingAndRepository::NamingInterface::to_name(sn);
+            CosNaming::Name_var name = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(sn);
         
             if (name->length() == 1)
             {
@@ -93,7 +93,7 @@ bool NamingUtilities::isSimpleName(const char* sn, std::string& reason)
             }
         
         }
-        catch(const Cdmw::NamingAndRepository::InvalidNameException &e)
+        catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &e)
         {
             // invalid name
             reason = e.what();
@@ -129,9 +129,9 @@ std::string NamingUtilities::simple_name_to_string(const CosNaming::Name& n)
 
         try
         {
-            str_name = Cdmw::NamingAndRepository::NamingInterface::to_string(n);
+            str_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(n);
         }
-        catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+        catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
         {
             throw CosNaming::NamingContext::InvalidName();
         }
@@ -170,6 +170,7 @@ CosNaming::Name* NamingUtilities::nameFirstPart(const CosNaming::Name& n)
             result->length(1);
             (*result)[0] = n[0];
         }
+	// FIXME handle length==0, throw exception
 
         return result._retn();
 
@@ -233,10 +234,10 @@ std::string NamingUtilities::stringifiedNameFirstPart(const CosNaming::Name& n)
         
         try
         {
-            result = Cdmw::NamingAndRepository::NamingInterface::to_string(firstPart.in());
+            result = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(firstPart.in());
         
         }
-        catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+        catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
         {
             // invalid name
             // => result remain empty
@@ -268,10 +269,10 @@ std::string NamingUtilities::stringifiedNameEndPart(const CosNaming::Name& n)
         
         try
         {
-            result = Cdmw::NamingAndRepository::NamingInterface::to_string(endPart.in());
+            result = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(endPart.in());
         
         }
-        catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+        catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
         {
             // invalid name
             // => result remain empty

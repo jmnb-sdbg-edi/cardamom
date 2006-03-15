@@ -1,29 +1,31 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
-
+#include <Foundation/common/Assert.hpp> 
+#include <Foundation/ossupport/OS.hpp>
 #include "namingandrepository/PersistentNameDomain.hpp"
+#include "namingandrepository/FTDatastoreHelper.hpp"
 #include "Foundation/osthreads/MutexGuard.hpp"
 #include "Foundation/osthreads/ReaderLockGuard.hpp"
 #include "Foundation/osthreads/WriterLockGuard.hpp"
@@ -113,12 +115,12 @@ void NameDomainInfo::swap(NameDomainInfo& rhs)
 Registration::Registration()
 :  m_activated(false), m_nameDomainInfo(NULL)
 {
-
+    
 }
 
 
 Registration::Registration(const std::string& name)
-: m_name(name), m_activated(false), m_nameDomainInfo(NULL)
+    : m_name(name), m_activated(false), m_nameDomainInfo(NULL) // FIXME what about init of "m_type" 
 
 {
 
@@ -172,8 +174,6 @@ Registration::~Registration()
 
 }
 
-
-
 Registration& Registration::operator=(const Registration& rhs)
 {
 
@@ -201,17 +201,20 @@ void Registration::swap(Registration& rhs)
 
 // PersistentNameDomain implementation
 
-Cdmw::OsSupport::Mutex PersistentNameDomain::M_existingNameDomains_mutex;
+/** 
+ * Class Attributes
+ **/
+Cdmw::OsSupport::Mutex PersistentNameDomain::M_current_gen_id_mutex;
 
-PersistentNameDomain::NameDomains PersistentNameDomain::M_existingNameDomains;
+unsigned long long PersistentNameDomain::M_current_gen_id = 0;
 
-
+/** 
+ * Methods
+ **/
     
 PersistentNameDomain* PersistentNameDomain::createWithId(const std::string& id)
             throw (AlreadyExistsException, OutOfResourcesException)
 {
-
-    CDMW_MUTEX_GUARD(M_existingNameDomains_mutex);
 
     if (existsId(id))
     {
@@ -224,10 +227,26 @@ PersistentNameDomain* PersistentNameDomain::createWithId(const std::string& id)
         PersistentNameDomain* result = NULL;
 
         std::auto_ptr<PersistentNameDomain> pND(new PersistentNameDomain(id));
-    
-        // memorize in the existing name domains set
-        M_existingNameDomains[id] = pND.get();
+
+        FTDataStore *storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
         
+        CdmwNamingAndRepository::DomainInfo info;
+        info.the_name   = id.c_str(); // OPTME useless strdup, block lifetime
+        CdmwNamingAndRepository::StorageData_var data (new CdmwNamingAndRepository::StorageData());
+        data->domain_info (info);
+
+	try {
+	    storage->insert (id, data); // FIXME what about multiple occurence of id
+	} 
+	catch (const Cdmw::CommonSvcs::DataStore::AlreadyExistException &ex) {
+	    // never here
+	    CDMW_THROW(AlreadyExistsException);
+	}
+	catch (const Cdmw::CommonSvcs::DataStore::StorageErrorException &ex) {
+	    // never here
+	    CDMW_THROW(OutOfResourcesException);
+	}
+
         // transfers ownership
         result = pND.release();
 
@@ -249,11 +268,30 @@ bool PersistentNameDomain::destroy(PersistentNameDomain* nameDomain)
     
     if (nameDomain != NULL)
     {
+	try {
+	    FTDataStore *storage =  FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	    
+	    try {
+		// FIXME,  make sure no siblings exist 
+		storage->remove(nameDomain->m_id);
+	    } 
+	    catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+		CDMW_NEVER_HERE(); // FIXME - remove
+		// ignore error
+		result = false;
+	    }
+	    catch (const Cdmw::CommonSvcs::DataStore::StorageErrorException & ex) {
+		CDMW_NEVER_HERE(); // FIXME - remove
+		// ignore error
+		result = false;
+	    }
 
-        CDMW_MUTEX_GUARD(M_existingNameDomains_mutex);
-        M_existingNameDomains.erase(nameDomain->m_id);
+	    CDMW_ASSERT (! existsId(nameDomain->m_id));
 
-        delete nameDomain;
+	} catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+	    std::cerr << "Exception raised " /* << ex */ << std::endl; // FIXME error handling
+	} 
+
         result = true;
     }
 
@@ -265,40 +303,41 @@ bool PersistentNameDomain::destroy(PersistentNameDomain* nameDomain)
 bool PersistentNameDomain::exists(const std::string& id)
     throw (OutOfResourcesException)
 {
-
-    CDMW_MUTEX_GUARD(M_existingNameDomains_mutex);
-
     return existsId(id);
-
 }
 
 
 PersistentNameDomain* PersistentNameDomain::findById(const std::string& id)
     throw (OutOfResourcesException)
 {
-
-    CDMW_MUTEX_GUARD(M_existingNameDomains_mutex);
-
     try
     {
-
         PersistentNameDomain* result = NULL;
 
-        NameDomains::iterator it = M_existingNameDomains.find(id);
+	FTDataStore * storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	if (storage->contains (id)) {
 
-        if (it != M_existingNameDomains.end())
-        {
-            result = it->second;
-        }
+#if !defined(NDEBUG)	
+ 	    CdmwNamingAndRepository::StorageData_var data =
+ 		FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID)->select (id);
+	    	    
+	    // paranoid - verify data is of type NameDomain
+	    CDMW_ASSERT (data->_d() == CdmwNamingAndRepository::NAR_DOMAIN);
+#endif
+
+	    result = new PersistentNameDomain(id);  // FIXME lifetime, otherwise memleak
+	} 
 
         return result;
-
+    }
+    catch(const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+	// ALERT - concurrently removed by other process
+	return NULL;
     }
     catch(const std::bad_alloc &)
-    {
+	{
         CDMW_THROW(OutOfResourcesException);
     }
-
 }
 
 
@@ -306,19 +345,10 @@ PersistentNameDomain* PersistentNameDomain::findById(const std::string& id)
 bool PersistentNameDomain::existsId(const std::string& id)
     throw (OutOfResourcesException)
 {
-    // NOT THREAD SAFE
-
     try
     {
-
-        bool result = false;
-
-        NameDomains::iterator it = M_existingNameDomains.find(id);
-
-        if (it != M_existingNameDomains.end())
-        {
-            result = true;
-        }
+	bool result = 
+	(FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID)->contains(id));
 
         return result;
     }
@@ -326,7 +356,6 @@ bool PersistentNameDomain::existsId(const std::string& id)
     {
         CDMW_THROW(OutOfResourcesException);
     }
-
 }
 
 
@@ -334,14 +363,12 @@ bool PersistentNameDomain::existsId(const std::string& id)
 
 PersistentNameDomain::PersistentNameDomain()
 {
-    m_current_gen_id = 0;
 }
 
 
 PersistentNameDomain::PersistentNameDomain(const std::string& id)
 : m_id(id)
 {
-    m_current_gen_id = 0;
 }
 
 
@@ -349,15 +376,11 @@ PersistentNameDomain::PersistentNameDomain(const PersistentNameDomain& rhs)
 {
 
     m_id = rhs.m_id;
-    m_registrations = rhs.m_registrations;
-    m_current_gen_id = rhs.m_current_gen_id;
-
 }
 
 
 PersistentNameDomain::~PersistentNameDomain()
 {
-
 }
 
 
@@ -378,56 +401,34 @@ void PersistentNameDomain::swap(PersistentNameDomain& rhs)
 {
 
     m_id.swap(rhs.m_id);
-    m_registrations.swap(rhs.m_registrations);
-    std::swap<size_t>(m_current_gen_id, rhs.m_current_gen_id);
-
 }
 
 
-PersistentNameDomain::Registrations::iterator PersistentNameDomain::findRegistration(const std::string& name)
+static const std::string REGID_SEPERATOR = "::"; 
+
+PersistentNameDomain::RegistrationId PersistentNameDomain::generateRegistrationId(const std::string& id)
     throw (OutOfResourcesException)
 {
-    // NOT THREAD SAFE
 
-    try
-    {
+    try {
+	RegistrationId gen_id;
+	unsigned long long current_gen_id = 0; // holding copy
 
-        Registrations::iterator result = m_registrations.end();
-        
-        for (Registrations::iterator it = m_registrations.begin(); it != m_registrations.end(); ++it)
-        {
-            if (name.compare(it->second.m_name) == 0)
-                result = it;
-        }
-
-        return result;
-
-    }
-    catch(const std::bad_alloc &)
-    {
-        CDMW_THROW(OutOfResourcesException);
-    }
-}
-
-
-PersistentNameDomain::RegistrationId PersistentNameDomain::generateRegistrationId()
-    throw (OutOfResourcesException)
-{
-    // NOT THREAD SAFE
-
-    try
-    {
-
-        RegistrationId gen_id;
-
+	// FIXME - assertion fails for demo_ft, incoking start_demo.sh 
+	//	CDMW_ASSERT (NULL==strchr(name.c_str(), '/'));
+	
         // FIXME : Overflow not currently managed
-        ++m_current_gen_id;
-
-        std::ostringstream temp;
-        temp << m_current_gen_id;
-
-        gen_id = temp.str();
-
+	std::ostringstream temp;
+	temp << id;
+	temp << REGID_SEPERATOR;
+	{
+	    // OPTME atomic increment
+	    CDMW_MUTEX_GUARD(M_current_gen_id_mutex);
+	    current_gen_id = ++M_current_gen_id; 
+	}
+	temp << current_gen_id;
+        gen_id =  temp.str(); // FIXME - assigning to any-type
+	
         return gen_id;
 
     }
@@ -438,26 +439,51 @@ PersistentNameDomain::RegistrationId PersistentNameDomain::generateRegistrationI
 
 }
 
+static std::string
+extractFromRegistrationId(const PersistentNameDomain::RegistrationId &regId) {
+
+    const std::string regIdStr = regId; // FIXME assigning any
+
+    CDMW_ASSERT(regIdStr.rfind(REGID_SEPERATOR)<regIdStr.size());
+    
+    std::string result = regIdStr.substr(0, regIdStr.rfind(REGID_SEPERATOR));
+
+    CDMW_ASSERT(result.size()>0);
+    
+    return result;
+}
 
 
 bool PersistentNameDomain::existsNameDomain(const std::string& name, bool& isSystem)
     throw (OutOfResourcesException)
 {
-    
     CDMW_READER_LOCK_GUARD(m_rwLock);
-
+ 
+    //FIXME - handle compound names
     try
     {
 
         bool result = false;
 
-        Registrations::iterator it = findRegistration(name);
+	const std::string key=createStorageKey(m_id, name);
+	FTDataStore *storage=FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
 
-        if (it != m_registrations.end() && it->second.m_type == NameDomainRegistration)
-        {
-            result = true;
-            isSystem = !((it->second.m_nameDomainInfo)->m_userSupplied);
-        }
+	if (storage->contains(key)) {
+	    try {
+		const CdmwNamingAndRepository::StorageData_var data=
+		    storage->select(key);
+		
+		// paranoid 
+		if (CdmwNamingAndRepository::NAR_DOMAIN_REGISTRATION == data->_d()) {
+		    result=true;
+		    isSystem=!(data->domain_registration_info().is_user_supplied);
+		}
+	    }
+	    catch(const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+		// ALERT, concurrently removed from storage
+		result = false;
+	    }
+	}
 
         return result;
 
@@ -474,23 +500,37 @@ bool PersistentNameDomain::existsNameDomain(const std::string& name, bool& isSys
 std::string PersistentNameDomain::findNameDomain(const std::string& name)
     throw (OutOfResourcesException)
 {
-
+ 
     CDMW_READER_LOCK_GUARD(m_rwLock);
-    
+
     try
     {
+        std::string result="";
 
-        std::string result;
-
-        Registrations::iterator it = findRegistration(name);
-
-        if (it != m_registrations.end() && it->second.m_type == NameDomainRegistration)
-        {
-            result = (it->second.m_nameDomainInfo)->m_nameDomainRefString;
+        const std::string key = createStorageKey(m_id, name);
+        
+        FTDataStore *storage=FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+        try { 
+            if (storage->contains(key)) {
+                const CdmwNamingAndRepository::StorageData_var data=
+                storage->select(key);
+                
+                if (data->_d()==CdmwNamingAndRepository::NAR_DOMAIN_REGISTRATION) {
+                    result=data->domain_registration_info().the_domain;
+                } else {
+                    // paranoid
+                    std::cerr << "findNameDomain error: " << name << std::endl;
+                    CDMW_NEVER_HERE();
+                } 
+            }
+        } 
+        catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+            // ALERT - concurrently removed 
+            result="";
         }
-
+	
         return result;
-
+        
     }
     catch(const std::bad_alloc &)
     {
@@ -505,19 +545,32 @@ std::string PersistentNameDomain::findFactoryFinder(const std::string& name)
 {
 
     CDMW_READER_LOCK_GUARD(m_rwLock);
-
+ 
     try
     {
 
         std::string result;
 
-        Registrations::iterator it = findRegistration(name);
+	const std::string key = createStorageKey(m_id, name);
 
-        if (it != m_registrations.end() && it->second.m_type == NameDomainRegistration)
-        {
-            result = (it->second.m_nameDomainInfo)->m_userFactoryFinderRefString;
-        }
-
+	FTDataStore *storage=FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	try { 
+	    if (storage->contains(key)) {
+		const CdmwNamingAndRepository::StorageData_var data=
+		    storage->select(key);
+		if (data->_d()==CdmwNamingAndRepository::NAR_DOMAIN_REGISTRATION) {
+		    result = data->domain_registration_info().the_factory_finder;
+		} else {
+		    // paranoid
+		    CDMW_NEVER_HERE();
+		} 
+	    }
+	} 
+	catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+	    // ALERT, concurrently removed, two primary Repositories in environment
+	    result = "";
+	}
+	
         return result;
 
     }
@@ -528,47 +581,129 @@ std::string PersistentNameDomain::findFactoryFinder(const std::string& name)
 
 }
 
+static TimeBase::TimeT 
+toTimeT (const OsSupport::OS::Timeval tv) {
+    // Time in TimeT is expressed in units of 100 nano seconds
+    // typedef unsigned long long TimeT;
+    const TimeBase::TimeT result = 
+       (tv.seconds * (1000*1000*10)) + (tv.microseconds * (10));
+
+   return result;
+}
+
+static bool
+passiveRegistrationExpired(const CdmwNamingAndRepository::StorageData_var data,
+			   const TimeBase::TimeT &current)
+{
+     switch (data->_d()) {
+     case CdmwNamingAndRepository::NAR_REGISTRATION:
+     {
+	  // Time in TimeT is expressed in units of 100 nano seconds
+          // typedef unsigned long long TimeT;
+	  const TimeBase::TimeT expiration = 
+		  data->registration_info().the_expiration_time;
+	  return (expiration != 0 && 
+		  current > expiration);
+	  break;
+     }
+     default:
+     {
+	     // it is active registration
+	     return false;
+	     break;
+     }
+     }
+}
 
 bool PersistentNameDomain::addRegistration(const std::string& name, RegistrationId& regId)
     throw (OutOfResourcesException)
 {
-
+ 
     CDMW_WRITER_LOCK_GUARD(m_rwLock);
-
+ 
     try
     {
-
         bool result = false;
         
-        Registrations::iterator it = findRegistration(name);
+	FTDataStore *storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	const std::string key = createStorageKey(m_id, name);
+	const RegistrationId regIdTmp = generateRegistrationId(key); 
+	const std::string regIdTmpStr = regIdTmp; // FIXME any assignment
+	TimeBase::TimeT current = 0L;
+	TimeBase::TimeT expiration = 0L;
 
-        if (it == m_registrations.end())
-        {
-            regId = generateRegistrationId();
-        
-            Registration reg(name);
-    
-            // add the registration
-            m_registrations[regId] = reg;
-            result = true;
-        
-        }
+        OsSupport::OS::Timeval tv = OsSupport::OS::get_time();
+	current = toTimeT(tv);
+        expiration = current + REGISTRATION_TIMEOUT;
+
+	// expiration==0 or expiration>0
+
+	CDMW_ASSERT(extractFromRegistrationId(regIdTmp) == key);
+
+
+	if (! storage->contains (key)) {
+	    CdmwNamingAndRepository::RegistrationInfo info;
+	    info.the_name = name.c_str(); 
+	    info.the_registration_id = regIdTmpStr.c_str();
+ 	    info.the_expiration_time = expiration;
+
+	    CdmwNamingAndRepository::StorageData_var data (new CdmwNamingAndRepository::StorageData());
+	    data->registration_info (info);
+
+	    storage->insert (key, data.in());
+	    CDMW_ASSERT (storage->contains(key));
+
+	    regId  = regIdTmp; // finally define out-value
+	    result = true;
+	} 
+	else {
+	    // In case of failover client might fail to activate
+	    // registration; Repository should not block the id for
+	    // restarted app.
+	    const CdmwNamingAndRepository::StorageData_var currentData=
+		 storage->select(key); // raises Cdmw::CommonSvcs::DataStore::NotFoundException
+
+	    if (passiveRegistrationExpired(currentData, current)) {
+		CdmwNamingAndRepository::StorageData_var data =
+		    new CdmwNamingAndRepository::StorageData();
+		    
+		CdmwNamingAndRepository::RegistrationInfo info;
+		info.the_name = name.c_str(); 
+		info.the_registration_id = regIdTmpStr.c_str();
+		info.the_expiration_time = expiration;
+		
+		data->registration_info (info);
+		
+		storage->update (key, data.in());
+		CDMW_ASSERT (storage->contains(key));
+		
+		regId  = regIdTmp; // finally define out-value
+		result = true;
+	    }    
+	}
 
         return result;
 
+    }
+    catch (const Cdmw::CommonSvcs::DataStore::AlreadyExistException &ex) {
+	// ALERT, insert/select failed, concurrent access to datastore
+	return false;
+    }
+    catch (const Cdmw::CommonSvcs::DataStore::StorageErrorException &ex) {
+	// ALERT, insert/select failed, concurrent access to datastore
+	return false;
     }
     catch(const std::bad_alloc &)
     {
         CDMW_THROW(OutOfResourcesException);
     }
-
 }
 
 
 bool PersistentNameDomain::addRegistration(const std::string& name, RegistrationType type)
     throw (OutOfResourcesException)
 {
-        
+
     CDMW_WRITER_LOCK_GUARD(m_rwLock);
 
     try
@@ -576,27 +711,62 @@ bool PersistentNameDomain::addRegistration(const std::string& name, Registration
     
         bool result = false;
 
-        if (type != NameDomainRegistration)
-        {
+	const std::string key = createStorageKey(m_id, name);
+	const RegistrationId regIdTmp = generateRegistrationId(key); 
+	const std::string regIdTmpStr = regIdTmp; // FIXME any assignment
 
-            Registrations::iterator it = findRegistration(name);
+ 	CDMW_ASSERT(extractFromRegistrationId(regIdTmp) == key);
 
-            if (it == m_registrations.end())
-            {
-
-                RegistrationId regId = generateRegistrationId();
-    
-                Registration reg(name, type);
-    
-                // add the registration
-                m_registrations[regId] = reg;
-                result = true;
-            
-            }
-        }
-
-        return result;
-
+	FTDataStore *storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	
+	if ( ! storage->contains (key)) {
+	    
+	    CdmwNamingAndRepository::StorageData_var 
+		data (new CdmwNamingAndRepository::StorageData());
+	    
+	    switch (type) {
+	    case ObjectRegistration:
+		{ 
+		    // activated=true;
+		    CdmwNamingAndRepository::ObjectRegistrationInfo info;
+		    info.the_name = name.c_str();
+		    info.the_registration_id = regIdTmpStr.c_str();
+		    data->object_registration_info(info);
+		    break;
+		}
+	    case FactoryRegistration:
+		{ 
+		    // activated=true;
+		    CdmwNamingAndRepository::FactoryRegistrationInfo info;
+		    info.the_name = name.c_str();
+		    info.the_registration_id = regIdTmpStr.c_str();
+		    data->factory_registration_info(info);
+		    break;
+		}
+	    case NameDomainRegistration: 
+		/* falling through */ 
+	    default:
+		CDMW_NEVER_HERE();
+		break;
+	    }
+	    
+	    // use RegistrationId as key for hashtable
+	    try {
+		storage->insert (key, data); /* true */
+		result = true;
+		CDMW_ASSERT (storage->contains(key));
+	    } 
+	    catch (const Cdmw::CommonSvcs::DataStore::AlreadyExistException &) {
+		// ALERT, insert failed, concurrent access to datastore
+		result=false;
+	    }
+	    catch (const Cdmw::CommonSvcs::DataStore::StorageErrorException &) {
+		// ALERT, insert failed, concurrent access to datastore
+		result=false;
+	    }
+	}
+	
+	return  result;
     }
     catch(const std::bad_alloc &)
     {
@@ -610,28 +780,48 @@ bool PersistentNameDomain::addRegistration(const std::string& name,
     const NameDomainInfo& nameDomainInfo)
     throw (OutOfResourcesException)
 {
-
+ 
     CDMW_WRITER_LOCK_GUARD(m_rwLock);
-
+ 
     try
     {
-
         bool result = false;
-        
-        Registrations::iterator it = findRegistration(name);
 
-        if (it == m_registrations.end())
-        {
+	FTDataStore *storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
 
-            RegistrationId regId = generateRegistrationId();
-    
-            Registration reg(name, nameDomainInfo);
-    
-            // add the registration
-            m_registrations[regId] = reg;
-            result = true;
-        
-        }
+	const std::string key = createStorageKey(m_id, name);
+	const RegistrationId regIdTmp = generateRegistrationId(key); 
+	const std::string regIdTmpStr = regIdTmp; // FIXME any assignment
+
+	CDMW_ASSERT(extractFromRegistrationId(regIdTmp) == key);
+	
+	if ( ! storage->contains (key)) {
+	    
+	    CdmwNamingAndRepository::DomainRegistrationInfo info;
+	    info.the_name    = name.c_str();
+	    info.the_registration_id = regIdTmpStr.c_str(); 
+	    info.the_domain  = nameDomainInfo.m_nameDomainRefString.c_str();
+	    info.the_factory_finder = nameDomainInfo.m_userFactoryFinderRefString.c_str();
+	    info.is_user_supplied =  nameDomainInfo.m_userSupplied;
+
+	    CdmwNamingAndRepository::StorageData_var data (new CdmwNamingAndRepository::StorageData());
+	    data->domain_registration_info (info);
+	    
+	    try {
+		// OPTME, use RegistrationId as key for hashtable
+                storage->insert (key, data); /* should be true  */
+		result = true;
+		CDMW_ASSERT (storage->contains(key));
+	    } 
+	    catch (const Cdmw::CommonSvcs::DataStore::AlreadyExistException &) {
+		// ALERT, insert failed, concurrent write
+		result=false;
+	    }
+	    catch (const Cdmw::CommonSvcs::DataStore::StorageErrorException &) {
+		// ALERT, insert failed, concurrent access to datastore
+		result=false;
+	    }
+	}
 
         return result;
 
@@ -648,20 +838,54 @@ bool PersistentNameDomain::addRegistration(const std::string& name,
 std::string PersistentNameDomain::findName(const RegistrationId& regId)
     throw (OutOfResourcesException)
 {
-
+ 
     CDMW_READER_LOCK_GUARD(m_rwLock);
 
     try
     {
 
-        std::string result;
+        std::string result="";
 
-        Registrations::iterator it = m_registrations.find(regId);
+	const std::string regIdStr = regId; // FIXME export any
+	const std::string key = extractFromRegistrationId(regId);
+	FTDataStore *storage=FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
 
-        if (it != m_registrations.end())
-        {
-            result = it->second.m_name;
-        }
+	try { 
+	    if (storage->contains(key)) {
+		const CdmwNamingAndRepository::StorageData_var data=
+		    storage->select(key); // raises Cdmw::CommonSvcs::DataStore::NotFoundException
+		//FIXME -  is it really NAR_DOMAIN
+		switch (data->_d()) {
+		case CdmwNamingAndRepository::NAR_REGISTRATION:
+		    {
+			result = data->registration_info().the_name;
+			break;
+		    }
+		case CdmwNamingAndRepository::NAR_DOMAIN_REGISTRATION:
+		    {
+			result = data->domain_registration_info().the_name;
+			break;
+		    }
+		case CdmwNamingAndRepository::NAR_FACTORY_REGISTRATION:
+		    {
+			result = data->factory_registration_info().the_name;
+			break;
+		    }	
+		case CdmwNamingAndRepository::NAR_OBJECT_REGISTRATION:
+		    {
+			result = data->object_registration_info().the_name;
+			break;
+		    }	
+		default:
+		    CDMW_NEVER_HERE();
+		    result = "";
+		} 
+	    }
+	} 
+	catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+	    // ALERT, select failed, object removed concurrently
+	    result = "";
+	}
 
         return result;
 
@@ -679,7 +903,7 @@ bool PersistentNameDomain::activateRegistration(const RegistrationId& regId, Reg
     bool& alreadyActivated)
     throw (OutOfResourcesException)
 {
-
+ 
     CDMW_WRITER_LOCK_GUARD(m_rwLock);
 
     try
@@ -687,23 +911,97 @@ bool PersistentNameDomain::activateRegistration(const RegistrationId& regId, Reg
 
         bool result = false;
 
-        if (type != NameDomainRegistration)
+	if (type != NameDomainRegistration)
         {
-
-            Registrations::iterator it = m_registrations.find(regId);
-
-            if (it != m_registrations.end())
-            {
-                alreadyActivated = it->second.m_activated;
-        
-                if (!alreadyActivated)
-                {
-                    it->second.m_activated = true;
-                    it->second.m_type = type;
-                    result = true;
-                }
-            }
-        }
+	    std::string key = extractFromRegistrationId(regId); // export to string
+		
+	    FTDataStore *storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	    try { 
+		if (storage->contains(key)) {
+		    CdmwNamingAndRepository::StorageData_var data=
+			storage->select(key);
+		    
+		    switch (data->_d()) {
+		    case CdmwNamingAndRepository::NAR_REGISTRATION:
+			{
+			    const std::string nameCopy =  
+				data->registration_info().the_name.in();
+			    const RegistrationId regIdCopy= 
+				data->registration_info().the_registration_id.in(); 
+			    if (regId == regIdCopy) {
+				switch (type) {
+				case ObjectRegistration:
+				    { 
+					// activated=true;
+					CdmwNamingAndRepository::ObjectRegistrationInfo info;
+					info.the_name = nameCopy.c_str();
+					info.the_registration_id = regIdCopy.c_str();;
+					data->object_registration_info(info);
+					break;
+				    }
+				case FactoryRegistration:
+				    { 
+					// activated=true;
+					CdmwNamingAndRepository::FactoryRegistrationInfo info;
+					info.the_name = nameCopy.c_str();
+					info.the_registration_id = regIdCopy.c_str();
+					data->factory_registration_info(info);
+					break;
+				    }
+				case NameDomainRegistration: 
+				    /* falling through */ 
+				default:
+				    CDMW_NEVER_HERE();
+				    result = false;
+				}
+				
+				try {
+				    storage->update(key, data);
+				    alreadyActivated = false;
+				    result = true;
+				} 
+				catch(const NotFoundException & ex) {
+				    // update failed, someone removed the entry concurrently
+				    result = false;
+				}
+				catch(const Cdmw::CommonSvcs::DataStore::StorageErrorException & ex) {
+				    // update failed, someone removed the entry concurrently
+				    result = false;
+				}
+			    } else {
+				 result = false;
+			    }
+			    break;
+			}
+			
+		    case CdmwNamingAndRepository::NAR_FACTORY_REGISTRATION:
+			{
+			    CDMW_ASSERT(type==FactoryRegistration);
+			    alreadyActivated = true;
+			    result = true;
+			    break;
+			}	
+		    case CdmwNamingAndRepository::NAR_OBJECT_REGISTRATION:
+		    {
+			CDMW_ASSERT(type==ObjectRegistration);
+			alreadyActivated = true;
+			result = true;
+			break;
+		    }	
+		    case CdmwNamingAndRepository::NAR_DOMAIN_REGISTRATION:
+			/* fall through */ 
+		    default:
+			CDMW_NEVER_HERE();
+			result = false;
+		    } 
+		}
+	    } 
+	    catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+		// select failed, element removed concurrently
+		result = false;
+	    }
+	    
+	}
 
         return result;
 
@@ -719,38 +1017,91 @@ bool PersistentNameDomain::activateRegistration(const RegistrationId& regId, con
         bool& alreadyActivated)
     throw (OutOfResourcesException)
 {
-
+  
     CDMW_WRITER_LOCK_GUARD(m_rwLock);
-
-    try
+ 
+   try
     {
 
         bool result = false;
 
-        Registrations::iterator it = m_registrations.find(regId);
+	const std::string key = extractFromRegistrationId(regId); 
+	FTDataStore *storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
 
-        if (it != m_registrations.end())
-        {
-            alreadyActivated = it->second.m_activated;
-        
-            if (!alreadyActivated)
-            {
-                NameDomainInfo* temp_nameDomainInfo = new NameDomainInfo(nameDomainInfo);
-                
-                it->second.m_activated = true;
-                it->second.m_type = NameDomainRegistration;
-                it->second.m_nameDomainInfo = temp_nameDomainInfo;
+	try { 
+	    if (storage->contains(key)) {
+		CdmwNamingAndRepository::StorageData_var data=
+		    storage->select(key);
+		
+		switch (data->_d()) {
+		case CdmwNamingAndRepository::NAR_REGISTRATION:
+		    {
+			const std::string nameCopy = 
+			    data->registration_info().the_name.in();
+			const RegistrationId regIdCopy = 
+			    data->registration_info().the_registration_id.in();
+				
+			if (regId == regIdCopy) {
+				CdmwNamingAndRepository::DomainRegistrationInfo info;
+				info.the_name = nameCopy.c_str();
+				info.the_registration_id = regIdCopy.c_str();
+				info.the_domain  = nameDomainInfo.m_nameDomainRefString.c_str();
+				info.the_factory_finder = nameDomainInfo.m_userFactoryFinderRefString.c_str();
+				info.is_user_supplied = nameDomainInfo.m_userSupplied;
+				
+				data->domain_registration_info(info);
+				
+				try {
+                                    storage->update(key, data);
+                                    result = true;
+                                    alreadyActivated = false;
+				} 
+				catch(const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+                                    // update failed,  concurrent access
+                                    result = false;
+				}
+				catch(const Cdmw::CommonSvcs::DataStore::StorageErrorException & ex) {
+                                    // update failed,  concurrent access
+                                    result = false;
+				}
+			}
+			break;
+		    }		    
+		case CdmwNamingAndRepository::NAR_FACTORY_REGISTRATION:
+		    {
+			CDMW_NEVER_HERE();
+			break;
+		    }	
+		case CdmwNamingAndRepository::NAR_OBJECT_REGISTRATION:
+		    {
+			CDMW_NEVER_HERE();
+			break;
+		    }	
+		case CdmwNamingAndRepository::NAR_DOMAIN_REGISTRATION:
+		    {
+			const RegistrationId regIdCopy = 
+			   data->domain_registration_info().the_registration_id.in();
 
-                result = true;
-            }
-        }
-
+			// allready activated
+			result = (regId == regIdCopy);
+			alreadyActivated = true;
+		    }
+		default:
+		    CDMW_NEVER_HERE();
+		    break;
+		} 
+	    }
+	}
+	catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+	    // select failed, element removed concurrently
+	    result = false;
+	}
+	
         return result;
-
+	
     }
-    catch(const std::bad_alloc &)
-    {
-        CDMW_THROW(OutOfResourcesException);
+    catch(const std::bad_alloc &) {
+	CDMW_THROW(OutOfResourcesException);
     }
 
 }
@@ -759,26 +1110,31 @@ bool PersistentNameDomain::activateRegistration(const RegistrationId& regId, con
 bool PersistentNameDomain::removeRegistration(const std::string& name, bool& activated, RegistrationType& type)
     throw (OutOfResourcesException)
 {
-
+ 
     CDMW_WRITER_LOCK_GUARD(m_rwLock);
-
+ 
     try
     {
 
         bool result = false;
-
-        Registrations::iterator it = findRegistration(name);
-
-        if (it != m_registrations.end())
-        {
-            activated = it->second.m_activated;
-            type = it->second.m_type;
-
-            m_registrations.erase(it);
-        
-            result = true;
-        }
-
+	
+	const std::string key = createStorageKey(m_id, name);
+	FTDataStore *storage = FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	try { 
+	    // FIXME make sure siblings have been removed
+	    if (storage->contains(key)) {
+		storage->remove(key); // expected to be true
+		result = true;
+	    }
+	}
+	catch (const Cdmw::CommonSvcs::DataStore::NotFoundException & ex) {
+	    // ALERT, remove failed, element removed concurrently
+	    result = false;
+	}
+	catch (const Cdmw::CommonSvcs::DataStore::StorageErrorException & ex) {
+	    // ALERT, remove failed, element removed concurrently
+	    result = false;
+	}
         return result;
 
     }
@@ -795,30 +1151,52 @@ void PersistentNameDomain::list(std::list<std::string>& systemNameDomains, std::
 {
 
     CDMW_READER_LOCK_GUARD(m_rwLock);
-
+                                                                               
     try
     {
+	StorageKeyDataPairList siblings;
+	std::list<std::string> systemNameDomainsTmp; // exception safe: tmp objects
+	std::list<std::string> userFactoryFindersTmp;// exception safe: tmp objects
 
-        for (Registrations::iterator it = m_registrations.begin(); it != m_registrations.end(); ++it)
+	FTDataStore *storage=FTDataStoreHelper::getStorage(NAME_DOMAIN_DATASTORE_ID);
+	const std::string prefix=createStorageKey(m_id, "");
+	storage->for_each(GatherSiblings(prefix, siblings));
+	
+	for (StorageKeyDataPairList::iterator it = siblings.begin(); 
+	     it != siblings.end(); 
+	     ++it)
         {
-            if (it->second.m_activated && it->second.m_type == NameDomainRegistration)
-            {
-            
-                NameDomainInfo* nameDomainInfo = it->second.m_nameDomainInfo;
-            
-                if (nameDomainInfo->m_userSupplied)
-                {
-                    userFactoryFinders.push_back(nameDomainInfo->m_userFactoryFinderRefString);
-                }
-                else
-                {
-                    systemNameDomains.push_back(nameDomainInfo->m_nameDomainRefString);
-                }
-            
-            }
+	    const std::string key =  it->first;
+	    CdmwNamingAndRepository::StorageData &data =
+		it->second;
 
+	    switch (data._d()) {
+	    case CdmwNamingAndRepository::NAR_DOMAIN_REGISTRATION:
+		// is always activated 
+		{
+		    const std::string name =
+			data.domain_registration_info().the_name.in();
+		    const std::string domainRef=
+			data.domain_registration_info().the_domain.in();
+		    const std::string factoryRef=
+			data.domain_registration_info().the_factory_finder.in();
+		    
+		    if (data.domain_registration_info().is_user_supplied) {
+			userFactoryFindersTmp.push_back(factoryRef);
+		    } 
+		    else {
+			systemNameDomainsTmp.push_back(domainRef);
+		    } 
+		    break;
+		}
+	    default:
+		// ignore element
+		break;
+	    }
         }
 
+	userFactoryFinders = userFactoryFindersTmp; // exception safe: copy
+	systemNameDomains  = systemNameDomainsTmp;  // exception safe: copy	
     }
     catch(const std::bad_alloc &)
     {
@@ -826,8 +1204,6 @@ void PersistentNameDomain::list(std::list<std::string>& systemNameDomains, std::
     }
 
 }
-
-
 
 } // End of namespace NamingAndRepository
 } // End of namespace Cdmw

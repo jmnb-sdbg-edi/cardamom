@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -28,44 +28,187 @@
         <deliveries>
             <delivery basename="namingandrepositoryfile" type="data" visibility="public">
                 <sourcefiles>
+                    CdmwNamingAndRepositoryDatastoreConfig.xml
                     CdmwDefaultNamingAndRepository.xml
+                    CdmwNamingAndRepositoryDatastore_Desc.dtd
                     CdmwNamingAndRepository.dtd
                 </sourcefiles>
-            </delivery>               
+            </delivery>                                                
+            <delivery basename="cdmw_ft_naming_and_repository" type="exe" visibility="public">
+                <condition antfile="Conditions.xml" target="-check-FaultTolerance">
+                    <prerequisites>
+                        <libraries>                        
+                            Foundation/common
+                            Foundation/commonidl
+                            Foundation/pullmonitorableidl
+                            Foundation/commonsvcsdatastore
+                            Foundation/commonsvcsnaming
+                            Foundation/cosnotificationidl  
+                            Foundation/osthreads
+                            Foundation/logging
+                            Foundation/ossupport
+                            Foundation/orbsupport
+                            Foundation/logging
+                            idllib/repositoryidl
+                            LifeCycle/lifecycleidl
+                            TraceAndPerf/traceidl
+                            TraceAndPerf/tracelibrary
+                            SystemMngt/smgcommonidl
+                            SystemMngt/smginterfaceidl
+                            SystemMngt/platforminterface
+                            SystemMngt/platformlibrary
+                            SystemMngt/platformvaluetypes
+                            idllib/repositoryidl
+                            repositoryinterface/repositoryinterface
+                            FaultTolerance/ftstatemanager/ftstatemanager
+                            FaultTolerance/ftcommon/ftcommon
+                            FaultTolerance/ftlocationmanager/ftlocationmanager
+                            FaultTolerance/idllib/faulttoleranceidl
+                            ConfAndPlug/cdmwinit
+                            FaultTolerance/ftrequestlogging
+                            FaultTolerance/ftinit
+                        </libraries> 
+                        <!-- FIXME ECR-XXX uncomment 
+                        <generatedfilesfrom>
+                        CdmwNamingAndRepositoryDatastoreDeclaration.xml
+                    </generatedfilesfrom>
+                        -->
+                    </prerequisites>
+                    <sourcefiles>
+                        FTNamingAndRepository.cpp           
+                        
+                        <!-- FIXME ECR-XXX,  let generate -->
+                        CdmwNamingAndRepositoryDatastore_gen.cpp
+                        <!-- END -->
+                        FTDatastoreHelper.cpp
+                        FTRootNamingContext_impl.cpp        
+                        FactoryFinder_impl.cpp
+                        NameDomainActivator_impl.cpp
+                        BindingIterator_impl.cpp             
+                        ORBFacility.cpp
+                        Configurator.cpp                    
+                        PersistentNameDomain.cpp
+                        FactoryFinder_impl.cpp               
+                        PersistentNamingContext.cpp
+                        NameDomainActivator_impl.cpp         
+                        NameDomainContextActivator_impl.cpp  
+                        NameDomainContext_impl.cpp           
+                        NameDomain_impl.cpp                  
+                        Repository_impl.cpp          
+                        RepositoryExt_impl.cpp          
+                        RONamingContext_impl.cpp
+                        RootNamingContext_impl.cpp        
+                        StandardRepository_impl.cpp
+                        NamingContextActivator_impl.cpp  
+                        NamingContext_impl.cpp               
+                        NamingUtilities.cpp
+                        SystemFactoryFinder.cpp
+                        TestNamingContext_impl.cpp
+                    </sourcefiles>
+                    <idlfiles>
+                        <server>
+                            CdmwNamingAndRepositoryDatastoreEntities.idl
+                        </server>
+                        <client/>
+                        <requireidlsfrom>
+                            LifeCycle
+                            Foundation
+                            FaultTolerance
+                            Repository
+                        </requireidlsfrom>
+                    </idlfiles>
+                    <addcflags>
+                        -DCDMW_USE_FAULTTOLERANCE 
+                    </addcflags>
+                    <addldflags>
+                        @config.FaultTolerance.ORB.Libs@
+                    </addldflags>
+                </condition>
+            </delivery>
+            
             <delivery basename="cdmw_naming_and_repository" type="exe" visibility="public">
                 <prerequisites>
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
+                        Foundation/commonsvcsdatastore
+                        Foundation/commonsvcsnaming
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/ossupport
                         Foundation/orbsupport
+                        Foundation/logging
                         idllib/repositoryidl
                         LifeCycle/lifecycleidl
                         TraceAndPerf/traceidl
                         TraceAndPerf/tracelibrary
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
                         idllib/repositoryidl
-                        naminginterface/naminginterface
                         repositoryinterface/repositoryinterface
+                        <!--			FaultTolerance/ftstatemanager/ftstatemanager
+                        FaultTolerance/ftlocationmanager/ftlocationmanager
+                        FaultTolerance/ftcommon/ftcommon
+                        FaultTolerance/idllib/faulttoleranceidl -->
+                        <!--                        FaultTolerance/ftinit
+                            ConfAndPlug/cdmwinit -->
                     </libraries>
-                </prerequisites>
-                <sourcefiles>
-                    *
+                 </prerequisites>
+                 <sourcefiles>
+                    NamingAndRepository.cpp
+                    FTDatastoreHelper.cpp
+                    FactoryFinder_impl.cpp
+                    NameDomainActivator_impl.cpp
+                    BindingIterator_impl.cpp
+                    ORBFacility.cpp
+                    Configurator.cpp
+                    PersistentNameDomain.cpp
+                    FactoryFinder_impl.cpp
+                    PersistentNamingContext.cpp
+                    NameDomainActivator_impl.cpp
+                    NameDomainContextActivator_impl.cpp
+                    NameDomainContext_impl.cpp
+                    NameDomain_impl.cpp
+                    Repository_impl.cpp
+                    RONamingContext_impl.cpp
+                    RootNamingContext_impl.cpp
+                    StandardRepository_impl.cpp
+                    NamingContextActivator_impl.cpp
+                    NamingContext_impl.cpp
+                    NamingUtilities.cpp
+                    SystemFactoryFinder.cpp
+                    TestNamingContext_impl.cpp
                 </sourcefiles>
                 <idlfiles>
-                    <server/>
+                    <server>
+                        CdmwNamingAndRepositoryDatastoreEntities.idl
+                    </server>
                     <client/>
                     <requireidlsfrom>
                         LifeCycle
+                        Foundation
+                        FaultTolerance
+                        Repository
                     </requireidlsfrom>
                 </idlfiles>
-            </delivery>
+            </delivery> 
         </deliveries>
+        
+        <inspection>
+            <validation id="V-RPS-003">
+                <files>
+                    NamingContext_impl.hpp
+                    NamingContext_impl.cpp
+                    BindingIterator_impl.hpp
+                    BindingIterator_impl.cpp
+                </files>
+            </validation>
+        </inspection>
+        
     </csc>
 </config>
 

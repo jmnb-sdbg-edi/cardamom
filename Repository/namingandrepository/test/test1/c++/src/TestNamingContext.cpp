@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -87,7 +87,7 @@ void TestNamingContext::display_binding(const CosNaming::Binding& b)
 void TestNamingContext::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (32);
+    set_nbOfRequestedTestOK (36);
 
 
     CORBA::Object_ptr obj;
@@ -286,6 +286,7 @@ void TestNamingContext::do_tests()
     try
     {
         rootCtx->bind(name.in(), obj2.in());
+        TEST_FAILED();
     }
     catch(CosNaming::NamingContext::AlreadyBound &e)
     {
@@ -334,6 +335,7 @@ void TestNamingContext::do_tests()
     try
     {
         rootCtx->bind(name.in(), obj2.in());
+        TEST_FAILED();
     }
     catch(CosNaming::NamingContext::AlreadyBound &e)
     {
@@ -396,6 +398,7 @@ void TestNamingContext::do_tests()
     // ---------------
     TEST_INFO("Bind the object O4 as \"CTX2.context/O4.object\" within the root context");
 
+    
     name->length(2);
     nc->id = CORBA::string_dup("CTX2");
     nc->kind = CORBA::string_dup("context");
@@ -414,7 +417,6 @@ void TestNamingContext::do_tests()
         std::cout << e._name();
         TEST_FAILED();
     }
-    
 
     // --------- RESOLVE ---------
     
@@ -748,10 +750,11 @@ void TestNamingContext::do_tests()
     nc->id = CORBA::string_dup("CTX1");
     nc->kind = CORBA::string_dup("context");
     name->operator[](0) = nc.in();
-
+    
     try
     {
         rootCtx->rebind(name.in(), obj1.in());
+	TEST_FAILED();
     }
     catch(CosNaming::NamingContext::NotFound &e)
     {
@@ -770,6 +773,7 @@ void TestNamingContext::do_tests()
     try
     {
         rootCtx->rebind_context(name.in(), ctx1.in());
+         TEST_FAILED();
     }
     catch(CosNaming::NamingContext::NotFound &e)
     {
@@ -820,7 +824,15 @@ void TestNamingContext::do_tests()
 
     try
     {
-        rootCtx->rebind_context(name.in(), ctx2.in());
+        try
+        {
+            rootCtx->rebind_context(name.in(), ctx2.in());
+        }
+        catch(CORBA::Exception &e)
+        {
+            std::cout << "rebind_context threw " << e << std::endl;
+            throw;
+        }
 
         name->length(2);
         nc->id = CORBA::string_dup("CTX1");
@@ -911,7 +923,6 @@ void TestNamingContext::do_tests()
         ctx_to_destroy = CosNaming::NamingContextExt::_narrow(ctx_obj.in());
 
         ctx_to_destroy->destroy();
-
     }
     catch(CosNaming::NamingContext::NotEmpty &e)
     {
@@ -965,12 +976,80 @@ void TestNamingContext::do_tests()
     {
         CosNaming::Name_var name = ctx_to_destroy->to_name("O4.object");
     }
-    catch(CORBA::OBJECT_NOT_EXIST &e)
+    catch(CORBA::OBJECT_NOT_EXIST  &e)
     {
         std::cout << e._name();
         TEST_SUCCEED();
     }
 
+
+    // --------------- 
+    TEST_INFO("Try to invoke get the URLString Using a empty Address and Empty StringName")
+    try
+    {
+      CosNaming::NamingContextExt::URLString_var url_string = rootCtx->to_url("","");
+    }
+    catch(CosNaming::NamingContextExt::InvalidAddress &e)
+    {
+        std::cout << e._name();
+        TEST_SUCCEED();
+    }
+
+  
+    // --------------- 
+    TEST_INFO("Try to invoke get the URLString Using a valid Address and Empty StringName")
+    try
+    {
+      CosNaming::NamingContextExt::URLString_var url_string = rootCtx->to_url("thalesgroup.com","");
+    }
+    catch(CosNaming::NamingContextExt::InvalidAddress &e)
+    {
+        std::cout << e._name();
+        TEST_FAILED();
+    }
+    catch(CosNaming::NamingContext::InvalidName &e)
+    {
+        std::cout << e._name();
+        TEST_SUCCEED();
+    }
+
+    // --------------- 
+    TEST_INFO("Try to invoke get the URLString Using a valid Address and a valid StringName")
+    try
+    {
+      CosNaming::NamingContextExt::URLString_var url_string = rootCtx->to_url("555xyz.com/dev/NContext1","a/b/c");
+      std::cout << "The URLString is : "<< url_string << " " << std::endl;
+      TEST_SUCCEED();
+    }
+    catch(CosNaming::NamingContextExt::InvalidAddress &e)
+    {
+        std::cout << e._name();
+        TEST_FAILED();
+    }
+    catch(CosNaming::NamingContext::InvalidName &e)
+    {
+        std::cout << e._name();
+        TEST_FAILED();
+    }
+
+    // --------------- 
+    TEST_INFO("Try to invoke get the URLString Using a valid Address and a valid StringName that contains Escape characters")
+    try
+    {
+      CosNaming::NamingContextExt::URLString_var url_string = rootCtx->to_url("555xyz.com/dev/NContext1","a\\/b/c/<a>.b/c.d");
+      std::cout << "The URLString is : "<< url_string << " " << std::endl;
+      TEST_SUCCEED();
+    }
+    catch(CosNaming::NamingContextExt::InvalidAddress &e)
+    {
+        std::cout << e._name();
+        TEST_FAILED();
+    }
+    catch(CosNaming::NamingContext::InvalidName &e)
+    {
+        std::cout << e._name();
+        TEST_FAILED();
+    }
 
 }
 

@@ -1,29 +1,30 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 #include "namingandrepository/Configurator.hpp"
+#include "Foundation/common/Locations.hpp"
 #include <iostream>
 #include <memory>
 
@@ -189,7 +190,6 @@ void RootContextConfigurator::configureChild(const DOM_Node& node)
         DOM_Node nameAttrib = attributes.getNamedItem("name");
 
         std::string childName(to_string(nameAttrib.getNodeValue()));
-
         // create the child
         CdmwNamingAndRepository::NameDomain_var nameDomain;
         NameDomain_impl* nameDomain_i = NULL;
@@ -373,27 +373,29 @@ void RepositoryConfigurator::configureChild(const DOM_Node& node)
         DOM_Node nameAttrib = attributes.getNamedItem("name");
 
         std::string childName(to_string(nameAttrib.getNodeValue()));
-
         // create the child
         CosNaming::NamingContextExt_var rootContext;
-
-        if (childName.compare(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT) != 0)
+        
+        if (childName.compare(Cdmw::Common::Locations::ADMIN_ROOT_CONTEXT_ID) != 0)
         {
-            // If the root context differs from the default root context,
-            // create it
-            rootContext = RootNamingContext_impl::createContext(childName);
-        }
-        else
-        {
-            CosNaming::NamingContext_var temp_rootContext =
+            
+            if (childName.compare(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT) != 0)
+            {
+                // If the root context differs from the default root context,
+                // create it
+                rootContext = RootNamingContext_impl::createContext(childName);
+            }
+            else
+            {
+                CosNaming::NamingContext_var temp_rootContext =
                 m_repository->resolve_root_context(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT);
-            rootContext = CosNaming::NamingContextExt::_narrow(temp_rootContext.in());
+                rootContext = CosNaming::NamingContextExt::_narrow(temp_rootContext.in());
+            }
+            
+            // configure the child 
+            RootContextConfigurator childConfigurator(rootContext);
+            childConfigurator.configure(node, "NameDomain");
         }
-
-        // configure the child 
-        RootContextConfigurator childConfigurator(rootContext);
-        childConfigurator.configure(node, "NameDomain");
-
     }
     catch (const XMLException& e)
     {

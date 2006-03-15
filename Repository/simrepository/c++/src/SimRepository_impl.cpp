@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,7 +26,7 @@
 #include <iostream>
 
 #include "simrepository/SimRepository_impl.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 namespace
 {
@@ -63,7 +63,7 @@ SimRepository_impl::bind_new_context(CosNaming::NamingContext_ptr nc,
                                   const std::string &          name)
     throw (int)
 {
-    Cdmw::NamingAndRepository::NamingInterface ni(nc);
+    Cdmw::CommonSvcs::Naming::NamingInterface ni(nc);
 
     try {
         (void)ni.bind_new_context(name,false);
@@ -96,7 +96,7 @@ void SimRepository_impl::init(CosNaming::NamingContext_ptr nc,
         bind_new_context(nc,name);
     m_root_contexts[name] = default_root_nc;   
 
-    Cdmw::NamingAndRepository::NamingInterface default_ni(default_root_nc.in());
+    Cdmw::CommonSvcs::Naming::NamingInterface default_ni(default_root_nc.in());
 
     //
     // Create persistent POA
@@ -153,7 +153,7 @@ void SimRepository_impl::init(CosNaming::NamingContext_ptr nc,
              // create associated naming context
              try {
                  (void)default_ni.bind_new_context(dom,true);
-             } catch (Cdmw::NamingAndRepository::InvalidNameException & ex) {
+             } catch (Cdmw::CommonSvcs::Naming::InvalidNameException & ex) {
                  std::cerr << "Unvalid name " << ex.what() << std::endl;
                  throw i;
              } catch (...) {
@@ -214,6 +214,7 @@ SimRepository_impl::~SimRepository_impl() throw()
 //        domain_pos = m_domains.erase(domain_pos);
         //m_domains.erase(domain_pos++);
         nd->_remove_ref();
+        domain_pos++;
     }
     m_domains.clear();
 }
@@ -259,8 +260,8 @@ SimRepository_impl::resolve_name_domain(const char* domain_name)
     // Is the name valid
     try {
         CosNaming::Name_var name 
-	        = Cdmw::NamingAndRepository::NamingInterface::to_name(domain_name);
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException& ) {
+	        = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(domain_name);
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException& ) {
         throw CdmwNamingAndRepository::InvalidName();
     }
     NameDomainMap::iterator domain_pos = m_domains.find(domain_name);
@@ -308,7 +309,7 @@ bool SimNameDomain_impl::is_valid(const std::string& s) const throw()
         CosNaming::Name_var name = m_root.to_name(s);
         if (name->length() == 1)
             valid = true;
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException & ) {
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException & ) {
     }
     return valid;
 }
@@ -353,7 +354,7 @@ SimNameDomain_impl::new_name(const char* name)
         CORBA::Any_var id = new CORBA::Any;
         *id <<= name;
         return id._retn();
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException &) {
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException &) {
         throw CORBA::BAD_PARAM();
     } catch (const CORBA::Exception &) {
         throw;
@@ -385,7 +386,7 @@ SimNameDomain_impl::register_object(const CdmwNamingAndRepository::NameDomain::R
         remove_from_registry(n);
     } catch (const CosNaming::NamingContext::AlreadyBound& ) {
         throw CdmwNamingAndRepository::NameDomain::AlreadyExists();
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException &) {
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException &) {
         throw CdmwNamingAndRepository::NameDomain::InvalidRegistration();
     } catch (const CORBA::SystemException &) {
         throw;
@@ -418,7 +419,7 @@ SimNameDomain_impl::register_new_object(const char* object_name,
         m_root.bind(name,the_object,false);
     } catch (const CosNaming::NamingContext::AlreadyBound& ) {
         throw CdmwNamingAndRepository::NameDomain::AlreadyExists();
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException &) {
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException &) {
         throw CdmwNamingAndRepository::NameDomain::InvalidRegistration();
     } catch (const CORBA::SystemException &) {
         throw;
@@ -452,7 +453,7 @@ SimNameDomain_impl::register_factory(const CdmwNamingAndRepository::NameDomain::
         m_root.bind(name,the_factory,false);
     } catch(const CosNaming::NamingContext::NotFound &) {
         try {
-            Cdmw::NamingAndRepository::NamingInterface ni = 
+            Cdmw::CommonSvcs::Naming::NamingInterface ni = 
                 m_root.bind_new_context(ctx,false);
             ni.bind(s,the_factory,false);
         } catch (...) {
@@ -484,7 +485,7 @@ SimNameDomain_impl::register_new_factory(const char* factory_name,
         m_root.bind(name,the_factory,false);
     } catch(const CosNaming::NamingContext::NotFound &) {
         try {
-            Cdmw::NamingAndRepository::NamingInterface ni = 
+            Cdmw::CommonSvcs::Naming::NamingInterface ni = 
                 m_root.bind_new_context(ctx,false);
             ni.bind(factory_name,the_factory,false);
         } catch (...) {
@@ -494,10 +495,10 @@ SimNameDomain_impl::register_new_factory(const char* factory_name,
 }
 
 //
-// IDL:thalesgroup.com/CdmwNamingAndRepository/NameDomain/resolve_name_domain:1.0
+// IDL:thalesgroup.com/CdmwNamingAndRepository/NameDomain/resolve_sub_domain:1.0
 //
 CdmwNamingAndRepository::NameDomain_ptr 
-SimNameDomain_impl::resolve_name_domain(const char* domain_name)
+SimNameDomain_impl::resolve_sub_domain(const char* domain_name)
     throw(CdmwNamingAndRepository::NoNameDomain,
           CdmwNamingAndRepository::InvalidName,
           CORBA::SystemException)
@@ -505,7 +506,7 @@ SimNameDomain_impl::resolve_name_domain(const char* domain_name)
     // Check validity of domain_name
     try {
         CosNaming::Name_var name = m_root.to_name(domain_name);
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException & ) {
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException & ) {
         throw CdmwNamingAndRepository::InvalidName();
     }
     
@@ -575,7 +576,7 @@ void SimNameDomain_impl::release_name(const char* name)
           }
        } catch (const CosNaming::NamingContext::NotFound& ) {
           throw CdmwNamingAndRepository::NameDomain::NotRegistered();
-       } catch (const Cdmw::NamingAndRepository::InvalidNameException &) {
+       } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException &) {
           throw CORBA::INTERNAL();
        } catch (const CORBA::SystemException &) {
           throw;

@@ -1,32 +1,32 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
-#include <Repository/naminginterface/NamingUtil.hpp>
+#include <Foundation/commonsvcs/naming/NamingUtil.hpp>
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
-
+#include <iostream>
 namespace Cdmw
 {
 namespace NamingAndRepository
@@ -83,14 +83,14 @@ RepositoryInterface::init(const std::string&                       default_domai
     // Check that default domain is really a Name Domain
     CdmwNamingAndRepository::NameDomain_var dom 
         = repository->resolve_name_domain (default_domain.c_str());
-    // default_domain is a name domain, so we should be able to get its naming 
+   // default_domain is a name domain, so we should be able to get its naming 
     // context.
-    Cdmw::NamingAndRepository::NamingInterface ni(M_default_root_context.in());
+    Cdmw::CommonSvcs::Naming::NamingInterface ni(M_default_root_context.in());
     
     try {
-        typedef Cdmw::NamingAndRepository::NamingUtil<CosNaming::NamingContext> Util;
-        M_default_domain_context = Util::resolve_name(ni,default_domain);
-    } catch (const Cdmw::Common::TypeMismatchException & ){
+        typedef Cdmw::CommonSvcs::Naming::NamingUtil<CosNaming::NamingContext> Util;
+       M_default_domain_context = Util::resolve_name(ni,default_domain);
+   } catch (const Cdmw::Common::TypeMismatchException & ){
         M_default_domain =  "";
         M_repository = CdmwNamingAndRepository::Repository::_nil();
         M_default_root_context   = CosNaming::NamingContext::_nil();
@@ -107,6 +107,7 @@ RepositoryInterface::init(const std::string&                       default_domai
     } catch (const CORBA::SystemException &) {
         throw;
     }
+
     M_default_name_domain   = dom;
 }
 
@@ -116,18 +117,19 @@ RepositoryInterface::finish()
 {
     // Release all static object references
     M_repository = CdmwNamingAndRepository::Repository::_nil();
+    M_default_name_domain    = CdmwNamingAndRepository::NameDomain::_nil();
     M_default_root_context   = CosNaming::NamingContext::_nil();
     M_default_domain_context = CosNaming::NamingContext::_nil();
 }
 
-Cdmw::NamingAndRepository::NamingInterface
+Cdmw::CommonSvcs::Naming::NamingInterface
 RepositoryInterface::get_domain_naming_interface(const std::string& domain_name)
     throw(CdmwNamingAndRepository::NoNameDomain,
 	      CdmwNamingAndRepository::InvalidName,
           CORBA::SystemException)
 {
     CosNaming::NamingContext_var the_context = get_domain_context(domain_name);
-    return Cdmw::NamingAndRepository::NamingInterface(the_context.in());
+    return Cdmw::CommonSvcs::Naming::NamingInterface(the_context.in());
 }
 CdmwNamingAndRepository::Repository_ptr
 RepositoryInterface::get_repository()
@@ -155,10 +157,10 @@ RepositoryInterface::get_domain_context(const std::string& domain_name)
             = M_repository->resolve_name_domain (domain_name.c_str());
     	// default_domain is a name domain, so we should be able to get its naming 
 	    // context.
-    	Cdmw::NamingAndRepository::NamingInterface ni(M_default_root_context.in());
+    	Cdmw::CommonSvcs::Naming::NamingInterface ni(M_default_root_context.in());
 	    
     	try {
-            typedef Cdmw::NamingAndRepository::NamingUtil<NamingContext> Util;
+            typedef Cdmw::CommonSvcs::Naming::NamingUtil<NamingContext> Util;
             the_context = Util::resolve_name(ni,domain_name);
         } catch (const Cdmw::Common::TypeMismatchException & ) {
             throw  CORBA::INTERNAL(Cdmw::OrbSupport::INTERNALCdmwRepositoryError,
