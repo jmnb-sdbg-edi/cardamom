@@ -115,15 +115,25 @@ void TraceClientThread::run () throw()
                 
                 if (m_multi_domain_level)
                 {
+                    /* ECR-0123
                     CDMW_TRACE("DOMAIN-1", 1, msg.c_str() << count_for_trace);
                     CDMW_TRACE("DOMAIN-1", 5, msg.c_str() << count_for_trace);
                     CDMW_TRACE("DOMAIN-2", 2, msg.c_str() << count_for_trace);
                     CDMW_TRACE("DOMAIN-2", 6, msg.c_str() << count_for_trace);
+                    */
+                    CDMW_TRACE_CCM("COMP_A", "DOMAIN-1", 1, msg.c_str() << count_for_trace);
+                    CDMW_TRACE_CCM("COMP_B", "DOMAIN-1", 5, msg.c_str() << count_for_trace);
+                    CDMW_TRACE_CCM("COMP_A", "DOMAIN-2", 2, msg.c_str() << count_for_trace);
+                    CDMW_TRACE_CCM("COMP_B", "DOMAIN-2", 6, msg.c_str() << count_for_trace);
                 }
                 
                 else
                 {            
+                    /* ECR-0123
                     CDMW_TRACE("TEST", 1, msg.c_str() << count_for_trace);
+                    */
+                    CDMW_TRACE_CCM("COMP_A", "TEST", 1, msg.c_str() << count_for_trace);
+                    CDMW_TRACE_CCM("COMP_B", "TEST", 1, msg.c_str() << count_for_trace);
                 }
             }
             
@@ -166,13 +176,13 @@ void TraceClientThread::run () throw()
             // ===================================================
             // set thread sleeping
             // ===================================================
-            Cdmw::OsSupport::OS::sleep (1000);
+            Cdmw::OsSupport::OS::sleep (2000);
         } 
     }
     catch (...)
     {
         std::cout << "File : " << __FILE__ << " Line : " << __LINE__
-	              << "Unexpected exception in thread loop" << std::endl;
+                  << "Unexpected exception in thread loop" << std::endl;
     }
 }
 

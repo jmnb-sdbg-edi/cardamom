@@ -68,15 +68,15 @@ public:
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     virtual
     void initialise( const CdmwPlatformMngtBase::StartupKind& startup_kind )
-    throw( CdmwPlatformMngt::Process::BadOrder,
+    throw( CdmwPlatformMngt::ProcessDelegate::BadOrder,
            CORBA::SystemException )
     {
-        PlatformInterface::notifyMessage(
+        PlatformInterface::Notify_message(
             CdmwPlatformMngtBase::INF, "USER PROCESS", "Initialise requested" );
     }
 
@@ -85,16 +85,16 @@ public:
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     virtual
     void run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
-           CdmwPlatformMngt::Process::AlreadyDone,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
+           CdmwPlatformMngt::ProcessDelegate::AlreadyDone,
            CORBA::SystemException )
     {
-        PlatformInterface::notifyMessage(
+        PlatformInterface::Notify_message(
             CdmwPlatformMngtBase::INF, "USER PROCESS", "Run requested" );
 
         // Launch the test in a thread
@@ -106,14 +106,14 @@ public:
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     virtual
     void stop()
     throw( CORBA::SystemException )
     {
-        PlatformInterface::notifyMessage(
+        PlatformInterface::Notify_message(
             CdmwPlatformMngtBase::INF, "USER PROCESS", "Stop requested" );
 
         m_test_thread->shutdown();

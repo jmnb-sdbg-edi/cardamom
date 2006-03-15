@@ -31,7 +31,7 @@
 #include <Foundation/ossupport/OS.hpp>
 #include <ConfAndPlug/cdmwinit/ProcessControl.hpp>
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
-#include <Repository/naminginterface/NamingUtil.hpp>
+#include <Foundation/commonsvcs/naming/NamingUtil.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 #include <FaultTolerance/idllib/CdmwFTActivation.skel.hpp>
@@ -182,13 +182,13 @@ public:
        
         // get process name
         std::string process_name 
-            = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+            = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
 
 
         // Get this process' location
 		  std::cout << "test_server: get this process' location " << std::endl;
         ::FT::Location_var the_location = m_group_repository->the_location();
-        m_name = Cdmw::NamingAndRepository::NamingInterface::to_string(
+        m_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(
             the_location.in() );
 
         // Create the object
@@ -216,13 +216,13 @@ public:
     }
 
     void on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
     {
         if( m_current_step < m_nb_init_step )
             ++m_current_step;
         else
-            throw CdmwPlatformMngt::Process::InvalidStep();
+            throw CdmwPlatformMngt::ProcessDelegate::InvalidStep();
 
         // Get the object group reference
         ::FT::ObjectGroup_var group_ref = ::FT::ObjectGroup::_nil();
@@ -288,7 +288,7 @@ public:
     }
 
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
     }

@@ -48,7 +48,7 @@
         </code>
 
         <dependency type="Java Class">
-            <valuetypefactory repid="IDL:acme.com/Dinner/StatusInfo:1.0"
+            <valuetypefactory repid="IDL:acme.com/DinnerEvents/StatusInfo:1.0"
                               factoryentrypoint="cdmw.dinnerdemo.StatusInfoFactoryImpl.createStatusInfoFactory">
                 <fileinarchive name="libObserver.jar"/>
             </valuetypefactory>

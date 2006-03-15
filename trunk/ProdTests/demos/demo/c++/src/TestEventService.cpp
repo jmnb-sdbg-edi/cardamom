@@ -220,7 +220,7 @@ void TestEventService::do_tests()
         CosEventChannelAdmin::EventChannel_var channel;
 
         // Get NamingInterface object from RepositoryInterface
-        Cdmw::NamingAndRepository::NamingInterface ni
+        Cdmw::CommonSvcs::Naming::NamingInterface ni
             = Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface(Cdmw::Common::Locations::CDMW_SERVICES_NAME_DOMAIN);
 
         OsSupport::OS::sleep(timescale*10000);

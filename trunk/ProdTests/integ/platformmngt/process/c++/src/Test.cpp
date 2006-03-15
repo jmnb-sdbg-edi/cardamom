@@ -48,7 +48,7 @@ void Test::do_tests()
         CORBA::Any data;
 
         data <<= m_factory_type_a.create( "data type is TYPE_A" );
-        Cdmw::PlatformMngt::PlatformInterface::notifyUserEvent(
+        Cdmw::PlatformMngt::PlatformInterface::Notify_user_event(
             "USER PROCESS", data );
         TEST_SUCCEED();  
     }
@@ -64,7 +64,7 @@ void Test::do_tests()
         CORBA::Any data;
 
         data <<= m_factory_type_b.create( "data type is TYPE_B", 12345L );
-        Cdmw::PlatformMngt::PlatformInterface::notifyUserEvent(
+        Cdmw::PlatformMngt::PlatformInterface::Notify_user_event(
             "USER PROCESS", data );
         TEST_SUCCEED();  
     }

@@ -42,7 +42,7 @@ namespace Dinner {
 //
 // IDL:omg.org/Components/StatusInfo:1.0
 //
-class StatusInfo_impl : virtual public OBV_Dinner::StatusInfo,
+class StatusInfo_impl : virtual public OBV_DinnerEvents::StatusInfo,
                     virtual public CORBA::DefaultValueRefCountBase
 {
     void operator=(const StatusInfo_impl&);

@@ -57,7 +57,7 @@ public class ClientProcessControl extends ProcessControl {
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     public void onInitialise(
@@ -104,7 +104,7 @@ public class ClientProcessControl extends ProcessControl {
         String registration_name = "Tester";
         try {
             // get NamingInterface to demo_perf
-            cdmw.namingandrepository.NamingInterface demoPerfNamingInterface =
+            cdmw.commonsvcs.naming.NamingInterface demoPerfNamingInterface =
                 RepositoryInterface.getDomainNamingInterface ("demo_perf");
         
              // Retrieve Tester from NamingInterface
@@ -166,21 +166,21 @@ public class ClientProcessControl extends ProcessControl {
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/next_step:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/next_step:1.0
      * operation
      */
     public void onNextStep()
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep {
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep {
 
     }
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     public void onRun()
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun {
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun {
 
         try {
             // =================================================================
@@ -216,7 +216,7 @@ public class ClientProcessControl extends ProcessControl {
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     public void onStop() {

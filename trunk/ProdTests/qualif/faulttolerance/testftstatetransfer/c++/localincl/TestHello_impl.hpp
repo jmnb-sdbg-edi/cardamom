@@ -27,9 +27,9 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/ossupport/OS.hpp>
 #include <FaultTolerance/ftstatemanager/DataStore.hpp>
-#include <FaultTolerance/ftstatemanager/StorageHome.hpp>
-#include <FaultTolerance/ftstatemanager/StorageObject.hpp>
-#include <FaultTolerance/ftstatemanager/DataStore_impl.hpp>
+#include <Foundation/commonsvcs/datastore/StorageHome.hpp>
+#include <Foundation/commonsvcs/datastore/StorageObject.hpp>
+#include <FaultTolerance/ftstatemanager/DataStoreGroup_impl.hpp>
 
 #include "testftstatetransfer/TestHello.skel.hpp"
 #include "testftstatetransfer/TestOnInit.hpp"
@@ -40,12 +40,12 @@
 namespace Cdmw
 {
     typedef Cdmw::FT::DataStore<int, std::string> TestDataStore;
-    typedef Cdmw::FT::StorageHome<int, std::string> TestStorageHome;
-    typedef Cdmw::FT::StorageObject<int, std::string> TestStorageObject;
+    typedef Cdmw::CommonSvcs::DataStore::StorageHome<int, std::string> TestStorageHome;
+    typedef Cdmw::CommonSvcs::DataStore::StorageObject<int, std::string> TestStorageObject;
     typedef Cdmw::FT::DataStoreInitialiser<int, std::string> TestOnInit;
     typedef Cdmw::OnInit_impl<int, std::string> TestOnInitImpl;
 
-    class MyDataStoreObserver1 : public ::Cdmw::FT::DataStoreObserver < int, std::string > {
+    class MyDataStoreObserver1 : public ::Cdmw::CommonSvcs::DataStore::DataStoreObserver < int, std::string > {
         
     public :
         MyDataStoreObserver1() 
@@ -99,7 +99,7 @@ namespace Cdmw
         int on_remove_called;
     };
     
-    class MyDataStoreObserver2 : public ::Cdmw::FT::DataStoreObserver < int, std::string > {
+    class MyDataStoreObserver2 : public ::Cdmw::CommonSvcs::DataStore::DataStoreObserver < int, std::string > {
         
     public:
         MyDataStoreObserver2() 
@@ -200,7 +200,7 @@ namespace Cdmw
          *@return
          *@exception
          */
-        virtual ::CdmwFT::StateTransfer::LocalDataStoreInfo * get_local_datastore_info (CORBA::Long dsid)
+        virtual ::CdmwFT::StateTransfer::LocalDataStoreInfo * get_local_datastore_info ()
             throw(CORBA::SystemException);
      
          /**
@@ -288,10 +288,8 @@ namespace Cdmw
         
         MyDataStoreObserver1* m_observer2;
 
-        CdmwFT::StateTransfer::DataStore_var datastore1;
+        CdmwFT::StateTransfer::DataStoreGroup_var datastore_group;
         
-        CdmwFT::StateTransfer::DataStore_var datastore2;
-
         CORBA::ORB_var m_orb;
         
         PortableServer::POA_var m_poa;
@@ -345,7 +343,7 @@ namespace Cdmw
          *@return
          *@exception
          */
-        virtual ::CdmwFT::StateTransfer::LocalDataStoreInfo * get_local_datastore_info (CORBA::Long dsid)
+        virtual ::CdmwFT::StateTransfer::LocalDataStoreInfo * get_local_datastore_info ()
             throw(CORBA::SystemException);
 
     
@@ -434,9 +432,7 @@ namespace Cdmw
         
         MyDataStoreObserver2* m_observer4;
 
-        CdmwFT::StateTransfer::DataStore_var datastore3;
-
-        CdmwFT::StateTransfer::DataStore_var datastore4;
+        CdmwFT::StateTransfer::DataStoreGroup_var datastore_group;
 
         CORBA::ORB_var m_orb;
         

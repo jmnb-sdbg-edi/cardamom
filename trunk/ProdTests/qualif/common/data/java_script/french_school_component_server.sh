@@ -35,7 +35,7 @@ case @config.CCMContainer.java.orb@ in
     ;;
 esac
 
-__TOOLS_CLASSPATH__=$__ORB_CLASSPATH__:@config.XercesJAVA.classpath@:@config.FtpJAVA.classpath@:@config.XalanJAVA.classpath@
+__TOOLS_CLASSPATH__=$__ORB_CLASSPATH__:@config.XercesJAVA.classpath@:@config.XalanJAVA.classpath@
 
 __CLASSPATH__=""
 

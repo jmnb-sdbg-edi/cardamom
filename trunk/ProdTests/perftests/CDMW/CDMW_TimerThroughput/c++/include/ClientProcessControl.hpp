@@ -1,10 +1,7 @@
-/* ========================================================================== *
+/* ========================================================================== * 
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,7 +16,6 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
 #ifndef INCL_CLIENT_PROCESS_CONTROL_HPP
 #define INCL_CLIENT_PROCESS_CONTROL_HPP
 
@@ -37,23 +33,31 @@
 #include "tao/Messaging/Messaging.h"
 
 // OMG EVoT include
-#include "Time/clockservice/CosClockService.stub.hpp"
+#include "Time/clockservice/CdmwCosClock.hpp"
+#include "Time/clockservice/Util.hpp"
 
-#include "Periodic.hpp"
 
 // Std C++ include
 #include <iostream>
 #include <fstream>
 
+// cTools include
 #include "ctools/time/HighResTimer.h"
 #include "ctools/time/HighResTime.h"
 #include "ctools/time/HighResClock.h"
 #include "ctools/time/LocalClock.h"
 
-namespace TimerInvocation
+// local include
+#include "Periodic.hpp"
+#include "IExecutor.hpp"
+
+namespace TimerThroughput
 {
 
-class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
+class ClientProcessControl : 
+	public Cdmw::CdmwInit::ProcessControl,
+	public IExecutor
+					
 {
     
   public:
@@ -64,7 +68,7 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
 
   ClientProcessControl (CORBA::ORB_ptr orb,
                         int niter,
-                        TimeBase::TimeT period)
+                        TimeBase::TimeT deltaT)
     throw(CORBA::SystemException);  
 
     ~ClientProcessControl()
@@ -74,7 +78,7 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     virtual  
@@ -86,23 +90,33 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     virtual 
     void on_run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
                   CORBA::SystemException);
     
     /**
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     virtual 
     void on_stop()
+        throw(CORBA::SystemException);
+
+    /**
+     * 
+     * 
+     * 
+     * 
+     * 
+     */
+    virtual void startAt()
         throw(CORBA::SystemException);
 
   private:
@@ -128,12 +142,12 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
     CosClockService::Clock_var m_clock;
     CosClockService::PeriodicExecution::Controller_var m_controller;
     perfPeriodic::myPeriodic *m_periodic;
-
     int m_niter;
-    TimeBase::TimeT m_period;
+	TimeBase::TimeT m_deltaT;
+	TimeBase::TimeT m_startTime;    
 
 }; // End class ClientProcessControl
 
-}; // End namespace TimerInvocation
+}; // End namespace TimerThroughput
 
 #endif // INCL_CLIENT_PROCESS_CONTROL_HPP

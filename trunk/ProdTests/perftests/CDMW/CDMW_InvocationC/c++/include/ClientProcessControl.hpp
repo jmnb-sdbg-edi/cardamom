@@ -1,10 +1,7 @@
-/* ========================================================================== *
+/* ========================================================================== * 
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,6 +16,7 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
+ 
  
 
 #ifndef INCL_CLIENT_PROCESS_CONTROL_HPP
@@ -35,6 +33,7 @@
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Invocation.skel.hpp"
+#include "TestPing_i.h"
 #include "tao/Messaging/Messaging.h"
 
 #include <iostream>
@@ -43,12 +42,17 @@
 #include "ctools/time/HighResTimer.h"
 #include "ctools/time/HighResTime.h"
 #include "ctools/time/HighResClock.h"
+#include "ClockTime.hpp"
 
 #define CALL_RETURN       "CR"
 #define ONE_WAY           "OW"
 #define ONE_WAY_TRANSPORT "OW_TRANSPORT"
 #define ONE_WAY_SERVER    "OW_SERVER"
 #define ONE_WAY_TARGET    "OW_TARGET"
+
+#define MEASURE_HR "TIME_HR" // cTools HighRes Time
+#define MEASURE_TH "TIME_TH" // clock thread cpu time 
+#define MEASURE_TK "TIME_TK" // cTools HighRes clock tick count
 
 namespace Invocation
 {
@@ -66,7 +70,8 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
                         int niter,
                         int delay,
                         char* invocation_type,
-                        char* fileprefix)
+                        char* fileprefix,
+                        ClockTime *measure_type)
     throw(CORBA::SystemException);  
 
     ~ClientProcessControl()
@@ -76,7 +81,7 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     virtual  
@@ -88,19 +93,19 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     virtual 
     void on_run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
                   CORBA::SystemException);
     
     /**
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     virtual 
@@ -129,6 +134,11 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
     */
   //    BenchmarkThread* m_bench_thread;
     
+    
+    /**
+    * TestPing pointer
+    */
+  Invocation::TestPing_i* testping_i;
     /**
     * TestPing reference
     */
@@ -138,6 +148,8 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
   int m_delay;
   std::string m_invocation_type;
   std::string m_fileprefix;
+  ClockTime *m_measure;
+
 
 };  // End class ClientProcessControl
 

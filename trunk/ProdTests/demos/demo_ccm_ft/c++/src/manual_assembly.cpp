@@ -36,7 +36,7 @@
 
 #include "CCMContainer/idllib/CdmwCcmComponentServer.stub.hpp"
 #include "CCMContainer/ccmcontainer/ConfigValue_impl.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Foundation/osthreads/Thread.hpp"
 #include "Foundation/ossupport/OS.hpp"
@@ -222,9 +222,11 @@ namespace
         ::FT::ObjectGroup_var obj_group;
         try {
             obj_group = rm->add_member(group, ftLoc.get_FT_Location(), member);
+	    /***
             if (primary) { 
                 obj_group = rm->set_primary_member( obj_group.in(), ftLoc.get_FT_Location() );
             }
+	    */
         } catch (const CORBA::Exception & ex) {
             std::cerr << __FILE__ << "  " << __LINE__ << "\n"
                       << ex << std::endl;
@@ -242,7 +244,7 @@ namespace
      const char * entrypoint,
      const char * componentname,
      const char * bindingname,
-     Cdmw::NamingAndRepository::NamingInterface & ni,
+     Cdmw::CommonSvcs::Naming::NamingInterface & ni,
      CdmwDeployment::ComponentInstallation_ptr component_installation,
      CORBA::Long splice_port = 0L)
     {
@@ -256,7 +258,7 @@ namespace
         
         const std::string process_location = ostr.str();
         CdmwCcmComponentServer::ComponentServer_var process =
-            Cdmw::NamingAndRepository::NamingUtil<CdmwCcmComponentServer::ComponentServer>::resolve_name (ni,process_location);            
+            Cdmw::CommonSvcs::Naming::NamingUtil<CdmwCcmComponentServer::ComponentServer>::resolve_name (ni,process_location);            
         process->set_component_installation(component_installation);
         std::cout << "[B] Create the container on the component server" << std::endl;        
         // Create a set of ConfigValues.
@@ -387,7 +389,7 @@ int main(int argc, char* argv[])
     try 
     {
         // Initialise FT service
-        Cdmw::FT::FTServiceInit::init( argc, argv, true );
+        Cdmw::FT::FTServiceInit::Init( argc, argv, true );
         // ===================================================
         // Initialize the ORB
         // ===================================================
@@ -426,6 +428,7 @@ int main(int argc, char* argv[])
         // [0] Get the CDMW NamingAndRepository object reference
         // **************************************************************************
         using namespace Cdmw::NamingAndRepository;
+        using namespace Cdmw::CommonSvcs::Naming;
         CdmwNamingAndRepository::Repository_var repository =
             RepositoryInterface::get_repository(); 
         

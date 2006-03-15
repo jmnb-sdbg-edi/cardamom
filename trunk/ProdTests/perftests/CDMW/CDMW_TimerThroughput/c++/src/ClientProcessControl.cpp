@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,15 +16,16 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 #include "ClientProcessControl.hpp"
 
-namespace TimerInvocation
+
+namespace TimerThroughput
 {
   
     ClientProcessControl::ClientProcessControl (CORBA::ORB_ptr orb,
                                                 int niter,
-                                                TimeBase::TimeT period)
+                                                TimeBase::TimeT deltaT)
         throw(CORBA::SystemException)
         : m_orb (CORBA::ORB::_duplicate(orb)),
           m_applicationName (""),
@@ -37,7 +35,7 @@ namespace TimerInvocation
           m_periodic(0)
     {
         m_niter = niter;
-        m_period = period;
+        m_deltaT = deltaT;
     }
   
     ClientProcessControl::~ClientProcessControl()
@@ -64,7 +62,7 @@ namespace TimerInvocation
         // example of using the PlatformInterface for notifying a message
         // =================================================================
         Cdmw::PlatformMngt::PlatformInterface
-            ::notifyMessage(CdmwPlatformMngtBase::INF,
+            ::Notify_message(CdmwPlatformMngtBase::INF,
                             m_processName.c_str(),
                             ">>>>>>>>>>>>>> Initialisation requested by supervision");
     
@@ -106,14 +104,14 @@ namespace TimerInvocation
 
     // process to run called by platformmngt    
     void ClientProcessControl::on_run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, CORBA::SystemException)
     {
 
         // =================================================================
         // example of using the PlatformInterface for notifying a message
         // =================================================================
         Cdmw::PlatformMngt::PlatformInterface
-            ::notifyMessage(CdmwPlatformMngtBase::INF,
+            ::Notify_message(CdmwPlatformMngtBase::INF,
                             m_processName.c_str(),
                             ">>>>>>>>>>>>>> Run requested by supervision");
 
@@ -122,24 +120,17 @@ namespace TimerInvocation
         CosClockService::PeriodicExecution::Executor_var executor
            = CosClockService::PeriodicExecution::Executor::_narrow(m_clock.in());
 
-        m_periodic= new perfPeriodic::myPeriodic();
-
+		m_periodic= new perfPeriodic::myPeriodic(m_niter, this);
         CosClockService::PeriodicExecution::Periodic_var
             periodic = m_periodic->_this();
 
         m_controller = executor->enable_periodic_execution( periodic.in() );
 
-        CORBA::Any aPar;
+        m_startTime = Cdmw::clock::compute_current_time();
 
-		for (int n=0; n < m_niter; n++) {
-	        m_controller->start(m_period,
-        	                    0,
-    	                        m_niter,
-        	                    aPar);
-		}
-							
+		startAt();
 //-----------------------------------------------------------------------------
-        
+
         // write file for shell script execution control
         ofstream feof ("end_of_test.log");
         feof<<"EOF"<< std::endl;
@@ -158,11 +149,28 @@ namespace TimerInvocation
         // example of using the PlatformInterface for notifying a message
         // =================================================================
         Cdmw::PlatformMngt::PlatformInterface
-            ::notifyMessage(CdmwPlatformMngtBase::INF,
+            ::Notify_message(CdmwPlatformMngtBase::INF,
                             m_processName.c_str(),
                             ">>>>>>>>>>>>>> Stop requested by supervision");
         m_controller->terminate();
-        m_periodic->writeRes(m_niter);
+		m_periodic->writeRes(m_niter);
     } // on_stop()
-  
-}; // End namespace TimerInvocation
+
+///////////////////////////////////////////////////////////////////////////////
+
+    void ClientProcessControl::startAt()
+        throw(CORBA::SystemException)
+    {
+        // =================================================================
+        // 
+        // =================================================================
+		static CORBA::Any aPar;
+
+		//std::cerr << "** CLIENT COUNTER: " << m_periodic->m_counter << std::endl;
+		m_controller->start_at(
+			0,			 						 					// period
+			m_startTime + (m_deltaT * (m_periodic->m_counter + 1)), // at_time
+			1,									 					// executions_limit
+			aPar);
+    } // startAt()
+}; // End namespace TimerThroughput

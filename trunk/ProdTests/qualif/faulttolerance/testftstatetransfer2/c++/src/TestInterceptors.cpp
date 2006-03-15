@@ -21,9 +21,9 @@
  * =========================================================================== */
 
 
-#include <iostream>
 #include <testftstatetransfer2/TestInterceptors.hpp>
 
+#include <iostream>
 
 namespace Cdmw
 {
@@ -35,8 +35,8 @@ namespace Cdmw
         , m_actual_intercept_count(0)
         , m_host_name(host)
     {
-        if (strcmp(method, "prepare_insert") == 0) {
-            m_method_to_intercept = "prepare_insert";
+        if (strcmp(method, "prepare") == 0) {
+            m_method_to_intercept = "prepare";
         }
         else if (strcmp(method, "commit") == 0) {
             m_method_to_intercept = "commit";
@@ -135,8 +135,8 @@ namespace Cdmw
         , m_actual_intercept_count(0)
         , m_host_name(host)
     {
-        if (strcmp(method, "prepare_insert") == 0) {
-            m_method_to_intercept = "prepare_insert";
+        if (strcmp(method, "prepare") == 0) {
+            m_method_to_intercept = "prepare";
         }
         else if (strcmp(method, "commit") == 0) {
             m_method_to_intercept = "commit";

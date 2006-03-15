@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -54,7 +51,10 @@ XML_DATA_FILES:=data/Client.xml data/Server.xml \
 		run/start_single_test1H.sh \
 		run/start_single_test2H.sh \
 		data/Cdmw_nar.xml \
-		data/CdmwPlatformMngtDaemon_conf.xml
+		data/CdmwPlatformMngtDaemon_conf.xml \
+		data/CdmwFTSystemMngtGroupCreator_conf.xml \
+		data/CdmwPlatformMngtSystemStart.xml \
+		data/CdmwFaultToleranceManager_conf.xml
 
 all :: conf data gencode exe
 

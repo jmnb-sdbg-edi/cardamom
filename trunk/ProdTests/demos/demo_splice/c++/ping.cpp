@@ -1,29 +1,7 @@
-/* ========================================================================== *
- * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
- * License for more details.
- * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
- 
 //
-// IDENTIFICATION   = 1000000097678
+// IDENTIFICATION   = 1000000117114
 // REVISION         = 1
-// DATE             = 03-JAN-2005 07:45:27
+// DATE             = 22-JUL-2005 05:05:40
 // DESCRIPTION      =  
 // SECURITY         = UNCLASSIFIED  
 // STATUS           = RELEASED
@@ -32,15 +10,15 @@
 //
 // Copyright THALES NEDERLAND B.V. and/or its suppliers
 //
-// THIS SOFTWARE SOURCE CODE AND ANY EXECUTABLE DIRVED THEREOF ARE PROPRIETARY
+// THIS SOFTWARE SOURCE CODE AND ANY EXECUTABLE DERIVED THEREOF ARE PROPRIETARY
 // TO THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE, AND SHALL NOT
 // BE USED IN ANY WAY OTHER THAN BEFOREHAND AGREED ON BY THALES NEDERLAND B.V.,
 // NOR BE REPRODUCED OR DISCLOSED TO THIRD PARTIES WITHOUT PRIOR WRITTEN
 // AUTHORIZATION BY THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE.
 //
 
-#include "dds_dcps.h"
-#include "pingpong.h"
+#include "ccpp_dds_dcps.h"
+#include "ccpp_pingpong.h"
 
 #include <iostream>
 #include <time.h>
@@ -86,14 +64,14 @@ typedef struct
     int count;
 } stats_type;
 
-typedef Boolean pong_handler (int max_count);
+typedef Boolean pong_handler (unsigned int max_count);
 
 //
 // configurable parameters ( through cmdline)
 //
 
-static int nof_cycles = 100;
-static int nof_blocks = 20;
+static unsigned int nof_cycles = 100;
+static unsigned int nof_blocks = 20;
 static char topic_id  = 's';
 
 static char * write_partition = "PING";
@@ -231,7 +209,7 @@ timeToReal (
 
 static Boolean
 PP_min_handler (
-    int nof_cycles
+    unsigned int nof_cycles
     )
 {
     SampleInfoSeq_var infoList = new SampleInfoSeq;
@@ -250,7 +228,7 @@ PP_min_handler (
         if (amount > 1) {
             cout << "PING: Ignore excess messages : " << PP_min_dataList->length () << " msg received" << endl;
         }
-        PP_min_dataList[0].count++;
+        PP_min_dataList[0U].count++;
         if (PP_min_dataList[0].count < nof_cycles) {
             preWriteTime = timeGet ();
             dds_result = PP_min_writer->write (PP_min_dataList[0], HANDLE_NIL);
@@ -271,7 +249,7 @@ PP_min_handler (
 
 static Boolean
 PP_seq_handler (
-    int nof_cycles
+    unsigned int nof_cycles
     )
 {
     SampleInfoSeq_var infoList = new SampleInfoSeq;
@@ -290,10 +268,10 @@ PP_seq_handler (
         if (amount > 1) {
             cout << "PING: Ignore excess messages : " << PP_seq_dataList->length () << " msg received" << endl;
         }
-        PP_seq_dataList[0].count++;
-        if (PP_seq_dataList[0].count < nof_cycles) {
+        PP_seq_dataList[0U].count++;
+        if (PP_seq_dataList[0U].count < nof_cycles) {
             preWriteTime = timeGet ();
-            dds_result = PP_seq_writer->write (PP_seq_dataList[0], HANDLE_NIL);
+            dds_result = PP_seq_writer->write (PP_seq_dataList[0U], HANDLE_NIL);
             postWriteTime = timeGet ();
             add_stats (write_access, 1E6 * timeToReal (timeSub (postWriteTime, preWriteTime)));
         } else {
@@ -311,7 +289,9 @@ PP_seq_handler (
 }
 
 static Boolean
-PP_string_handler (int nof_cycles)
+PP_string_handler (
+    unsigned int nof_cycles
+    )
 {
     SampleInfoSeq_var infoList = new SampleInfoSeq;
     int               amount;
@@ -329,10 +309,10 @@ PP_string_handler (int nof_cycles)
         if (amount > 1) {
             cout << "PING: Ignore excess messages : " << PP_string_dataList->length () << " msg received" << endl;
         }
-        PP_string_dataList[0].count++;
-        if (PP_string_dataList[0].count < nof_cycles) {
+        PP_string_dataList[0U].count++;
+        if (PP_string_dataList[0U].count < nof_cycles) {
             preWriteTime = timeGet ();
-            dds_result = PP_string_writer->write (PP_string_dataList[0], HANDLE_NIL);
+            dds_result = PP_string_writer->write (PP_string_dataList[0U], HANDLE_NIL);
             postWriteTime = timeGet ();
             add_stats (write_access, 1E6 * timeToReal (timeSub (postWriteTime, preWriteTime)));
         } else {
@@ -350,7 +330,7 @@ PP_string_handler (int nof_cycles)
 
 static Boolean
 PP_fixed_handler (
-    int nof_cycles
+    unsigned int nof_cycles
     )
 {
     SampleInfoSeq_var infoList = new SampleInfoSeq;
@@ -369,10 +349,10 @@ PP_fixed_handler (
         if (amount > 1) {
             cout << "PING: Ignore excess messages : " << PP_fixed_dataList->length () << " msg received" << endl;
         }
-        PP_fixed_dataList[0].count++;
-        if (PP_fixed_dataList[0].count < nof_cycles ) {
+        PP_fixed_dataList[0U].count++;
+        if (PP_fixed_dataList[0U].count < nof_cycles ) {
             preWriteTime = timeGet ();
-            dds_result = PP_fixed_writer->write (PP_fixed_dataList[0], HANDLE_NIL);
+            dds_result = PP_fixed_writer->write (PP_fixed_dataList[0U], HANDLE_NIL);
             postWriteTime = timeGet ();
             add_stats (write_access, 1E6 * timeToReal (timeSub (postWriteTime, preWriteTime)));
         } else {
@@ -390,7 +370,7 @@ PP_fixed_handler (
 
 static
 Boolean PP_array_handler (
-    int nof_cycles
+    unsigned int nof_cycles
     )
 {
     SampleInfoSeq_var infoList = new SampleInfoSeq;
@@ -485,7 +465,7 @@ main (
     }
 
     //
-    //   Create participant
+    // Create participant
     //
     dpf = DomainParticipantFactory::get_instance ();
     dp = dpf->create_participant (myDomain, PARTICIPANT_QOS_DEFAULT, NULL);
@@ -493,7 +473,6 @@ main (
         cout << argv[0] << "PING: ERROR - Splice Daemon not running";
         exit (1);
     }
-    result = dp->enable ();
 
     // 
     // Create PING publisher
@@ -502,7 +481,6 @@ main (
     pQos.partition.name.length (1);
     pQos.partition.name[0] = string_dup (write_partition);
     p = dp->create_publisher (pQos, NULL);
-    result = p->enable ();
 
     //
     // Create PONG subscriber
@@ -522,14 +500,15 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_min_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_min_writer = PP_min_msgDataWriter::_narrow (dw);
+    PP_min_writer = dynamic_cast<PP_min_msgDataWriter_ptr>( dw );
 
     // Create datareader
     dr = s->create_datareader (PP_min_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_min_reader = PP_min_msgDataReader::_narrow (dr);
+    PP_min_reader = dynamic_cast<PP_min_msgDataReader_ptr>(dr);
 
     // Add datareader statuscondition to waitset
     PP_min_sc = PP_min_reader->get_statuscondition ();
+    PP_min_sc->set_enabled_statuses (DATA_AVAILABLE_STATUS);
     result = w.attach_condition (PP_min_sc);
 
     //
@@ -542,14 +521,15 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_seq_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_seq_writer = PP_seq_msgDataWriter::_narrow (dw);
+    PP_seq_writer = dynamic_cast<PP_seq_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_seq_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_seq_reader = PP_seq_msgDataReader::_narrow (dr);
+    PP_seq_reader = dynamic_cast<PP_seq_msgDataReader_ptr>(dr);
     
     // Add datareader statuscondition to waitset
     PP_seq_sc = PP_seq_reader->get_statuscondition ();
+    PP_seq_sc->set_enabled_statuses (DATA_AVAILABLE_STATUS);
     result = w.attach_condition (PP_seq_sc);
     
     //
@@ -562,14 +542,15 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_string_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_string_writer = PP_string_msgDataWriter::_narrow (dw);
+    PP_string_writer = dynamic_cast<PP_string_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_string_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_string_reader = PP_string_msgDataReader::_narrow (dr);
+    PP_string_reader = dynamic_cast<PP_string_msgDataReader_ptr> (dr);
     
     // Add datareader statuscondition to waitset
     PP_string_sc = PP_string_reader->get_statuscondition ();
+    PP_string_sc->set_enabled_statuses (DATA_AVAILABLE_STATUS);
     result = w.attach_condition (PP_string_sc);
     
     //
@@ -582,14 +563,15 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_fixed_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_fixed_writer = PP_fixed_msgDataWriter::_narrow (dw);
+    PP_fixed_writer = dynamic_cast<PP_fixed_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_fixed_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_fixed_reader = PP_fixed_msgDataReader::_narrow (dr);
+    PP_fixed_reader = dynamic_cast<PP_fixed_msgDataReader_ptr> (dr);
     
     // Add datareader statuscondition to waitset
     PP_fixed_sc = PP_fixed_reader->get_statuscondition ();
+    PP_fixed_sc->set_enabled_statuses (DATA_AVAILABLE_STATUS);
     result = w.attach_condition (PP_fixed_sc);
     
     //
@@ -602,14 +584,15 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_array_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_array_writer = PP_array_msgDataWriter::_narrow (dw);
+    PP_array_writer = dynamic_cast<PP_array_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_array_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_array_reader = PP_array_msgDataReader::_narrow (dr);
+    PP_array_reader = dynamic_cast<PP_array_msgDataReader_ptr> (dr);
     
     // Add datareader statuscondition to waitset
     PP_array_sc = PP_array_reader->get_statuscondition ();
+    PP_array_sc->set_enabled_statuses (DATA_AVAILABLE_STATUS);
     result = w.attach_condition (PP_array_sc);
     
     //
@@ -622,7 +605,7 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter(PP_quit_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_quit_writer = PP_quit_msgDataWriter::_narrow(dw);
+    PP_quit_writer = dynamic_cast<PP_quit_msgDataWriter_ptr>(dw);
 
     for (block = 0; block < nof_blocks ; block++) {
         while (!finish_flag) {
@@ -696,9 +679,10 @@ main (
                         result = PP_array_writer->write (PPdata, HANDLE_NIL);
                         postWriteTime = timeGet ();
                     }
+                    break;
                 case 't':
                     {
-                        // cout << "PING: sending initial ping_array" << endl;
+                        // cout << "PING: sending initial ping_quit" << endl;
                         PP_quit_msg PPdata;
                         PPdata.quit = true;
 			terminate = true;
@@ -707,7 +691,7 @@ main (
                         result = PP_quit_writer->write (PPdata, HANDLE_NIL);
                         postWriteTime = timeGet ();
                     }
-                break;
+                    break;
                 default:
                     printf("Invalid topic-id\n");
                     exit(1);
@@ -743,8 +727,8 @@ main (
 	    if (block == 0) {
 	        printf ("# PING PONG measurements (in us) \n");
 	        printf ("# Executed at: %s", ctime(&clock));
-	        printf ("# size      Roundtrip time [us]             Write-access time [us]          Read-access time [us]\n");
-	        printf ("# [bytes]   Count   mean    min    max      Count   mean    min    max      Count   mean    min    max\n");
+	        printf ("#           Roundtrip time [us]             Write-access time [us]          Read-access time [us]\n");
+	        printf ("# Block     Count   mean    min    max      Count   mean    min    max      Count   mean    min    max\n");
 	    }
             printf ("%6d %10d %6.0f %6.0f %6.0f %10d %6.0f %6.0f %6.0f %10d %6.0f %6.0f %6.0f\n",
 		block,

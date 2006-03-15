@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#*
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -20,11 +17,5 @@
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
-killall cdmw_platform_supervision
-killall cdmw_platform_daemon
-killall cdmw_platform_agent
-killall cdmw_ft_manager
-$CDMW_HOME/bin/cdmw_platform_kill_all_pids.sh /tmp/CdmwDaemon_21869
-./killtest.sh
-
-
+$CDMW_HOME/bin/cdmw_platform_kill_all_pids.sh /tmp/CdmwDaemon_*
+../../../kill_cdmw_appl.sh

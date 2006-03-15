@@ -1,9 +1,6 @@
-/* =========================================================================== *
+/* ========================================================================== * 
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -18,7 +15,9 @@
  * You should have received a copy of the GNU Library General
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * ========================================================================= */
+ 
+ 
 
 #ifndef ___MARSHALLING_TESTPING_FACET_EXECUTOR_IMPL_HPP__
 #define ___MARSHALLING_TESTPING_FACET_EXECUTOR_IMPL_HPP__

@@ -70,7 +70,7 @@ fi
 INIT_TIMEOUT=10
 FT_MANAGER_TIMEOUT=30
 EXEC_TIMEOUT=30
-CLEANUP_TIMEOUT=9
+CLEANUP_TIMEOUT=20
 
 
 $echo "========================================================="
@@ -93,16 +93,14 @@ sleep $INIT_TIMEOUT
 if test -x "$CDMW_HOME/bin/cdmw_ft_manager"
 then
     $echo Starting the FT Manager...
-    $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_perf/c++/data/CdmwFaultToleranceManager_conf.xml &
+    $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_perf/c++/data/CdmwFaultToleranceManager_conf.xml --groupConf=$CDMW_HOME/demos/demo_perf/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml &
     FT_MANAGER_PID=$!
     sleep $FT_MANAGER_TIMEOUT
-    $echo Starting the Platform Management Supervision...
-    $CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21881 --FaultManagerRegistration=corbaloc::$HOSTNAME:4601/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000 &
-else
-    $echo Starting the Platform Management Supervision...
-    $CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21881 --creation-timeout=20000 &
 fi
-SUPERVISION_PID=$!
+
+$echo Starting the Platfor :Lrm Management Supervision...
+$CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=$CDMW_HOME/demos/demo_perf/c++/data/CdmwPlatformMngtSystemStart.xml --validate
+
 sleep $INIT_TIMEOUT
 
 # 3) Define system
@@ -131,7 +129,7 @@ read FOO
 $echo "=============================================================="
 
 $DAEMON_COMMAND stop
-kill -9 $SUPERVISION_PID
+
 if test -x "$CDMW_HOME/bin/cdmw_ft_manager"
 then
     kill -9 $FT_MANAGER_PID

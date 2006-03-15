@@ -44,17 +44,19 @@ class HelloActivationHandler:
 
 public:
 
-    // Constructor
-    HelloActivationHandler(int argc, char *argv[],
-			                  const std::string& name,
-                           HelloInterface_impl* hello_impl):
-		  RecoveryMechanism(argc, argv),
-        m_name (name),
-        m_hello_impl (hello_impl),
-        m_is_active (false)
+
+   HelloActivationHandler(int argc, char *argv[],
+			  const std::string& name,
+			  HelloInterface_impl* hello_impl):
+     RecoveryMechanism(argc, argv),
+	m_name (name),
+	m_hello_impl (hello_impl),
+	m_is_active (false)
     { 
-        CDMW_ASSERT(m_hello_impl != NULL);
-        m_hello_impl->_add_ref();
+      std::cout << " Hello Activation Handler Constructor -------------"<< std::endl;
+      CDMW_ASSERT(m_hello_impl != NULL);
+      m_hello_impl->_add_ref();
+      
     };
     
     // Descrutor

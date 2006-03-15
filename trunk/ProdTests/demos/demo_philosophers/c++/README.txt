@@ -21,26 +21,41 @@
 #* =========================================================================== *
 
 Welcome to the CDMW PHILOSOPHERS DEMO
-======================================
+=====================================
 
 The purpose of CDMW PHILOSOPHERS DEMO is to provide an comprehensive example
 for writing software based on CDMW runtime middleware. Provided Makefiles may
 be reused to write more sofisticated ones that suit needs of CDMW users.
 
-
 To build CDMW demo philosophers:
 	make all
 
-Running the demo:
+To run the demo with C++ components only:
 	cd run
-	start_demo.sh
+	./start_demo.sh
+
+To run the first demo with C++ and Java components together
+(C++: Philosophers, Java: Observer):
+    (cd ../java && make all)
+    cd run
+    ./make_assembly_package_2.sh
+    ./start_demo_2.sh
+
+To run the second demo with C++ and Java components together
+(C++: Observer, Java:Philosophers):
+    (cd ../java && make all)
+    cd run
+    ./make_assembly_package_3.sh
+    ./start_demo_3.sh
 
 
-
-CONTENT:
+CONTENT
 =======
+
 Makefile      : Global makefile
 ORBacus4.mk   : ORBacus/C++ 4.x configuration file
+tao13.mk      : TAO 1.3.x configuration file
+tao14-OF.mk   : TAO 1.4.x OpenFusion configuration file
 README.txt    : This file
 config.mk     : CDMW configuration file for use by demo makefiles
 site.mk       : Configuration file used by demo makefiles
@@ -56,10 +71,19 @@ generated/    : Contains CDMW generated files
 host-type/    : Build directory
 
 
-Technical considerations on environnement
------------------------------------------
-At the time of this writing (25.11.04) most of the demos have their own CdmwPlatformMngtDaemon_conf. But not this one : we use the share directory.
-Advantage to have localy: we can define specific adresses to automaticaly avoid problems whith another test/demo process launched by another one (for example i use last digit of id and pwd length to build adresses in Makefile).
-To do this in our case (not local), modify the ports in files of share directory, then touch run/start_daemon.sh.in, touch data/integ_deployment.xml.in, and do a "make data".
-Advantage to get in share directory: evolutions on the configuration file fields are automaticaly kept + these delivered files are tested..
-For the moment i have choosed to keep local where it is already local (and so to add a local CdmwFaultToleranceManager_conf) and to take the share conf files when they are not local
+Technical considerations about the user environnement
+-----------------------------------------------------
+At the time of this writing (25.11.04) most of the demos have their own
+CdmwPlatformMngtDaemon_conf. But not this one : we use the share directory.
+Advantage to have localy: we can define specific adresses to automaticaly
+avoid problems whith another test/demo process launched by another one
+(for example i use last digit of id and pwd length to build adresses in
+Makefile).
+To do this in our case (not local), modify the ports in files of share
+directory, then touch run/start_daemon.sh.in, touch
+data/integ_deployment.xml.in, and do a "make data".
+Advantage to get in share directory: evolutions on the configuration file
+fields are automaticaly kept + these delivered files are tested.
+For the moment i have choosed to keep local where it is already local (and
+so to add a local CdmwFaultToleranceManager_conf) and to take the share conf
+files when they are not local.

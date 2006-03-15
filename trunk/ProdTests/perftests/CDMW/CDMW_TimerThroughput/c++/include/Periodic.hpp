@@ -1,10 +1,7 @@
-/* ========================================================================== *
+/* ========================================================================== * 
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,23 +16,25 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
 #ifndef INCL_PERIODIC_HPP_
 #define INCL_PERIODIC_HPP_
 
-// Std C++ include
+// std C++ include
 #include <iostream>
 #include <valarray>
+#include <fstream>
 
 // OMG EVoT include
 #include "Time/clockservice/CosClockService.skel.hpp"
 
-// Ctools include
+// cTools include
 #include "ctools/time/HighResTimer.h"
 #include "ctools/time/HighResTime.h"
 #include "ctools/time/HighResClock.h"
 #include "ctools/time/LocalClock.h"
 
+// local include
+#include "IExecutor.hpp"
 
 namespace perfPeriodic {
 
@@ -46,12 +45,16 @@ public:
     CORBA::Boolean do_work (const CORBA::Any&)
         throw (CORBA::SystemException);
     
-    myPeriodic::myPeriodic();
-    void writeRes(int req_iter);
+    myPeriodic(int reqIter, IExecutor *ref);
+	void writeRes(int IterRequested);
+public:
+	int m_counter;
+	int m_reqIter;
 private:
-    unsigned int m_count;
+	IExecutor *m_ProcCtrlRef;
+
 };
 
 } // perfPeriodic
 
-#endif
+#endif // INCL_PERIODIC_HPP_

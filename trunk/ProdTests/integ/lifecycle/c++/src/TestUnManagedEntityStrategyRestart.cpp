@@ -22,8 +22,8 @@
 
 #include "lifecycle/TestUnManagedEntityStrategyRestart.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include <string>
 #include <cctype>
 #include <algorithm>
@@ -114,10 +114,10 @@ void TestUnManagedEntityStrategyRestart::do_tests()
 
         {
             using Cdmw::NamingAndRepository::RepositoryInterface;
-            Cdmw::NamingAndRepository::NamingInterface ni
+            Cdmw::CommonSvcs::Naming::NamingInterface ni
             = RepositoryInterface::get_domain_naming_interface
                 (factory_domain_name);
-            typedef Cdmw::NamingAndRepository::NamingUtil<CFFactories::ResourceFactory> 
+            typedef Cdmw::CommonSvcs::Naming::NamingUtil<CFFactories::ResourceFactory> 
                 Util;
             
             fac = Util::resolve_name(ni,factory_name);
@@ -146,10 +146,10 @@ void TestUnManagedEntityStrategyRestart::do_tests()
             }
         } else {
             using Cdmw::NamingAndRepository::RepositoryInterface;
-            Cdmw::NamingAndRepository::NamingInterface ni
+            Cdmw::CommonSvcs::Naming::NamingInterface ni
             = RepositoryInterface::get_domain_naming_interface
                 (resource_domain_name);
-            typedef Cdmw::NamingAndRepository::NamingUtil<CF::Application> 
+            typedef Cdmw::CommonSvcs::Naming::NamingUtil<CF::Application> 
                 Util;
             
             appli = Util::resolve_name(ni,appl_1_key);

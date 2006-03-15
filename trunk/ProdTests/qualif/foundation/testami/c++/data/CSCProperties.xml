@@ -33,11 +33,13 @@
                         Foundation/common
                         Foundation/testutils
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platformlibrary
                         SystemMngt/platforminterface
                         SystemMngt/platformvaluetypes
@@ -46,7 +48,7 @@
                         LifeCycle/lifecycleinit
                         LifeCycle/lifecycle
                         Repository/repositoryidl
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         ConfAndPlug/cdmwinit
                     </libraries>
@@ -73,11 +75,13 @@
                         Foundation/common
                         Foundation/testutils
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platformlibrary
                         SystemMngt/platforminterface
                         SystemMngt/platformvaluetypes
@@ -86,7 +90,7 @@
                         LifeCycle/lifecycleinit
                         LifeCycle/lifecycle
                         Repository/repositoryidl
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         ConfAndPlug/cdmwinit
                     </libraries>
@@ -100,9 +104,10 @@
                     ServerHandler_impl.cpp
                 </sourcefiles>
                 <idlfiles>
-                    <server/>
-                    <client>
+                    <server>
                         TestAMI.idl
+                    </server>
+                    <client>                       
                     </client>
                 </idlfiles>
                 <addidlflags>

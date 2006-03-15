@@ -1,10 +1,7 @@
 #!/bin/sh
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -71,10 +68,10 @@ echo Create assembly archive
 
 OLD_DIR=`pwd`
 cd $PACK_TMP_DIR
-$ZIP_ROOT/bin/zip -r $OLD_DIR/CcmPerf_1host.aar *
+/usr/bin/zip -r $OLD_DIR/CcmPerf_1host.aar *
 cp $PARENT_DIR/data/CcmPerf_2hosts.cad $PACK_TMP_DIR/meta-inf
 rm $PACK_TMP_DIR/meta-inf/CcmPerf_1host.cad
-$ZIP_ROOT/bin/zip -r $OLD_DIR/CcmPerf_2hosts.aar *
+/usr/bin/zip -r $OLD_DIR/CcmPerf_2hosts.aar *
 cd $OLD_DIR
 
 rm -fr $PACK_TMP_DIR

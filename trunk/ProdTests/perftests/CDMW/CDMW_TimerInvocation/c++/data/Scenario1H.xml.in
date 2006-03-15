@@ -2,10 +2,7 @@
 <!--
  * =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -29,7 +26,7 @@
 <!-- System definition -->
 <!--                   -->
 <!-- ***************** -->
-<System Name="DEMO" Port="21869">
+<System Name="DEMO" Port="@SystemMngt_port@">
 
 	<!-- Default timeouts for processes of the entire system -->
 	<Timeout Init="2000000" Run="2000000" Stop="2000000"/>
@@ -38,7 +35,7 @@
 	<Host-monitoring Pull-interval="1000" Pull-timeout="1500"/>
 	<App-monitoring Pull-interval="060" Pull-timeout="070"/>
 	<Proc-monitoring Model="NO_MONITORING" 
-                     Pull-interval="021" 
+                     Pull-interval="021"
                      Pull-timeout="031" 
                      Push-interval="041" 
                      Push-timeout="051"/>
@@ -47,9 +44,8 @@
 	<Service Name="NamingAndRepositoryService" App-name="CdmwServices" Process-name="Repository"/>
 
 	<!-- Hosts of the system -->
-	<Host Name="localhost" App-exec-path="@cdmw_home@/bin/cdmw_platform_application" 
-                           Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent" 
-                           Probe-exec-path="@cdmw_home@/bin/cdmw_host_probe">
+	<Host Name="@hostname@" App-exec-path="@cdmw_home@/bin/cdmw_platform_application" 
+                           Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent">
 		<Host-monitoring Pull-interval="2000" 
                          Pull-timeout="2500"/>
 	</Host>
@@ -58,7 +54,7 @@
 	<!-- Application definition -->
 	<!--                        -->
 	<!-- ********************** -->
-	<Application Name="CdmwServices" Host-name="localhost" Agent-port="-1" App-port="-1">
+	<Application Name="CdmwServices" Host-name="@hostname@" Agent-port="-1" App-port="-1">
 
 		<!-- Default timeouts for processes of this application -->
 		<Timeout Init="2000000" Run="2000000" Stop="2000000"/>
@@ -70,7 +66,7 @@
 		<!-- Process definitions -->
 		<!--                     -->
 		<!-- ******************* -->
-		<Managed-process Name="Repository" Host-name="localhost" 
+		<Managed-process Name="Repository" Host-name="@hostname@" 
                          Type="SERVICE-PROVIDER" Autoended="FALSE" 
                          Exec-path="@cdmw_home@/bin/cdmw_naming_and_repository" 
                          Args="--CdmwProcessPort=42561 --CdmwLocalisationService=42562 
@@ -101,7 +97,7 @@
 	<!-- Application definition -->
 	<!--                        -->
 	<!-- ********************** -->
-	<Application Name="DemoPerf" Host-name="localhost" Agent-port="-1" App-port="-1">
+	<Application Name="DemoPerf" Host-name="@hostname@" Agent-port="-1" App-port="-1">
 
 		<!-- Default timeouts for processes of this application -->
 		<Timeout Init="2000000" Run="420000" Stop="2000000"/>
@@ -113,14 +109,7 @@
 		<!-- Process definitions -->
 		<!--                     -->
 		<!-- ******************* -->
-		<Unmanaged-process Name="clockService" Host-name="localhost" 
-                         Autoended="TRUE" 
-                         Exec-path="./start_clockservice.sh" 
-                         Args=" --validateXML" 
-                         Port="-1">
-		</Unmanaged-process>
-        
-		<Managed-process Name="Client" Host-name="localhost" 
+		<Managed-process Name="Client" Host-name="@hostname@" 
                          Type="MANAGED-PROCESS" Autoended="FALSE" 
                          Exec-path="./client.sh" 
                          Args="--CdmwXMLFile=@prefix@/data/Client.xml --validateXML" 
@@ -135,16 +124,14 @@
 
 		<!-- Init graph of processes of this application -->
 		<Init-graph>
-			<Graph-element Name="clockService">
-				<Graph-element-successor Name="Client"/>
+			<Graph-element Name="Client">
 			</Graph-element>
-			<Graph-element-root Name="clockService"/>
+			<Graph-element-root Name="Client"/>
 		</Init-graph>
 		
         <!-- Stop graph of processes of this application -->
 		<Stop-graph>
 			<Graph-element Name="Client">
-				<Graph-element-successor Name="clockService"/>
 			</Graph-element>
 			<Graph-element-root Name="Client"/>
 		</Stop-graph>

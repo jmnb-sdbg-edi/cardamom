@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     {
         // Initialise FT service
         std::cout << argv[0] << " : initialise FT service" << std::endl;
-        Cdmw::FT::FTServiceInit::init( argc, argv );
+        Cdmw::FT::FTServiceInit::Init( argc, argv );
         // ===================================================
         // Initialize the ORB
         // ===================================================
@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
         try
         {
             using namespace Cdmw::NamingAndRepository;
+            using namespace Cdmw::CommonSvcs::Naming;
             NamingInterface ni = 
                 RepositoryInterface::get_domain_naming_interface("demo_ccm_ft/hello_servers");
             ::FT::ObjectGroup_var group = ni.resolve("hello_server.group");

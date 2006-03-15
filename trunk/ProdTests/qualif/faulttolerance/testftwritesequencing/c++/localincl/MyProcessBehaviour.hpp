@@ -29,7 +29,7 @@
 #include "Foundation/orbsupport/CORBA.hpp"
 #include "Foundation/orbsupport/RefCountLocalObject.hpp"
 #include <FaultTolerance/idllib/FT.stub.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 #include "testftwritesequencing/TestHello_impl.hpp"
@@ -38,6 +38,9 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+
+using namespace std;
+
 /**
 * Purpose:
 * <p>
@@ -77,7 +80,7 @@ public:
     * Purpose:
     * <p>
     * the behaviour for the
-    * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_steps:1.0
     * attribute
     */
     virtual CORBA::ULong nb_steps() throw(CORBA::SystemException)
@@ -90,7 +93,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
 	* operation
 	*/
     virtual CORBA::Object_ptr get_service() throw(CORBA::SystemException)
@@ -103,7 +106,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
 	* operation
 	*/
     virtual void on_initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
@@ -112,10 +115,10 @@ public:
 
         Cdmw::OsSupport::OS::sleep(100);
         // get application name
-        std::string application_name =  Cdmw::PlatformMngt::PlatformInterface::getApplicationName();
+        std::string application_name =  Cdmw::PlatformMngt::PlatformInterface::Get_application_name();
         
         // get process name
-        std::string process_name = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+        std::string process_name = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
 
         ::FT::Location loc;
         loc.length(3);
@@ -126,7 +129,7 @@ public:
         loc[2].id = CORBA::string_dup(process_name.c_str());
         loc[2].kind = "processname";
 
-        m_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+        m_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
         
 
         CdmwNamingAndRepository::Repository_var repository
@@ -154,7 +157,7 @@ public:
             {
                 CdmwNamingAndRepository::NameDomain::RegistrationId_var regId = helloDomain->new_name (full_name.c_str());
                 // register the object
-                helloDomain->register_object (regId.in(), recorderInterface.in ());
+                helloDomain->register_object (regId.in() , recorderInterface.in ());
             }
             catch (const CORBA::SystemException& e)
             {
@@ -187,7 +190,7 @@ public:
             {
                 CdmwNamingAndRepository::NameDomain::RegistrationId_var regId = helloDomain->new_name (full_name.c_str());
                 // register the object
-                helloDomain->register_object (regId.in(), helloInterface.in ());
+                helloDomain->register_object (regId.in() , helloInterface.in ());
             }
             catch (const CORBA::SystemException& e)
             {
@@ -207,12 +210,12 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
 	* operation
 	*/
     virtual void on_run()
         throw(CORBA::SystemException,
-              CdmwPlatformMngt::Process::NotReadyToRun)
+              CdmwPlatformMngt::ProcessDelegate::NotReadyToRun)
     {    
 
     }
@@ -221,7 +224,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
 	* operation
 	*/
     virtual void on_stop() throw(CORBA::SystemException)

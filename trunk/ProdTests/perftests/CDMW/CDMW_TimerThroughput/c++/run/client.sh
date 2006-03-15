@@ -1,10 +1,7 @@
 #!/bin/sh
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -23,8 +20,7 @@
 
 DIRECTORY="`dirname $0`"
 PROGRAM="`basename $0 .sh`"
-ARGS_FILE="-ORBInitRef ClockService=file://ClockService.ior -ORBInitRef LocalClock=file://LocalClock.ior"
-ARGS_NAME="-ORBInitRef ClockService=corbaloc::localhost:4883/ClockService -ORBInitRef LocalClock=corbaloc::localhost:4883/LocalClock"
+ARGS_NAMING="-ORBInitRef ClockService=corbaloc::$HOSTNAME:5130/ClockService -ORBInitRef LocalClock=corbaloc::$HOSTNAME:5130/LocalClock -ORBInitRef PolicyControllerUpdateAdmin=corbaloc::$HOSTNAME:5130/PolicyControllerUpdateAdmin"
 echo "** executing client application **"
-exec $DIRECTORY/launch.sh $PROGRAM $ARGS_FILE $*
+exec $DIRECTORY/launch.sh $PROGRAM $ARGS_NAMING $*
 

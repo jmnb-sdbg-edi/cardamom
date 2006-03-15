@@ -26,7 +26,7 @@
 // Cdmw Files
 #include <Foundation/common/Assert.hpp> 
 #include <Foundation/orbsupport/CORBA.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <faulttoleranceserver/TestMembersAdmin_impl.hpp>
 
 
@@ -51,7 +51,7 @@ namespace Location
 TestMembersAdmin_impl::TestMembersAdmin_impl(PortableServer::POA_ptr poa,
                                      const ::FT::Location&   the_location)
     : m_poa(PortableServer::POA::_duplicate(poa)),
-      m_location(Cdmw::NamingAndRepository::NamingInterface::to_string(the_location))
+      m_location(Cdmw::CommonSvcs::Naming::NamingInterface::to_string(the_location))
 {
 }
 
@@ -81,8 +81,18 @@ TestMembersAdmin_impl::update_group_view(const CdmwFT::GroupInfo& group_info)
 TestMembersAdmin_impl::the_location()
     throw(CORBA::SystemException)
 {
-    ::FT::Location* location = Cdmw::NamingAndRepository::NamingInterface::to_name(m_location);
+    ::FT::Location* location = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(m_location);
     return location;
+}
+
+//
+// IDL:thalesgroup.com/CdmwFT/Location/MembersAdmin/the_slocation:1.0
+//
+char*
+TestMembersAdmin_impl::the_slocation()
+    throw(CORBA::SystemException)
+{
+    return CORBA::string_dup(m_location.c_str());
 }
 
 

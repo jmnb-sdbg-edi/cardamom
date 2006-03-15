@@ -31,7 +31,7 @@
 #include "testftwritesequencing/TestHello_impl.hpp"
 
 #include "testftwritesequencing/TestWriteSequencing.hpp"
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <FaultTolerance/ftlocationmanager/StatefullPrimaryBackupAdmin_impl.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
@@ -114,25 +114,43 @@ void TestWriteSequencing::do_tests()
         prop[0].nam[0].id="org.omg.ft.MinimumNumberReplicas";
         prop[0].val <<= (CORBA::UShort)1;
 
+        ::FT::Locations locs(3);
+        locs.length(3);
+        locs[0].length(3);
+        locs[0][0].id = m_host1.c_str();
+        locs[0][0].kind = "hostname";
+        locs[0][1].id = "APPL1";
+        locs[0][1].kind = "applicationname";
+        locs[0][2].id = "P11";
+        locs[0][2].kind = "processname";
 
+        locs[1].length(3);
+        locs[1][0].id = m_host2.c_str();
+        locs[1][0].kind = "hostname";
+        locs[1][1].id = "APPL2";
+        locs[1][1].kind = "applicationname";
+        locs[1][2].id = "P21";
+        locs[1][2].kind = "processname";
 
-        std::vector<std::string> slocvect(3);
-        slocvect[0] =  m_host1 +".hostname/APPL1.applicationname/P11.processname";
-        slocvect[1] =  m_host2 +".hostname/APPL2.applicationname/P21.processname";
-        slocvect[2] =  m_host3 +".hostname/APPL3.applicationname/P31.processname";
+        locs[2].length(3);
+        locs[2][0].id = m_host3.c_str();
+        locs[2][0].kind = "hostname";
+        locs[2][1].id = "APPL3";
+        locs[2][1].kind = "applicationname";
+        locs[2][2].id = "P31";
+        locs[2][2].kind = "processname";
 
-
-        const CORBA::ULong MAX_LOCS=slocvect.size();
+        const CORBA::ULong factory_infos_len = locs.length();
         ::FT::FactoryInfos factoryInfos;
-        factoryInfos.length(MAX_LOCS);
-        for (CORBA::ULong i = 0; i < MAX_LOCS; ++i) {
+        factoryInfos.length(factory_infos_len);
+        for (CORBA::ULong i = 0; i < factory_infos_len; ++i) 
+        {
             factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
-            ::FT::Location_var loc = 
-              Cdmw::NamingAndRepository::NamingInterface::to_name(slocvect[i]);
-            std::cerr << '[' << i << "] " << slocvect[i] << " --- " 
-                      << Cdmw::NamingAndRepository::NamingInterface::to_string(loc.in()) << std::endl;
-            
-            factoryInfos[i].the_location = loc.in();
+            std::cout << '[' << i << "] " << " --- " 
+                      << Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                           (locs[i]) << std::endl;
+
+            factoryInfos[i].the_location = locs[i];
             ::FT::Criteria factoryCrit;        
             factoryCrit.length(0);
             factoryInfos[i].the_criteria = factoryCrit;
@@ -202,7 +220,7 @@ void TestWriteSequencing::do_tests()
         Cdmw::NamingAndRepository::RepositoryInterface::init ("CDMW",
                                                               repository.in());
         
-        Cdmw::NamingAndRepository::NamingInterface ni =
+        Cdmw::CommonSvcs::Naming::NamingInterface ni =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
     
 
@@ -324,18 +342,9 @@ void TestWriteSequencing::do_tests()
         // Add group members: PROC1 first, then PROC2 and 3. PROC1 become the primary process.
         TEST_INFO("[---- TestFTStateTransfer::do_tests] add the member "<<m_host1.c_str()<<"/APPL1/P11 in group 1");
 
-        ::FT::Location loc;
-        loc.length(3);
-        loc[0].id = m_host1.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL1";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P11";
-        loc[2].kind = "processname";
-
         try  {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[0],
                                   helloPROC11.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -346,12 +355,9 @@ void TestWriteSequencing::do_tests()
         }
 
         TEST_INFO("[---- TestFTStateTransfer::do_tests] add the member "<<m_host2.c_str()<<"/APPL2/P21 in group 1");
-        loc[0].id = m_host2.c_str();
-        loc[1].id = "APPL2";
-        loc[2].id = "P21";
         try  {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[1],
                                   helloPROC21.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -362,12 +368,9 @@ void TestWriteSequencing::do_tests()
         }
 
         TEST_INFO("[---- TestFTStateTransfer::do_tests] add the member "<<m_host3.c_str()<<"/APPL3/P31 in group 1");
-        loc[0].id = m_host3.c_str();
-        loc[1].id = "APPL3";
-        loc[2].id = "P31";
         try  {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[2],
                                   helloPROC31.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -440,6 +443,8 @@ void TestWriteSequencing::do_tests()
         //
         // END FIRST STEP
         // ######################################################################
+        
+        Cdmw::NamingAndRepository::RepositoryInterface::finish();
     }
     catch(const CORBA::Exception& e ) {
         std::cerr << e._name() << std::endl;

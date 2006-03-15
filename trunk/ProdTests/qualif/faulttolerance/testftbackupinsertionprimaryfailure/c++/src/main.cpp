@@ -260,7 +260,7 @@ private:
             try
             {
                 // Initialise FT service
-                Cdmw::FT::FTServiceInit::init( argc, argv );
+                Cdmw::FT::FTServiceInit::Init( argc, argv );
 
                 std::cout << "[**** " << host_name << "::main] starting with args:" << std::endl;
                 for (int i=1; i<argc; ++i) {

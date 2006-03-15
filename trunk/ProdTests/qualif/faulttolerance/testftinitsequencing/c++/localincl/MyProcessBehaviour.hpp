@@ -1,24 +1,16 @@
-/* =========================================================================== *
- * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
  * All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
- * License for more details.
- * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * This file and the information it contains are confidential and proprietary. 
+ * They shall not be reproduced nor disclosed to any person except to those 
+ * having a need to know them without prior written consent of the owner.
+*/
+/* ===================================================================== */
 
 #ifndef INCL_MY_PROCESS_BEHAVIOUR_HPP 
 #define INCL_MY_PROCESS_BEHAVIOUR_HPP 
@@ -29,10 +21,11 @@
 #include "Foundation/orbsupport/CORBA.hpp"
 #include "Foundation/orbsupport/RefCountLocalObject.hpp"
 #include <FaultTolerance/idllib/FT.stub.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 #include "testftinitsequencing/TestHello_impl.hpp"
+#include "testftinitsequencing/TestInterceptors.hpp"
 #include <string>
 #include <sstream>
 #include <iostream>
@@ -52,11 +45,15 @@ public:
     * Purpose:
     * <p> The constructor.
     */ 
-        MyProcessBehaviour  (CORBA::ORB_ptr orb, PortableServer::POA_ptr rootPOA, std::string the_host)
+    MyProcessBehaviour  (CORBA::ORB_ptr orb,
+                         PortableServer::POA_ptr rootPOA, 
+                         std::string the_host,
+                         Cdmw::TestServerInterceptor* server_interceptor_impl)
             : m_hostname(the_host)
     {
         m_orb = CORBA::ORB::_duplicate(orb);
         m_rootPOA =  PortableServer::POA::_duplicate(rootPOA);
+        m_server_interceptor_impl = server_interceptor_impl;        
     }
 
 
@@ -74,7 +71,7 @@ public:
     * Purpose:
     * <p>
     * the behaviour for the
-    * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_steps:1.0
     * attribute
     */
     virtual CORBA::ULong nb_steps() throw(CORBA::SystemException)
@@ -87,7 +84,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
 	* operation
 	*/
     virtual CORBA::Object_ptr get_service() throw(CORBA::SystemException)
@@ -100,30 +97,29 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
 	* operation
 	*/
     virtual void on_initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
         throw( CORBA::SystemException)
     {
-
         Cdmw::OsSupport::OS::sleep(100);
         // get application name
-        std::string application_name =  Cdmw::PlatformMngt::PlatformInterface::getApplicationName();
+        m_applicationname =  Cdmw::PlatformMngt::PlatformInterface::Get_application_name();
         
         // get process name
-        std::string process_name = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+        m_processname = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
 
         ::FT::Location loc;
         loc.length(3);
         loc[0].id = CORBA::string_dup(m_hostname.c_str());
         loc[0].kind = "hostname";
-        loc[1].id = CORBA::string_dup(application_name.c_str());
+        loc[1].id = CORBA::string_dup(m_applicationname.c_str());
         loc[1].kind = "applicationname";
-        loc[2].id = CORBA::string_dup(process_name.c_str());
+        loc[2].id = CORBA::string_dup(m_processname.c_str());
         loc[2].kind = "processname";
 
-        m_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+        m_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
         
 
         CdmwNamingAndRepository::Repository_var repository
@@ -135,30 +131,30 @@ public:
         CdmwNamingAndRepository::NameDomain_var helloDomain =
             repository->resolve_name_domain ("dom1/dom2/dom3");
         std::string full_name = "P31HelloGroup";
+        std::string time_collector_name = "TimeCollector";
 
         // Get the Replication Manager
         CORBA::Object_var objref = m_orb->resolve_initial_references("ReplicationManager");
-        CdmwFT::ReplicationManager_var rm = CdmwFT::ReplicationManager::_narrow(objref.in());
+        m_rm = CdmwFT::ReplicationManager::_narrow(objref.in());
 
         std::cout << m_name << " test_server: create HelloInterface_impl"<<std::endl;
         // create object hellointerface
         Cdmw::HelloInterface_impl * helloInterface_impl
             = new ::Cdmw::HelloInterface_impl (
                 m_orb.in(), m_rootPOA.in(), m_name.c_str());
-        CdmwReplicationManager::HelloInterface_var helloInterface
+        m_helloInterface
             =  helloInterface_impl->_this();
 
-        Cdmw::NamingAndRepository::NamingInterface ni =
+        Cdmw::CommonSvcs::Naming::NamingInterface ni =
             Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2/dom3");
-        
+
         // ========================================================
         // Add the HelloInterface object to the Object Group
         // ========================================================
-        CORBA::Object_var obj;
         
         try
         {
-            obj = ni.resolve (full_name);
+            m_obj = ni.resolve (full_name);
         }
         catch(const CosNaming::NamingContext::NotFound& e)
         {
@@ -181,11 +177,73 @@ public:
             abort();
         }
 
+        // ========================================================
+        // Add the HelloInterface object to the Object Group
+        // ========================================================
+        
+        
         try
         {
-            obj = rm->add_member(obj.in(),
-                                 loc,
-                                 helloInterface.in());
+            CORBA::Object_var obj = ni.resolve (time_collector_name);
+            CdmwReplicationManager::time_collector_var time_collector = CdmwReplicationManager::time_collector::_narrow(obj.in());
+            if (!CORBA::is_nil(time_collector.in()))
+                {
+                    std::cout<<"the time_collector is not nil"<<std::endl;
+                    m_server_interceptor_impl->init(time_collector.in());
+                }
+                
+        }
+        catch(const CosNaming::NamingContext::NotFound& e)
+        {
+            std::cout << e << std::endl;
+            abort();
+        }
+        catch(const CosNaming::NamingContext::CannotProceed& e)
+        {
+            std::cout << e << std::endl;
+            abort();
+        }
+        catch(const CosNaming::NamingContext::InvalidName& e)
+        {
+            std::cout << e << std::endl;
+            abort();
+        }
+        catch (const CORBA::SystemException& e)
+        {
+            std::cout << e << std::endl;
+            abort();
+        }
+
+    }
+
+
+    
+    /**
+	* Purpose:
+	* <p>
+	* the behaviour for the
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
+	* operation
+	*/
+    virtual void on_run()
+        throw(CORBA::SystemException,
+              CdmwPlatformMngt::ProcessDelegate::NotReadyToRun)
+    {    
+        try
+        {
+            std::cout<<"**** before  add_member"<<std::endl;
+            ::FT::Location loc;
+            loc.length(3);
+            loc[0].id = CORBA::string_dup(m_hostname.c_str());
+            loc[0].kind = "hostname";
+            loc[1].id = CORBA::string_dup(m_applicationname.c_str());
+            loc[1].kind = "applicationname";
+            loc[2].id = CORBA::string_dup(m_processname.c_str());
+            loc[2].kind = "processname";
+            m_obj = m_rm->add_member(m_obj.in(),
+                                   loc,
+                                   m_helloInterface.in());
+            std::cout<<"**** after  add_member"<<std::endl;
         }
         catch( CORBA::Exception& e )
         {
@@ -196,27 +254,11 @@ public:
         }
     }
 
-
-    
     /**
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
-	* operation
-	*/
-    virtual void on_run()
-        throw(CORBA::SystemException,
-              CdmwPlatformMngt::Process::NotReadyToRun)
-    {    
-
-    }
-
-    /**
-	* Purpose:
-	* <p>
-	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
 	* operation
 	*/
     virtual void on_stop() throw(CORBA::SystemException)
@@ -242,7 +284,14 @@ private:
     */
     std::string m_name;
     std::string m_hostname;
+    std::string m_applicationname;
+    std::string m_processname;
+    CdmwReplicationManager::HelloInterface_var m_helloInterface;
+    Cdmw::TestServerInterceptor* m_server_interceptor_impl;
+
     bool m_creator;
+    CdmwFT::ReplicationManager_var m_rm;
+    CORBA::Object_var m_obj;
 };
 
 

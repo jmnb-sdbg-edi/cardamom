@@ -30,7 +30,7 @@
 #include "testftmanagerreplication2/TestHello_impl.hpp"
 #include "testftmanagerreplication2/TestFTManagerReplication2.hpp"
 
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <FaultTolerance/ftlocationmanager/StatefullPrimaryBackupAdmin_impl.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
@@ -117,25 +117,43 @@ void TestFTManagerReplication2::do_tests()
         prop1[0].nam[0].id="org.omg.ft.MinimumNumberReplicas";
         prop1[0].val <<= (CORBA::UShort)2;
 
+        ::FT::Locations locs(3);
+        locs.length(3);
+        locs[0].length(3);
+        locs[0][0].id = m_host1.c_str();
+        locs[0][0].kind = "hostname";
+        locs[0][1].id = "APPL1";
+        locs[0][1].kind = "applicationname";
+        locs[0][2].id = "P11";
+        locs[0][2].kind = "processname";
 
+        locs[1].length(3);
+        locs[1][0].id = m_host2.c_str();
+        locs[1][0].kind = "hostname";
+        locs[1][1].id = "APPL2";
+        locs[1][1].kind = "applicationname";
+        locs[1][2].id = "P21";
+        locs[1][2].kind = "processname";
 
-        std::vector<std::string> slocvect(3);
-        slocvect[0] =  m_host1 +".hostname/APPL1.applicationname/P11.processname";
-        slocvect[1] =  m_host2 +".hostname/APPL2.applicationname/P21.processname";
-        slocvect[2] =  m_host3 +".hostname/APPL3.applicationname/P31.processname";
+        locs[2].length(3);
+        locs[2][0].id = m_host3.c_str();
+        locs[2][0].kind = "hostname";
+        locs[2][1].id = "APPL3";
+        locs[2][1].kind = "applicationname";
+        locs[2][2].id = "P31";
+        locs[2][2].kind = "processname";
 
-
-        const CORBA::ULong MAX_LOCS=slocvect.size();
+        const CORBA::ULong factory_infos_len = locs.length();
         ::FT::FactoryInfos factoryInfos;
-        factoryInfos.length(MAX_LOCS);
-        for (CORBA::ULong i = 0; i < MAX_LOCS; ++i) {
+        factoryInfos.length(factory_infos_len);
+        for (CORBA::ULong i = 0; i < factory_infos_len; ++i) 
+        {
             factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
-            ::FT::Location_var loc = 
-              Cdmw::NamingAndRepository::NamingInterface::to_name(slocvect[i]);
-            std::cerr << '[' << i << "] " << slocvect[i] << " --- " 
-                      << Cdmw::NamingAndRepository::NamingInterface::to_string(loc.in()) << std::endl;
-            
-            factoryInfos[i].the_location = loc.in();
+            std::cout << '[' << i << "] " << " --- " 
+                      << Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                           (locs[i]) << std::endl;
+
+            factoryInfos[i].the_location = locs[i];
             ::FT::Criteria factoryCrit;        
             factoryCrit.length(0);
             factoryInfos[i].the_criteria = factoryCrit;
@@ -206,12 +224,14 @@ void TestFTManagerReplication2::do_tests()
         std::ostringstream proc_init11;
         std::ostringstream proc_init21;
         std::ostringstream proc_init31;
-        proc_init11<< " --proc-initialise APPL1 P11";
-        proc_init21<< " --proc-initialise APPL2 P21";
-        proc_init31<< " --proc-initialise APPL3 P31";
+        proc_init11<< " --proc-initialise APPL1 P11 "<< m_host1;
+        proc_init21<< " --proc-initialise APPL2 P21 "<< m_host2;
+        proc_init31<< " --proc-initialise APPL3 P31 "<< m_host3;
 
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init11.str());   
+        OsSupport::OS::sleep(timescale*3000);
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init21.str());   
+        OsSupport::OS::sleep(timescale*3000);
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init31.str());   
 
         OsSupport::OS::sleep(timescale*20000);
@@ -219,9 +239,9 @@ void TestFTManagerReplication2::do_tests()
         std::ostringstream proc_run11;
         std::ostringstream proc_run21;
         std::ostringstream proc_run31;
-        proc_run11<< " --proc-run APPL1 P11";
-        proc_run21<< " --proc-run APPL2 P21";
-        proc_run31<< " --proc-run APPL3 P31";
+        proc_run11<< " --proc-run APPL1 P11 "<< m_host1;
+        proc_run21<< " --proc-run APPL2 P21 "<< m_host2;
+        proc_run31<< " --proc-run APPL3 P31 "<< m_host3;
 
         OsSupport::OS::create_process( "platform_admin.sh" , proc_run11.str());   
         OsSupport::OS::create_process( "platform_admin.sh" , proc_run21.str());   
@@ -241,7 +261,7 @@ void TestFTManagerReplication2::do_tests()
         Cdmw::NamingAndRepository::RepositoryInterface::init ("CDMW",
                                                               repository.in());
         
-        Cdmw::NamingAndRepository::NamingInterface ni =
+        Cdmw::CommonSvcs::Naming::NamingInterface ni =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
     
 
@@ -363,18 +383,9 @@ void TestFTManagerReplication2::do_tests()
         // Add group members: PROC1 first, then PROC2 and 3. PROC1 become the primary process.
         TEST_INFO("[---- TestFTManagerReplication2::do_tests] add the member "<<m_host1.c_str()<<"/APPL1/P11 in group 1");
 
-        ::FT::Location loc;
-        loc.length(3);
-        loc[0].id = m_host1.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL1";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P11";
-        loc[2].kind = "processname";
-
         try  {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[0],
                                   helloPROC11.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -388,12 +399,9 @@ void TestFTManagerReplication2::do_tests()
 
 
         TEST_INFO("[---- TestFTManagerReplication2::do_tests] add the member "<<m_host2.c_str()<<"/APPL2/P21 in group 1");
-        loc[0].id = m_host2.c_str();
-        loc[1].id = "APPL2";
-        loc[2].id = "P21";
         try  {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[1],
                                   helloPROC21.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -423,31 +431,49 @@ void TestFTManagerReplication2::do_tests()
         prop2[0].nam[0].id="org.omg.ft.MinimumNumberReplicas";
         prop2[0].val <<= (CORBA::UShort)2;
 
+        ::FT::Locations locs2(3);
+        locs2.length(3);
+        locs2[0].length(3);
+        locs2[0][0].id = m_host1.c_str();
+        locs2[0][0].kind = "hostname";
+        locs2[0][1].id = "APPL1";
+        locs2[0][1].kind = "applicationname";
+        locs2[0][2].id = "P12";
+        locs2[0][2].kind = "processname";
 
+        locs2[1].length(3);
+        locs2[1][0].id = m_host2.c_str();
+        locs2[1][0].kind = "hostname";
+        locs2[1][1].id = "APPL2";
+        locs2[1][1].kind = "applicationname";
+        locs2[1][2].id = "P22";
+        locs2[1][2].kind = "processname";
 
-        slocvect[0] =  m_host1 +".hostname/APPL1.applicationname/P12.processname";
-        slocvect[1] =  m_host2 +".hostname/APPL2.applicationname/P22.processname";
-        slocvect[2] =  m_host3 +".hostname/APPL3.applicationname/P32.processname";
+        locs2[2].length(3);
+        locs2[2][0].id = m_host3.c_str();
+        locs2[2][0].kind = "hostname";
+        locs2[2][1].id = "APPL3";
+        locs2[2][1].kind = "applicationname";
+        locs2[2][2].id = "P32";
+        locs2[2][2].kind = "processname";
 
-
-        factoryInfos.length(slocvect.size());
-        for (CORBA::ULong i = 0; i < MAX_LOCS; ++i) {
+        factoryInfos.length(factory_infos_len);
+        for (CORBA::ULong i = 0; i < factory_infos_len; ++i) 
+        {
             factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
-            ::FT::Location_var loc = 
-              Cdmw::NamingAndRepository::NamingInterface::to_name(slocvect[i]);
-            std::cerr << '[' << i << "] " << slocvect[i] << " --- " 
-                      << Cdmw::NamingAndRepository::NamingInterface::to_string(loc.in()) << std::endl;
-            
-            factoryInfos[i].the_location = loc.in();
+            std::cout << '[' << i << "] " << " --- " 
+                      << Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                           (locs2[i]) << std::endl;
+
+            factoryInfos[i].the_location = locs2[i];
             ::FT::Criteria factoryCrit;        
             factoryCrit.length(0);
             factoryInfos[i].the_criteria = factoryCrit;
         }
-        
+
         prop2[1].nam.length(1);
         prop2[1].nam[0].id="org.omg.ft.Factories";
         prop2[1].val <<= factoryInfos;
-
 
 
         ::FT::Criteria crit2;        
@@ -485,12 +511,14 @@ void TestFTManagerReplication2::do_tests()
         std::ostringstream proc_init12;
         std::ostringstream proc_init22;
         std::ostringstream proc_init32;
-        proc_init12<< " --proc-initialise APPL1 P12";
-        proc_init22<< " --proc-initialise APPL2 P22";
-        proc_init32<< " --proc-initialise APPL3 P32";
+        proc_init12<< " --proc-initialise APPL1 P12 "<< m_host1;
+        proc_init22<< " --proc-initialise APPL2 P22 "<< m_host2;
+        proc_init32<< " --proc-initialise APPL3 P32 "<< m_host3;
 
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init12.str());   
+        OsSupport::OS::sleep(timescale*3000);
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init22.str());   
+        OsSupport::OS::sleep(timescale*3000);
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init32.str());   
 
         OsSupport::OS::sleep(timescale*20000);
@@ -498,9 +526,9 @@ void TestFTManagerReplication2::do_tests()
         std::ostringstream proc_run12;
         std::ostringstream proc_run22;
         std::ostringstream proc_run32;
-        proc_run12<< " --proc-run APPL1 P12";
-        proc_run22<< " --proc-run APPL2 P22";
-        proc_run32<< " --proc-run APPL3 P32";
+        proc_run12<< " --proc-run APPL1 P12 "<< m_host1;
+        proc_run22<< " --proc-run APPL2 P22 "<< m_host2;
+        proc_run32<< " --proc-run APPL3 P32 "<< m_host3;
 
         OsSupport::OS::create_process( "platform_admin.sh" , proc_run12.str());   
         OsSupport::OS::create_process( "platform_admin.sh" , proc_run22.str());   
@@ -609,17 +637,9 @@ void TestFTManagerReplication2::do_tests()
         // Add group members: PROC1 first, then PROC2 and 3. PROC1 become the primary process.
         TEST_INFO("[---- TestFTManagerReplication2::do_tests] add the member "<<m_host1.c_str()<<"/APPL1/P12 in group 1");
 
-
-        loc[0].id = m_host1.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL1";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P12";
-        loc[2].kind = "processname";
-
         try  {
             obj2 = rm->add_member(obj2.in(),
-                                  loc,
+                                  locs2[0],
                                   helloPROC12.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -630,12 +650,9 @@ void TestFTManagerReplication2::do_tests()
         }
 
         TEST_INFO("[---- TestFTManagerReplication2::do_tests] add the member "<<m_host2.c_str()<<"/APPL2/P22 in group 1");
-        loc[0].id = m_host2.c_str();
-        loc[1].id = "APPL2";
-        loc[2].id = "P22";
         try  {
             obj2 = rm->add_member(obj2.in(),
-                                  loc,
+                                  locs2[1],
                                   helloPROC22.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -654,12 +671,9 @@ void TestFTManagerReplication2::do_tests()
 
 
         TEST_INFO("[---- TestFTManagerReplication2::do_tests] add the member "<<m_host3.c_str()<<"/APPL3/P31 in group 1");
-        loc[0].id = m_host3.c_str();
-        loc[1].id = "APPL3";
-        loc[2].id = "P31";
         try  {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[2],
                                   helloPROC31.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -671,12 +685,9 @@ void TestFTManagerReplication2::do_tests()
 
 
         TEST_INFO("[---- TestFTManagerReplication2::do_tests] add the member "<<m_host3.c_str()<<"/APPL3/P32 in group 1");
-        loc[0].id = m_host3.c_str();
-        loc[1].id = "APPL3";
-        loc[2].id = "P32";
         try  {
             obj2 = rm->add_member(obj2.in(),
-                                  loc,
+                                  locs2[2],
                                   helloPROC32.in());
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
@@ -693,11 +704,8 @@ void TestFTManagerReplication2::do_tests()
 
  
         TEST_INFO("removing member "<<m_host1.c_str()<<"/APPL1/P11");
-        loc[0].id = m_host1.c_str();
-        loc[1].id = "APPL1";
-        loc[2].id = "P11";
         try  {
-            obj1 = rm->remove_member(obj1.in(), loc);
+            obj1 = rm->remove_member(obj1.in(), locs[0]);
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
             std::cerr << e._name() << std::endl;
@@ -705,11 +713,8 @@ void TestFTManagerReplication2::do_tests()
         }
 
         TEST_INFO("removing member "<<m_host2.c_str()<<"/APPL2/P21");
-        loc[0].id = m_host2.c_str();
-        loc[1].id = "APPL2";
-        loc[2].id = "P21";
         try  {
-            obj1 = rm->remove_member(obj1.in(), loc);
+            obj1 = rm->remove_member(obj1.in(), locs[1]);
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
             std::cerr << e._name() << std::endl;
@@ -717,11 +722,8 @@ void TestFTManagerReplication2::do_tests()
         }
 
         TEST_INFO("removing member "<<m_host3.c_str()<<"APPL3/P31");
-        loc[0].id = m_host3.c_str();
-        loc[1].id = "APPL3";
-        loc[2].id = "P31";
         try  {
-            obj1 = rm->remove_member(obj1.in(), loc);
+            obj1 = rm->remove_member(obj1.in(), locs[2]);
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
             std::cerr << e._name() << std::endl;
@@ -739,11 +741,8 @@ void TestFTManagerReplication2::do_tests()
         }
         
         TEST_INFO("removing member "<<m_host1.c_str()<<"/APPL1/P12");
-        loc[0].id = m_host1.c_str();
-        loc[1].id = "APPL1";
-        loc[2].id = "P12";
         try  {
-            obj2 = rm->remove_member(obj2.in(), loc);
+            obj2 = rm->remove_member(obj2.in(), locs2[0]);
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
             std::cerr << e._name() << std::endl;
@@ -751,11 +750,8 @@ void TestFTManagerReplication2::do_tests()
         }
 
         TEST_INFO("removing member "<<m_host2.c_str()<<"/APPL2/P22");
-        loc[0].id = m_host2.c_str();
-        loc[1].id = "APPL2";
-        loc[2].id = "P22";
         try  {
-            obj2 = rm->remove_member(obj2.in(), loc);
+            obj2 = rm->remove_member(obj2.in(), locs2[1]);
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
             std::cerr << e._name() << std::endl;
@@ -763,11 +759,8 @@ void TestFTManagerReplication2::do_tests()
         }
 
         TEST_INFO("removing member "<<m_host3.c_str()<<"APPL3/P32");
-        loc[0].id = m_host3.c_str();
-        loc[1].id = "APPL3";
-        loc[2].id = "P32";
         try  {
-            obj2 = rm->remove_member(obj2.in(), loc);
+            obj2 = rm->remove_member(obj2.in(), locs2[2]);
             TEST_SUCCEED();
         } catch( CORBA::Exception& e ) {
             std::cerr << e._name() << std::endl;
@@ -788,9 +781,9 @@ void TestFTManagerReplication2::do_tests()
         std::ostringstream proc_stop11;
         std::ostringstream proc_stop21;
         std::ostringstream proc_stop31;
-        proc_stop11<< " --proc-stop APPL1 P11";
-        proc_stop21<< " --proc-stop APPL2 P21";
-        proc_stop31<< " --proc-stop APPL3 P31";
+        proc_stop11<< " --proc-stop APPL1 P11 "<< m_host1;
+        proc_stop21<< " --proc-stop APPL2 P21 "<< m_host2;
+        proc_stop31<< " --proc-stop APPL3 P31 "<< m_host3;
 
         OsSupport::OS::create_process( "platform_admin.sh" , proc_stop11.str());   
         OsSupport::OS::create_process( "platform_admin.sh" , proc_stop21.str());   
@@ -799,9 +792,9 @@ void TestFTManagerReplication2::do_tests()
         std::ostringstream proc_stop12;
         std::ostringstream proc_stop22;
         std::ostringstream proc_stop32;
-        proc_stop12<< " --proc-stop APPL1 P12";
-        proc_stop22<< " --proc-stop APPL2 P22";
-        proc_stop32<< " --proc-stop APPL3 P32";
+        proc_stop12<< " --proc-stop APPL1 P12 "<< m_host1;
+        proc_stop22<< " --proc-stop APPL2 P22 "<< m_host2;
+        proc_stop32<< " --proc-stop APPL3 P32 "<< m_host3;
 
         OsSupport::OS::create_process( "platform_admin.sh" , proc_stop12.str());   
         OsSupport::OS::create_process( "platform_admin.sh" , proc_stop22.str());   
@@ -813,6 +806,8 @@ void TestFTManagerReplication2::do_tests()
         //
         // END FIRST STEP
         // ######################################################################
+
+        Cdmw::NamingAndRepository::RepositoryInterface::finish();
 
     }
     catch(const CORBA::Exception& e ) {

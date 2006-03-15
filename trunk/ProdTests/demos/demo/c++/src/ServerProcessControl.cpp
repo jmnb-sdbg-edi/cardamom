@@ -28,7 +28,7 @@
 //#include "ossupport/OS.hpp"
 
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 #include "Event/idllib/CosEventComm.stub.hpp"
 #include "Event/eventinterface/EventChannel.hpp"
@@ -80,6 +80,7 @@ ServerProcessControl::on_initialise(const CdmwPlatformMngtBase::StartupKind& sta
     // this operation.
     
     // Get NamingInterface object from RepositoryInterface
+    using namespace Cdmw::CommonSvcs::Naming;
     using namespace Cdmw::NamingAndRepository;
     NamingInterface ni = RepositoryInterface::get_domain_naming_interface
         (Cdmw::Common::Locations::CDMW_SERVICES_NAME_DOMAIN);
@@ -126,7 +127,7 @@ ServerProcessControl::on_initialise(const CdmwPlatformMngtBase::StartupKind& sta
     
 void 
 ServerProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // do nothing

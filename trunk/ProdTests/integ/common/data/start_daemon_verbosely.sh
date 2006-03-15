@@ -39,6 +39,7 @@ cd ../exec
 
 trap 'echo "Signal trapped, stop command send to platform daemon."; $CDMW_RUNTIME_ROOT/integration/exec/cdmw_platform_daemon.sh stop; exit' 0 2
 ./cdmw_platform_daemon.sh 2>&1 | tee $TESTS_FILE
+kill -2 $$;
 
 # Come back to the previous dir
 cd $OLD_DIR

@@ -30,7 +30,7 @@
 <!-- System definition -->
 <!--                   -->
 <!-- ***************** -->
-<System Name="DEMO" Port="21869">
+<System Name="DEMO" Port="@SystemMngt_port@">
 	<!-- Default timeouts for processes of the entire system -->
 	<Timeout Init="20000" Run="20000" Stop="20000"/>
 	<!-- Default monitorings for the entire system -->
@@ -40,14 +40,14 @@
 	<!-- Services of the system -->
 	<Service Name="NamingAndRepositoryService" App-name="CdmwServices" Process-name="Repository"/>
 	<!-- Hosts of the system -->
-	<Host Name="localhost" App-exec-path="@cdmw_home@/bin/cdmw_platform_application" Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent" Probe-exec-path="@cdmw_home@/bin/cdmw_host_probe">
+	<Host Name="@host_name@" App-exec-path="@cdmw_home@/bin/cdmw_platform_application" Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent" >
 		<Host-monitoring Pull-interval="2000" Pull-timeout="2500"/>
 	</Host>
 	<!-- ********************** -->
 	<!-- Application definition -->
 	<!--                        -->
 	<!-- ********************** -->
-	<Application Name="CdmwServices" Host-name="localhost" Agent-port="-1" App-port="-1">
+	<Application Name="CdmwServices" Host-name="@host_name@" Agent-port="-1" App-port="-1">
 		<!-- Default timeouts for processes of this application -->
 		<Timeout Init="20000" Run="20000" Stop="20000"/>
 		<!-- Monitoring of this application -->
@@ -56,12 +56,12 @@
 		<!-- Process definitions -->
 		<!--                     -->
 		<!-- ******************* -->
-		<Managed-process Name="Repository" Host-name="localhost" Type="SERVICE-PROVIDER" Autoended="FALSE" Exec-path="@cdmw_home@/bin/cdmw_naming_and_repository" Args="--CdmwProcessPort=42561 --CdmwLocalisationService=42562 --id=GlobalRepository --conf=@prefix@/data/Cdmw_nar.xml --trace" Port="-1">
+		<Managed-process Name="Repository" Host-name="@host_name@" Type="SERVICE-PROVIDER" Autoended="FALSE" Exec-path="@cdmw_home@/bin/cdmw_naming_and_repository" Args="--CdmwProcessPort=42561 --CdmwLocalisationService=42562 --id=GlobalRepository --conf=@prefix@/data/Cdmw_nar.xml --trace" Port="-1">
 			<Init-step Name="initialisation" Timeout="10000"/>
 			<Run-timeout Timeout="10000"/>
 			<Stop-timeout Timeout="10000"/>
 		</Managed-process>
-		<Managed-process Name="TraceCollector" Host-name="localhost" Type="MANAGED-PROCESS" Autoended="TRUE" Exec-path="@cdmw_home@/bin/cdmw_trace_collector" Args="--collector-name=the_collector --traceFile-name=traces.txt --traceProducer-path RepositoryTraceProducer/TRACE/TraceProducer" Port="-1">
+		<Managed-process Name="TraceCollector" Host-name="@host_name@" Type="MANAGED-PROCESS" Autoended="TRUE" Exec-path="@cdmw_home@/bin/cdmw_trace_collector" Args="--collector-name=the_collector --traceFile-name=traces.txt --traceProducer-path RepositoryTraceProducer/TRACE/TraceProducer" Port="-1">
 			<Init-step Name="step0" Timeout="10000"/>
 		</Managed-process>
 		<!-- ************************** -->
@@ -84,7 +84,7 @@
 	<!-- Application definition -->
 	<!--                        -->
 	<!-- ********************** -->
-	<Application Name="CdmwDemo" Host-name="localhost" Agent-port="-1" App-port="-1">
+	<Application Name="CdmwDemo" Host-name="@host_name@" Agent-port="-1" App-port="-1">
 		<!-- Default timeouts for processes of this application -->
 		<Timeout Init="20000" Run="20000" Stop="20000"/>
 		<!-- Monitoring of this application -->
@@ -93,13 +93,13 @@
 		<!-- Process definitions -->
 		<!--                     -->
 		<!-- ******************* -->
-		<Managed-process Name="DemoServer1" Host-name="localhost" Type="MANAGED-PROCESS" Autoended="FALSE" Exec-path="./Server1.sh" Args="--CdmwXMLFile=@prefix@/data/Server1.xml --CdmwProcessPort=5027 --validateXML" Port="5127">
+		<Managed-process Name="DemoServer1" Host-name="@host_name@" Type="MANAGED-PROCESS" Autoended="FALSE" Exec-path="./Server1.sh" Args="--CdmwXMLFile=@prefix@/data/Server1.xml --CdmwProcessPort=5027 --validateXML" Port="5127">
 			<Init-step Name="step0" Timeout="20000"/>
 		</Managed-process>
-		<Managed-process Name="DemoServer2" Host-name="localhost" Type="MANAGED-PROCESS" Autoended="FALSE" Exec-path="./Server2.sh" Args="--CdmwXMLFile=@prefix@/data/Server2.xml --CdmwProcessPort=5028 --validateXML" Port="5128">
+		<Managed-process Name="DemoServer2" Host-name="@host_name@" Type="MANAGED-PROCESS" Autoended="FALSE" Exec-path="./Server2.sh" Args="--CdmwXMLFile=@prefix@/data/Server2.xml --CdmwProcessPort=5028 --validateXML" Port="5128">
 			<Init-step Name="step0" Timeout="20000"/>
 		</Managed-process>
-		<Managed-process Name="DemoClient" Host-name="localhost" Type="MANAGED-PROCESS" Autoended="FALSE" Exec-path="./Client.sh" Args="--CdmwXMLFile=@prefix@/data/Client.xml --CdmwProcessPort=5030 --validateXML" Port="5130">
+		<Managed-process Name="DemoClient" Host-name="@host_name@" Type="MANAGED-PROCESS" Autoended="FALSE" Exec-path="./Client.sh" Args="--CdmwXMLFile=@prefix@/data/Client.xml --CdmwProcessPort=5030 --validateXML" Port="5130">
 			<Init-step Name="step0" Timeout="20000"/>
 		</Managed-process>
 		<!-- ************************** -->

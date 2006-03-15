@@ -44,14 +44,14 @@ export SPLICE_BIN_PATH
 start() {
 	echo "Starting Splice daemon..."
 	. $SPLICE_BIN_PATH/../release.com
-#exec $TERM -ls -sb -sl 500 -e $SPLICE_BIN_PATH/$PROGRAM $*
+	#exec $TERM -ls -sb -sl 500 -e $SPLICE_BIN_PATH/$PROGRAM $*
 	exec $SPLICE_BIN_PATH/$PROGRAM $*
 }
 
 
 stop() {
 	echo "Stopping Splice..."
-	$SPLICE_BIN_PATH/stop_splice
+	$SPLICE_BIN_PATH/sdds -a stop
 }
 
 # See how we were called.

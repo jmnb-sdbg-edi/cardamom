@@ -25,11 +25,10 @@
 #define __USERBASICDEMO_IDL__
 
 #include <Basic_cif.idl>
-#include <Components.idl>
 
 #pragma prefix "thalesgroup.com"
 
-module BasicDemo
+module UserBasicDemo
 {
          local interface User_CCM_Client : BasicDemo::CCM_Client, Components::SessionComponent
 	 {

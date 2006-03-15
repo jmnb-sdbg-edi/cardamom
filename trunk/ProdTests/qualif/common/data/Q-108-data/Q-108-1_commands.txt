@@ -1,0 +1,12 @@
+verbose
+install_assembly @config.install.dir@/share/QualifCcmFtTimers.aar
+create_assembly CcmFtAssembly myAssembly
+build_assembly myAssembly
+sleep 60000
+tear_assembly_down myAssembly
+destroy_assembly myAssembly
+remove_assembly CcmFtAssembly
+remove_component Client 1,0,0,0
+remove_component ServerWithFacet 1,0,0,0
+remove_component ServerWithEvents 1,0,0,0
+exit

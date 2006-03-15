@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#*
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -21,9 +18,9 @@
 #* =========================================================================== *
 
 # Cardamom installation directory (needed by some Makefile)
-CDMW_HOME=/home/$USER/cdmw_install
+CDMW_HOME=/home/$USER/projects/CDMW-Install
 # Performance test home directory (needed by Testparams.sh)
-PERFTESTS_HOME=/home/$USER/cdmw_install-qualif/delivery/perftests
+PERFTESTS_HOME=/home/$USER/projects/CDMW/ProdTests/perftests
 # Add cTools lib to LD_LIBRARY_PATH
 LD_LIBRARY_PATH=$PERFTESTS_HOME/cTools/lib:$LD_LIBRARY_PATH
 
@@ -33,22 +30,20 @@ XALAN_ROOT=/tools/exec/xalan-j_2_3_1
 XERCES_JAR=/tools/exec/xerces-2.0.1
 SAXON_JAR=/tools/exec/saxon-6.5.3
 OPENCCM_ROOT=/tools/exec/OpenCCM-0.4p6
-ZIP_ROOT=/tools/exec/zip23
 FTP_DIR=/var/ftp
-R_ROOT=/tools/exec/R-1.9.0/bin
+R_ROOT=$TOOLS_ROOT/R-1.9.0/bin
 PATH=$PATH:$R_ROOT
-
 
 # export environments variables
 export PERFTESTS_HOME
 export CDMW_HOME
 export LD_LIBRARY_PATH
+export TOOLS_ROOT
 export XERCES_ROOT
 export XALAN_ROOT
 export XERCES_JAR
 export SAXON_JAR
 export OPENCCM_ROOT
-export ZIP_ROOT
 export FTP_DIR
 export PATH
 
@@ -69,3 +64,4 @@ then
     echo "Switch in $PERFTESTS_HOME/cTools, and type"
     echo "'./configure' , and then 'make'"
 fi
+find $PERFTESTS_HOME -name "*.sh" -exec chmod +x {} \;

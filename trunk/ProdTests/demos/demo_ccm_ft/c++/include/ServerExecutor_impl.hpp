@@ -28,8 +28,9 @@
 #include "Foundation/orbsupport/RefCountLocalObject.hpp"
 
 #include "UserHello.skel.hpp"
-#include "DemoFTDCPS.h"
-
+//#include "DemoFTDCPS.h"
+//#include "HelloData.h"
+#include <ccpp_HelloData.h>
 
 namespace Hello
 {
@@ -105,26 +106,27 @@ class ServerExecutor_impl : virtual public User_Server,
         
 	// DCPS-based state replication...
 	// Splice DomainParticipantFactory
-	DCPS::SpliceDomainParticipantFactory_var m_factory;
+	//DDS::SpliceDomainParticipantFactory_var m_factory;
+        DDS::DomainParticipantFactory_ptr m_factory;
 	
 	// Splice domainParticipant
-	DCPS::DomainParticipant_var              m_participant;
+	DDS::DomainParticipant_ptr              m_participant;
 	
 	// Splice Topic
-	DCPS::Topic_var                          m_topic;
+	DDS::Topic_ptr                          m_topic; 
 	
 	// DCPS Subscriber
-	DCPS::Subscriber_var                     m_subscriber;
+	DDS::Subscriber_ptr                     m_subscriber;
 	
 	// DCPS Data Reader
-	DCPS::DataReader_var                     m_data_reader;
+	DDS::DataReader_var                     m_data_reader;
 	DemoFTDCPS::ServerStateDataReader_ptr    m_typed_data_reader;
 		  
 	// DCPS publisher
-	DCPS::Publisher_var                      m_publisher;
+	DDS::Publisher_ptr                      m_publisher;
 
 	// DCPS data writer
-	DCPS::DataWriter_var                     m_data_writer;
+	DDS::DataWriter_var                     m_data_writer;
 	DemoFTDCPS::ServerStateDataWriter_ptr    m_typed_data_writer;
     
     

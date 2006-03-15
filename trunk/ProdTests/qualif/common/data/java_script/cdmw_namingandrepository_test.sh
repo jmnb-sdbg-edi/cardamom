@@ -52,5 +52,5 @@ __CLASSPATH__=$__CLASSPATH__$__TOOLS_CLASSPATH__
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:@config.install.dir@/lib/c++
 LIBPATH=$LIBPATH:@config.install.dir@/lib/c++
 
-exec java -Xbootclasspath/p:$__CLASSPATH__ cdmw.namingandrepository.test.MainTest $*
+exec java -Xbootclasspath/p:$__CLASSPATH__ cdmw.commonsvcs.naming.test.MainTest $*
 

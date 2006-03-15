@@ -278,13 +278,13 @@ CcmFtTest::CCM_Client_impl::do_tests()
         CcmFtTest::HostInfo_var hostInfo = m_session_context->get_connection_serverHostInfo();
     
         CORBA::String_var hostname = hostInfo->get_hostname();
-        TEST_INFO("Request on empty grou succeed !! hostname: " << hostname.in());
+        TEST_INFO("Request on empty group succeed !! hostname: " << hostname.in());
         TEST_FAILED();
          
-    } catch (const CORBA::TRANSIENT& e) {
-        TEST_SUCCEED();
     } catch (const CORBA::SystemException& e) {
-        TEST_INFO("Unexpected CORBA::SystemException: " << e);
+        TEST_SUCCEED();
+    } catch (const CORBA::Exception& e) {
+        TEST_INFO("Unexpected CORBA::Exception: " << e);
         TEST_FAILED();
     }
     

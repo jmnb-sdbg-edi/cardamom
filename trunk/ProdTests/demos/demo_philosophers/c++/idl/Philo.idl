@@ -28,6 +28,9 @@
 #include <Components.idl>
 #endif
 
+#include <PhiloEvents.idl>
+#include <PhiloRegistration.idl>
+
 #pragma prefix "acme.com"
 
 module Dinner {
@@ -36,12 +39,8 @@ module Dinner {
   /*
    * A Registrator hands out names for Philosophers
    */
-
-  interface Registration {
-    string register ();
-  };
-
-  component Registrator supports Registration {
+ 
+  component Registrator supports ::DinnerRegistration::Registration {
   };
 
   home RegistratorHome manages Registrator {};
@@ -62,26 +61,6 @@ module Dinner {
   home ForkHome manages ForkManager {};
 
   /*
-   * Status information produced by each Philosopher
-   */
-
-  enum PhilosopherState {
-    EATING,
-    THINKING,
-    HUNGRY,
-    STARVING,
-    DEAD
-  };
-
-  eventtype StatusInfo {
-    public string name;
-    public PhilosopherState state;
-    public unsigned long secs_since_last_meal;
-    public boolean has_left_fork;
-    public boolean has_right_fork;
-  };
-
-  /*
    * Philosopher component
    */
 
@@ -89,9 +68,9 @@ module Dinner {
     readonly attribute string name;
     uses Fork left;
     uses Fork right;
-    uses Registration register;
-    emits StatusInfo config;
-    publishes StatusInfo info;
+    uses ::DinnerRegistration::Registration register;
+    emits ::DinnerEvents::StatusInfo config;
+    publishes ::DinnerEvents::StatusInfo info;
   };
 
   home PhilosopherHome manages Philosopher {};
@@ -101,7 +80,7 @@ module Dinner {
    */
 
   component Observer {
-    consumes StatusInfo info;
+    consumes ::DinnerEvents::StatusInfo info;
   };
 
   home ObserverHome manages Observer {};

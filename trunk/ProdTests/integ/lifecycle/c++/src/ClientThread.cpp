@@ -22,8 +22,8 @@
 
 #include "lifecycle/ClientThread.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include <string>
 #include <cctype>
 #include <algorithm>

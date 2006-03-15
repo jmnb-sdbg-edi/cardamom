@@ -32,12 +32,15 @@
                     <libraries>
                         Foundation/common
                         Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
+                        Foundation/cosnotificationidl
                         CCMContainer/ccmcontaineridl    
                         FaultTolerance/ftcommon
                         FaultTolerance/faulttoleranceidl
-                        FaultTolerance/ftstatemanager
+                        FaultTolerance/ftstatemanager                       
                     </libraries>
                     <generatedfilesfrom>
                         CodeGenServerComponent.xml
@@ -69,6 +72,8 @@
                     <libraries>
                         Foundation/common
                         Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
                         CCMContainer/ccmcontaineridl
@@ -102,10 +107,14 @@
                         Foundation/common
                         Foundation/commonidl
                         Foundation/ossupport
+                        Foundation/cosnotificationidl
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/commonsvcsdatastore
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -113,20 +122,23 @@
                         LifeCycle/lifecycleinit
                         Event/eventidl
                         Event/eventinterface
+                        Event/eventsupport
                         CCMContainer/ccmcommon
                         CCMContainer/ccmcontainer
                         CCMContainer/ccmcontaineridl
+                        CCMContainer/ccmcif
                         CCMContainer/ftccmcif
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
                         FaultTolerance/ftcommon
                         FaultTolerance/faulttoleranceidl
+                        FaultTolerance/ftrequestlogging
                         FaultTolerance/ftinit
                         FaultTolerance/ftlocationmanager
                         FaultTolerance/ftstatemanager
@@ -150,7 +162,9 @@
                     -DCDMW_USE_FAULTTOLERANCE 
                 </addcflags>
                 <addldflags>
-                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty @config.CCMContainer.ORB.Libs@
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosEvent 
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty 
+                    @config.CCMContainer.ORB.Libs@
                     @config.FaultTolerance.ORB.Libs@
                 </addldflags>
             </delivery>
@@ -160,10 +174,14 @@
                         Foundation/common
                         Foundation/commonidl
                         Foundation/ossupport
+                        Foundation/cosnotificationidl
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/commonsvcsdatastore
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -171,15 +189,17 @@
                         LifeCycle/lifecycleinit
                         Event/eventidl
                         Event/eventinterface
+                        Event/eventsupport
                         CCMContainer/ccmcommon
                         CCMContainer/ccmcontainer
                         CCMContainer/ccmcontaineridl
+                        CCMContainer/ccmcif
                         CCMContainer/ftccmcif
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
@@ -207,7 +227,9 @@
                     -DCDMW_USE_FAULTTOLERANCE 
                 </addcflags>
                 <addldflags>
-                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty @config.CCMContainer.ORB.Libs@
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosEvent 
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty 
+                    @config.CCMContainer.ORB.Libs@
                     @config.FaultTolerance.ORB.Libs@
                 </addldflags>
             </delivery>
@@ -215,19 +237,24 @@
                 <prerequisites>
                     <libraries>
                         Foundation/common
+                        Foundation/cosnotificationidl
                         Foundation/commonidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
+                        Foundation/osthreads
                         Foundation/orbsupport
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/commonsvcsdatastore
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
                         LifeCycle/lifecycleidl
                         LifeCycle/lifecycleinit
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes

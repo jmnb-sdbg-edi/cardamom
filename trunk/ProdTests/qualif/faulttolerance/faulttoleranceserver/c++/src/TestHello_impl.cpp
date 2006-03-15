@@ -100,7 +100,7 @@ int HelloInterface1_impl::send_exception(int exception_number)
     if (exception_number == 11)
     {
         std::cout<<"notify error"<<std::endl;
-        Cdmw::PlatformMngt::PlatformInterface::notifyFatalError(m_process_info->name, "fatal error");
+        Cdmw::PlatformMngt::PlatformInterface::Notify_fatal_error(m_process_info->name, "fatal error");
     }
     
     if (exception_number == 9)

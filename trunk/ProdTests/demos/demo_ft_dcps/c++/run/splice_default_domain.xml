@@ -19,5 +19,5 @@ AUTHORIZATION BY THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE.
 -->
 
 <Splice>
-    <Domain name="dds_shm_a02"/>
+    <Domain name="cardamom_domain"/>
 </Splice>

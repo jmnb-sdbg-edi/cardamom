@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -45,9 +42,6 @@ SAXON_JAR_PATH=$(SAXON_JAR)
 # OpenCCM
 OPENCCM_BIN_PATH=$(OPENCCM_ROOT)/bin
 OPENCCM_IDL_PATH=$(OPENCCM_ROOT)/idl
-
-# Zip
-ZIP_BIN_PATH=$(ZIP_ROOT)/bin
 
 # C++ ORB
 ifeq (TAO,TAO)

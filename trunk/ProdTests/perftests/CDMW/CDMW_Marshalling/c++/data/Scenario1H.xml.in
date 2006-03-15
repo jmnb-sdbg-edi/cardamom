@@ -2,10 +2,7 @@
 <!--
  * =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -29,7 +26,7 @@
 <!-- System definition -->
 <!--                   -->
 <!-- ***************** -->
-<System Name="DEMO" Port="21869">
+<System Name="DEMO" Port="@SystemMngt_port@">
 
 	<!-- Default timeouts for processes of the entire system -->
 	<Timeout Init="2000000" Run="2000000" Stop="2000000"/>
@@ -38,7 +35,7 @@
 	<Host-monitoring Pull-interval="1000" Pull-timeout="1500"/>
 	<App-monitoring Pull-interval="060" Pull-timeout="070"/>
 	<Proc-monitoring Model="NO_MONITORING" 
-                     Pull-interval="021" 
+                     Pull-interval="021"
                      Pull-timeout="031" 
                      Push-interval="041" 
                      Push-timeout="051"/>
@@ -48,8 +45,7 @@
 
 	<!-- Hosts of the system -->
 	<Host Name="@hostname@" App-exec-path="@cdmw_home@/bin/cdmw_platform_application" 
-                           Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent" 
-                           Probe-exec-path="@cdmw_home@/bin/cdmw_host_probe">
+                           Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent">
 		<Host-monitoring Pull-interval="2000" 
                          Pull-timeout="2500"/>
 	</Host>

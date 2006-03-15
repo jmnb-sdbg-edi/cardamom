@@ -39,7 +39,7 @@
 #include <FaultTolerance/ftinit/FTServiceInit.hpp>
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
 #include <ConfAndPlug/cdmwinit/ProcessControl.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
 
@@ -104,12 +104,12 @@ public:
             prop[2].nam.length( 1 );
             prop[2].nam[0].id = "org.omg.ft.MembershipStyle";
             prop[2].val <<= (CORBA::UShort) 0;
-        
+    
 	    prop[3].nam.length( 1 );
 	    prop[3].nam[0].id = "org.omg.ft.Factories";
 	    Cdmw::FT::FactoryInfos factoryInfos;
 	    factoryInfos.add_ftLocation(hostLocation, "FTApplication", "hello1");
-	    factoryInfos.add_ftLocation(::getenv("HOSTNAME2"), "FTApplication", "hello2");
+	    factoryInfos.add_ftLocation(::getenv("HOSTNAME2"), "FTApplication", "hello2"); 
 	    prop[3].val <<= factoryInfos.get_factoryInfos();
 
         ::FT::Criteria ft_criteria;
@@ -143,7 +143,7 @@ public:
             repository->resolve_name_domain ("demo_ft/hello_servers");
                 
         // get NamingInterface to hello_servers (for reading)
-        Cdmw::NamingAndRepository::NamingInterface helloNamingInterface =
+        Cdmw::CommonSvcs::Naming::NamingInterface helloNamingInterface =
             Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("demo_ft/hello_servers");
 
         
@@ -151,8 +151,8 @@ public:
         add_hello_member("hello1", hostLocation, helloNamingInterface, true);
 
         // add hello2 to object group
-        hostLocation = ::getenv("HOSTNAME2");
-        add_hello_member("hello2", hostLocation, helloNamingInterface, false);
+	hostLocation = ::getenv("HOSTNAME2"); 
+	add_hello_member("hello2", hostLocation, helloNamingInterface, false);
 
         // add hello3 to object group
 		  //host_location = ::getenv("HOSTNAME3");
@@ -170,7 +170,7 @@ public:
 
     
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
         std::cout << "   -------- GroupCreator run --------" << std::endl;
@@ -190,7 +190,7 @@ private:
 
     virtual void add_hello_member(std::string hello_name,
 			                         std::string host_location,
-                                  Cdmw::NamingAndRepository::NamingInterface& namingInterface,
+                                  Cdmw::CommonSvcs::Naming::NamingInterface& namingInterface,
                                   bool set_as_primary)
     {
         // Retrieve reference of member to add from NamingInterface

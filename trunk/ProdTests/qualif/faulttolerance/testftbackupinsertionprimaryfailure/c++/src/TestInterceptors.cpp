@@ -20,8 +20,8 @@
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * =========================================================================== */
 
-
 #include <iostream>
+
 #include <testftbackupinsertionprimaryfailure/TestInterceptors.hpp>
 #include <Foundation/ossupport/OS.hpp>
 

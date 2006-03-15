@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,7 +16,7 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 #include "ClientProcessControl.hpp"
 #include "Foundation/common/Exception.hpp"
 #include "Foundation/common/Assert.hpp"
@@ -67,7 +64,7 @@ namespace TimeParallelism
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                                          m_processName.c_str(), 
                                                          ">>>>>>>>>>>>>> Initialisation requested by supervision");
     // ====================
@@ -88,13 +85,13 @@ namespace TimeParallelism
   
   // process to run called by platformmngt    
   void ClientProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
   {
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                                          m_processName.c_str(), 
                                                          ">>>>>>>>>>>>>> Run requested by supervision");
     
@@ -158,7 +155,7 @@ namespace TimeParallelism
     fp << "Mean time for invocation= " << tdeltatot2*1.0/(n_iter_x_thread *  m_nthread) << " usec" << std::endl;
     fp.close();
     
-    fname = "MEAN_TP.dat";
+    fname = "DELTA_C.dat";
     ofstream fd (fname.c_str());
     fd.precision(6);
     float temp = ((tdeltatot2*1.0) / (n_iter_x_thread *  m_nthread));
@@ -180,15 +177,16 @@ namespace TimeParallelism
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                                          m_processName.c_str(), 
                                                          ">>>>>>>>>>>>>> Stop requested by supervision");
+	  std::cout << "Stopping Clock parallelism performance test.." << std::endl;
     for (int i = 0; i< m_nthread; i++) {
       m_bench_thread[i].stop();
-      m_bench_thread[i].join();
+		  //m_bench_thread[i].join();
+	  }
       delete [] m_bench_thread;
       m_bench_thread = 0; // preventing problem in destructor
-    }
   } // on_stop()
 }; // End namespace TimeParallelism
 

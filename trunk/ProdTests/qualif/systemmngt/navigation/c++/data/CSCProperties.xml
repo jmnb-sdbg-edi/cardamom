@@ -32,10 +32,15 @@
                         Foundation/common
                         Foundation/testutils
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
+                        SystemMngt/platformvaluetypes
+                        SystemMngt/platformlibrary
                         SystemMngt/platforminterface
                     </libraries>
                 </prerequisites>

@@ -54,12 +54,12 @@ case @config.SystemMngt.cpp.orb@ in
 	{
 	if [ $NAME_PID != "" ]; then
 		echo "killing the Name Server ..."
-		kill -9 $NAME_PID
+		kill $NAME_PID
 	fi
         
 	if [ $TIME_PID != "" ]; then
 		echo "killing the Time Server ..."
-		kill -9 $TIME_PID
+		kill $TIME_PID
 	fi
         
 	exit 1
@@ -98,5 +98,6 @@ echo "starting the Platform Daemon ..."
 
 trap 'echo "Signal trapped, stop command send to platform daemon.";cdmw_platform_daemon.sh stop; exit' 2
 
-cdmw_platform_daemon.sh --CdmwXMLFile=CdmwPlatformMngtDaemon_conf.xml | tee $TESTS_FILE
+cdmw_platform_daemon.sh --CdmwXMLFile=CdmwPlatformMngtDaemon_conf.xml $* | tee $TESTS_FILE
+kill -2 $$;
 

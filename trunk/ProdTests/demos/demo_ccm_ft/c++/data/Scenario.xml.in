@@ -52,8 +52,7 @@
 	<Host
         Name="@host_name@"
         App-exec-path="./cdmw_platform_application"
-        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-        Probe-exec-path="./cdmw_host_probe"/>
+        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -117,24 +116,6 @@
                          Autoended="FALSE"
 						 Exec-path="./spliced.sh"
                          Args="start"/>
-                         
-        <Unmanaged-process Name="sortids1"
-                         Host-name="@host_name@"
-                         Autoended="FALSE"
-                         Exec-path="@splice_bin@/sortids"
-						 Args=""/>
-                         
-        <Unmanaged-process Name="worldids1"
-                         Host-name="@host_name@"
-                         Autoended="FALSE"
-                         Exec-path="@splice_bin@/worldids"
-						 Args=""/>
-                        
-        <Unmanaged-process Name="context1"
-                         Host-name="@host_name@"
-                         Autoended="FALSE"
-                         Exec-path="@splice_bin@/context"
-						 Args=""/>
 
 
         <!-- ************************** -->
@@ -143,15 +124,9 @@
         <!-- ************************** -->
 
         <!-- Init graph of processes of this application -->
-		<Init-graph>
-		    <Graph-element Name="spliced1"/>
-            <Graph-element Name="sortids1"/>
-            <Graph-element Name="worldids1"/>
-            <Graph-element Name="context1"/>
+	    <Init-graph>
+	    <Graph-element Name="spliced1"/>
 
-            <Graph-element-root Name="sortids1"/>
-            <Graph-element-root Name="worldids1"/>
-            <Graph-element-root Name="context1"/>
             <Graph-element-root Name="spliced1"/>
     	</Init-graph>
 

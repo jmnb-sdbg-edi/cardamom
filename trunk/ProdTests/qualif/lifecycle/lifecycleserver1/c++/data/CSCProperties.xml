@@ -33,17 +33,19 @@
                         Foundation/common
                         Foundation/testutils
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        Foundation/logging
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platformlibrary
                         SystemMngt/platforminterface
                         SystemMngt/platformvaluetypes
                         SystemMngt/processadmintools
                         Repository/repositoryidl
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         LifeCycle/lifecycleidl
                         LifeCycle/lifecycleinit

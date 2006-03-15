@@ -183,8 +183,8 @@
                          Autoended="FALSE"
                          Exec-path="./cdmw_package_manager.sh"
                          Port="24010"
-                         Args="--installDir=@config.FtpJAVA.ftp.dir@/cdmw_integration 
-                               --ftpHomeDir=@config.FtpJAVA.ftp.dir@
+                         Args="--installDir=@config.Ftp.homedir@/cdmw_integration 
+                               --ftpHomeDir=@config.Ftp.homedir@
                                --saveFile=../workDir/PackageManager.save">
 			<Init-step Name="initialisation" Timeout="30000"/>
 		<!--	<Run-timeout Timeout="1000"/>

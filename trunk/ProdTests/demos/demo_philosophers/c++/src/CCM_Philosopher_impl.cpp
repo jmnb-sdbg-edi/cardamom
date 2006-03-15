@@ -71,7 +71,7 @@ Dinner::test_ccm_philosopher_activate::do_tests()
   {
       CDMW_ASSERT(m_philosopher);
 
-	  ::Dinner::Registration_var register_server;
+	  ::DinnerRegistration::Registration_var register_server;
      ::Dinner::CCM_Philosopher_Context_var philosopher_context = m_philosopher->get_context();
 	  
      TEST_INFO("Philo: Get_connection_to_register...");
@@ -115,9 +115,9 @@ Dinner::test_ccm_philosopher_activate::do_tests()
      test_ok = false;
 	  try
 	  {
-		    Dinner::StatusInfo_var si = new StatusInfo_impl;
+		    DinnerEvents::StatusInfo_var si = new StatusInfo_impl;
           si->name (m_philosopher->m_name.in());
-	       si->state (Dinner::THINKING);
+	       si->state (DinnerEvents::THINKING);
           si->secs_since_last_meal (m_philosopher->m_state);
           si->has_left_fork (m_philosopher->m_have_left_fork);
           si->has_right_fork (m_philosopher->m_have_right_fork);
@@ -474,28 +474,28 @@ Dinner::CCM_Philosopher_impl::ccm_remove()
 void 
 Dinner::CCM_Philosopher_impl::push_state ()
 {
-    Dinner::StatusInfo_var si = new StatusInfo_impl;
+    DinnerEvents::StatusInfo_var si = new StatusInfo_impl;
     si->name (m_name.in());
 
     if (m_have_left_fork && m_have_right_fork) 
 	 {
-	     si->state (Dinner::EATING);
+	     si->state (DinnerEvents::EATING);
     }
     else if (m_state < 3) 
 	 {
-	     si->state (Dinner::THINKING);
+	     si->state (DinnerEvents::THINKING);
     }
     else if (m_state < 10) 
 	 {
-	     si->state (Dinner::HUNGRY);
+	     si->state (DinnerEvents::HUNGRY);
     }
     else if (m_state < 40) 
 	 {
-	     si->state (Dinner::STARVING);
+	     si->state (DinnerEvents::STARVING);
     }
     else 
 	 {
-	     si->state (Dinner::DEAD);
+	     si->state (DinnerEvents::DEAD);
     }
 
     si->secs_since_last_meal (m_state);

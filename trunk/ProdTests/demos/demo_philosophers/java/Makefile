@@ -32,12 +32,14 @@ include site.mk
 
 BUILD_TARGET:=prod/$(ORB)
 
-XML_CONF_FILES:=xml/ComponentServers.xml
+XML_CONF_FILES:=xml/ComponentServers.xml xml/ComponentServerDummy.xml
 
 XML_DATA_FILES:=run/ccm_integration_commands.txt run/start_interface_repository.sh run/define_system.sh \
 	run/make_assembly_package.sh run/start_demo.sh run/start_daemon.sh run/start_supervision.sh \
 	run/start_system.sh run/stop_system.sh data/Dinner.cad data/EventChannelConf1.xml \
 	data/FrenchSchoolComponentServer.xml data/GreekSchoolComponentServer.xml data/ObserverComponentServer.xml \
+        data/CdmwPlatformMngtSystemStart.xml \
+        data/CdmwFTSystemMngtGroupCreator_conf.xml \
 	data/integ_deployment.xml data/cdmw_nar_integ_ccm.xml
 
 .SUFFIXES:
@@ -71,16 +73,17 @@ gencode::
 	@if [ ! -d $(PWD)/generated ]; then \
 		mkdir $(PWD)/generated ; \
 	fi
-	$(CDMW_HOME)/bin/cdmw_code_generator.sh --xml=$(PWD)/xml/ComponentServers.xml --dir=$(PWD)/generated --lang=java --validate
+	$(CDMW_HOME)/bin/cdmw_code_generator.sh --xml=$(PWD)/xml/ComponentServerDummy.xml --dir=$(PWD)/generated --lang=java --validate
+	$(CDMW_HOME)/bin/cdmw_code_generator.sh --xml=$(PWD)/xml/ComponentServers.xml --dir=$(PWD)/generated --lang=java --validate --force-generation
 	@echo "#################### Code Generation completed"
 
 # Rules to build each XML configuration file
 %.xml: %.xml.in
 	@echo "Generating $@ from $<"
-	@echo s%@runtime_root@%$(CDMW_RUNTIME_ROOT)%g >> sed_patterns
 	@echo s%@cdmw_platform@%$(BUILD_TARGET)%g >> sed_patterns
 	@echo s%@prefix@%$(PWD)%g >> sed_patterns
 	@echo s%@cdmw_home@%$(CDMW_HOME)%g >> sed_patterns
+	@echo s%@host_name@%`uname -n`%g >> sed_patterns
 	@echo s%@JACORB_IDL_PATH@%$(JACORB_IDL_PATH)%g >> sed_patterns
 	@echo s%@JACORB_JAR_PATH@%$(JACORB_JAR_PATH)%g >> sed_patterns
 	@echo s%@JACORB_BIN_PATH@%$(JACORB_BIN_PATH)%g >> sed_patterns
@@ -96,7 +99,6 @@ gencode::
 # Rules to build each sh configuration file
 %.sh: %.sh.in
 	@echo "Generating $@ from $<"
-	@echo s%@runtime_root@%$(CDMW_RUNTIME_ROOT)%g >> sed_patterns
 	@echo s%@cdmw_platform@%$(BUILD_TARGET)%g >> sed_patterns
 	@echo s%@prefix@%$(PWD)%g >> sed_patterns
 	@echo s%@cdmw_home@%$(CDMW_HOME)%g >> sed_patterns
@@ -113,7 +115,6 @@ gencode::
 # Rules to build each TXT configuration file
 %.txt: %.txt.in
 	@echo "Generating $@ from $<"
-	@echo s%@runtime_root@%$(CDMW_RUNTIME_ROOT)%g >> sed_patterns
 	@echo s%@cdmw_platform@%$(BUILD_TARGET)%g >> sed_patterns
 	@echo s%@prefix@%$(PWD)%g >> sed_patterns
 	@echo s%@cdmw_home@%$(CDMW_HOME)%g >> sed_patterns
@@ -128,7 +129,6 @@ gencode::
 
 %.cad:%.cad.in
 	@echo "Generating $@ from $<"
-	@echo s%@runtime_root@%$(CDMW_RUNTIME_ROOT)%g >> sed_patterns
 	@echo s%@cdmw_platform@%$(BUILD_TARGET)%g >> sed_patterns
 	@echo s%@prefix@%$(PWD)%g >> sed_patterns
 	@echo s%@hostname@%`hostname`%g >> sed_patterns

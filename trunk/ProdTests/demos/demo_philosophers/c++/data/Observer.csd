@@ -48,7 +48,7 @@
         </code>
 
         <dependency type="DLL">
-            <valuetypefactory repid="IDL:acme.com/Dinner/StatusInfo:1.0"
+            <valuetypefactory repid="IDL:acme.com/DinnerEvents/StatusInfo:1.0"
                               factoryentrypoint="createStatusInfoFactory">
                 <fileinarchive name="libObserver.so"/>
             </valuetypefactory>

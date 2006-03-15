@@ -31,7 +31,7 @@ import cdmw.event.EventChannel;
 import cdmw.event.TypedEventChannel;
 import cdmw.event.EventChannelInterface;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 
 public class EventServiceTest extends Testable {

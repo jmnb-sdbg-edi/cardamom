@@ -73,6 +73,12 @@ public:
     //
     virtual ::FT::Location* the_location()
         throw(CORBA::SystemException);
+
+    //
+    // IDL:thalesgroup.com/CdmwFT/Location/MembersAdmin/the_slocation:1.0
+    //
+    virtual char* the_slocation()
+        throw(CORBA::SystemException);
     
     //
     // IDL:thalesgroup.com/CdmwFT/Location/MembersAdmin/get_data_store_infos:1.0

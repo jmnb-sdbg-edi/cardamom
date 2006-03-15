@@ -49,7 +49,7 @@ HelloInterface1_impl::HelloInterface1_impl(CORBA::ORB_ptr orb,PortableServer::PO
     }
 
     // create the CORBA object for the datastore
-    datastore1 = (new Cdmw::FT::DataStore_impl(m_poa.in(),*dataStoreObj1))->_this();
+    datastore_group = (new Cdmw::FT::DataStoreGroup_impl(m_poa.in(), dataStoreObj1->get_context()))->_this();
     onInitObj1 = new TestOnInitImpl();
     
     dataStoreObj1->register_initialiser(onInitObj1);
@@ -65,9 +65,6 @@ HelloInterface1_impl::HelloInterface1_impl(CORBA::ORB_ptr orb,PortableServer::PO
     if ( ! registered) {
       // ###### ?????
     }
-
-    // create the CORBA object for the datastore
-    datastore2 = (new Cdmw::FT::DataStore_impl(m_poa.in(),*dataStoreObj2))->_this();
 
     // create the initialiser for the datastore (on_init)
     onInitObj2 = new TestOnInitImpl();
@@ -90,21 +87,18 @@ void HelloInterface1_impl::hello ()
 }
 
 ::CdmwFT::StateTransfer::LocalDataStoreInfo *
-HelloInterface1_impl::get_local_datastore_info (CORBA::Long dsid)
+HelloInterface1_impl::get_local_datastore_info ()
     throw(CORBA::SystemException)
 {
     ::CdmwFT::StateTransfer::LocalDataStoreInfo* info = new  ::CdmwFT::StateTransfer::LocalDataStoreInfo;
-    info->dsid = dsid;
-    if (dsid == 1)
-    {
-        info->coordinator = dataStoreObj1->get_coordinator_ref();
-        info->cohort = dataStoreObj1->get_cohort_ref();
-        info->local_data_store = CdmwFT::StateTransfer::DataStore::_duplicate(datastore1.in());
-    } else {
-        info->coordinator = dataStoreObj2->get_coordinator_ref();
-        info->cohort = dataStoreObj2->get_cohort_ref();
-        info->local_data_store = CdmwFT::StateTransfer::DataStore::_duplicate(datastore2.in());
-    }
+
+    info->dsids.length(2);
+    info->dsids[0] = dataStoreObj1->get_dsid();
+    info->dsids[1] = dataStoreObj2->get_dsid();
+    info->coordinator = dataStoreObj1->get_context().get_coordinator_ref();
+    info->cohort = dataStoreObj1->get_context().get_cohort_ref();
+    info->local_data_store = CdmwFT::StateTransfer::DataStoreGroup::_duplicate(datastore_group.in());
+
     return info;
 }
 
@@ -258,7 +252,7 @@ HelloInterface2_impl::HelloInterface2_impl(CORBA::ORB_ptr orb,PortableServer::PO
     }
 
     // create the CORBA object for the datastore
-    datastore3 = (new Cdmw::FT::DataStore_impl(m_poa.in(),*dataStoreObj3))->_this();
+    datastore_group = (new Cdmw::FT::DataStoreGroup_impl(m_poa.in(), dataStoreObj3->get_context()))->_this();
 
     // create the initialiser for the datastore (on_init)
     onInitObj3 = new TestOnInitImpl();
@@ -269,9 +263,6 @@ HelloInterface2_impl::HelloInterface2_impl(CORBA::ORB_ptr orb,PortableServer::PO
     dsBase = Cdmw::FT::DataStoreBase::Get_dataStore(4);
     dataStoreObj4 = dynamic_cast<Cdmw::FT::DataStore<CORBA::Long, std::string, std::less<CORBA::Long> >*>(dsBase);
     
-    // create the CORBA object for the datastore
-    datastore4 = (new Cdmw::FT::DataStore_impl(m_poa.in(),*dataStoreObj4))->_this();
-
     // create the observer for the dsid 4
     m_observer4 = new MyDataStoreObserver2();
 
@@ -300,21 +291,18 @@ void HelloInterface2_impl::hello ()
 }
 
 ::CdmwFT::StateTransfer::LocalDataStoreInfo *
-HelloInterface2_impl::get_local_datastore_info (CORBA::Long dsid)
+HelloInterface2_impl::get_local_datastore_info ()
     throw(CORBA::SystemException)
 {
     ::CdmwFT::StateTransfer::LocalDataStoreInfo* info = new  ::CdmwFT::StateTransfer::LocalDataStoreInfo;
-    info->dsid = dsid;
-    if (dsid == 3)
-    {
-        info->coordinator = dataStoreObj3->get_coordinator_ref();
-        info->cohort = dataStoreObj3->get_cohort_ref();
-        info->local_data_store = CdmwFT::StateTransfer::DataStore::_duplicate(datastore3.in());
-    } else {
-        info->coordinator = dataStoreObj4->get_coordinator_ref();
-        info->cohort = dataStoreObj4->get_cohort_ref();
-        info->local_data_store = CdmwFT::StateTransfer::DataStore::_duplicate(datastore4.in());
-    }
+
+    info->dsids.length(2);
+    info->dsids[0] = dataStoreObj3->get_dsid();
+    info->dsids[1] = dataStoreObj4->get_dsid();
+    info->coordinator = dataStoreObj3->get_context().get_coordinator_ref();
+    info->cohort = dataStoreObj3->get_context().get_cohort_ref();
+    info->local_data_store = CdmwFT::StateTransfer::DataStoreGroup::_duplicate(datastore_group.in());
+
     return info;
 }
 

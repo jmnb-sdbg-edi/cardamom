@@ -23,7 +23,7 @@
 
 package cdmw.dinnerdemo;
 
-import com.acme.Dinner.PhilosopherState;
+import com.acme.DinnerEvents.PhilosopherState;
 
 public class CCMObserverImpl extends org.omg.CORBA.LocalObject
     implements com.acme.Dinner.CCM_Observer {
@@ -37,7 +37,7 @@ public class CCMObserverImpl extends org.omg.CORBA.LocalObject
     //
     // IDL:acme.com/Dinner/Observer/push_info:1.0
     //
-    public void push_info(com.acme.Dinner.StatusInfo event) {
+    public void push_info(com.acme.DinnerEvents.StatusInfo event) {
     
         System.out.print("Observer: " + event.name + ": ");
 

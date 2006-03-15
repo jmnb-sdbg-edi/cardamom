@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * THALES (R) - CARDAMOM
+ *
+ * Copyright (c) THALES 2000-2004 All rights reserved
+ * This file and the information  it contains  are   property  of  THALES  and
+ * confidential.   They  shall  not be reproduced nor disclosed  to any person
+ * except to those having  a need  to know them without  prior written consent
+ * of THALES.
+ * =========================================================================== *
+-->
+
+
+<!DOCTYPE System SYSTEM "./CdmwPlatformMngtSystem.dtd">
+
+<!-- ***************** -->
+<!-- System definition -->
+<!--                   -->
+<!-- ***************** -->
+
+<System Name="MySystem" Port="21869">
+
+	<!-- Default timeouts for processes of the entire system -->
+	<Timeout Init="20000" Run="20000" Stop="20000"/>
+	<!-- Default monitorings for the entire system -->
+	<Host-monitoring Pull-interval="1000" Pull-timeout="1500"/>
+	<App-monitoring Pull-interval="060" Pull-timeout="070"/>
+	<Proc-monitoring Model="NO_MONITORING" 
+	                 Pull-interval="021" Pull-timeout="031" 
+	                 Push-interval="041" Push-timeout="051"/>
+	
+	<!-- Services of the system -->
+	<!-- <Service Name="NamingAndRepositoryService" 
+	         App-name="CardamomServices" 
+	         Process-name="Repository"/>  -->
+            <!--	     
+	      App-exec-path="/home/florenna/MINICARDAMOM_DEVELOP/CARDAMOM_INSTALLED/bin/cdmw_platform_application" 
+	      Agent-exec-path="/home/florenna/MINICARDAMOM_DEVELOP/CARDAMOM_INSTALLED/bin/cdmw_platform_agent" 
+	      Probe-exec-path="/home/florenna/MINICARDAMOM_DEVELOP/CARDAMOM_INSTALLED/bin/cdmw_host_probe">
+	      -->
+	
+	<!-- Hosts of the system -->
+	<Host Name="@hostname1val@"  >
+		<Host-monitoring Pull-interval="2000" Pull-timeout="2500"/>
+	</Host>
+	
+	<!-- ********************** -->
+	<!-- Application definition -->
+	<!--                        -->
+	<!-- ********************** -->
+	<Application Name="HELLO_WORLD" 
+	             Host-name="@hostname1val@" 
+	             Agent-port="-1" 
+	             App-port="-1">
+	             
+		<!-- Default timeouts for processes of this application -->
+		<Timeout Init="20000" Run="20000" Stop="20000"/>
+		
+		<!-- Monitoring of this application -->
+		<App-monitoring Pull-interval="021" Pull-timeout="031"/>
+		
+		<!-- ******************* -->
+		<!-- Process definitions -->
+		<!--                     -->
+		<!-- ******************* -->
+               <Unmanaged-process Name="HelloProcess1"
+                     Host-name="@hostname1val@" 
+                     Autoended="TRUE" 
+                     Exec-path="cdmw_teststdattributes_Host"
+		     Port="-1" />
+		     
+
+		   
+		
+		<!-- ************************** -->
+		<!--                            -->
+		<!-- End of process definitions -->
+		<!-- ************************** -->
+		
+		<!-- Init graph of processes of this application -->
+                <Init-graph>
+                    <Graph-element Name="HelloProcess1">
+                        </Graph-element> 
+                        <Graph-element-root Name="HelloProcess1"/>
+                </Init-graph>
+
+		<!--
+		<Init-graph>
+		    <Graph-element Name="HelloProcess1">
+			<Graph-element-successor Name="HelloProcess2"  />
+			</Graph-element> 
+
+		    <Graph-element Name="HelloProcess2">
+			<Graph-element-successor Name="HelloProcess3"  />
+			</Graph-element> 
+
+			<Graph-element-root Name="HelloProcess1"/>
+		</Init-graph>
+		-->
+		
+		<!-- ***************************** -->
+		<!--                               -->
+		<!-- End of application definition -->
+		<!-- ***************************** -->
+	</Application>
+	
+	
+	<!-- Stop graph of applications of the system-->
+	
+	<Init-graph>
+		    <Graph-element Name="HELLO_WORLD">
+			</Graph-element> 
+			<Graph-element-root Name="HELLO_WORLD"/>
+	</Init-graph>
+	
+	<Stop-graph>
+		<Graph-element Name="HELLO_WORLD">
+		</Graph-element>
+		<Graph-element-root Name="HELLO_WORLD"/>
+	</Stop-graph> 
+
+<!-- Run sets of the system -->
+<!--
+<Run-set Name="RS1">
+  <Run-set-element Name="HelloProcess1"/>
+  <Run-set-element Name="HelloProcess2"/>
+  <Run-set-element Name="HelloProcess3"/>
+</Run-set>
+-->
+	
+	
+</System>
+
+<!-- ************************ -->
+<!--                          -->
+<!-- End of system definition -->
+<!-- ************************ -->

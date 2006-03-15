@@ -45,26 +45,26 @@ Dinner::CCM_Observer_impl::~CCM_Observer_impl()
 // IDL:acme.com/Dinner/Observer/push_info:1.0
 //
 void
-Dinner::CCM_Observer_impl::push_info (Dinner::StatusInfo* event)
+Dinner::CCM_Observer_impl::push_info (DinnerEvents::StatusInfo* event)
 	throw(CORBA::SystemException)
 {
     std::cout << "Observer: " << event->name() << ": " ;
 
     switch (event->state()) 
 	 {
-      case Dinner::EATING:   
+      case DinnerEvents::EATING:   
 			std::cout << "Eating     "; 
 			break;
-      case Dinner::THINKING: 
+      case DinnerEvents::THINKING: 
 			std::cout <<  "Thinking   "; 
 			break;
-      case Dinner::HUNGRY:   
+      case DinnerEvents::HUNGRY:   
 			std::cout <<  "Hungry     "; 
 			break;
-      case Dinner::STARVING: 
+      case DinnerEvents::STARVING: 
 			std::cout <<  "Starving   "; 
 			break;
-      case Dinner::DEAD:     
+      case DinnerEvents::DEAD:     
 			std::cout <<  "Dead       "; 
 			break;
     }

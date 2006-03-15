@@ -35,5 +35,9 @@
         <RequestDurationTime>20000000</RequestDurationTime>
         <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-1/@Monitoring_addr@:8556</SimplePullCorbaloc>
         <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-2/@Monitoring_addr@:8557</SimplePushCorbaloc>
+        <ServiceLocator locator-service-address="corbaloc:miop:1.0@1.0-cdmwftdomain-5/@Service_addr@:4560"
+            registration-service-address="corbaloc:miop:1.0@1.0-cdmwftdomain-6/@Service_addr@:4561"
+            nb-retries="5"
+            time-interval="200"/>
 </CdmwPlatformMngtDaemon>
 

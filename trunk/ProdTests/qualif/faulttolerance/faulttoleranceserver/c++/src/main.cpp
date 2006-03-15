@@ -79,6 +79,19 @@ namespace
 } // end anonymous namespace
 
 
+CORBA::ORB_var orb = CORBA::ORB::_nil();
+
+void exit_handler(int sig) {
+    if (!CORBA::is_nil(orb.in())) {
+        try {
+            orb->shutdown(false);
+        } catch (const CORBA::SystemException& e) {
+            std::cerr << "Error while shuting ORB down in exit_handler:\n"
+                      << e << " - minor code: " << e.minor() << std::endl;
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     // the return code 
@@ -129,7 +142,7 @@ int main(int argc, char* argv[])
     {        
         // Initialise FT service
         std::cout << "test_server: initialise FT service" << std::endl;
-        Cdmw::FT::FTServiceInit::init(argc, argv);
+        Cdmw::FT::FTServiceInit::Init(argc, argv);
         
         //Register interceptor
         ServerORBInitializer_impl * temp_initializer = 0;
@@ -144,10 +157,10 @@ int main(int argc, char* argv[])
         // Initialises the ORB
         OrbSupport::StrategyList strategyList;
         strategyList.add_OrbThreaded();
-        strategyList.add_PoaThreadPerConnection();
+        strategyList.add_PoaThreadPool(POA_THREAD_POOL_SIZE);
 
         std::cout << "test_server: initialise the orb" << std::endl;
-        CORBA::ORB_var orb =  OrbSupport::OrbSupport::ORB_init(argc,argv, strategyList); 
+        orb =  OrbSupport::OrbSupport::ORB_init(argc,argv, strategyList); 
         
         // And activate the root POA
         CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
@@ -165,10 +178,10 @@ int main(int argc, char* argv[])
         Cdmw::CdmwInit::CDMW_init(orb.in(), argc, argv,  pProcessBehaviour.get());
 
         // get application name
-        std::string application_name =  Cdmw::PlatformMngt::PlatformInterface::getApplicationName();
+        std::string application_name =  Cdmw::PlatformMngt::PlatformInterface::Get_application_name();
 
         // get process name
-        std::string process_name = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+        std::string process_name = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
 
         ::FT::Location loc;
         loc.length(3);
@@ -196,9 +209,18 @@ int main(int argc, char* argv[])
             interceptor->forward_references (testPrimaryBackupAdmin.in ());
         }
         
+        struct sigaction action;
+        action.sa_handler=exit_handler;
+        sigemptyset(&action.sa_mask);
+        sigaction(SIGTERM, &action, NULL);
+        sigaction(SIGINT, &action, NULL);
+        sigaction(SIGQUIT, &action, NULL);
+        sigaction(SIGABRT, &action, NULL);
+
         orb->run();
         
         //orb->shutdown() is done by the stop() of the ProcessBehaviour
+        Cdmw::CdmwInit::CDMW_cleanup(orb.in());
         Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
         orb->destroy();
         

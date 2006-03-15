@@ -29,7 +29,7 @@
 
     <target name="-check-JacORB">
         <if>
-            <equals arg1="${config.CCMContainer.java.orb}" arg2="JacORB"
+            <equals arg1="${config.ProdTests.java.orb}" arg2="JacORB"
                     trim="true"/>
             <then>
                 <echo level="info">CONDITION_IS_TRUE</echo>
@@ -43,7 +43,7 @@
 
     <target name="-check-not-JacORB">
         <if>
-            <equals arg1="${config.CCMContainer.java.orb}" arg2="JacORB"
+            <equals arg1="${config.ProdTests.java.orb}" arg2="JacORB"
                     trim="true"/>
             <then>
                 <echo level="info">CONDITION_IS_FALSE</echo>

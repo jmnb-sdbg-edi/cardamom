@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,7 +16,7 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 
 #include <cstdlib>
 #include <string>
@@ -45,7 +42,7 @@ namespace
 {
   const int SUCCESS = 0;
   const int FAILURE = 1;
-  const int POA_THREAD_POOL_SIZE = 2;
+  const int POA_THREAD_POOL_SIZE = 5;
   
 }; // End anonymous namespace
 
@@ -53,7 +50,12 @@ int main(int argc, char* argv[])
 {    
   int status = SUCCESS;
   
-  std::cout << "Start Client" << std::endl;
+	std::cerr	<< "-------------------------" << std::endl
+				<< "      Start Client" << std::endl
+				<< "-------------------------" << std::endl;
+	for (int n=0; n < argc; n++)
+		std::cerr << "argv[" << n <<"]: " << argv[n] << std::endl;  
+	std::cerr 	<< "-------------------------" << std::endl;
   
   //number of test
   int niter = 1000;
@@ -78,17 +80,26 @@ int main(int argc, char* argv[])
 
   std::cout << "Reading Configuration File..." << std::endl;
   //read configuration file
-  
-  FILE * fd = fopen("client.cfg", "r");
-  fscanf(fd,"%d",&niter);
-  fscanf(fd,"%d",&delay);
-  fscanf(fd,"%s",invocation_type);
-  fscanf(fd,"%s",data_type);
-  fscanf(fd,"%d",&data_size);
-  fscanf(fd,"%s",measure_type);
-  fscanf(fd,"%s",fileprefix);  
-  
-  fclose(fd);
+
+  FILE * fd;
+  if ((fd = fopen("client.cfg", "r"))!=NULL) {
+	  fscanf(fd,"%d",&niter);
+	  fscanf(fd,"%d",&delay);
+	  fscanf(fd,"%s",invocation_type);
+	  fscanf(fd,"%s",data_type);
+	  fscanf(fd,"%d",&data_size);
+	  fscanf(fd,"%s",measure_type);
+	  fscanf(fd,"%s",fileprefix);  
+	  if (ferror(fd)) { 
+			std::cerr << "Error in reading file client.cfg\n";
+			exit(-1);
+	  }                
+	  fclose(fd);                                   
+  }                        
+  else {
+		std::cerr << "Error: client.cfg don't exist!\n";
+		exit(-1);
+ }                                                                                                                            
   
   std::cout << "Sample invocation= " << niter << std::endl;            
   std::cout << "Delay (ms)= " << delay << std::endl;            

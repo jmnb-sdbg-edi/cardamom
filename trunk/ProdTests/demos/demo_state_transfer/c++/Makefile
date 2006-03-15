@@ -35,12 +35,14 @@ XML_CONF_FILES:=xml/Main.xml
 
 XML_DATA_FILES:=data/CdmwFaultToleranceManager_conf.xml \
     data/CdmwPlatformMngtDaemon_conf.xml \
+    data/CdmwPlatformMngtSystemStart.xml \
     data/Database.xml \
     data/ScenarioMulticast.xml \
     data/Cdmw_nar.xml \
     data/Client.xml \
     data/GroupCreator.xml \
-    data/ScenarioPointToPoint.xml
+    data/ScenarioPointToPoint.xml \
+    data/CdmwFTSystemMngtGroupCreator_conf.xml
 
 .SUFFIXES:
 .SUFFIXES: .xml  .xml.in
@@ -86,6 +88,7 @@ gencode::
 	@echo s%@HOSTNAME@%$(HOSTNAME)%g >> sed_patterns
 	@echo s%@HOSTNAME2@%$(HOSTNAME2)%g >> sed_patterns
 	@echo s%@HOSTNAME3@%$(HOSTNAME3)%g >> sed_patterns
+	@echo s%@host_name@%`uname -n`%g >> sed_patterns
 	@echo s%@PWD@%$(PWD)%g >> sed_patterns
 	@echo s%@CDMW_HOME@%$(CDMW_HOME)%g >> sed_patterns
 	@echo s%@GENERATION_DIR@%$(GENERATION_DIR)%g >> sed_patterns
@@ -94,6 +97,7 @@ gencode::
 	@echo s%@SystemMngt_port@%21`echo $PWD | wc -c | tail -c 2``id -u | tail -c 2``id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@Monitoring_addr@%225.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@StateTransfert_addr@%226.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Service_addr@%227.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@cat  $< | sed -f sed_patterns > $@
 	@rm -f sed_patterns
 

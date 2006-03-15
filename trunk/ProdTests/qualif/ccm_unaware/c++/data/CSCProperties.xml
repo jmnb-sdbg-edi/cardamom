@@ -32,6 +32,8 @@
                     <libraries>
                         Foundation/common
                         Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
                         CCMContainer/ccmcontaineridl
@@ -62,11 +64,14 @@
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -81,8 +86,8 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
@@ -111,19 +116,21 @@
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
                         LifeCycle/lifecycleidl
                         LifeCycle/lifecycleinit
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes

@@ -106,7 +106,7 @@ get_process_callback(CORBA::ORB_ptr orb)
         = CdmwPlatformMngt::ProcessCallback::_nil();
     {
         try {
-            Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
             CORBA::Object_var obj__ = ni.resolve(PROCESS_CALLBACK_BINDING_NAME);
             callback = CdmwPlatformMngt::ProcessCallback::_narrow(obj__.in());
             if (CORBA::is_nil(callback.in())) {

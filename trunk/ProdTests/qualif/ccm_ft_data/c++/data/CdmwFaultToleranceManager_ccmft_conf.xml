@@ -33,6 +33,11 @@
     <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-2/225.1.1.8:4557</SimplePushCorbaloc>
     <MutualPullCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-3/225.1.1.8:4558</MutualPullCorbaloc>
     <MutualPushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-4/225.1.1.8:4559</MutualPushCorbaloc>
+    <!--
+    Localisation service address
+    -->
+    <LocalisationServiceAddress>corbaloc:miop:1.0@1.0-cdmw_ftdomain-5/225.1.1.8:4560</LocalisationServiceAddress>
+
     <MasterInterrogationTime>900</MasterInterrogationTime>
     <MasterElectionTime>600</MasterElectionTime>
     <MasterConfirmationTime>700</MasterConfirmationTime>

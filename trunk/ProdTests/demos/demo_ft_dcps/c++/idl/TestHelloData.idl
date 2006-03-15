@@ -31,6 +31,8 @@ module DemoFTDCPS {
 /** 
 * Hello interface
 */
+        typedef string<10> String10;
+
         struct BasicTypes
         {
                 unsigned long                   myUlong;          // Key field.

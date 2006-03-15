@@ -23,7 +23,7 @@
 
 package cdmw.dinnerdemo;
 
-public class StatusInfoImpl extends com.acme.Dinner.StatusInfo {
+public class StatusInfoImpl extends com.acme.DinnerEvents.StatusInfo {
     
     public StatusInfoImpl() {}
     

@@ -22,8 +22,8 @@
 
 #include "lifecycle/TestServiceStrategy.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include <string>
 #include <cctype>
 #include <algorithm>
@@ -112,14 +112,14 @@ void TestServiceStrategy::do_tests()
         //         the Application object.
         
 
-        Cdmw::NamingAndRepository::NamingInterface ni
+        Cdmw::CommonSvcs::Naming::NamingInterface ni
             = Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface
             (factory_domaine_name);
 
         TEST_INFO( "Testing " << factory_name << " factory.");
 
         
-        typedef Cdmw::NamingAndRepository::NamingUtil<CFFactories::AnonymousResourceFactory> 
+        typedef Cdmw::CommonSvcs::Naming::NamingUtil<CFFactories::AnonymousResourceFactory> 
             Util;
     
         

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+* =========================================================================== *
+* THALES (R) - CARDAMOM
+*
+* Copyright (c) THALES 2000-2004 All rights reserved
+* This file and the information  it contains  are   property  of  THALES  and
+* confidential.   They  shall  not be reproduced nor disclosed  to any person
+* except to those having  a need  to know them without  prior written consent
+* of THALES.
+* =========================================================================== *
+-->
+
+
+<!DOCTYPE System SYSTEM "./CdmwPlatformMngtSystem.dtd">
+
+<!-- ***************** -->
+<!-- System definition -->
+<!--                   -->
+<!-- ***************** -->
+
+<System Name="MySystem" Port="21869">
+
+  <!-- Default timeouts for processes of the entire system -->
+  <Timeout Init="20000" Run="20000" Stop="20000"/>
+  <!-- Default monitorings for the entire system -->
+  <Host-monitoring Pull-interval="1000" Pull-timeout="1500"/>
+  <App-monitoring Pull-interval="060" Pull-timeout="070"/>
+  <Proc-monitoring Model="NO_MONITORING" 
+		   Pull-interval="021" Pull-timeout="031" 
+		   Push-interval="041" Push-timeout="051"/>
+
+  <!-- Definition of System Entity -->
+  <Entity Name="HelloSystemEntity">
+    <Property Name="entity_short_sys_property" Type="Short" Value="5"/>
+  </Entity>
+  
+  <!-- Hosts of the system -->
+  <Host Name="@hostname1val@"  >
+    <Host-monitoring Pull-interval="2000" Pull-timeout="2500"/>
+    <Property Name="host_float_property" Type="Float" Value="2.4"/>
+  </Host>
+
+  <!-- ********************** -->
+  <!-- Application definition -->
+  <!--                        -->
+  <!-- ********************** -->
+  <Application Name="HELLO_WORLD" 
+	       Host-name="@hostname1val@" 
+	       Agent-port="-1" 
+	       App-port="-1">
+    
+    <!-- Default timeouts for processes of this application -->
+    <Timeout Init="20000" Run="20000" Stop="20000"/>
+    
+    <!-- Monitoring of this application -->
+    <App-monitoring Pull-interval="021" Pull-timeout="031"/>
+    
+    <Entity Name="HelloApplicationEntity">
+      <Property Name="entity_short_app_property" Type="Short" Value="5"/>
+    </Entity>
+    
+    
+    <!-- ******************* -->
+    <!-- Process definitions -->
+    <!--                     -->
+    <!-- ******************* -->
+    <Unmanaged-process Name="HelloUnmanagedProcess"
+		       Host-name="@hostname1val@" 
+		       Autoended="TRUE" 
+		       Exec-path="proc1.sh"
+		       Port="-1">
+      <Property Name="unmanaged_proc_float_property" Type="Float" Value="3.3"/>
+    </Unmanaged-process>
+    
+    
+    <Managed-process Name="HelloManagedProcess"
+		     Host-name="@hostname1val@"
+		     Type="MANAGED-PROCESS"
+		     Autoended="TRUE"
+		     Exec-path="HelloProcess2"
+		     Args="--"
+		     Port="-1">
+      <Init-step Name="initialisation" Timeout="10000"/>
+      <Run-timeout Timeout="10000"/>
+      <Stop-timeout Timeout="10000"/>
+      <Entity Name="HelloManagedProcessEntity">
+	<Property Name="entity_short_managed_proc_property" Type="String" Value="Managed-Process-String-Property"/>
+      </Entity>
+      <Property Name="managed_proc_short_property" Type="Short" Value="4"/>
+    </Managed-process>
+    
+    
+    <!-- ************************** -->
+    <!--                            -->
+    <!-- End of process definitions -->
+    <!-- ************************** -->
+    
+    <!-- Init graph of processes of this application -->
+    <Init-graph>
+      <Graph-element Name="HelloManagedProcess">
+	<Graph-element-successor Name="HelloUnmanagedProcess"  />
+      </Graph-element>
+      <Graph-element-root Name="HelloManagedProcess"/>
+    </Init-graph>
+    
+    
+    <!-- ***************************** -->
+    <!--                               -->
+    <!-- End of application definition -->
+    <!-- ***************************** -->
+
+    <Property Name="app_str_property" Type="String" Value=" string property value into application " />
+  </Application>
+  
+
+  
+  <!-- Stop graph of applications of the system-->
+  
+  <Init-graph>
+    <Graph-element Name="HELLO_WORLD">
+    </Graph-element>	
+       <Graph-element-root Name="HELLO_WORLD"/>
+  </Init-graph>
+  
+  <Stop-graph>
+    <Graph-element Name="HELLO_WORLD">
+      </Graph-element>	
+      <Graph-element-root Name="HELLO_WORLD"/>
+  </Stop-graph> 
+
+  <Property Name="system_short_property" Type="Short" Value="3"/>	
+</System>
+
+<!-- ************************ -->
+<!--                          -->
+<!-- End of system definition -->
+<!-- ************************ -->

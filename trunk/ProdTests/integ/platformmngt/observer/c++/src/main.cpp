@@ -192,7 +192,7 @@ int main( int argc, char* argv[] )
 
         // Initialise the platform interface
         if( managed_option == "yes" )
-            PlatformInterface::setup( orb.in(), argc, argv );
+            PlatformInterface::Setup( orb.in(), argc, argv );
 
         // Register event factories
         register_factories( orb.in() );
@@ -220,12 +220,16 @@ int main( int argc, char* argv[] )
         // Acknowledge the creation of the process
         if( managed_option == "yes" )
         {
-            PlatformInterface::acknowledgeCreation( pMyProcess.get() );
+            PlatformInterface::Acknowledge_creation( pMyProcess.get() );
             pMyProcess.release();
         }
 
         // Accept requests
         orb->run();
+        
+        // cleanup the platform interface
+        PlatformInterface::Cleanup();
+
     }
     catch ( const CORBA::Exception &e )
     {

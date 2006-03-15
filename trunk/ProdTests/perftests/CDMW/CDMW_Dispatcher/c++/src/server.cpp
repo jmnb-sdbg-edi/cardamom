@@ -1,9 +1,6 @@
 /* =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -59,7 +56,12 @@ int main(int argc, char* argv[])
 {    
     int status = SUCCESS;
     
-    std::cout << "Start Server" << std::endl;
+	std::cerr	<< "-------------------------" << std::endl
+				<< "      Start Server" << std::endl
+				<< "-------------------------" << std::endl;
+    for (int n=0; n < argc; n++)
+		std::cerr << "argv[" << n <<"]: " << argv[n] << std::endl;
+    std::cerr 	<< "-------------------------" << std::endl;
     
     //number of start-up ping
     int nservant = 2;
@@ -67,9 +69,19 @@ int main(int argc, char* argv[])
     std::cout << "Reading Configuration File..." << std::endl;
     //read configuration file
     
-    FILE * fd = fopen("server.cfg", "r");
-    fscanf(fd,"%d",&nservant);
-    fclose(fd);
+	FILE * fd;
+	if ((fd = fopen("server.cfg", "r"))!=NULL) {
+        fscanf(fd,"%d",&nservant);
+		if (ferror(fd)) { 
+			std::cerr << "Error in reading file server.cfg\n";
+			exit(-1);
+		}
+	    fclose(fd);
+	}  
+	else {
+		std::cerr << "Error: server.cfg don't exist!\n";
+		//exit(-1);
+	}
 
     std::cout << "Number of servant= " << nservant << std::endl;            
    

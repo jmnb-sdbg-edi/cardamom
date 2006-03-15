@@ -147,14 +147,13 @@ sleep $INIT_TIMEOUT
 
 # 1b) Start FT Manager
 $echo Starting the FT Manager...
-$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_ft/c++/data/CdmwFaultToleranceManager_conf.xml &
+$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_ft/c++/data/CdmwFaultToleranceManager_conf.xml --groupConf=$CDMW_HOME/demos/demo_ft/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml &
 FT_MANAGER_PID=$!
 sleep $FT_MANAGER_TIMEOUT
 
 # 2) Start Platform Management Supervision
 $echo Starting the Platform Management Supervision...
-$CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21885 --FaultManagerRegistration=corbaloc::$HOSTNAME:4605/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000 &
-SUPERVISION_PID=$!
+$CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=$CDMW_HOME/demos/demo_ft/c++/data/CdmwPlatformMngtSystemStart.xml --validate
 sleep $INIT_TIMEOUT
 
 # 3) Define system
@@ -184,7 +183,6 @@ $echo "=============================================================="
 
 $DAEMON_COMMAND stop
 rsh $HOSTNAME2 $DAEMON_COMMAND2 stop
-kill -9 $SUPERVISION_PID
 kill -9 $FT_MANAGER_PID
 $echo "done."
 

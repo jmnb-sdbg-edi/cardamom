@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,29 +16,41 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 #include "Periodic.hpp"
-#include <fstream>
 
 using namespace std;
 using namespace perfPeriodic;
 
+myPeriodic::myPeriodic(int reqIter, IExecutor *ref) 
+	:	m_counter(0),
+		m_reqIter(reqIter),
+		m_ProcCtrlRef(ref)
+{
+}
+
 CORBA::Boolean myPeriodic::do_work(const CORBA::Any& par)
     throw (CORBA::SystemException)
 {
-    m_count++;
-    return true;
+	if (m_counter < m_reqIter) 
+	{
+		++m_counter;
+		//std::cerr << "** PERIODIC COUNTER: " << m_counter << std::endl;
+		m_ProcCtrlRef->startAt();
+		return true;
+	}
+	// write file for script control
+	std::ofstream feof("perf_timer.eof"); 
+	feof.close();
+	return false;
 }
 
-myPeriodic::myPeriodic() : m_count(0)
+void myPeriodic::writeRes(int IterRequested)
 {
-}
-
-void myPeriodic::writeRes(int req_iter)
-{
-    ofstream fp("COUNTER.dat");
-	fp << req_iter << std::endl;
-	fp << m_count  << std::endl;
+    std::ofstream fp("COUNTER.dat");
+    fp	<< "Timer iteration throughput" << std::endl
+		<< "--------------------------" << std::endl
+		<< "Requested iteration: " << IterRequested << std::endl
+		<< "Performed iteration: " << m_counter << std::endl;
     fp.close();
-}    
-                   
+} 

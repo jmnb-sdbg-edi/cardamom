@@ -27,8 +27,8 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/ossupport/OS.hpp>
 #include <FaultTolerance/ftstatemanager/DataStore.hpp>
-#include <FaultTolerance/ftstatemanager/StorageHome.hpp>
-#include <FaultTolerance/ftstatemanager/StorageObject.hpp>
+#include <Foundation/commonsvcs/datastore/StorageHome.hpp>
+#include <Foundation/commonsvcs/datastore/StorageObject.hpp>
 
 #include "testftwritesequencing/TestSequenceRecorder.skel.hpp"
 

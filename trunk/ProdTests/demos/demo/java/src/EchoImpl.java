@@ -23,7 +23,7 @@
 
 package cdmw.resources;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 
 import cdmw.event.EventChannel;

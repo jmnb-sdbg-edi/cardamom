@@ -25,8 +25,8 @@
 #include <ccm_ft_datastore/CCM_ServerWithFacet_impl.hpp>
 
 #include <Foundation/ossupport/OS.hpp>
-#include <FaultTolerance/ftstatemanager/StorageObject.hpp>
-#include <FaultTolerance/ftstatemanager/StorageHome.hpp>
+#include <Foundation/commonsvcs/datastore/StorageObject.hpp>
+#include <Foundation/commonsvcs/datastore/StorageHome.hpp>
 //
 // IDL:thalesgroup.com/CcmFtTest/CCM_ServerWithFacet:1.0
 //
@@ -97,8 +97,8 @@ CORBA::Long CcmFtTest::CCM_ServerWithFacet_impl::get_data()
     throw (CORBA::SystemException)
 {
     std::cout << "   ... CCM_ServerWithFacet_impl::get_data() from datastore " << m_datastoreID << std::endl;
-    typedef  Cdmw::FT::StorageHome<CORBA::Long, CORBA::Long, std::less<CORBA::Long> > TestStorageHome;
-    typedef Cdmw::FT::StorageObject<CORBA::Long, CORBA::Long, std::less<CORBA::Long> > TestStorageObject;
+    typedef  Cdmw::CommonSvcs::DataStore::StorageHome<CORBA::Long, CORBA::Long, std::less<CORBA::Long> > TestStorageHome;
+    typedef Cdmw::CommonSvcs::DataStore::StorageObject<CORBA::Long, CORBA::Long, std::less<CORBA::Long> > TestStorageObject;
 
     TestStorageHome storageHome (m_datastoreID);
 
@@ -110,7 +110,7 @@ CORBA::Long CcmFtTest::CCM_ServerWithFacet_impl::get_data()
         storageObject.set(return_val + 1);
         return_val ++;
     }
-    catch(const Cdmw::FT::NotFoundException& ex)
+    catch(const Cdmw::CommonSvcs::DataStore::NotFoundException& ex)
     {
         storageHome.create(1,1);
         return_val = 1;

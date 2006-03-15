@@ -23,8 +23,8 @@
 
 #include "TestUnManagedEntityStrategy.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include <string>
 #include <cctype>
 #include <algorithm>
@@ -112,13 +112,13 @@ void TestUnManagedEntityStrategy::do_tests()
         //         Application.stop() will kill the process and deactivate
         //         the Application object.
         
-        Cdmw::NamingAndRepository::NamingInterface ni
+        Cdmw::CommonSvcs::Naming::NamingInterface ni
             = Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface
             (factory_domaine_name);
         
         TEST_INFO( "Testing " << factory_name << " factory.");
 
-        typedef Cdmw::NamingAndRepository::NamingUtil<CFFactories::ResourceFactory> 
+        typedef Cdmw::CommonSvcs::Naming::NamingUtil<CFFactories::ResourceFactory> 
             Util;
     
         CFFactories::ResourceFactory_var fac 

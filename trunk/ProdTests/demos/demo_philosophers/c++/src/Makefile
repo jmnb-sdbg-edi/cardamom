@@ -61,9 +61,12 @@ include ../config.mk
 
 MAINMK=	Main.mk
 
-IDL_SRCS=../generated/Cdmw_Philo_cif.idl \
-	../generated/Philo_cif.idl \
-	../idl/UserPhilo.idl
+IDL_SRCS=../idl/PhiloRegistration.idl \
+         ../generated/Cdmw_PhiloEvents_cif.idl \
+         ../generated/PhiloEvents_cif.idl \
+         ../generated/Cdmw_Philo_cif.idl \
+         ../generated/Philo_cif.idl \
+         ../idl/UserPhilo.idl
 
 all: idl_var.mk idl_rules.mk
 	@echo "Executing $(MAINMK)"

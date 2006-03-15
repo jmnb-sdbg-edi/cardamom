@@ -34,7 +34,7 @@ SAXON_JAR_PATH=@config.Saxon.lib.dir@
 
 OPENCCM_BIN_PATH=@config.OpenCCM.bin.dir@
 
-SPLICE_INC_PATH=@config.Splice.include.dir@/dcps/C++/TAO
+SPLICE_INC_PATH=@config.Splice.include.dir@/dcps
 SPLICE_LIB_PATH=@config.Splice.lib.dir@
 SPLICE_BIN_PATH=@config.Splice.bin.dir@
 

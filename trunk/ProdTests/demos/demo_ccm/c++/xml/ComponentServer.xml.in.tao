@@ -31,6 +31,7 @@
          <idl-search-dir>@cdmw_home@/idl</idl-search-dir>
          <idl-search-dir>@cdmw_home@/demos/demo_ccm/c++/idl</idl-search-dir>
          <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+         <preprocessing-flags>-DINCLUDE_REGISTRATION</preprocessing-flags>
       </factory>
       <factory kind="HOME" 
                idl-interface="BasicDemo.ServerHome"
@@ -38,8 +39,15 @@
          <idl-search-dir>@cdmw_home@/idl</idl-search-dir>
          <idl-search-dir>@cdmw_home@/demos/demo_ccm/c++/idl</idl-search-dir>
          <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+         <preprocessing-flags>-DINCLUDE_REGISTRATION</preprocessing-flags>
       </factory>
    </factories>
+   <datastore-types>
+      <datastore-type typename="DataPart1Store" oid-type="BasicDemo.Ident" data-type="BasicDemo.DataPart1" idl-filename="Data.idl">
+         <idl-search-dir>@prefix@/idl</idl-search-dir>
+         <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+      </datastore-type>
+   </datastore-types>
    <lifecycle-frameworks>
       <lifecycle-framework id="client.framework"
                            factory-idref="BasicDemo.ClientHome">

@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -22,11 +19,7 @@
 
 
 # BEGIN CDMW INSTALLATION DATA
-# -------------------------------------------------------------------------------
-# CDMW installation folder
-#CDMW_HOME=/home/cardamom/CDMW-Install
-# CDMW demo installation folder
-#CDMW_PERF_HOME=/home/cardamom/perftests/CDMW/CDMW_TimeParallelism/c++
+# ------------------------------------------------------------------------------
 CDMW_PERF_HOME=$(PWD)
 
 XERCES_INC_PATH=$(XERCES_ROOT)
@@ -35,6 +28,7 @@ XERCES_LIB_PATH=$(XERCES_ROOT)/lib
 ifeq (TAO,TAO)
 ORB_IDL_PATH=$(ACE_ROOT)/TAO/orbsvcs/orbsvcs
 ORB_LIB_PATH=$(ACE_ROOT)/ace 
+ORB_INC_PATH=$(ACE_ROOT)/TAO/orbsvcs/orbsvc
 ORB=tao14-OF
 endif
 ifeq (TAO,ORBacusCPP)

@@ -63,10 +63,10 @@ private:
     CdmwPlatformMngt::System_var m_system;
     CdmwPlatformMngt::Application_var m_application1;
     CdmwPlatformMngt::Application_var m_application2;
-    CdmwPlatformMngt::ProcessProxy_var m_process1;
-    CdmwPlatformMngt::ProcessProxy_var m_process2;
-    CdmwPlatformMngt::HostProxy_var m_host1;
-    CdmwPlatformMngt::HostProxy_var m_host2;
+    CdmwPlatformMngt::Process_var m_process1;
+    CdmwPlatformMngt::Process_var m_process2;
+    CdmwPlatformMngt::Host_var m_host1;
+    CdmwPlatformMngt::Host_var m_host2;
     
 
 }; // end class 

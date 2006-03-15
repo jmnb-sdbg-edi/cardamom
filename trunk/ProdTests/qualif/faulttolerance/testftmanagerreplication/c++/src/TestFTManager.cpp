@@ -31,7 +31,7 @@
 #include "testftmanagerreplication/TestHello_impl.hpp"
 #include <testftmanagerreplication/SIM_consumer.hpp>
 #include "testftmanagerreplication/TestFTManager.hpp"
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <FaultTolerance/ftlocationmanager/StatefullPrimaryBackupAdmin_impl.hpp>
 #include "FaultTolerance/idllib/CdmwFTManager.stub.hpp"
 
@@ -292,28 +292,40 @@ void TestFTManager::do_tests()
         prop1[0].nam[0].id="org.omg.ft.MinimumNumberReplicas";
         prop1[0].val <<= (CORBA::UShort)2;
 
+        ::FT::Locations locs(2);
+        locs.length(2);
+        locs[0].length(3);
+        locs[0][0].id = m_host1.c_str();
+        locs[0][0].kind = "hostname";
+        locs[0][1].id = "APPL1";
+        locs[0][1].kind = "applicationname";
+        locs[0][2].id = "P11";
+        locs[0][2].kind = "processname";
 
-        std::vector<std::string> slocvect(2);
-        slocvect[0] =  m_host1 +".hostname/APPL1.applicationname/P11.processname";
-        slocvect[1] =  m_host2 +".hostname/APPL2.applicationname/P21.processname";
+        locs[1].length(3);
+        locs[1][0].id = m_host2.c_str();
+        locs[1][0].kind = "hostname";
+        locs[1][1].id = "APPL2";
+        locs[1][1].kind = "applicationname";
+        locs[1][2].id = "P21";
+        locs[1][2].kind = "processname";
 
-
-        const CORBA::ULong MAX_LOCS=slocvect.size();
+        const CORBA::ULong factory_infos_len = locs.length();
         ::FT::FactoryInfos factoryInfos;
-        factoryInfos.length(MAX_LOCS);
-        for (CORBA::ULong i = 0; i < MAX_LOCS; ++i) {
+        factoryInfos.length(factory_infos_len);
+        for (CORBA::ULong i = 0; i < factory_infos_len; ++i) 
+        {
             factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
-            ::FT::Location_var loc = 
-              Cdmw::NamingAndRepository::NamingInterface::to_name(slocvect[i]);
-            std::cerr << '[' << i << "] " << slocvect[i] << " --- " 
-                      << Cdmw::NamingAndRepository::NamingInterface::to_string(loc.in()) << std::endl;
-            
-            factoryInfos[i].the_location = loc.in();
+            std::cout << '[' << i << "] " << " --- " 
+                      << Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                           (locs[i]) << std::endl;
+
+            factoryInfos[i].the_location = locs[i];
             ::FT::Criteria factoryCrit;        
             factoryCrit.length(0);
             factoryInfos[i].the_criteria = factoryCrit;
         }
-        
+
         prop1[1].nam.length(1);
         prop1[1].nam[0].id="org.omg.ft.Factories";
         prop1[1].val <<= factoryInfos;
@@ -361,25 +373,38 @@ void TestFTManager::do_tests()
         prop2[0].nam[0].id="org.omg.ft.MinimumNumberReplicas";
         prop2[0].val <<= (CORBA::UShort)2;
 
+        ::FT::Locations locs2(2);
+        locs2.length(2);
+        locs2[0].length(3);
+        locs2[0][0].id = m_host1.c_str();
+        locs2[0][0].kind = "hostname";
+        locs2[0][1].id = "APPL1";
+        locs2[0][1].kind = "applicationname";
+        locs2[0][2].id = "P12";
+        locs2[0][2].kind = "processname";
 
-        slocvect[0] =  m_host1 +".hostname/APPL2.applicationname/P12.processname";
-        slocvect[1] =  m_host2 +".hostname/APPL2.applicationname/P22.processname";
+        locs2[1].length(3);
+        locs2[1][0].id = m_host2.c_str();
+        locs2[1][0].kind = "hostname";
+        locs2[1][1].id = "APPL2";
+        locs2[1][1].kind = "applicationname";
+        locs2[1][2].id = "P22";
+        locs2[1][2].kind = "processname";
 
-
-        factoryInfos.length(MAX_LOCS);
-        for (CORBA::ULong i = 0; i < MAX_LOCS; ++i) {
+        factoryInfos.length(factory_infos_len);
+        for (CORBA::ULong i = 0; i < factory_infos_len; ++i) 
+        {
             factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
-            ::FT::Location_var loc = 
-              Cdmw::NamingAndRepository::NamingInterface::to_name(slocvect[i]);
-            std::cerr << '[' << i << "] " << slocvect[i] << " --- " 
-                      << Cdmw::NamingAndRepository::NamingInterface::to_string(loc.in()) << std::endl;
-            
-            factoryInfos[i].the_location = loc.in();
+            std::cout << '[' << i << "] " << " --- " 
+                      << Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                           (locs2[i]) << std::endl;
+
+            factoryInfos[i].the_location = locs2[i];
             ::FT::Criteria factoryCrit;        
             factoryCrit.length(0);
             factoryInfos[i].the_criteria = factoryCrit;
         }
-        
+
         prop2[1].nam.length(1);
         prop2[1].nam[0].id="org.omg.ft.Factories";
         prop2[1].val <<= factoryInfos;
@@ -419,22 +444,13 @@ void TestFTManager::do_tests()
 
         TEST_INFO("Realise a add_member on the second objectgroup");
         TEST_INFO("but the location was not already register");
-        ::FT::Location location2;
-        location2.length(3);
-        location2[0].id = m_host1.c_str();
-        location2[0].kind = "hostname";
-        location2[1].id = "APPL2";
-        location2[1].kind = "applicationname";
-        location2[2].id = "P12";
-        location2[2].kind = "processname";
-
 
         Cdmw::HelloInterface_impl* hello_obj = new Cdmw::HelloInterface_impl();
         CdmwReplicationManager::HelloInterface_var hello = hello_obj->_this();
         
         try
         {
-            rm->add_member(obj2.in(), location2, hello.in());
+            rm->add_member(obj2.in(), locs2[0], hello.in());
             TEST_FAILED();
         }
         catch(const ::FT::ObjectNotAdded&)

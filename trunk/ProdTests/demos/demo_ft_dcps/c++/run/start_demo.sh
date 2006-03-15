@@ -80,9 +80,9 @@ fi
 
 TERM_PATH=`which $TERM`
 
-INIT_TIMEOUT=35
-FT_MANAGER_TIMEOUT=30
-EXEC_TIMEOUT=160
+INIT_TIMEOUT=15
+FT_MANAGER_TIMEOUT=20
+EXEC_TIMEOUT=90
 CLEANUP_TIMEOUT=5
 
 
@@ -129,7 +129,7 @@ else
    $echo Demo already installed on $HOSTNAME2
 fi
 
-
+export SPLICE_DDS_URI=file://$CDMW_HOME/demos/demo_ft_dcps/c++/run/splice_default.xml
 
 # 1) Start daemon 
 $echo Starting the Platform Management Daemon...
@@ -138,7 +138,7 @@ $TERM -ls -sb -sl 5000 -e $DAEMON_COMMAND &
 
 DAEMON_COMMAND2="$CDMW_HOME/bin/cdmw_platform_daemon.sh --CdmwXMLFile=$CDMW_HOME/demos/demo_ft_dcps/c++/data/CdmwPlatformMngtDaemon_conf.xml"
 
-rsh $HOSTNAME2 "(LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; PATH=$PATH; export PATH; $TERM_PATH -display $DISPLAY -sb -sl 5000 -e $DAEMON_COMMAND2)" &
+rsh $HOSTNAME2 "(export LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export PATH=$PATH; export SPLICE_DDS_URI=$SPLICE_DDS_URI; $TERM_PATH -display $DISPLAY -sb -sl 5000 -e $DAEMON_COMMAND2)" &
 
 trap '$DAEMON_COMMAND stop; exit' 2
 #rsh $HOSTNAME2 trap '$DAEMON_COMMAND2 stop; exit' 2
@@ -147,22 +147,21 @@ sleep $INIT_TIMEOUT
 
 # 1b) Start FT Manager
 $echo Starting the FT Manager...
-$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_ft_dcps/c++/data/CdmwFaultToleranceManager_conf.xml &
+$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_ft_dcps/c++/data/CdmwFaultToleranceManager_conf.xml --groupConf=$CDMW_HOME/demos/demo_ft_dcps/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml &
 FT_MANAGER_PID=$!
 sleep $FT_MANAGER_TIMEOUT
 
 # 2) Start Platform Management Supervision
 $echo Starting the Platform Management Supervision...
-$CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21887 --FaultManagerRegistration=corbaloc::$HOSTNAME:4607/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000 &
-SUPERVISION_PID=$!
+$CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=$CDMW_HOME/demos/demo_ft_dcps/c++/data/CdmwPlatformMngtSystemStart.xml --validate
 sleep $INIT_TIMEOUT
 
 # 3) Define system
 $echo Defining the System '$SCENARIO_FILE'
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21887/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
 
 # 4) Start_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21887/CdmwPlatformMngtSupervision --sys-start
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-start
 if [ $? -eq "0" ];
 then
     $echo "Waiting a while for the execution of the scenario...\c"
@@ -171,10 +170,10 @@ then
 fi
 
 # 5) Get a snapshot of the system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21887/CdmwPlatformMngtSupervision --sys-snapshot
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-snapshot
 
 # 6) stop_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21887/CdmwPlatformMngtSupervision --sys-stop
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-stop
 sleep $CLEANUP_TIMEOUT
 
 $echo "=============================================================="
@@ -184,7 +183,6 @@ $echo "=============================================================="
 
 $DAEMON_COMMAND stop
 rsh $HOSTNAME2 $DAEMON_COMMAND2 stop
-kill -9 $SUPERVISION_PID
 kill -9 $FT_MANAGER_PID
 $echo "done."
 

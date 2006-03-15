@@ -38,7 +38,7 @@
 #include "FaultTolerance/ftinit/FTServiceInit.hpp"
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
 #include "ConfAndPlug/cdmwinit/ProcessControl.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 
@@ -99,30 +99,26 @@ public:
 	std::string hostLocation = Cdmw::OsSupport::OS::get_hostname();
 
         ::FT::Properties prop;
-        prop.length( 5 );
+        prop.length( 4 );
         prop[0].nam.length( 1 );
         prop[0].nam[0].id = "org.omg.ft.MinimumNumberReplicas";
         prop[0].val <<= (CORBA::UShort) 3;
         
         prop[1].nam.length( 1 );
         prop[1].nam[0].id = "org.omg.ft.ReplicationStyle";
-        prop[1].val <<= ::FT::WARM_PASSIVE; //(CORBA::UShort) 2;
+        prop[1].val <<= (CORBA::UShort) 2; //::FT::WARM_PASSIVE; //(CORBA::UShort) 2;
         
         prop[2].nam.length( 1 );
         prop[2].nam[0].id = "org.omg.ft.MembershipStyle";
-        prop[2].val <<= ::FT::MEMB_APP_CTRL; // (CORBA::UShort) 0;
+        prop[2].val <<= (CORBA::UShort) 0; //::FT::MEMB_APP_CTRL; // (CORBA::UShort) 0;
         
-        prop[3].nam.length( 1 );
-        prop[3].nam[0].id = "org.omg.ft.FaultMonitoringStyle";
-        prop[3].val <<= ::FT::PULL; // (CORBA::UShort) 0;
-        
-	prop[4].nam.length( 1 );
-	prop[4].nam[0].id = "org.omg.ft.Factories";
+	prop[3].nam.length( 1 );
+	prop[3].nam[0].id = "org.omg.ft.Factories";
 	Cdmw::FT::FactoryInfos factoryInfos;
 	factoryInfos.add_ftLocation(hostLocation, "FTApplication", "ServerProcess1");
 	factoryInfos.add_ftLocation(hostLocation, "FTApplication", "ServerProcess2");
 	factoryInfos.add_ftLocation(hostLocation, "FTApplication", "ServerProcess3");
-	prop[4].val <<= factoryInfos.get_factoryInfos();
+	prop[3].val <<= factoryInfos.get_factoryInfos();
     
         // 2) Create both the component IOGR and the facet's IOGR.
         
@@ -189,7 +185,7 @@ public:
     
     
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
         std::cout << "   -------- GroupCreator run --------" << std::endl;

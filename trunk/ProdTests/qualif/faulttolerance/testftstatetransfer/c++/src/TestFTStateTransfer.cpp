@@ -33,7 +33,7 @@
 #include "FaultTolerance/idllib/CdmwFTManager.stub.hpp"
 
 #include "testftstatetransfer/TestFTStateTransfer.hpp"
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 #include <FaultTolerance/ftlocationmanager/StatefullPrimaryBackupAdmin_impl.hpp>
@@ -95,7 +95,7 @@ bool TestFTStateTransfer::contain(const std::string& process_name, const ::CdmwR
 // do_tests
 void TestFTStateTransfer::do_tests()
 {
-    set_nbOfRequestedTestOK (206);
+    set_nbOfRequestedTestOK (212);
 
     try
     {
@@ -140,24 +140,43 @@ void TestFTStateTransfer::do_tests()
         prop[0].nam[0].id="org.omg.ft.MinimumNumberReplicas";
         prop[0].val <<= (CORBA::UShort)2;
     
+        ::FT::Locations locs(3);
+        locs.length(3);
+        locs[0].length(3);
+        locs[0][0].id = m_host1.c_str();
+        locs[0][0].kind = "hostname";
+        locs[0][1].id = "APPL1";
+        locs[0][1].kind = "applicationname";
+        locs[0][2].id = "P11";
+        locs[0][2].kind = "processname";
 
-        std::vector<std::string> slocvect(3);
-        slocvect[0] =  m_host1 +".hostname/APPL1.applicationname/P11.processname";
-        slocvect[1] =  m_host2 +".hostname/APPL2.applicationname/P21.processname";
-        slocvect[2] =  m_host3 +".hostname/APPL3.applicationname/P31.processname";
+        locs[1].length(3);
+        locs[1][0].id = m_host2.c_str();
+        locs[1][0].kind = "hostname";
+        locs[1][1].id = "APPL2";
+        locs[1][1].kind = "applicationname";
+        locs[1][2].id = "P21";
+        locs[1][2].kind = "processname";
 
+        locs[2].length(3);
+        locs[2][0].id = m_host3.c_str();
+        locs[2][0].kind = "hostname";
+        locs[2][1].id = "APPL3";
+        locs[2][1].kind = "applicationname";
+        locs[2][2].id = "P31";
+        locs[2][2].kind = "processname";
 
-        const CORBA::ULong MAX_LOCS=slocvect.size();
+        const CORBA::ULong factory_infos_len = locs.length();
         ::FT::FactoryInfos factoryInfos;
-        factoryInfos.length(MAX_LOCS);
-        for (CORBA::ULong i = 0; i < MAX_LOCS; ++i) {
+        factoryInfos.length(factory_infos_len);
+        for (CORBA::ULong i = 0; i < factory_infos_len; ++i) 
+        {
             factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
-            ::FT::Location_var loc = 
-                  Cdmw::NamingAndRepository::NamingInterface::to_name(slocvect[i]);
-            std::cerr << '[' << i << "] " << slocvect[i] << " --- " 
-                      << Cdmw::NamingAndRepository::NamingInterface::to_string(loc.in()) << std::endl;
+            std::cout << '[' << i << "] " << " --- " 
+                      << Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                           (locs[i]) << std::endl;
 
-            factoryInfos[i].the_location = loc.in();
+            factoryInfos[i].the_location = locs[i];
             ::FT::Criteria factoryCrit;        
             factoryCrit.length(0);
             factoryInfos[i].the_criteria = factoryCrit;
@@ -270,22 +289,24 @@ void TestFTStateTransfer::do_tests()
         std::ostringstream proc_init11;
         std::ostringstream proc_init21;
         std::ostringstream proc_init31;
-        proc_init11<< " --proc-initialise APPL1 P11";
-        proc_init21<< " --proc-initialise APPL2 P21";
-        proc_init31<< " --proc-initialise APPL3 P31";
+        proc_init11<< " --proc-initialise APPL1 P11 " << m_host1;
+        proc_init21<< " --proc-initialise APPL2 P21 " << m_host2;
+        proc_init31<< " --proc-initialise APPL3 P31 " << m_host3;
 
-        OsSupport::OS::create_process( "platform_admin.sh" , proc_init11.str());   
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init21.str());   
+        OsSupport::OS::sleep(timescale*3000);
         OsSupport::OS::create_process( "platform_admin.sh" , proc_init31.str());   
+        OsSupport::OS::sleep(timescale*3000);
+        OsSupport::OS::create_process( "platform_admin.sh" , proc_init11.str());   
 
         OsSupport::OS::sleep(timescale*20000);
         
         std::ostringstream proc_run11;
         std::ostringstream proc_run21;
         std::ostringstream proc_run31;
-        proc_run11<< " --proc-run APPL1 P11";
-        proc_run21<< " --proc-run APPL2 P21";
-        proc_run31<< " --proc-run APPL3 P31";
+        proc_run11<< " --proc-run APPL1 P11 " << m_host1;
+        proc_run21<< " --proc-run APPL2 P21 " << m_host2;
+        proc_run31<< " --proc-run APPL3 P31 " << m_host3;
 
         OsSupport::OS::create_process( "platform_admin.sh" , proc_run11.str());   
         OsSupport::OS::create_process( "platform_admin.sh" , proc_run21.str());   
@@ -306,7 +327,7 @@ void TestFTStateTransfer::do_tests()
         Cdmw::NamingAndRepository::RepositoryInterface::init ("CDMW",
                                                               repository.in());
         
-        Cdmw::NamingAndRepository::NamingInterface ni =
+        Cdmw::CommonSvcs::Naming::NamingInterface ni =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
     
 
@@ -502,136 +523,6 @@ void TestFTStateTransfer::do_tests()
         TEST_CHECK( ! CORBA::is_nil(hello2P11.in()) );
 
 
-
-//         TEST_INFO("start clients");
-//         std::ostringstream appl1;
-//         std::ostringstream appl2;
-//         appl1<<"--client APPL1 --object_group_id1="<<ogi1<<" --object_group_id2="<<ogi2;
-//         appl2<<"--client APPL2 --object_group_id1="<<ogi1<<" --object_group_id2="<<ogi2;
-
-//         OsSupport::OS::ProcessId pid1  = 
-//         OsSupport::OS::create_process( m_process_name, appl1.str());
-//         sleep(2);
-//         OsSupport::OS::ProcessId pid2  = 
-//         OsSupport::OS::create_process( m_process_name, appl2.str());   
-//         sleep(4);
-//         TEST_SUCCEED();
-
-//         int timescale = Cdmw::TestUtils::Testable::get_timescale();
-//         OsSupport::OS::sleep(timescale*1000);
-        
-
-        
-//         // wait creation of ior files
-//         while (!(OsSupport::OS::file_exists(iorhello2APPL2) && OsSupport::OS::file_exists(iorhello1APPL2)))
-//         {
-//             OsSupport::OS::sleep(timescale*1000);
-//         }
-
-//         TEST_INFO("get the reference for the synchronisation object");
-//         std::string file_url_prefix = "file://";        
-//         std::string file_url = file_url_prefix;
-        
-
-//         TEST_INFO("get the reference for object to insert  into the object group");
-//         file_url = file_url_prefix;
-//         file_url += iorhello1APPL1;
-        
-//         CORBA::Object_var object_hello1APPL1 = m_orb->string_to_object(file_url.c_str());
-//         CdmwReplicationManager::HelloInterface1_var hello1APPL1 = CdmwReplicationManager::HelloInterface1::_narrow(object_hello1APPL1.in());
-
-//         file_url = file_url_prefix;
-//         file_url += iorhello1APPL2;
-        
-//         CORBA::Object_var object_hello1APPL2 = m_orb->string_to_object(file_url.c_str());
-//         CdmwReplicationManager::HelloInterface1_var hello1APPL2 = CdmwReplicationManager::HelloInterface1::_narrow(object_hello1APPL2.in());
-
-//         file_url = file_url_prefix;
-//         file_url += iorhello2APPL1;
-        
-//         CORBA::Object_var object_hello2APPL1 = m_orb->string_to_object(file_url.c_str());
-//         CdmwReplicationManager::HelloInterface2_var hello2APPL1 = CdmwReplicationManager::HelloInterface2::_narrow(object_hello2APPL1.in());
-
-//         file_url = file_url_prefix;
-//         file_url += iorhello2APPL2;
-        
-//         CORBA::Object_var object_hello2APPL2 = m_orb->string_to_object(file_url.c_str());
-//         CdmwReplicationManager::HelloInterface2_var hello2APPL2 = CdmwReplicationManager::HelloInterface2::_narrow(object_hello2APPL2.in());
-
-
-//         TEST_SUCCEED();
-
-//         TEST_INFO("client started")
-        
-
-
-//         // create a reference for the PrimaryBackupGroupRepository
-//         ::FT::Location loc;
-//         loc.length(3);
-//         loc[0].id = "HOST3";
-//         loc[1].id = "APPL3";
-//         loc[2].id = "PROC3";
-
-//         Cdmw::FT::DataStoreBase::Set_Location_Name(Cdmw::NamingAndRepository::NamingInterface::to_string(loc));
-
-//         ::Cdmw::FT::Location::PrimaryBackupGroupRepository_impl * primaryBackupGroupRepository_impl
-//           = ::Cdmw::FT::Location::PrimaryBackupGroupRepository_impl::get_instance();
-
-// 		  // export GroupRepository in orb
-// 		  CdmwFT::Location::PrimaryBackupGroupRepository_var primary_backup_rep_ref
-// 			  = primaryBackupGroupRepository_impl;
-		  
-// 		  m_orb->register_initial_reference("FTGroupRepository", 
-// 				                              primary_backup_rep_ref.in());
-
-
-//         // create the reference for the StatefullPrimaryBackupAdmin
-//         ::Cdmw::FT::Location::StatefullPrimaryBackupAdmin_impl* statefullPrimaryBackupAdmin_impl
-//           = new ::Cdmw::FT::Location::StatefullPrimaryBackupAdmin_impl(m_orb.in(), m_rootPOA.in(), loc, primaryBackupGroupRepository_impl, true);
-        
-//         CdmwFT::Location::StatefullPrimaryBackupAdmin_var statefullPrimaryBackupAdmin = statefullPrimaryBackupAdmin_impl->_this();
-        
-
-
-//         Cdmw::HelloInterface1_impl * helloInterface1_impl = new Cdmw::HelloInterface1_impl(m_orb.in(), m_rootPOA.in(), "APPL3");
-//         CdmwReplicationManager::HelloInterface1_var hello1APPL3 =  helloInterface1_impl->_this();
-
-//         Cdmw::HelloInterface2_impl * helloInterface2_impl = new Cdmw::HelloInterface2_impl(m_orb.in(), m_rootPOA.in(), "APPL3");
-//         CdmwReplicationManager::HelloInterface2_var hello2APPL3 =  helloInterface2_impl->_this();
-
-//         // register the Member Admin (the PrimaryBackupAdmin) on the Replication Manager
-//         //rm->register_location(loc, primaryBackupAdmin.in());
-//         ::CdmwFT::StateTransfer::LocalDataStoreInfos infos;
-//         infos.length(4);
-//         for (int i = 0; i< 2; i++)
-//         {
-//             ::CdmwFT::StateTransfer::LocalDataStoreInfo* info = hello1APPL3->get_local_datastore_info(i+1);
-//             ::CdmwFT::StateTransfer::LocalDataStoreInfo local_info;
-//             local_info.dsid = info->dsid;
-//             local_info.coordinator = info->coordinator;
-//             local_info.cohort = info->cohort;
-//             local_info.local_data_store = info->local_data_store;
-            
-//             infos[i]= local_info;
-
-//             info = hello2APPL3->get_local_datastore_info(i+3);
-//             local_info.dsid = info->dsid;
-//             local_info.coordinator = info->coordinator;
-//             local_info.cohort = info->cohort;
-//             local_info.local_data_store = info->local_data_store;
-            
-//             infos[i+2]= local_info;
-//         }
-
-//         rm->register_statefull_location(loc,
-//                                         statefullPrimaryBackupAdmin.in(),
-//                                         infos);
-
-
-
-
-
-
         TEST_INFO("");
         TEST_INFO("START TEST");
         TEST_INFO("");
@@ -649,22 +540,12 @@ void TestFTStateTransfer::do_tests()
                       << " IN FILE: " << __FILE__ << std::endl; 
         }
 
-        ::FT::Location loc;
-        loc.length(3);
-        loc[0].id = m_host2.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL2";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P21";
-        loc[2].kind = "processname";
-
-
         // Add new member on the group
         TEST_INFO("add the new member "<<m_host2<<"/APPL2/P21 in group 1");
         try
         {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[1],
                                   hello1P21.in());
         }
         
@@ -674,12 +555,9 @@ void TestFTStateTransfer::do_tests()
             std::cerr << " **** TEST FAILED AT LINE " << __LINE__ 
                       << " IN FILE: " << __FILE__ << std::endl; 
         }
-
         
         OsSupport::OS::sleep(timescale*1000);
         
-
-
         TEST_INFO("Set info into data store");
         try
         {
@@ -720,20 +598,12 @@ void TestFTStateTransfer::do_tests()
         TEST_CHECK(hello1P21->callback_called(2, "remove") == 1);
         
 
-
-        loc[0].id = m_host3.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL3";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P31";
-        loc[2].kind = "processname";
-
         // Add new member on the group
         TEST_INFO("add the new member"<<m_host3<<"/APPL3/P31 in group 1");
         try
         {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[2],
                                   hello1P31.in());
         }
         
@@ -746,7 +616,14 @@ void TestFTStateTransfer::do_tests()
 
         
         OsSupport::OS::sleep(timescale*1000);
-        
+
+        TEST_CHECK(hello1P31->callback_called(1, "insert") == 2);
+        TEST_CHECK(hello1P31->callback_called(1, "update") == 0);
+        TEST_CHECK(hello1P31->callback_called(1, "remove") == 0);
+        TEST_CHECK(hello1P31->callback_called(2, "insert") == 2);
+        TEST_CHECK(hello1P31->callback_called(2, "update") == 0);
+        TEST_CHECK(hello1P31->callback_called(2, "remove") == 0);
+ 
 
         TEST_INFO("Get info from data store");
         try
@@ -807,10 +684,10 @@ void TestFTStateTransfer::do_tests()
         TEST_CHECK(hello1P21->callback_called(2, "update") == 1);
         TEST_CHECK(hello1P21->callback_called(2, "remove") == 1);
 
-        TEST_CHECK(hello1P31->callback_called(1, "insert") == 3);
+        TEST_CHECK(hello1P31->callback_called(1, "insert") == 1);
         TEST_CHECK(hello1P31->callback_called(1, "update") == 1);
         TEST_CHECK(hello1P31->callback_called(1, "remove") == 1);
-        TEST_CHECK(hello1P31->callback_called(2, "insert") == 3);
+        TEST_CHECK(hello1P31->callback_called(2, "insert") == 1);
         TEST_CHECK(hello1P31->callback_called(2, "update") == 1);
         TEST_CHECK(hello1P31->callback_called(2, "remove") == 1);
 
@@ -839,20 +716,12 @@ void TestFTStateTransfer::do_tests()
             TEST_FAILED();
         }
 
-
-        loc[0].id = m_host1.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL1";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P11";
-        loc[2].kind = "processname";
-
         // Add new member on the group
         TEST_INFO("add the new member"<<m_host1<<"/APPL1/P11 in group 1");
         try
         {
             obj1 = rm->add_member(obj1.in(),
-                                  loc,
+                                  locs[0],
                                   hello1P11.in());
         }
         
@@ -1028,20 +897,12 @@ void TestFTStateTransfer::do_tests()
         }
 
 
-        loc[0].id = m_host2.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL2";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P21";
-        loc[2].kind = "processname";
-
-
         // Add new member on the group
         TEST_INFO("add the new member "<<m_host2<<"/APPL2/P21 in group 2");
         try
         {
             obj2 = rm->add_member(obj2.in(),
-                                  loc,
+                                  locs[1],
                                   hello2P21.in());
         }
         
@@ -1095,21 +956,12 @@ void TestFTStateTransfer::do_tests()
         TEST_CHECK(hello2P21->callback_called(4, "update") == 0);
         TEST_CHECK(hello2P21->callback_called(4, "remove") == 1);
 
-
-        loc[0].id = m_host3.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL3";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P31";
-        loc[2].kind = "processname";
-
-
         // Add new member on the group
         TEST_INFO("add the new member "<<m_host3<<"/APPL3/P31 in group 2");
         try
         {
             obj2 = rm->add_member(obj2.in(),
-                                  loc,
+                                  locs[2],
                                   hello2P31.in());
         }
         
@@ -1210,20 +1062,12 @@ void TestFTStateTransfer::do_tests()
             TEST_FAILED();
         }
 
-        loc[0].id = m_host1.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL1";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P11";
-        loc[2].kind = "processname";
-
-
         // Add new member on the group
         TEST_INFO("add the new member "<<m_host1<<"/APPL1/P11 in group 2");
         try
         {
             obj2 = rm->add_member(obj2.in(),
-                                  loc,
+                                  locs[0],
                                   hello2P11.in());
         }
         
@@ -1373,14 +1217,7 @@ void TestFTStateTransfer::do_tests()
         CdmwReplicationManager::HelloInterface1_var temp1;
         CdmwReplicationManager::HelloInterface2_var temp2;
 
-        loc[0].id = m_host2.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL2";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P21";
-        loc[2].kind = "processname";
-
-        std::string location_string = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+        std::string location_string = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(locs[1]);
 
         TEST_INFO("Who is the primary");
         try
@@ -1428,7 +1265,7 @@ void TestFTStateTransfer::do_tests()
         try
         {
             obj1 = rm->remove_member(obj1.in(),
-                                    loc);
+                                    locs[1]);
             TEST_SUCCEED();
         }
         
@@ -1445,14 +1282,7 @@ void TestFTStateTransfer::do_tests()
 //         std::cout<<"Press any key and Enter"<<std::endl;
 //         std::cin >> dummy;
 
-        loc[0].id = m_host1.c_str();
-        loc[0].kind = "hostname";
-        loc[1].id = "APPL1";
-        loc[1].kind = "applicationname";        
-        loc[2].id = "P11";
-        loc[2].kind = "processname";
-
-        location_string = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+        location_string = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(locs[0]);
 
         TEST_INFO("Who is the primary");
         try
@@ -1475,6 +1305,8 @@ void TestFTStateTransfer::do_tests()
             TEST_FAILED();
         }
 
+        Cdmw::NamingAndRepository::RepositoryInterface::finish();
+        
     }
     
     catch(const CORBA::Exception& e )

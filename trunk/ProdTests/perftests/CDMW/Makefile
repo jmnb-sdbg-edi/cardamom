@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#*
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -19,10 +16,6 @@
 #* Public License along with CARDAMOM; see the file COPYING. If not, write to
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
-
-#
-#$Id: Makefile,v 1.1.1.1 2005-07-08 14:31:03 moghrabi Exp $
-#
 
 SHELL = /bin/sh
 
@@ -44,7 +37,12 @@ exe::
 	@$(MAKE) -C $(PWD)/CDMW_TimeInvocation/c++ --no-print-directory  all
 	@$(MAKE) -C $(PWD)/CDMW_TimerThroughput/c++ --no-print-directory  all
 	@$(MAKE) -C $(PWD)/CDMW_TimeParallelism/c++ --no-print-directory  all
-
+	@$(MAKE) -C $(PWD)/CDMW_ControlledClockInvocation/c++ --no-print-directory  all
+	@$(MAKE) -C $(PWD)/CDMW_FederatedClockInvocation/c++ --no-print-directory  all
+	@$(MAKE) -C $(PWD)/CDMW_TimerPrecision/c++ --no-print-directory  all
+	@$(MAKE) -C $(PWD)/CDMW_LBinvocation/c++ --no-print-directory  all
+	@$(MAKE) -C $(PWD)/CDMW_SMGnotification/c++ --no-print-directory  all
+	
 clean::
 	@$(MAKE) -C $(PWD)/CDMW_InvocationC/c++ --no-print-directory  clean
 	@$(MAKE) -C $(PWD)/CDMW_Marshalling/c++ --no-print-directory  clean
@@ -55,6 +53,13 @@ clean::
 	@$(MAKE) -C $(PWD)/CDMW_TimeInvocation/c++ --no-print-directory  clean
 	@$(MAKE) -C $(PWD)/CDMW_TimerThroughput/c++ --no-print-directory  clean
 	@$(MAKE) -C $(PWD)/CDMW_TimeParallelism/c++ --no-print-directory  clean
+	@$(MAKE) -C $(PWD)/CDMW_ControlledClockInvocation/c++ --no-print-directory  clean
+	@$(MAKE) -C $(PWD)/CDMW_FederatedClockInvocation/c++ --no-print-directory  clean
+	@$(MAKE) -C $(PWD)/CDMW_TimerPrecision/c++ --no-print-directory  clean
+	@$(MAKE) -C $(PWD)/CDMW_LBinvocation/c++ --no-print-directory  clean
+	@$(MAKE) -C $(PWD)/CDMW_SMGnotification/c++ --no-print-directory  clean
+	
+	
 
 cleanall::
 	@$(MAKE) -C $(PWD)/CDMW_InvocationC/c++ --no-print-directory  cleanall
@@ -66,6 +71,8 @@ cleanall::
 	@$(MAKE) -C $(PWD)/CDMW_TimeInvocation/c++ --no-print-directory  cleanall
 	@$(MAKE) -C $(PWD)/CDMW_TimerThroughput/c++ --no-print-directory  cleanall
 	@$(MAKE) -C $(PWD)/CDMW_TimeParallelism/c++ --no-print-directory  cleanall
-
-
-
+	@$(MAKE) -C $(PWD)/CDMW_ControlledClockInvocation/c++ --no-print-directory  cleanall
+	@$(MAKE) -C $(PWD)/CDMW_FederatedClockInvocation/c++ --no-print-directory  cleanall
+	@$(MAKE) -C $(PWD)/CDMW_TimerPrecision/c++ --no-print-directory  cleanall
+	@$(MAKE) -C $(PWD)/CDMW_LBinvocation/c++ --no-print-directory  cleanall
+	@$(MAKE) -C $(PWD)/CDMW_SMGnotification/c++ --no-print-directory  cleanall

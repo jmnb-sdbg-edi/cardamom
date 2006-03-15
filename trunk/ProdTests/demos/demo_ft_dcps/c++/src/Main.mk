@@ -100,7 +100,9 @@ SERVER_SRCS=$(CDMW_GEN_SERVER_SRC) \
 GRP_CREATOR_SRCS=$(CDMW_GEN_GRP_CREATOR_SRC) \
 	group_creator.cpp
 
-DCPS_HEADER=TestHelloDataSplDcps.cpp TestHelloDataDcps.cpp 
+DCPS_HEADER=BasicSplDcps.cpp  BasicDcps_impl.cpp BasicDcpsC.cpp BasicC.cpp
+
+#DCPS_HEADER=TestHelloDataSplDcps.cpp TestHelloDataDcps.cpp 
 
 .SUFFIXES:
 .SUFFIXES: .idl .cpp .skel.cpp .stub.cpp .o .stub.hpp .skel.hpp .hpp .h
@@ -118,7 +120,8 @@ GRP_CREATOR_OBJ = $(GRP_CREATOR_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
 	| sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
 	[ -s $@ ] || rm -f $@
 
-DCPS_SRCS= ../idl/TestHelloData.idl
+#DCPS_SRCS= ../idl/TestHelloData.idl
+DCPS_SRCS= ../idl/Basic.idl
 
 SRCS=${DCPS_HEADER} $(CLIENT_SRCS) $(SERVER_SRCS) $(GRP_CREATOR_SRCS) $(CORBA_SRV_ALL_SRC)
 DEPENDS=$(SRCS:.cpp=.d)

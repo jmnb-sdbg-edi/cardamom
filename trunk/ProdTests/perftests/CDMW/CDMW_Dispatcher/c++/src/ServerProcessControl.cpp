@@ -1,9 +1,6 @@
 /* =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -66,7 +63,7 @@ void ServerProcessControl::on_initialise (
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Initialisation requested by supervision");
                 
@@ -122,13 +119,13 @@ void ServerProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void ServerProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(),
                                      ">>>>>>>>>>>>>> Run requested by supervision");
                 
@@ -143,7 +140,7 @@ void ServerProcessControl::on_stop()
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Stop requested by supervision");
                 

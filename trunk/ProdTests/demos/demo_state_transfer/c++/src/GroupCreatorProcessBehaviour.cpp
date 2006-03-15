@@ -153,7 +153,7 @@ void GroupCreatorProcessBehaviour::on_initialise(
 
     
 void GroupCreatorProcessBehaviour::on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
 {
 }

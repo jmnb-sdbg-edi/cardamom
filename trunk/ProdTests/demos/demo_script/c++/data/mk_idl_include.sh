@@ -24,7 +24,6 @@
 # mk_idl_include:
 # Tool for generating ORB independent include files.
 # (C) Arnaud Desitter - Nag Ltd. - arnaud@nag.co.uk, 1999
-# $Id: mk_idl_include.sh,v 1.1.1.1 2005-07-08 14:31:03 moghrabi Exp $
 #
 ###########################################################
 # Redistribution and use in source and binary forms, with or without
@@ -71,7 +70,6 @@ version() {
 cat >&2 << __EOF__
 `basename ${0}`: IDL include file generator.
 (C) Arnaud Desitter - Nag Ltd. <arnaud@nag.co.uk>, 1999.
-\$Id: mk_idl_include.sh,v 1.1.1.1 2005-07-08 14:31:03 moghrabi Exp $
 __EOF__
 }
 

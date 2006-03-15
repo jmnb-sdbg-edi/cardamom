@@ -31,18 +31,22 @@
                 <prerequisites>
                     <libraries>
                         Foundation/common
+                        Foundation/commonsvcsdatastore
                         Foundation/testutils
                         Foundation/commonidl
+                        Foundation/cosnotificationidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        Foundation/logging
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platformlibrary
                         SystemMngt/platforminterface
                         SystemMngt/platformvaluetypes
                         Repository/repositoryidl
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         LifeCycle/lifecycleidl
                         ConfAndPlug/cdmwinit
@@ -52,6 +56,7 @@
                         FaultTolerance/ftcommon
                         FaultTolerance/ftstatemanager
                         FaultTolerance/ftlocationmanager
+                        FaultTolerance/ftrequestlogging
                         FaultTolerance/ftinit
                     </libraries>
                     <generatedfilesfrom>
@@ -67,6 +72,7 @@
                     </server>
                     <client/>
                     <requireidlsfrom>                        
+                        Foundation
                         FaultTolerance
                     </requireidlsfrom>
                 </idlfiles>

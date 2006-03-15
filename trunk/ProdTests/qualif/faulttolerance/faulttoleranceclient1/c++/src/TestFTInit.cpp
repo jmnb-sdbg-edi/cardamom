@@ -1,6 +1,7 @@
 /* =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI.
+
  * 
  * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
  * All rights reserved.
@@ -28,7 +29,7 @@
 
 #include <faulttoleranceclient1/TestHello.stub.hpp>
 #include "Foundation/ossupport/OS.hpp"
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 #include <FaultTolerance/idllib/FT.stub.hpp>
@@ -139,6 +140,8 @@ void TestFTInit::do_tests()
     int timescale = Cdmw::TestUtils::Testable::get_timescale();
     Cdmw::OsSupport::OS::sleep( timescale * 1000 );
     
+// REM : FLT-0210 TRANSIENT TEST could be done with other FLT-0210 test
+// in the corresponding independent test for FLT-120,130,210
     // call the method on an empty object group
     //(REQ 160)
     try
@@ -169,7 +172,7 @@ void TestFTInit::do_tests()
     Cdmw::NamingAndRepository::RepositoryInterface::init ("CDMW",
                                                            repository.in());
 
-    Cdmw::NamingAndRepository::NamingInterface ni =
+    Cdmw::CommonSvcs::Naming::NamingInterface ni =
     Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
 
 
@@ -182,7 +185,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P51";
     loc[2].kind = "processname";
 
-    std::string s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    std::string s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
 
     std::string full_name = "dom3/P51HelloInterface1";
 
@@ -288,7 +291,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P31";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P31HelloInterface1";
 
@@ -382,6 +385,7 @@ void TestFTInit::do_tests()
     }
     catch (const CORBA::SystemException& e)
     {
+        std::cout<<e<<std::endl;
         TEST_FAILED();
     }
 
@@ -396,7 +400,7 @@ void TestFTInit::do_tests()
     loc[2].kind = "processname";
 
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P11HelloInterface1";
 
@@ -942,8 +946,8 @@ void TestFTInit::do_tests()
         TEST_FAILED();
     }
      
-    
-    
+// REM : FLT-0130 INV OBJ REF TEST could be done with other FLT-0130 test
+// in the corresponding independant test for FLT-120,130,210
     // the Replication Manager Version is lower than the object group reference 
     // create a new object group reference with a higher group version
     TEST_INFO("the Replication Manager Object Version is lower than the object group reference ");
@@ -1015,7 +1019,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P21";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name ="dom3/P21HelloInterface2";
     // recover the reference of the APPL2/PROC21/HelloInterface2 object
@@ -1068,7 +1072,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P41";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
 
     full_name =  "dom3/P41HelloInterface2";
     // recover the reference of the APPL4/PROC41/HelloInterface2 object
@@ -1119,7 +1123,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P61";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name =  "dom3/P61HelloInterface2";
 
@@ -1208,7 +1212,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P22";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P22HelloInterface3";
     // recover the reference of the APPL2/PROC22/HelloInterface3 object
@@ -1259,7 +1263,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P42";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P42HelloInterface3";
 
@@ -1312,7 +1316,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P62";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name ="dom3/P62HelloInterface3";
 
@@ -1650,39 +1654,118 @@ void TestFTInit::do_tests()
         TEST_FAILED();
     }
 
+// This flag could be used when PCR-0243 will be solved by Prismtech
+// In this case, REQ-SRS-FLT-120 is also tested in this test
+#ifndef TESTFWDPERM
+    ::FT::ObjectGroupId object_group_id1 = 0, object_group_id2 = 0, object_group_id3 = 0;
+    Cdmw::Test::HelloInterface1_var hello1;
+    Cdmw::Test::HelloInterface2_var hello2;
+    Cdmw::Test::HelloInterface3_var hello3;
+    try
+    {
+        object_group_id1 = m_replication_manager->get_object_group_id(hello_group_HelloInterface1.in());
+        object_group_id2 = m_replication_manager->get_object_group_id(hello_group_HelloInterface2.in());
+        object_group_id3 = m_replication_manager->get_object_group_id(hello_group_HelloInterface3.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;;
+    }
+#endif
+    int hello1_version_sav, hello2_version_sav, hello3_version_sav;
     TEST_INFO("Check the good version of each object group");
     
-    if ( helloInterface1_version < Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in()) )
+#ifdef TESTFWDPERM
+    hello1_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id1);
+        hello1 = Cdmw::Test::HelloInterface1::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello1_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello1.in());
+#endif
+    if ( helloInterface1_version < hello1_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
 
-    if ( helloInterface2_version == Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in()) )
+#ifdef TESTFWDPERM
+    hello2_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id2);
+        hello2 = Cdmw::Test::HelloInterface2::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello2_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello2.in());
+#endif
+    if ( helloInterface2_version == hello2_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
 
-    if ( helloInterface3_version == Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in()) )
+#ifdef TESTFWDPERM
+    hello3_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id3);
+        hello3 = Cdmw::Test::HelloInterface3::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello3_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello3.in());
+#endif
+    if ( helloInterface3_version == hello3_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
   
-    helloInterface1_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in());
-    helloInterface2_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in());
-    helloInterface3_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in());
+    helloInterface1_version = hello1_version_sav;
+    helloInterface2_version = hello2_version_sav;
+    helloInterface3_version = hello3_version_sav;
     
     TEST_INFO("Check the good number of member in each object group");
+#ifdef TESTFWDPERM
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface1.in()) == 2)
+#else
+        // no need to take ref again
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello1.in()) == 2)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
 
+#ifdef TESTFWDPERM
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface2.in()) == 3)
+#else
+        // no need to take ref again
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello2.in()) == 3)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
 
+#ifdef TESTFWDPERM
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface3.in()) == 3)
+#else
+        // no need to take ref again
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello3.in()) == 3)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
@@ -1785,42 +1868,98 @@ void TestFTInit::do_tests()
 
     TEST_INFO("Check the good version of each object group");
     std::cout<<"helloInterface1_version :"<<helloInterface1_version<<std::endl;
-    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in())<<std::endl;
-
-    if ( helloInterface1_version == Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in()) )
+#ifdef TESTFWDPERM
+    hello1_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id1);
+        hello1 = Cdmw::Test::HelloInterface1::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello1_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello1.in());
+#endif
+    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<< hello1_version_sav <<std::endl;
+    if ( helloInterface1_version == hello1_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
+
     std::cout<<"helloInterface2_version :"<<helloInterface2_version<<std::endl;
-    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in())<<std::endl;
-
-    if ( helloInterface2_version < Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in()) )
+#ifdef TESTFWDPERM
+    hello2_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id2);
+        hello2 = Cdmw::Test::HelloInterface2::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello2_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello2.in());
+#endif
+    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<< hello2_version_sav <<std::endl;
+    if ( helloInterface2_version < hello2_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
-    std::cout<<"helloInterface3_version :"<<helloInterface3_version<<std::endl;
-    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in())<<std::endl;
 
-    if ( helloInterface3_version < Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in()) )
+    std::cout<<"helloInterface3_version :"<<helloInterface3_version<<std::endl;
+#ifdef TESTFWDPERM
+    hello3_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id3);
+        hello3 = Cdmw::Test::HelloInterface3::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello3_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello3.in());
+#endif
+    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<< hello3_version_sav <<std::endl;
+    if ( helloInterface3_version < hello3_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
   
-    helloInterface1_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in());
-    helloInterface2_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in());
-    helloInterface3_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in());
+    helloInterface1_version = hello1_version_sav;
+    helloInterface2_version = hello2_version_sav;
+    helloInterface3_version = hello3_version_sav;
     TEST_INFO("Check the good number of member in each object group");
+#ifdef TESTFWDPERM
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface1.in()) == 2)
+#else
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello1.in()) == 2)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
 
+#ifdef TESTFWDPERM
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface2.in()) == 2)
+#else
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello2.in()) == 2)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
 
+#ifdef TESTFWDPERM
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface3.in()) == 2)
+#else
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello3.in()) == 2)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
@@ -1885,15 +2024,6 @@ void TestFTInit::do_tests()
             TEST_FAILED();
 
     }
-    catch (const CORBA::TRANSIENT& e)
-    {
-        TEST_INFO("Expected CORBA::TRANSIENT Exception raised" << e);
-        if (e.completed () == CORBA::COMPLETED_NO)
-            TEST_SUCCEED();  
-        else
-            TEST_FAILED();
-    }
-
     catch (const CORBA::SystemException& e)
     {
         std::cout<<e<<std::endl;
@@ -1923,50 +2053,107 @@ void TestFTInit::do_tests()
     }
     TEST_INFO("Check the good version of each object group");
     std::cout<<"helloInterface1_version :"<<helloInterface1_version<<std::endl;
-    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in())<<std::endl;
-    
-    if ( helloInterface1_version < Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in()) )
+#ifdef TESTFWDPERM
+    hello1_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id1);
+        hello1 = Cdmw::Test::HelloInterface1::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello1_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello1.in());
+#endif    
+    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<hello1_version_sav<<std::endl;
+    if ( helloInterface1_version < hello1_version_sav )
         TEST_SUCCEED();
-    
     else 
         TEST_FAILED();
+
     std::cout<<"helloInterface2_version :"<<helloInterface2_version<<std::endl;
-    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in())<<std::endl;
-
-    if ( helloInterface2_version < Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in()) )
+#ifdef TESTFWDPERM
+    hello2_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id2);
+        hello2 = Cdmw::Test::HelloInterface2::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello2_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello2.in());
+#endif
+    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<hello2_version_sav<<std::endl;
+    if ( helloInterface2_version <  hello2_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
-    std::cout<<"helloInterface3_version :"<<helloInterface3_version<<std::endl;
-    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in())<<std::endl;
 
-    if ( helloInterface3_version < Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in()) )
+    std::cout<<"helloInterface3_version :"<<helloInterface3_version<<std::endl;
+#ifdef TESTFWDPERM
+    hello3_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in());
+#else
+    try
+    {
+        ::FT::ObjectGroup_var object_group = m_replication_manager->get_object_group_ref_from_gid(object_group_id3);
+        hello3 = Cdmw::Test::HelloInterface3::_narrow(object_group.in());
+    }
+    catch( CORBA::Exception& e )
+    {
+        std::cerr << e._name() << std::endl;
+        TEST_FAILED();
+    }
+    hello3_version_sav = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello3.in());
+#endif
+
+    std::cout<<" Cdmw::FT::TestUtils::get_object_group_version :"<<hello3_version_sav<<std::endl;
+    if ( helloInterface3_version < hello3_version_sav )
         TEST_SUCCEED();
     else 
         TEST_FAILED();
   
-    helloInterface1_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1.in());
-    helloInterface2_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface2.in());
-    helloInterface3_version = Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface3.in());
+    helloInterface1_version = hello1_version_sav;
+    helloInterface2_version = hello2_version_sav;
+    helloInterface3_version = hello3_version_sav;
 
     TEST_INFO("Check the good number of member in each object group");
 
+#ifdef TESTFWDPERM
     std::cout<<"get_number_of_member"<<Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface1.in())<<std::endl;
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface1.in()) == 1)
+#else
+    std::cout<<"get_number_of_member"<<Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello1.in())<<std::endl;
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello1.in()) == 1)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
 
+#ifdef TESTFWDPERM
     std::cout<<"get_number_of_member"<<Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface2.in())<<std::endl;
-
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface2.in()) == 1)
+#else
+    std::cout<<"get_number_of_member"<<Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello2.in())<<std::endl;
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello2.in()) == 1)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
 
+#ifdef TESTFWDPERM
     std::cout<<"get_number_of_member"<<Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface3.in())<<std::endl;
-
     if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello_group_HelloInterface3.in()) == 1)
+#else
+    std::cout<<"get_number_of_member"<<Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello3.in())<<std::endl;
+    if ( Cdmw::FT::TestUtils::get_number_of_member(m_orb.in(), hello3.in()) == 1)
+#endif
         TEST_SUCCEED();
     else
         TEST_FAILED();
@@ -2023,6 +2210,8 @@ void TestFTInit::do_tests()
         TEST_FAILED();
     }
 
+// REM : FLT-0210 TRANSIENT TEST could be done with other FLT-0210 test
+// in the corresponding independent test for FLT-120,130,210
     // call the method on an object group with primary
     try
     {

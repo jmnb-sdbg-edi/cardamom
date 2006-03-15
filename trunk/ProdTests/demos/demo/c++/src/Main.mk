@@ -56,7 +56,8 @@ include ../config.mk
 
 #Append to CPPFLAGS and IDLFLAGS
 override CPPFLAGS += -I. -I../include -I../generated \
-	$(foreach d, $(shell find $(CDMW_HOME)/include/c++ -type d), -I$(d))
+	$(foreach d, $(shell find $(CDMW_HOME)/include/c++ -name TAO\* -prune -o -type d -print), -I$(d)) \
+        -I$(CDMW_HOME)/include/c++/TAOOpenFusion
 override IDLFLAGS += -I../idl -I../generated
 
 ALL_LIBS=$(LIBS)

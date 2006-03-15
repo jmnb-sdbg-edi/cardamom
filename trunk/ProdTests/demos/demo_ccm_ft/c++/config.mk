@@ -1,23 +1,13 @@
 #* =========================================================================== *
-#* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
-#* 
-#* CARDAMOM is free software; you can redistribute it and/or modify it under
-#* the terms of the GNU Library General Public License as published by the
-#* Free Software Foundation; either version 2 of the License, or (at your
-#* option) any later version.
-#* 
-#* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
-#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
-#* License for more details.
-#* 
-#* You should have received a copy of the GNU Library General
-#* Public License along with CARDAMOM; see the file COPYING. If not, write to
-#* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#* THALES (R) - CARDAMOM
+#*
+#* Copyright (c) THALES 2000-2004 All rights reserved.
+#* Software commonly developed by THALES and SELEX-SI
+#*
+#* This file and the information  it contains  are   property  of  THALES  and
+#* confidential.   They  shall  not be reproduced nor disclosed  to any person
+#* except to those having  a need  to know them without  prior written consent
+#* of THALES.
 #* =========================================================================== *
 
 ################################################################################
@@ -61,7 +51,8 @@ LIBS_solaris2_8=
 # Linux
 # ...........
 #CXXFLAGS_linux=-g -Wall -Werror
-CXXFLAGS_linux=-g -Wall -Werror -fPIC
+#CXXFLAGS_linux=-g -Wall -Werror -fPIC
+CXXFLAGS_linux=-Wall
 LDFLAGS_linux=  -lpthread -ldl -rdynamic
 IDLFLAGS_linux=
 LIBS_linux=
@@ -88,25 +79,28 @@ LIBS_ORB:= $(LIBS_$(ORB))
 CPPFLAGS_CDMW=-I$(CDMW_HOME)/include/c++ \
 	-I$(CDMW_HOME)/include/c++/cdmwidl \
 	-I$(XERCES_INC_PATH) \
-	-I$(SPLICE_INC_PATH) \
-	-D_REENTRANT -DCDMW_ASSERT_NO_THROW
+	-I$(SPLICE_INC_PATH)/C++/CCPP/OpenFusion -I$(SPLICE_INC_PATH)/C++/CCPP \
+	-I$(TAO_ROOT)/include \
+	-D_REENTRANT -DCDMW_ASSERT_NO_THROW -DDDS_OpenFusion_1_4_1
 CXXFLAGS_CDMW=
 LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
 	-L$(XERCES_LIB_PATH) -L$(SPLICE_LIB_PATH) 
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
 LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface \
           -lcdmwlifecycle -lcdmwrepositoryinterface \
-          -lcdmwplatforminterface -lcdmwnaminginterface \
-          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
+          -lcdmwplatforminterface -lcdmwcommonsvcsnaming \
+          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwlogging \
           -lcdmwcommon -lcdmwccmcommon -lcdmwccmcif -lcdmwccmcontainer \
           -lcdmwccmcomponentserver -lcdmwtestutils -lxerces-c1_3 \
           -lcdmwlifecycleidl -lcdmweventidl -lcdmwccmcontaineridl \
-          -lcdmwplatformvaluetypes -lcdmwplatformidl -lcdmwrepositoryidl \
-          -lcdmwcommonidl -lcdmwsystemmngtidl -lcdmwplatformlibrary \
-          -lcdmwfaulttoleranceidl \
-          -lcdmwftinit -lcdmwftlocationmanager \
+          -lcdmwcommonidl -lcdmwrepositoryidl \
+          -lcdmwplatformvaluetypes -lcdmwplatformlibrary \
+          -lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+          -lcdmwfaulttoleranceidl -lcdmwcosnotificationidl \
+          -lcdmwftinit -lcdmwftlocationmanager -lcdmwcommonsvcsdatastore \
           -lcdmwftcommon -lcdmwftstatemanager -lcdmwmonitoringidl \
-          -ldcps_c++_api -lsuperapi -lsplice
+	  -ldcpscommon -ldcpsccpp -ldcpsgapi -lstdc++
+#-ldcpscorbac++ 
 #END CDMW FLAGS
 
 RM=rm -f
@@ -117,5 +111,5 @@ CPPFLAGS=$(CPPFLAGS_$(HOST_SUFFIX)) $(CPPFLAGS_ORB) $(CPPFLAGS_CDMW)
 CXXFLAGS=$(CXXFLAGS_$(HOST_SUFFIX)) $(CXXFLAGS_ORB) $(CXXFLAGS_CDMW)
 LDFLAGS=$(LDFLAGS_$(HOST_SUFFIX)) $(LDFLAGS_ORB) $(LDFLAGS_CDMW)
 IDLFLAGS=$(IDLFLAGS_$(HOST_SUFFIX)) $(IDLFLAGS_CDMW) $(IDLFLAGS_ORB) 
-LIBS=$(LIBS_$(HOST_SUFFIX)) $(LIBS_ORB) $(LIBS_CDMW)
+LIBS=$(LIBS_$(HOST_SUFFIX))$(LIBS_CDMW) $(LIBS_ORB)
 

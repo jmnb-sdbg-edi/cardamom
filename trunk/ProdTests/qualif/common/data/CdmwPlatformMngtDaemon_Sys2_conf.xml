@@ -33,7 +33,12 @@
 	<IorFile>CdmwDaemon.ior</IorFile>
 	<NotificationCallTimeout>10000</NotificationCallTimeout>
 	<RequestDurationTime>20000000</RequestDurationTime>
-    <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmw_sys2_ftdomain-1/225.1.1.8:4556</SimplePullCorbaloc>
-    <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_sys2_ftdomain-2/225.1.1.8:4557</SimplePushCorbaloc>
+        <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmw_sys2_ftdomain-1/225.1.1.8:4556</SimplePullCorbaloc>
+        <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_sys2_ftdomain-2/225.1.1.8:4557</SimplePushCorbaloc>
+        <ServiceLocator locator-service-address="corbaloc:miop:1.0@1.0-cdmw_sys2_ftdomain-5/225.1.1.8:4560"
+            registration-service-address="corbaloc:miop:1.0@1.0-cdmw_sys2_ftdomain-6/225.1.1.8:4561"
+            nb-retries="5"
+            time-interval="200"/>
+
 </CdmwPlatformMngtDaemon>
 

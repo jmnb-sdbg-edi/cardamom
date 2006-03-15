@@ -56,13 +56,11 @@
     <!-- Hosts of the system -->
 	<Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
 	<Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -114,16 +112,14 @@
 		                 Autoended="FALSE"
 		                 Exec-path="cdmw_start_ifr_service.sh"
 		                 Port="-1"
-                         Args="">
-		</Unmanaged-process>
+                         Args=""/>
 		
 		<Unmanaged-process Name="IfrFeed"
                          Host-name="@hostname2val@"
 		                 Autoended="TRUE"
 		                 Exec-path="cdmw_start_ifr_feed.sh"
 		                 Port="-1"
-                         Args="../idl/Philo.idl">
-		</Unmanaged-process>
+                         Args="../idl/Philo.idl"/>
 		
 		<Managed-process Name="EventChannelManager"
                          Host-name="@hostname2val@"
@@ -191,8 +187,8 @@
                          Autoended="FALSE"
                          Exec-path="cdmw_package_manager.sh"
                          Port="24010"
-                         Args="--installDir=@config.FtpJAVA.ftp.dir@/cdmw_validation 
-                               --ftpHomeDir=@config.FtpJAVA.ftp.dir@
+                         Args="--installDir=@config.Ftp.homedir@/cdmw_validation 
+                               --ftpHomeDir=@config.Ftp.homedir@
                                --saveFile=workDir/PackageManager.save">
 			<Init-step Name="initialisation" Timeout="30000"/>
 		<!--	<Run-timeout Timeout="1000"/>

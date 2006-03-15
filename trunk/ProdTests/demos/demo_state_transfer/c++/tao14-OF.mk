@@ -29,7 +29,7 @@ CPPFLAGS_tao14-OF= -I$(ACE_ROOT) -I$(TAO_ROOT) -I$(TAO_ROOT)/orbsvcs -I$(TAO_ROO
 CXXFLAGS_tao14-OF=
 IDLFLAGS_tao14-OF= -I$(TAO_ROOT)/TAO_IDL/idl_specs -I$(TAO_ROOT) -I$(TAO_ROOT)/tao -I$(TAO_ROOT)/orbsvcs -I$(TAO_ROOT)/tao/IFR_Client
 LDFLAGS_tao14-OF:= -L$(ACE_ROOT)/ace 
-LIBS_tao14-OF:= -lTAO_CosEvent -lTAO_CosProperty -lTAO -lTAO_PortableServer -lTAO_CosNaming -lTAO_Strategies -lTAO_Messaging -lTAO_RTCORBA -lACE -lTAO_IFR_Client
+LIBS_tao14-OF:= -lTAO_CosEvent -lTAO_CosProperty -lTAO -lTAO_PortableServer -lTAO_CosNaming -lTAO_Strategies -lTAO_Messaging -lTAO_RTCORBA -lACE -lTAO_IFR_Client -lTAO_FTORB
 IDL2CXX_tao14-OF=ACE_ROOT=$(ACE_ROOT) TAO_ROOT=$(TAO_ROOT) $(TAO_ROOT)/TAO_IDL/tao_idl -DTAO \
 		-Ge 0 -Gv -Sc
 # -------------------------------------------------------------------------------

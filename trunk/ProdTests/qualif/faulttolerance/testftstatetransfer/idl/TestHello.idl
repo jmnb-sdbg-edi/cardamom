@@ -44,7 +44,7 @@ module CdmwReplicationManager {
     /**
      * get_local_datastore_info
      */
-    CdmwFT::StateTransfer::LocalDataStoreInfo get_local_datastore_info(in long dsid);
+    CdmwFT::StateTransfer::LocalDataStoreInfo get_local_datastore_info();
 
 
     /**
@@ -91,7 +91,7 @@ module CdmwReplicationManager {
     /**
      * get_local_datastore_info
      */
-    CdmwFT::StateTransfer::LocalDataStoreInfo get_local_datastore_info(in long dsid);
+    CdmwFT::StateTransfer::LocalDataStoreInfo get_local_datastore_info();
     
     /**
      * get_info_from_datastore

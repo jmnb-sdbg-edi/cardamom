@@ -25,7 +25,7 @@
 // Cdmw Files
 #include <Foundation/common/Assert.hpp> 
 #include <Foundation/orbsupport/CORBA.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <faulttoleranceserver/TestPrimaryBackupAdmin_impl.hpp>
 
 
@@ -52,7 +52,7 @@ TestPrimaryBackupAdmin_impl::TestPrimaryBackupAdmin_impl(PortableServer::POA_ptr
                                                          const ::FT::Location&     the_location)
     :  TestMembersAdmin_impl( poa, the_location),
        m_poa(PortableServer::POA::_duplicate(poa)),
-       m_location(Cdmw::NamingAndRepository::NamingInterface::to_string(the_location))
+       m_location(Cdmw::CommonSvcs::Naming::NamingInterface::to_string(the_location))
 
 {
 }

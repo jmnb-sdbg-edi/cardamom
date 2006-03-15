@@ -23,8 +23,8 @@
 
 #include "ClientThread.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include <string>
 #include <cctype>
 #include <algorithm>
@@ -319,9 +319,9 @@ CORBA::Long ClientThread::stop_proc(const std::string & arg, std::ostream & os)
         } 
 		  else 
 		  {        
-            Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
 
-            typedef Cdmw::NamingAndRepository::NamingUtil<Validation::ProcessAgentFactory> Util;
+            typedef Cdmw::CommonSvcs::Naming::NamingUtil<Validation::ProcessAgentFactory> Util;
             
             Validation::ProcessAgentFactory_var factory
                 = Util::resolve_name(ni,arg);

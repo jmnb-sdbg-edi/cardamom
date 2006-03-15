@@ -47,6 +47,8 @@ TestNavigation::TestNavigation(CORBA::ORB_ptr orb,
       m_supervision = supervision_corbaloc;
       m_hostname1 = host1;
       m_hostname2 = host2;
+      m_process1 = CdmwPlatformMngt::Process::_nil();
+      m_process2 = CdmwPlatformMngt::Process::_nil();
 }
 
 // destructor
@@ -60,7 +62,7 @@ void TestNavigation::do_tests()
 
     using namespace Cdmw;
 
-    set_nbOfRequestedTestOK (33);
+    set_nbOfRequestedTestOK (36);
     
 
     // Get the CORBA reference of the system of the CDMW Supervision
@@ -72,10 +74,14 @@ void TestNavigation::do_tests()
     }
     
     TEST_INFO("Navigation - System to Host");
+    TEST_INFO("Get the number of host in the system");
+    TEST_INFO("system->get_number_of_hosts()");
     TEST_CHECK(m_system->get_number_of_hosts() == 2);
 
     try
     {
+        TEST_INFO("Get the host from the system");
+        TEST_INFO("system->get_host(hostname1)");
         m_host1 = m_system->get_host(m_hostname1.c_str());
         TEST_SUCCEED();
     }
@@ -88,6 +94,8 @@ void TestNavigation::do_tests()
     
     try
     {
+        TEST_INFO("Get a unknown host from the system");
+        TEST_INFO("system->get_host(\"UNKNOWN\")");
         m_host2 = m_system->get_host("UNKNOWN");
         TEST_FAILED();
     }
@@ -98,6 +106,8 @@ void TestNavigation::do_tests()
 
     try
     {
+        TEST_INFO("Get the host from the system");
+        TEST_INFO("system->get_host(hostname2)");
         m_host2 = m_system->get_host(m_hostname2.c_str());
         TEST_SUCCEED();
     }
@@ -114,6 +124,8 @@ void TestNavigation::do_tests()
     TEST_INFO("Navigation - System to Application");
     try
     {
+        TEST_INFO("Get an unknown application from the system");
+        TEST_INFO("system->get_application(\"UNKNOWN\")");
         m_application1 =  m_system->get_application("UNKNOWN");
         TEST_FAILED();
     }
@@ -124,6 +136,8 @@ void TestNavigation::do_tests()
     
     try
     {
+        TEST_INFO("Get an application from the system");
+        TEST_INFO("system->get_application(\"NavigationApplication1\")");
         m_application1 =  m_system->get_application("NavigationApplication1");
         TEST_SUCCEED();
     }
@@ -136,6 +150,8 @@ void TestNavigation::do_tests()
     
     try
     {
+        TEST_INFO("Get an application from the system");
+        TEST_INFO("system->get_application(\"NavigationApplication2\")");
         m_application2 =  m_system->get_application("NavigationApplication2");
         TEST_SUCCEED();
     }
@@ -150,7 +166,9 @@ void TestNavigation::do_tests()
     TEST_INFO("Navigation - Application to process");
     try
     {
-        m_process1 = m_application1->get_process("UNKNOWN");
+        TEST_INFO("Get an unknown process from the system");
+        TEST_INFO("application1->get_process(\"UNKNOWN\", \"UNKNOWN\")");
+        m_process1 = m_application1->get_process("UNKNOWN", "UNKNOWN");
         TEST_FAILED();
     }
     catch(const CdmwPlatformMngt::ProcessNotFound& ex)
@@ -160,7 +178,9 @@ void TestNavigation::do_tests()
 
     try
     {
-        m_process1 = m_application1->get_process("NavigationProcess1");
+        TEST_INFO("Get a process from the application");
+        TEST_INFO("application1->get_process(\"NavigationProcess1\",hostname1)");
+        m_process1 = m_application1->get_process("NavigationProcess1", m_hostname1.c_str());
         TEST_SUCCEED();
     }
     catch(const CdmwPlatformMngt::ProcessNotFound& ex)
@@ -171,7 +191,9 @@ void TestNavigation::do_tests()
 
     try
     {
-        m_process2 = m_application2->get_process("NavigationProcess2");
+        TEST_INFO("Get a process from the application");
+        TEST_INFO("application2->get_process(\"NavigationProcess2\",hostname2)");
+        m_process2 = m_application2->get_process("NavigationProcess2", m_hostname2.c_str());
         TEST_SUCCEED();
     }
     catch(const CdmwPlatformMngt::ProcessNotFound& ex)
@@ -181,38 +203,61 @@ void TestNavigation::do_tests()
     TEST_CHECK(!strcmp(m_process2->name(), "NavigationProcess2"));
 
     TEST_INFO("Navigation - Process to Host");
-    m_host1 = m_process1->get_host();;
+    TEST_INFO("Get a host from the process");
+    TEST_INFO("process1->get_host()");   
+    m_host1 = m_process1->get_host();
     TEST_CHECK(!strcmp(m_host1->name(), m_hostname1.c_str()));
 
-    m_host2 = m_process2->get_host();;
+    TEST_INFO("Get a host from the process");
+    TEST_INFO("process2->get_host()");
+    m_host2 = m_process2->get_host();
     TEST_CHECK(!strcmp(m_host2->name(), m_hostname2.c_str()));
-    
+
+
+
+
+
+
+
+
+
 
 
     TEST_INFO("Navigation - System to Entity");
     TEST_CHECK(m_system->get_number_of_entities() == 1);
-    CdmwPlatformMngtEntity::EntityStatus entityStatus;
-    CORBA::String_var entityInfo;
+
+    CdmwPlatformMngt:: Entity_var entity = CdmwPlatformMngt:: Entity::_nil();
+    CORBA::String_var entityStatus;
+    char * infoStatus;
+    CORBA::String_out info_out (infoStatus);
 
     try
     {
-        entityStatus = m_system->get_entity_status("UNKNOWN", entityInfo); 
+        entity = m_system->get_entity("UNKNOWN"); 
         TEST_FAILED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_SUCCEED();
     }
 
     try
     {
-        entityStatus = m_system->get_entity_status("SYSTEM_ENTITY", entityInfo);
+        std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
+        entity = m_system->get_entity("SYSTEM_ENTITY");
+        std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
+        
+        entity->set_status("OK", "the entity is OK");
+        std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
+        entityStatus = entity->get_status(info_out);
+        std::cout<<__FILE__<<" "<<__LINE__<<std::endl;
+
         std::cout << "entity name   :" << "SYSTEM_ENTITY" << std::endl;
-        std::cout << "entity status :" << entityStatus << std::endl;
-        std::cout << "entity info   :" << entityInfo.in() << std::endl;  
+        std::cout << "entity status :" << entityStatus.in() << std::endl;
+        std::cout << "entity info   :" << infoStatus << std::endl;  
         TEST_SUCCEED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_FAILED();
     }
@@ -222,23 +267,26 @@ void TestNavigation::do_tests()
 
      try
     {
-        entityStatus = m_application1->get_entity_status("APPLICATION_ENTITY2", entityInfo); 
+        entity = m_application1->get_entity("APPLICATION_ENTITY2"); 
         TEST_FAILED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_SUCCEED();
     }
 
     try
     {
-        entityStatus = m_application1->get_entity_status("APPLICATION_ENTITY1", entityInfo);
+        entity = m_application1->get_entity("APPLICATION_ENTITY1");
+        entity->set_status("OK", "the entity is OK");
+        entityStatus = entity->get_status(info_out);
+
         std::cout << "entity name   :" << "APPLICATION_ENTITY1" << std::endl;
-        std::cout << "entity status :" << entityStatus << std::endl;
-        std::cout << "entity info   :" << entityInfo.in() << std::endl;  
+        std::cout << "entity status :" << entityStatus.in() << std::endl;
+        std::cout << "entity info   :" << infoStatus << std::endl;  
         TEST_SUCCEED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_FAILED();
     }
@@ -248,23 +296,26 @@ void TestNavigation::do_tests()
 
     try
     {
-        entityStatus = m_application2->get_entity_status("APPLICATION_ENTITY1", entityInfo); 
+        entity = m_application2->get_entity("APPLICATION_ENTITY1"); 
         TEST_FAILED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_SUCCEED();
     }
 
     try
     {
-        entityStatus = m_application2->get_entity_status("APPLICATION_ENTITY2", entityInfo);
+        entity = m_application2->get_entity("APPLICATION_ENTITY2");
+        entity->set_status("OK", "the entity is OK");
+        entityStatus = entity->get_status(info_out);
+
         std::cout << "entity name   :" << "APPLICATION_ENTITY2" << std::endl;
-        std::cout << "entity status :" << entityStatus << std::endl;
-        std::cout << "entity info   :" << entityInfo.in() << std::endl;  
+        std::cout << "entity status :" << entityStatus.in() << std::endl;
+        std::cout << "entity info   :" << infoStatus << std::endl;  
         TEST_SUCCEED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_FAILED();
     }
@@ -274,51 +325,88 @@ void TestNavigation::do_tests()
 
      try
     {
-        entityStatus = m_process1->get_entity_status("PROCESS_ENTITY2", entityInfo); 
+        entity = m_process1->get_entity("PROCESS_ENTITY2"); 
         TEST_FAILED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_SUCCEED();
     }
 
     try
     {
-        entityStatus = m_process1->get_entity_status("PROCESS_ENTITY1", entityInfo);
+        entity = m_process1->get_entity("PROCESS_ENTITY1");
+        entity->set_status("OK", "the entity is OK");
+        entityStatus = entity->get_status(info_out);
+
         std::cout << "entity name   :" << "PROCESS_ENTITY1" << std::endl;
-        std::cout << "entity status :" << entityStatus << std::endl;
-        std::cout << "entity info   :" << entityInfo.in() << std::endl;  
+        std::cout << "entity status :" << entityStatus.in() << std::endl;
+        std::cout << "entity info   :" << infoStatus << std::endl;  
         TEST_SUCCEED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_FAILED();
     }
 
     TEST_CHECK(m_process2->get_number_of_entities() == 1);
 
-     try
+    try
     {
-        entityStatus = m_process2->get_entity_status("PROCESS_ENTITY1", entityInfo); 
+        entity = m_process2->get_entity("PROCESS_ENTITY1"); 
         TEST_FAILED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_SUCCEED();
     }
 
     try
     {
-        entityStatus = m_process2->get_entity_status("PROCESS_ENTITY2", entityInfo);
+        entity = m_process2->get_entity("PROCESS_ENTITY2");
+        entity->set_status("OK", "the entity is OK");
+        entityStatus = entity->get_status(info_out);
+
         std::cout << "entity name   :" << "PROCESS_ENTITY2" << std::endl;
-        std::cout << "entity status :" << entityStatus << std::endl;
-        std::cout << "entity info   :" << entityInfo.in() << std::endl;  
+        std::cout << "entity status :" << entityStatus.in() << std::endl;
+        std::cout << "entity info   :" << infoStatus << std::endl;  
         TEST_SUCCEED();
     }
-    catch(const CdmwPlatformMngtEntity::EntityNotFound& e)
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
     {
         TEST_FAILED();
     }
+
+    TEST_CHECK(m_host1->get_number_of_entities() == 1);
+
+    try
+    {
+        entity = m_host1->get_entity("HOST_ENTITYx"); 
+        TEST_FAILED();
+    }
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
+    {
+        TEST_SUCCEED();
+    }
+
+    try
+    {
+        entity = m_host1->get_entity("HOST_ENTITY");
+        entity->set_status("OK", "the entity is OK");
+        entityStatus = entity->get_status(info_out);
+
+        std::cout << "entity name   :" << "HOST_ENTITY" << std::endl;
+        std::cout << "entity status :" << entityStatus.in() << std::endl;
+        std::cout << "entity info   :" << infoStatus << std::endl;  
+        TEST_SUCCEED();
+    }
+    catch(const CdmwPlatformMngt::EntityNotFound& e)
+    {
+        TEST_FAILED();
+    }
+
+
+
 
 
 }

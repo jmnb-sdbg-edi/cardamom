@@ -27,7 +27,11 @@
 #include <ServerExecutor_impl.hpp>
 
 #include <DisplayFacetExecutor_impl.hpp>
+#include <sstream>
 
+//#include <HelloData.h>
+#include <ccpp_HelloData.h>
+//#include <dds_dcpsT.h>
 
 namespace Hello
 {
@@ -142,9 +146,11 @@ void ServerExecutor_impl::ccm_activate()
     
     m_argv[argc]=NULL;
     
-    m_factory = new DCPS::SpliceDomainParticipantFactory(argc, m_argv);
+    //m_factory = new DCPS::SpliceDomainParticipantFactory(argc, m_argv);
+    m_factory = DDS::DomainParticipantFactory::get_instance();
     
-    if (!m_factory.in()) {
+    //if (!m_factory.in()) {
+    if (m_factory == 0) {
         std::cerr << m_name.in() 
                   << ": => impossible to create a SpliceDomainParticipantFactory"
                   << std::endl;
@@ -154,10 +160,10 @@ void ServerExecutor_impl::ccm_activate()
               << ":  => SpliceDomainParticipantFactory created!" << std::endl;
     
     // Create a domainParticipant with it.
-    DCPS::DomainParticipantQos dp_qos;
+    DDS::DomainParticipantQos dp_qos = PARTICIPANT_QOS_DEFAULT;
     m_participant = m_factory->create_participant(0, dp_qos, NULL);
     
-    if (!m_participant.in()) {
+    if (!m_participant) {
         std::cerr << m_name.in() 
                   << ": => impossible to create a DomainParticipant" << std::endl;
         throw CORBA::INTERNAL();
@@ -167,7 +173,7 @@ void ServerExecutor_impl::ccm_activate()
     // Enable the DomainParticipant.
     std::cout << m_name.in() 
               << ": => Th_createRegistrar ok!" << std::endl;
-    DCPS::ReturnCode_t status = m_participant->enable();
+    DDS::ReturnCode_t status = m_participant->enable();
     if (status) {
         std::cerr << m_name.in() 
                   << ": => impossible to enable the DomainParticipant" << std::endl;
@@ -176,9 +182,9 @@ void ServerExecutor_impl::ccm_activate()
     std::cout << m_name.in() << ": => DomainParticipant enabled." << std::endl;
     
     // Register the 'ServerState' type inside my DomainParticipant.
-    const char *type_name = "ServerState";
-    DemoFTDCPS::ServerStateDataType myDataType;
-    status = myDataType.register_type(m_participant.in(), type_name);
+    const char *type_name = "DemoFTDCPS::ServerState";
+    DemoFTDCPS::ServerStateTypeSupport myDataType;
+    status = myDataType.register_type(m_participant, type_name);
     if (status)  {
         std::cerr << m_name.in() 
                   << ": => impossible to register the 'ServerState' type "
@@ -188,14 +194,16 @@ void ServerExecutor_impl::ccm_activate()
     std::cout << m_name.in() << ": => ServerStateDataType registered." << std::endl;
     
     // Create a new Topic for the BasicTypes type.
-    TopicQos tp_qos;
-    tp_qos.durability.kind = TRANSIENT_DURABILITY_QOS;
-    tp_qos.reliability.kind = RELIABLE_RELIABILITY_QOS;
-    tp_qos.delay_laxity.duration.sec = 0;
-    tp_qos.delay_laxity.duration.nanosec = 0;
+    DDS::TopicQos tp_qos;
+    tp_qos.durability.kind =  DDS::TRANSIENT_DURABILITY_QOS;
+    tp_qos.reliability.kind =  DDS::RELIABLE_RELIABILITY_QOS;
+    //tp_qos.delay_laxity.duration.sec = 0;
+    //tp_qos.delay_laxity.duration.nanosec = 0;
     
-    m_topic = m_participant->create_topic("myServerState", type_name, tp_qos, NULL);
-    if (!m_topic.in()) {
+    //m_topic = m_participant->create_topic("myServerState", type_name, tp_qos, NULL);
+    m_topic = m_participant->create_topic("myServerState", type_name,  TOPIC_QOS_DEFAULT, NULL);
+
+    if (m_topic == 0) { //if (!m_topic.in()) {
         std::cerr << m_name.in() 
                   << ": => impossible to create the topic for the 'ServerState' type"
                   << std::endl;
@@ -213,15 +221,16 @@ void ServerExecutor_impl::ccm_activate()
     }
     std::cout << m_name.in() << ": => Topic enabled." << std::endl;
     
-    // Create a Publisher QoS.
+
+     // Create a Publisher QoS.
     // use a default partition.
-    DCPS::PublisherQos pub_qos;
+    DDS::PublisherQos pub_qos = PUBLISHER_QOS_DEFAULT; ;
     pub_qos.partition.name.length(1);
-    pub_qos.partition.name[0] = "myPartition";
+    pub_qos.partition.name[0] = CORBA::string_dup("myPartition");
     
     // Create a Publisher in this Partition.
     m_publisher = m_participant->create_publisher(pub_qos, NULL);
-    if (!m_publisher.in()) {
+    if (!m_publisher) {
         std::cerr << m_name.in() << ": => impossible to create a Publisher in partition"
                   << std::endl;
         throw CORBA::INTERNAL();
@@ -239,7 +248,7 @@ void ServerExecutor_impl::ccm_activate()
     std::cout << m_name.in() << ": => Publisher enabled." << std::endl;
     
     // Create a ServerStateDataWriter.
-    DCPS::DataWriterQos dw_qos;
+    DDS::DataWriterQos dw_qos = DATAWRITER_QOS_DEFAULT;
     
     m_data_writer = m_publisher->create_datawriter(m_topic, dw_qos, NULL);
     std::cout << m_name.in() << ": => DataWriter created for type 'ServerState'." 
@@ -252,7 +261,7 @@ void ServerExecutor_impl::ccm_activate()
     }
     
     // Cast it to its original (typed) format.
-    m_typed_data_writer = dynamic_cast<ServerStateDataWriter_ptr>(m_data_writer.in());
+    m_typed_data_writer = dynamic_cast<DemoFTDCPS::ServerStateDataWriter_ptr>(m_data_writer.in());
     if (m_typed_data_writer == NULL) {
         std::cerr << m_name.in()
                   << ": => DataWriter handle could not be casted back to its original"
@@ -274,7 +283,7 @@ void ServerExecutor_impl::ccm_activate()
     std::cout << m_name.in() << ": => DataWriter enabled."  << std::endl;
     
     // Create a Subscriber QoS.
-    DCPS::SubscriberQos sub_qos;
+    DDS::SubscriberQos sub_qos = SUBSCRIBER_QOS_DEFAULT;
     
     // Use a default Partition.
     sub_qos.partition.name.length(1);    
@@ -284,7 +293,7 @@ void ServerExecutor_impl::ccm_activate()
               << std::endl;
     
     m_subscriber = m_participant->create_subscriber(sub_qos, NULL);
-    if (!m_subscriber.in()) {
+    if (!m_subscriber) {
         std::cerr << m_name.in() << ": => impossible to create Subscriber" << std::endl;
         throw CORBA::INTERNAL();
     }
@@ -301,7 +310,7 @@ void ServerExecutor_impl::ccm_activate()
     std::cout << m_name.in() << ": => Subscriber enabled." << std::endl;
     
     // Create a BasicTypesDataReader.
-    DCPS::DataReaderQos dr_qos;
+    DDS::DataReaderQos dr_qos = DATAREADER_QOS_DEFAULT;
     
     m_data_reader = m_subscriber->create_datareader(m_topic, dr_qos, NULL);
     if (!m_data_reader.in()) {
@@ -342,7 +351,7 @@ void ServerExecutor_impl::ccm_passivate()
               << ": ==> ccm_passivate called!" << std::endl;
     
     /* Now start to destroy all entities. */
-    DCPS::ReturnCode_t status = m_subscriber->delete_datareader(m_typed_data_reader);
+    DDS::ReturnCode_t status = m_subscriber->delete_datareader(m_typed_data_reader);
     if (status) {
         std::cerr << m_name.in() 
                   << ": => impossible to delete ServerStateDataReader!" << std::endl;
@@ -406,18 +415,20 @@ void ServerExecutor_impl::ccm_remove()
 DemoFTDCPS::ServerState ServerExecutor_impl::read_state()
     throw(CORBA::SystemException)
 {
-    // Allocate holders for read results.
-    DemoFTDCPS::ServerStateSeq_var samples;
-    DCPS::SampleInfoSeq_var sampleInfo;
-    DCPS::SampleStateMask ssm = NOT_READ_SAMPLE_STATE;
-    DCPS::LifecycleStateMask lcm = NEW_LIFECYCLE_STATE | MODIFIED_LIFECYCLE_STATE;
+
+  // Allocate holders for read results.
+    DemoFTDCPS::ServerStateSeq_var samples = new DemoFTDCPS::ServerStateSeq() ;
+    DDS::SampleInfoSeq_var sampleInfo = new DDS::SampleInfoSeq();
+    DDS::SampleStateMask ssm = DDS::NOT_READ_SAMPLE_STATE;
+    DDS::ViewStateMask vsm = DDS::ANY_VIEW_STATE;
+    DDS::InstanceStateMask ism = DDS::ALIVE_INSTANCE_STATE;
     
     std::cout << m_name.in() << ":  => read_state try to read samples" << std::endl;
-    m_typed_data_reader->read(samples, sampleInfo, ssm, lcm);
+    m_typed_data_reader->read(samples, sampleInfo, DDS::LENGTH_UNLIMITED, ssm, vsm, ism);
     std::cout << m_name.in() << ": => read_state samples read : samples length = "
               << samples->length() << std::endl;
     
-    for (DCPS::ULong k = 0; k < samples->length(); ++k)	{
+    for (CORBA::ULong k = 0; k < samples->length(); ++k)	{
         std::cout << m_name.in() 
                   << ":  Read ServerState value nr " << k << " :\n" 
                   << "        counter    = " << samples[k].counter << " \n"
@@ -429,12 +440,12 @@ DemoFTDCPS::ServerState ServerExecutor_impl::read_state()
     if (samples->length()) {
         // Only return first state
         result.counter = samples[0L].counter;
-        result.message = DDS::string_dup(samples[0L].message);
+        result.message = CORBA::string_dup(samples[0L].message);
         std::cout << m_name.in() 
                   << ": Returning first read value " << std::endl;
     } else {
         result.counter = 0L;
-        result.message = DDS::string_dup("NO MESSAGE");
+        result.message = CORBA::string_dup("NO MESSAGE");
         std::cout << m_name.in() << ": no state to update ! " 
                   << " Using default values!" << std::endl;
     }
@@ -448,7 +459,7 @@ void ServerExecutor_impl::write_state(const DemoFTDCPS::ServerState & state)
               << ": write_state (" << state.counter << "," << state.message << ")"
               << std::endl;
     
-    DCPS::ReturnCode_t status = m_typed_data_writer->write(state, HANDLE_NIL);
+    DDS::ReturnCode_t status = m_typed_data_writer->write(state, DDS::HANDLE_NIL);
     if (status) {
         std::cerr << m_name.in() 
                   << ": write_state => impossible to write value !!" << std::endl;

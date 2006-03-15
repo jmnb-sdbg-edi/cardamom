@@ -21,6 +21,8 @@
  * =========================================================================== */
 
 
+#include <iostream>
+#include <sstream>
 #include <DisplayFacetExecutor_impl.hpp>
 
 #include <ServerExecutor_impl.hpp>
@@ -54,6 +56,10 @@ void DisplayFacetExecutor_impl::display_hello()
               << "Entering display_hello() ..."
               << std::endl;
     CORBA::String_var server_name = m_pserver->name();
+    std::cout << "\n"
+              << "===========================================================\n"
+              << "The server name is ..." << server_name
+              << std::endl;
     // 
     // Read state data, increment counter and then save state again
     //
@@ -76,8 +82,8 @@ void DisplayFacetExecutor_impl::display_hello()
     std::ostringstream ostr;
     ostr << "Message number " << state.counter;
     // NOTA: Splice does not follow the language mapping!
-    DDS::string_free(state.message);
-    state.message=DDS::string_dup(ostr.str().c_str());
+    //   CORBA::string_free(state.message);
+    state.message=CORBA::string_dup(ostr.str().c_str());
     std::cout << "\tNEW STATE IS \n"
               << "\t\tcounter :" << state.counter << "\n"
               << "\t\tmessage :" << state.message << "\n"
@@ -85,8 +91,8 @@ void DisplayFacetExecutor_impl::display_hello()
               << std::endl;
     m_pserver->write_state(state);
     //  NOTA: Splice does not follow the language mapping!
-    DDS::string_free(state.message);
-    state.message=0;
+    //   CORBA::string_free(state.message);
+    state.message=""; //state.message=0;
     std::cout << "\n"
               << "Exiting display_hello()\n"
               << "==========================================================="

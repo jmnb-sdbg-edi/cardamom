@@ -36,7 +36,7 @@
 #include "FaultTolerance/ftinit/FTServiceInit.hpp"
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
 #include "ConfAndPlug/cdmwinit/ProcessControl.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 
@@ -111,13 +111,13 @@ public:
     }
 
     void on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
     {
         if( m_current_step < m_nb_init_step )
             ++m_current_step;
         else
-            throw CdmwPlatformMngt::Process::InvalidStep();
+            throw CdmwPlatformMngt::ProcessDelegate::InvalidStep();
 
         std::cout << "Adding new member to the group..." << std::endl;
         {
@@ -133,7 +133,7 @@ public:
             loc[2].kind = "processname";
 
 			
-            Cdmw::NamingAndRepository::NamingInterface ni =
+            Cdmw::CommonSvcs::Naming::NamingInterface ni =
                 Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
             
             
@@ -193,7 +193,7 @@ public:
                 loc[2].id = "hello2";
                 loc[2].kind = "processname";
 
-            Cdmw::NamingAndRepository::NamingInterface ni =
+            Cdmw::CommonSvcs::Naming::NamingInterface ni =
                 Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
             
             std::string full_name = "dom3/hello2HelloInterface";
@@ -252,7 +252,7 @@ public:
                 loc[2].id = "hello3";
                 loc[2].kind = "processname";
 
-            Cdmw::NamingAndRepository::NamingInterface ni =
+            Cdmw::CommonSvcs::Naming::NamingInterface ni =
                 Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
             
             std::string full_name = "dom3/hello3HelloInterface";
@@ -302,7 +302,7 @@ public:
     }
 
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
         // Launch the test in a thread

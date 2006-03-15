@@ -319,7 +319,8 @@
                         Foundation/ossupport
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -333,8 +334,7 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                     </libraries>
                     <generatedfilesfrom>
@@ -363,10 +363,11 @@
                 <prerequisites>
                     <libraries>
                         Foundation/common
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -380,8 +381,7 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                     </libraries>
                     <generatedfilesfrom>
@@ -418,7 +418,8 @@
                         Foundation/ossupport
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -432,8 +433,7 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                     </libraries>
                     <generatedfilesfrom>
@@ -465,7 +465,8 @@
                         Foundation/ossupport
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -479,8 +480,7 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                     </libraries>
                     <generatedfilesfrom>
@@ -517,7 +517,8 @@
                         Foundation/ossupport
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -531,8 +532,7 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                     </libraries>
                     <generatedfilesfrom>
@@ -564,7 +564,8 @@
                         Foundation/ossupport
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
+                        Foundation/pullmonitorableidl
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -578,8 +579,7 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                     </libraries>
                     <generatedfilesfrom>

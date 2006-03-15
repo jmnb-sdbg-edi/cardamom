@@ -22,7 +22,7 @@
 
 #include <iostream>
 #include <faulttoleranceserver/HelloThread.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 
 namespace Cdmw
 {
@@ -36,7 +36,7 @@ namespace FTInit
         
 HelloThread::HelloThread(CORBA::ORB_ptr orb, const ::FT::Location & the_location)
    : m_orb(CORBA::ORB::_duplicate(orb)),
-     m_name(Cdmw::NamingAndRepository::NamingInterface::to_string(the_location))
+     m_name(Cdmw::CommonSvcs::Naming::NamingInterface::to_string(the_location))
 {    
 }
 

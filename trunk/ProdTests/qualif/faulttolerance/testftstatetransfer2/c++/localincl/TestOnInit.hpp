@@ -24,8 +24,11 @@
 #ifndef INCL_ONINIT_INTERFACE_IMPL_HPP 
 #define INCL_ONINIT_INTERFACE_IMPL_HPP 
 
+#include <iostream>
 #include <fstream>
+
 #include <FaultTolerance/ftstatemanager/DataStoreInitialiser.hpp>
+
 
 
 namespace Cdmw

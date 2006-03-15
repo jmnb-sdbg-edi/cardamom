@@ -91,18 +91,22 @@ int main( int argc, char* argv[] )
         mgr->activate();
 
         // Initialise the platform interface
-        PlatformInterface::setup( orb.in(), argc, argv );
+        PlatformInterface::Setup( orb.in(), argc, argv );
 
         // Create the process behaviour
         std::auto_ptr< MyProcessBehaviour > pMyProcess(
             new MyProcessBehaviour() );
 
         // Acknowledge the creation of the process
-        PlatformInterface::acknowledgeCreation( pMyProcess.get() );
+        PlatformInterface::Acknowledge_creation( pMyProcess.get() );
         pMyProcess.release();
 
         // Start orb
         orb->run();
+        
+        // cleanup the platform interface
+        PlatformInterface::Cleanup();
+
     }
     catch ( const CORBA::Exception& e )
     {  

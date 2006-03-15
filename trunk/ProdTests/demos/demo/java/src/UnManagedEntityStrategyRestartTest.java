@@ -26,7 +26,7 @@ package cdmw.lifecycle;
 import cdmw.testutils.Testable;
 import cdmw.common.Assert;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 
 import com.thalesgroup.CF.Application;

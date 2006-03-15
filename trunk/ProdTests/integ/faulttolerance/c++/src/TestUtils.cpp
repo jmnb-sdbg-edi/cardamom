@@ -27,7 +27,7 @@
 // Cdmw Files
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 
 #include <tao/IORManipulation/IORManip_Loader.h>
 #include <orbsvcs/FaultTolerance/FT_ClientService_Activate.h>
@@ -169,7 +169,7 @@ TestUtils::update_group_with_primary_outside_cdmw_ft
     std::string s_primary_location("");
     bool check_primary_location=false;
     
-    using namespace Cdmw::NamingAndRepository;
+    using namespace Cdmw::CommonSvcs::Naming;
     ::FT::Location primary_location;
     primary_location.length(3);
     primary_location[0].id = host_name;

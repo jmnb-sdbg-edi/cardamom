@@ -53,7 +53,7 @@ public:
     {
         CDMW_ASSERT(m_client);
         
-        ::BasicDemo::Registration_var register_server;
+        ::CommonDemo::Registration_var register_server;
         ::BasicDemo::CCM_Client_Context_var client_context = m_client->get_context();
         
         TEST_INFO("Get_connection_to_register...");

@@ -32,6 +32,8 @@
                     <libraries>
                         Foundation/common
                         Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
                         CCMContainer/ccmcontaineridl
@@ -62,6 +64,8 @@
                     <libraries>
                         Foundation/common
                         Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         CCMContainer/ccmcontaineridl
                     </libraries>
@@ -93,6 +97,8 @@
                     <libraries>
                         Foundation/common
                         Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         CCMContainer/ccmcontaineridl
                     </libraries>
@@ -123,6 +129,8 @@
                     <libraries>
                         Foundation/common
                         Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         CCMContainer/ccmcontaineridl
                     </libraries>
@@ -154,11 +162,13 @@
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
@@ -172,8 +182,8 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
@@ -201,17 +211,21 @@
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
                         LifeCycle/lifecycleidl
+                        LifeCycle/lifecycleinit
                         Event/eventidl
                         Event/eventinterface
+                        Event/eventsupport
                         CCMContainer/ccmcommon
                         CCMContainer/ccmcontainer
                         CCMContainer/ccmcontaineridl
@@ -219,8 +233,8 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
@@ -240,7 +254,9 @@
                     <client/>
                 </idlfiles>
                 <addldflags>
-                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty @config.CCMContainer.ORB.Libs@
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosEvent 
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty 
+                    @config.CCMContainer.ORB.Libs@
                 </addldflags>
             </delivery>
             <delivery basename="greek_school_component_server" type="exe" visibility="private">
@@ -248,17 +264,21 @@
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
+                        Foundation/logging
                         Foundation/orbsupport
                         Foundation/testutils
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         Repository/repositoryidl
                         LifeCycle/lifecycle
                         LifeCycle/lifecycleidl
+                        LifeCycle/lifecycleinit
                         Event/eventidl
                         Event/eventinterface
+                        Event/eventsupport
                         CCMContainer/ccmcommon
                         CCMContainer/ccmcontainer
                         CCMContainer/ccmcontaineridl
@@ -266,8 +286,8 @@
                         CCMDeployment/ccmdeploymentidl
                         CCMContainer/ccmcomponentserver
                         ConfAndPlug/cdmwinit
-                        SystemMngt/systemmngtidl
-                        SystemMngt/platformidl
+                        SystemMngt/smgcommonidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         SystemMngt/platformlibrary
                         SystemMngt/platformvaluetypes
@@ -287,7 +307,9 @@
                     <client/>
                 </idlfiles>
                 <addldflags>
-                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty @config.CCMContainer.ORB.Libs@
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosEvent 
+                    -l@config.CCMContainer.ORB.Lib.Prefix@CosProperty 
+                    @config.CCMContainer.ORB.Libs@
                 </addldflags>
             </delivery>
         </deliveries>

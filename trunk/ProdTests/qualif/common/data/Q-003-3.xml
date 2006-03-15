@@ -50,13 +50,11 @@
     <!-- Hosts of the system -->
 	<Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
 	<Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe">
+          Agent-exec-path="cdmw_platform_agent">
 	    <Host-monitoring Pull-interval="2000" Pull-timeout="2500"/>
     </Host>
 
