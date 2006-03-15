@@ -1,0 +1,144 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+#ifndef _CdmwFTMutualMonitoring_IDL
+#define _CdmwFTMutualMonitoring_IDL
+
+#include "CdmwFTMonitoring.idl"
+
+#pragma prefix "thalesgroup.com"
+
+/**
+ * This module describes interfaces and data types of the Monitoring
+ * Library.
+ */
+module CdmwFT {
+module MonitoringLibrary {
+    /**
+     * This module describes interfaces and data types of the Monitoring
+     * Library for Primary/Backup style.
+     */
+    module PrimaryBackup {
+        /**
+    	 * Interface to be supported by entities willing to be notified
+         * whenever current location switches from primary to backup or
+         * vice versa.
+         */ 
+        local interface MutualMonitoringObserver : MonitoringObserver {
+            /**
+             * Callback operation to report that current location has switched to
+             * primary.
+             */ 
+            void on_switch_to_primary ();
+            /**
+             * Callback operation to report that current location has switched to
+             * backup.
+             */ 
+            void on_switch_to_backup ();
+        };
+
+        /**
+    	 * Interface to be supported by the mutual monitoring object responsible
+         * for monitoring other locations to detect their failure and to elect
+         * a location to be <u>the primary location</u>.
+         */ 
+        local interface MutualMonitoring : Monitoring {
+            /**
+             * Adds <i>the_location</i> to the list of locations to be monitored.
+             *
+             * @param the_location The location to be monitored.
+             *
+             * @exception LocationAlreadyExists Raised if the location is already
+             * known to the monitoring library.
+             */             
+            void add_location(in Location the_location)
+                raises (AlreadyExists);
+
+            /**
+             * Removes <i>the_location</i> from the list of monitored locations.
+             *
+             * @param the_location The location to be remove.
+             *
+             * @exception NotFound Raised if the location was not monitored locally.
+             */             
+            void remove_location(in Location the_location)
+                raises (NotFound);
+
+
+            /**
+             * Sets the set of locations to be monitored. This is only possible
+             * if there are no locations yet. Otherwise a call to reset_locations
+             * have to be made before calling this operation.
+             *
+             * @param the_locations A sequence of Locations.
+             *
+             * @exception NotEmpty Raised if there is already a list of locations.
+             */
+            void set_locations(in Locations the_locations)
+                raises (NotEmpty);
+
+            /**
+             * Reset all locations. No location to monitor.
+             */
+            void reset_locations();
+
+            /**
+             * Get locations that have declared their presence
+             *
+             * @return A sequence of the started locations
+             *
+             */
+            Locations get_started_locations();
+
+            /**
+             * Attach an observer to be called when current location
+             * switches to primary/backup or when some location has failed.
+             * An exception is raised if the observer has already been attached.
+             *
+             * @param the_observer The MutualMonitoringObserver to attach.
+             *
+             * @exception AlreadyExists Raised when <i>the_observer</i> has
+             * alreay been attached.
+             */
+            void attach_observer(in MutualMonitoringObserver the_observer)
+                raises (AlreadyExists);
+
+            /**
+             *
+             * Detaches previously attached observer. There will be no further call
+             * to <i>the_observer</i>. An exception will be raised if <i>the_observer</i>
+             * was not attached previously.
+             *
+             * @param the_observer The MutualMonitoringObserver to detach.
+             *
+             * @exception NotFound Raised whenever <i>the_observer</i> was not
+             * attached previously.
+             **/
+            void detach_observer(in MutualMonitoringObserver the_observer)
+                raises (NotFound);
+        };
+    };
+};
+};
+#endif 

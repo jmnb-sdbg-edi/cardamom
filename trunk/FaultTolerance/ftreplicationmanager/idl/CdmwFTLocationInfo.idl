@@ -1,0 +1,141 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef _CDMW_FT_LOCATION_INFO_IDL_
+#define _CDMW_FT_LOCATION_INFO_IDL_
+
+#include <CdmwFTCommon.idl>
+#include <CdmwFTRepMgrCommon.idl>
+#include <CdmwFTStateTransfer.idl>
+#include <CdmwFTMembersAdmin.idl>
+#include <CdmwFTStateFullPrimaryBackupAdmin.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes data saved in the ReplicationManager LocationDataStore.
+* 
+*/
+module CdmwFT {
+
+    /*
+    * Location stateness: wether the location has datastore or not
+    */
+    enum LocationStateness {
+       LocationStateness_STATELESS,
+       LocationStateness_STATEFULL
+    };
+ 
+    /*
+    * MembersAdminInfo:
+    *
+    * This structure keeps track of data associated with a registered MembersAdmin:
+    * - the MembersAdmin reference,
+    * - a sequence of LocalDataStoreInfo: this sequence is empty for a non statefull
+    *   admin and should not be empty for a statefull admin.
+    *
+    * 2nd and 3rd fields are somewhat redundant, but it looks safer to rely on an
+    * explicit field rather than on the internal state of the 3rd field.  
+   */
+  
+   struct StatelessMembersAdminInfo {
+       Location::MembersAdmin                admin;
+   };
+
+   struct StatefullMembersAdminInfo {
+       Location::StatefullPrimaryBackupAdmin admin;
+       StateTransfer::LocalDataStoreInfos    local_datastore_infos;
+   };
+     
+   union MembersAdminInfo switch (LocationStateness) {
+       case LocationStateness_STATELESS: StatelessMembersAdminInfo  stateless;
+       case LocationStateness_STATEFULL: StatefullMembersAdminInfo  statefull;
+   };        
+    
+    /*
+    * LocationInfo:
+    *
+    * This structure keeps track of data associated with a location:
+    *
+    * - state of the location
+    * - data associated with the location MembersAdmin
+    * - data needed to restore the internal rep. mgr. objects state
+    *   (Location, ObjectGroup, Object)
+    *
+    * LocationInfo records are created when register_location (stateless, 
+    * and statefull variants) or create_object are called. If the record
+    * creation is following a create_object, then the location may have
+    * not been registered yet. To manage this situation an additional boolean
+    * is provided to indicate if the MembersAdminInfo field has been initialized
+    * or not. 
+    *
+   */
+  
+   enum LocationState {
+       LocationState_INITIAL,
+       LocationState_INSERTING_PRIMARY,
+       LocationState_PRIMARY,
+       LocationState_INSERTING_BACKUP,
+       LocationState_BACKUP,
+       LocationState_FAILED
+   };
+ 
+   struct LocationInfo {
+
+       // The number of expected add_member needed to switch to
+       // PRIMARY or BACKUP state (to leave the INSERTING_XXX state).
+       // This field is needed for state machine restoring.
+       long                expected_add_member;
+
+       // Location state as defined in the enum above
+       LocationState       state;
+
+       // Flag needed by the Location state machine: tells that the 
+       // Location will add its members as BACKUP
+       // This field is needed for state machine restoring.
+       boolean             initial_backup;
+
+       // Location state as internally defined by the sm compiler.
+       // This field is needed for state machine restoring.
+       long                fsm_internal_state;
+
+       // Location state as defined in the enum above
+       LocationStateness   stateness;
+
+       // A boolean to indicate that the Location should be chosen
+       // when a new primary is elected
+       boolean             first_backup;
+
+       // A boolean to manage transient LocationInfo state
+       boolean             has_members_admin;
+       MembersAdminInfo    members_admin_info;
+
+      // the location used the reply logging
+      boolean             reply_logging;
+   };
+
+};
+
+#endif // _CDMW_FT_LOCATION_INFO_IDL_
