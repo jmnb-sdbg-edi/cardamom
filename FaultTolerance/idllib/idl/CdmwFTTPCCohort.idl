@@ -1,0 +1,119 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef _CDMW_FT_TPCCOHORT_IDL_
+#define _CDMW_FT_TPCCOHORT_IDL_
+
+#include <CdmwFTTPCCommon.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW Fault Tolerance
+* service.
+*/
+module CdmwFT 
+{
+
+  /**
+   * This module describes interfaces and data types for transactions 
+   * between coordinator and cohorts
+   */
+  module Transaction
+  {
+
+    typedef sequence<StateChange> StateChanges;
+
+    /**
+     * the interface if for backup data store. The coordinator call there functions to 
+     * realise the two phases commit protocol
+     */
+    interface TPCCohort : TPCBase
+    {
+        
+        /**
+        * This operation is the first step of the two phases commit protocol
+        * to create modify data in the backup data store.
+        *
+        * @param id the transaction identification.
+        * @param change the modificatoin to perform.
+        *
+        */
+        oneway void send_prepare(in TransactionIdentification id,
+                                 in StateChanges change);
+        
+        /**
+        * This operation is the second step of the two phases commit protocol
+        * to realise the commit after the first phase.
+        *
+        * @param id the transaction identification.
+        *
+        */
+        oneway void send_commit(in TransactionIdentification id);
+        
+        /**
+        * This operation allows to realise a rollback on the previous commit
+        *
+        * @param id the transaction identification.
+        *
+        */
+        oneway void send_rollback(in TransactionIdentification id);
+
+        /**
+        * This operation is the first step of the two phases commit protocol
+        * to create modify data in the backup data store.
+        *
+        * @param id the transaction identification.
+        * @param change the modificatoin to perform.
+        *
+        */
+        boolean prepare(in StateChanges change,
+                        inout TransactionIdentification id,
+                        out TransactionSender sender);
+        
+        /**
+        * This operation is the second step of the two phases commit protocol
+        * to realise the commit after the first phase.
+        *
+        * @param id the transaction identification.
+        *
+        */
+        void commit(inout TransactionIdentification id,
+                    out TransactionSender sender);
+        
+        /**
+        * This operation allows to realise a rollback on the previous commit
+        *
+        * @param id the transaction identification.
+        *
+        */
+        void rollback(inout TransactionIdentification id,
+                      out TransactionSender sender);
+    };
+    
+  }; // End of namespace Transaction
+
+}; // End of namespace CdmwFT
+#endif // _CDMW_FT_TPCCOHORT_IDL_
