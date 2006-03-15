@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include "Foundation/common/Options.hpp"
@@ -33,6 +35,7 @@
 #include "Foundation/osthreads/ThreadHandle.hpp"
 #include "Foundation/orbsupport/OrbSupport.hpp"
 #include "Foundation/orbsupport/StrategyList.hpp"
+#include <Foundation/logging/LogManager.hpp> // ECR-0169
 
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
 #include "SystemMngt/platforminterface/ServiceNames.hpp"
@@ -219,7 +222,7 @@ int main(int argc, char* argv[])
             std::cout << "Init PlatformInterface" << std::endl;
                       
             // initialise the platform interface
-            PlatformInterface::setup(orb.in(), argc, argv);
+            PlatformInterface::Setup(orb.in(), argc, argv);
       
             // creates the process behaviour
             std::auto_ptr<MyProcessBehaviour> procBehaviour(
@@ -229,13 +232,13 @@ int main(int argc, char* argv[])
             OS::ProcessId processId = OS::get_processId();
 
             // acknowledge the creation of the process
-            PlatformInterface::acknowledgeCreation(procBehaviour.get());
+            PlatformInterface::Acknowledge_creation(procBehaviour.get());
             MyProcessBehaviour * pProcBehaviour = procBehaviour.release();
                     
             // sample usage of the platform interface                    
-            applicationName = PlatformInterface::getApplicationName();
+            applicationName = PlatformInterface::Get_application_name();
 
-            processName = PlatformInterface::getProcessName();
+            processName = PlatformInterface::Get_process_name();
 
 
             std::cout << "Application name : "
@@ -257,7 +260,7 @@ int main(int argc, char* argv[])
     
     
 	        CORBA::Object_var obj =
-	               PlatformInterface::getService(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
+	               PlatformInterface::Get_service(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
 	        rep = CdmwNamingAndRepository::Repository::_narrow(obj.in());
 	        
 	        // ======================================================   
@@ -288,17 +291,22 @@ int main(int argc, char* argv[])
                 // Init the trace library
                 //     5000    is the time to wait before flushing the current flush area
                 //             containing the messages to trace although it is not full.      
+                //     100     threshold at which a info message about a repeating message
+                //             is output to the collector
                 //     2       is the number of flush area to be used to store messages
                 //             to trace
                 //     50*1024 size of each flush area to be used to store messages to trace
                 //             must be a multiple of 1024
                 //
                 // May raise CORBA::SystemException
-            
+		Cdmw::Logging::LogManager::Init(argc, argv);
                 Cdmw::Trace::InitUtils::init_trace_library(rootPOA.in(),
                                                            applicationName,
                                                            processName,
-                                                           5000,2,50*1024,
+                                                           5000,
+                                                           100,
+                                                           2,
+                                                           50 * 1024,
                                                            collectorNameList);
             
             
@@ -320,7 +328,10 @@ int main(int argc, char* argv[])
             
             Cdmw::Trace::Stream stream; 
                                        
+	    /* ECR-0123
             CDMW_TRACE_ST(stream,"TEST", 1, msg.c_str());
+	    */
+            CDMW_TRACE_ST_CCM(stream,"TEST", "TEST", 1, msg.c_str());
                     
         
             // advise behavior that init is done
@@ -329,6 +340,10 @@ int main(int argc, char* argv[])
         
             // start orb
             orb->run();
+
+            // cleanup the platform interface
+            PlatformInterface::Cleanup();
+
         }
             
         catch(...)

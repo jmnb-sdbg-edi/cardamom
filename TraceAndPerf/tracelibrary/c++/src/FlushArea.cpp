@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include "tracelibrary/FlushArea.hpp"
@@ -163,6 +165,7 @@ void FlushArea::store_outFlushAreaMsg (const std::string& errmsg)
 	header.m_fileName = "";
 	header.m_userLevel = CdmwTrace::ALL_VALUES;
 	header.m_userDomain = CdmwTrace::ALL_DOMAINS;
+    header.m_componentName = CdmwTrace::ALL_COMPONENT_NAMES; // ECR-0123
 	header.m_tid = OsSupport::Thread::self();
 	header.m_timestamping = OsSupport::OS::get_time();
 
@@ -242,6 +245,11 @@ CdmwTrace::MessageHeader* FlushArea::create_MessageHeader (const Trace::Message&
         char* domain = CORBA::string_dup (header.m_pUserDomain);
         check_corba_str (domain);
         messageHeader->the_level.the_domain = domain;
+
+        // ECR-0123
+        char * componentName = CORBA::string_dup(header.m_pComponentName);
+        check_corba_str(componentName);
+        messageHeader->the_level.the_component_name = componentName;
 
         // Which thread has produced the message
         messageHeader->the_thread_id = header.m_tid;

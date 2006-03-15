@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include "tracecollector/TraceFileMngr.hpp"
@@ -208,6 +210,8 @@ void TraceFileMngr::print_message (TraceCircularBuffer::TraceMessageRaw* pData)
           *p_os << "Application Name : " << p_mainHeader->m_pApplicationName << std::endl;
           *p_os << "Process Name     : " << p_mainHeader->m_pProcessName << std::endl;
           *p_os << "Process Id       : " << p_mainHeader->m_pid << std::endl;
+          // ECR-0123
+          *p_os << "Component Name   : " << p_messageHeader->m_pComponentName << std::endl;
           *p_os << "Domain           : " << p_messageHeader->m_pUserDomain << std::endl;
           *p_os << "Level            : " << p_messageHeader->m_userLevel << std::endl;
           *p_os << "Thread Id        : " << p_messageHeader->m_tid << std::endl;
@@ -248,7 +252,11 @@ void TraceFileMngr::print_message (TraceCircularBuffer::TraceMessageRaw* pData)
               sprintf (string_buf, "%-5.5s", stream_buf.str().c_str());
               *p_os << string_buf << " ";
             }
-            
+
+            // ECR-0123
+            sprintf(string_buf, "%-16.16s", p_messageHeader->m_pComponentName);
+            *p_os << string_buf << " ";
+
             sprintf (string_buf, "%-16.16s", p_messageHeader->m_pUserDomain);
             *p_os << string_buf << " ";
             

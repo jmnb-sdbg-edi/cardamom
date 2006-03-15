@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #ifndef INCL_TRACE_FLUSHAREAMNGR_HPP 
@@ -28,18 +30,20 @@
 #include <list>
 #include <memory>
 
-#include "TraceAndPerf/tracelibrary/Message.hpp"
+#include <TraceAndPerf/tracelibrary/Message.hpp>
 
-#include "Foundation/orbsupport/CORBA.hpp"
-#include "Foundation/orbsupport/CosNaming.stub.hpp"
+#include <Foundation/orbsupport/CORBA.hpp>
+#include <Foundation/orbsupport/CosNaming.stub.hpp>
 
-#include "Foundation/ossupport/OS.hpp"
-#include "Foundation/osthreads/Mutex.hpp"
-#include "Foundation/osthreads/Condition.hpp"
-#include "Foundation/osthreads/Barrier.hpp"
-#include "Foundation/osthreads/ThreadHandle.hpp"
-#include "TraceAndPerf/idllib/CdmwTraceTraceProducer.skel.hpp"
-#include "TraceAndPerf/idllib/CdmwTraceCollector.stub.hpp"
+#include <Foundation/ossupport/OS.hpp>
+#include <Foundation/osthreads/Mutex.hpp>
+#include <Foundation/osthreads/Condition.hpp>
+#include <Foundation/osthreads/Barrier.hpp>
+#include <Foundation/osthreads/ThreadHandle.hpp>
+#include <TraceAndPerf/idllib/CdmwTraceTraceProducer.skel.hpp>
+#include <TraceAndPerf/idllib/CdmwTraceCollector.stub.hpp>
+
+#include <Foundation/logging/LogManagerDelegate.hpp> // ECR-0169
 
 
 /**
@@ -117,13 +121,19 @@ class FlushAreaMngr : public OsSupport::Thread
 	    */
 	    static const size_t DEFAULT_FLUSHING_TIME=5000;	    
 
+        /**
+         * Default message threshold
+         */
+        static const size_t DEFAULT_MSG_THRESHOLD = 100;
+
 #       else
         enum 
 		{
-            DEFAULT_AREA_NB=2,
-            DEFAULT_AREA_NB_MESSAGE=1024,
-            DEFAULT_FLUSHING_TIME=5000,
-            DEFAULT_AREA_SIZE=50*1024
+            DEFAULT_AREA_NB         = 2,
+            DEFAULT_AREA_NB_MESSAGE = 1024,
+            DEFAULT_FLUSHING_TIME   = 5000,
+            DEFAULT_AREA_SIZE       = 50 * 1024,
+            DEFAULT_MSG_THRESHOLD   = 100
         };
 #       endif
 
@@ -197,6 +207,9 @@ class FlushAreaMngr : public OsSupport::Thread
         *@param nbFlushArea number of FlushArea to be used to store messages
         *@param sizeFlushArea size of each FlushArea to be used to store messages
 	    *@param areaNbMessage the maximum number of messages for each flush area
+        *@param msgThreshold the threshold at which an info message about the
+        *                    number of times the last added message was repeated
+        *                    is added to the flush area
 		*
 	    *@return the pointer to the TraceProducer servant object is returned
         *
@@ -214,13 +227,59 @@ class FlushAreaMngr : public OsSupport::Thread
                                             size_t flushingTime = DEFAULT_FLUSHING_TIME,
                                             size_t nbFlushArea = DEFAULT_AREA_NB, 
                                             size_t sizeFlushArea = DEFAULT_AREA_SIZE,
-                                            size_t areaNbMessage = DEFAULT_AREA_NB_MESSAGE)
+                                            size_t areaNbMessage = DEFAULT_AREA_NB_MESSAGE,
+                                            size_t msgThreshold = DEFAULT_MSG_THRESHOLD)
                 
             throw (OutOfMemoryException,
                    BadParameterException,
                    InternalErrorException);
 
 
+        /**
+         * Initialize the Trace library.
+         * This function must be called prior to any other calls to the library.
+         * The Trace service must be terminated by calling cleanup().
+         *
+         * @param tracePOA POA to use for trace servant.
+         * @param collectorList List of registered Trace Collectors.
+         * @param componentName the component to which the domain is associated
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         * @param applicationName the name of the application
+         * @param processName the name of the process
+         * @param flushingTime time to wait before flushing the current area
+         *                     although it is not full.
+         * @param nbFlushArea number of FlushArea to be used to store messages
+         * @param sizeFlushArea size of each FlushArea to be used to store messages
+         * @param areaNbMessage the maximum number of messages for each FlushArea
+         * @param msgThreshold the threshold at which an info message about the
+         *                     number of times the last added message was
+         *                     repeated is added to the flush area
+         *
+         * @return the pointer to the TraceProducer servant object.
+         *
+         * @exception OutOfMemoryException
+         * @exception BadParameterException
+         * @exception InternalErrorException
+         */
+        // ECR-0123
+        static CdmwTrace::TraceProducer_ptr
+        init(PortableServer::POA_ptr tracePOA,
+             std::list<CdmwTrace::TraceProducer::CollectorData>& collectorList,
+             const std::string& componentName,
+             const std::string& domain,
+             long level,
+             const std::string& applicationName,
+             const std::string& processName,
+             size_t flushingTime = DEFAULT_FLUSHING_TIME,
+             size_t nbFlushArea = DEFAULT_AREA_NB,
+             size_t sizeFlushArea = DEFAULT_AREA_SIZE,
+             size_t areaNbMessage = DEFAULT_AREA_NB_MESSAGE,
+             size_t msgThreshold = DEFAULT_MSG_THRESHOLD)
+
+            throw(OutOfMemoryException,
+                  BadParameterException,
+                  InternalErrorException);
 
 
         /**
@@ -289,6 +348,24 @@ class FlushAreaMngr : public OsSupport::Thread
 		void activate_level (const std::string& domain, long level)
 		    throw (OutOfMemoryException);
 
+
+        /**
+         * Activate the specified level.
+         *
+         * @param componentName the component to which the domain is associated
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         *
+         * @exception OutOfMemoryException
+         */
+        // ECR-0123
+        void
+        activate_level(const std::string& componentName,
+                       const std::string& domain,
+                       long level)
+            throw(OutOfMemoryException);
+
+
 		/**
 		* Purpose:
 		* <p> Defines the specified level as deactivated
@@ -301,6 +378,24 @@ class FlushAreaMngr : public OsSupport::Thread
 		*/ 
 		void deactivate_level (const std::string& domain, long level)
 		    throw (OutOfMemoryException);
+
+
+        /**
+         * Deactivate the specified level.
+         *
+         * @param componentName the component to which the domain is associated
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         *
+         * @exception OutOfMemoryException
+         */
+        // ECR-0123
+        void
+        deactivate_level(const std::string& componentName,
+                         const std::string& name,
+                         long level)
+            throw(OutOfMemoryException);
+
 
         /**
         * Purpose:
@@ -318,7 +413,26 @@ class FlushAreaMngr : public OsSupport::Thread
         static
         bool is_to_be_traced (const std::string& domain, long level)
             throw (OutOfMemoryException);
-        
+
+
+        /**
+         * Check if the specified level is active.
+         *
+         * @param componentName the component to which the domain is associated
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         *
+         * @return true or false
+         *
+         * @exception OutOfMemoryException
+         */
+        // ECR-0123
+        static bool
+        is_to_be_traced(const std::string& componentName,
+                        const std::string& name,
+                        long level)
+            throw(OutOfMemoryException);
+
 
         /**
 		* Purpose:
@@ -449,6 +563,19 @@ class FlushAreaMngr : public OsSupport::Thread
 	    */
 	    void put_flushedArea (FlushArea* pFlushedArea)
             throw (OutOfMemoryException);
+
+
+        /**
+         * Insert an info message about the number of times
+         * a message has been added to the flush area.
+         *
+         * This method assumes that the m_currentFlushArea_mtx
+         * mutex has been acquired by the caller and therefore
+         * will not make any attempt to acquire the mutex.
+         */
+        bool
+        insert_info_message()
+            throw(InternalErrorException);
 	    
 	
         /**
@@ -489,6 +616,9 @@ class FlushAreaMngr : public OsSupport::Thread
         *@param nbFlushArea number of FlushArea to be used to store messages
         *@param sizeFlushArea size of each FlushArea to be used to store messages
 	    *@param areaNbMessage the maximum number of messages for each flush area
+        *@param msgThreshold the threshold at which an info message about the
+        *                    number of times the last added message was repeated
+        *                    is added to the flush area
 		*
         *@exception OutOfMemoryException
         *@exception BadParameterException
@@ -503,15 +633,54 @@ class FlushAreaMngr : public OsSupport::Thread
                        size_t flushingTime,
                        size_t nbFlushArea , 
                        size_t sizeFlushArea,
-                       size_t areaNbMessage)
+                       size_t areaNbMessage,
+                       size_t msgThreshold)
                 throw (OutOfMemoryException,
 					   BadParameterException,
                        InternalErrorException);
 
 
-    
-    
-    
+        /**
+         * Constructor.
+         *
+         * @param tracePOA POA to use for trace servant.
+         * @param collectorList List of registered Trace Collectors.
+         * @param componentName the component to which the domain is associated
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         * @param applicationName the name of the application
+         * @param processName the name of the process
+         * @param flushingTime time to wait before flushing the current area
+         *                     although it is not full.
+         * @param nbFlushArea number of FlushArea to be used to store messages
+         * @param sizeFlushArea size of each FlushArea to be used to store messages
+         * @param areaNbMessage the maximum number of messages for each FlushArea
+         * @param msgThreshold the threshold at which an info message about the
+         *                     number of times the last added message was
+         *                     repeated is added to the flush area
+         *
+         * @exception OutOfMemoryException
+         * @exception BadParameterException
+         * @exception InternalErrorException
+         */
+        // ECR-0123
+        FlushAreaMngr(PortableServer::POA_ptr tracePOA,
+                      std::list<CdmwTrace::TraceProducer::CollectorData>& collectorList,
+                      const std::string& componentName,
+                      const std::string& domain,
+                      long level,
+                      const std::string& applicationName,
+                      const std::string& processName,
+                      size_t flushingTime,
+                      size_t nbFlushArea ,
+                      size_t sizeFlushArea,
+                      size_t areaNbMessage,
+                      size_t msgThreshold)
+            throw(OutOfMemoryException,
+                  BadParameterException,
+                  InternalErrorException);
+
+
         /**
         * Purpose:
         * <p> Copy Constructor
@@ -547,10 +716,13 @@ class FlushAreaMngr : public OsSupport::Thread
         * The cleanup() function reset this variable to false.
         */
         static  
-        bool m_initDone;
+        bool M_initDone;
 
         static
-        FlushAreaMngr* m_pSingleton; 
+        FlushAreaMngr* M_pSingleton; 
+
+        static 
+        Cdmw::Logging::LogManagerDelegate* M_LogManagerDelegate;
 
         /**
         * This barrier is used to be synchronised with the AreaFlusher
@@ -565,6 +737,31 @@ class FlushAreaMngr : public OsSupport::Thread
         * the area is not full.
         */
         size_t m_flushingTime;
+
+
+        /**
+         * Silently add m_msgThreshold repeating messages.
+         */
+        size_t m_msgThreshold;
+
+
+        /**
+         * Count the number of times that a same message is
+         * added to the flush area.
+         */
+        unsigned long m_lastMsgCount;
+
+
+        /**
+         * The last message header.
+         */
+        Message::MessageHeader m_lastMsgHeader;
+
+
+        /**
+         * The last message body.
+         */
+        std::string m_lastMsgBody;
 
 
         /**

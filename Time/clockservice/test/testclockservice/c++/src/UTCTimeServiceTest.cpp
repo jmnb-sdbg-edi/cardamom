@@ -1,46 +1,47 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
-
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+ 
 /**
  * @file UTCTimeServiceTest.cpp
  * @brief unit tests for UTCTimeService
  * 
  * @author Fabrizio Morciano
- * @author Lello Mele
+ * @author Raffaele Mele
+ * @author Copyright (C) 2004-2005 SELEX-SI
  */
 
-#include "Time/testclockservice/UTCTimeServiceTest.hpp"
-#include "Time/testclockservice/PerformanceManager.hpp"
-#include "Time/testclockservice/CORBAManager.hpp"
+#include "testclockservice/UTCTimeServiceTest.hpp"
+#include "Time/clockservice/test/testcommon/PerformanceManager.hpp"
+#include "Time/clockservice/test/testcommon/TimeTestManager.hpp"
 
-#include "Time/clockservice/UTCTimeService_impl.hpp"
-#include "Time/clockservice/UTC_impl.hpp"
-#include "Time/clockservice/Time.hpp"
+#include "clockservice/UTCTimeService_impl.hpp"
+#include "clockservice/UTC_impl.hpp"
 #include "Time/clockservice/Macro.hpp"
 
-#include "Time/testclockservice/CORBAManager.hpp"
-
 #include "Foundation/common/Assert.hpp"
-	
-#include "tao/ORB_Core.h"
-#include "tao/PortableServer/ORB_Manager.h"
 
+#include "tao/ORB_Core.h"
+	
 #include <iostream>
 #include <iterator>
 #include <algorithm>
@@ -61,6 +62,7 @@ CORBA::Object_ptr UTCTimeServiceTest::obj_ = 0;
 ///////////////////////////////////////////////////////////////////////////////
 
 CPPUNIT_TEST_SUITE_REGISTRATION( UTCTimeServiceTest );
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(UTCTimeServiceTest, "testclockservice");
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -71,14 +73,14 @@ UTCTimeServiceTest::UTCTimeServiceTest()
     {
         is_initialized_ = true;
         alias_name_ = "ClockService";
-        CORBAManager::instance ()->add (alias_name_);
+        Cdmw::TestUtils::CORBATestManager::instance ()->add (alias_name_);
         
         bool exce = false;
         try
         {
-            obj_ = CORBAManager::instance ()->get_object (alias_name_);
+            obj_ = Cdmw::TestUtils::CORBATestManager::instance ()->get_object (alias_name_);
         }
-        catch (CORBAManager::InvalidObject &)
+        catch (Cdmw::TestUtils::CORBATestManager::InvalidObject &)
         {
             exce = true;
         }
@@ -88,7 +90,7 @@ UTCTimeServiceTest::UTCTimeServiceTest()
         }
         
         if( exce )
-            CPPUNIT_FAIL ("CORBAManager::InvalidObject");
+            CPPUNIT_FAIL ("Cdmw::TestUtils::CORBATestManager::InvalidObject");
         
         try 
         {
@@ -101,12 +103,12 @@ UTCTimeServiceTest::UTCTimeServiceTest()
         CPPUNIT_ASSERT ( utc_factory_ != 0);
         TAO_OBV_REGISTER_FACTORY (UTC_impl_init, UTC );
 
-
         /*
-        CORBAManager::instance ()->get_orb ()->
+        Cdmw::TestUtils::CORBATestManager::instance ()->get_ORB ()->
             register_value_factory (utc_factory_->tao_repository_id (),
             utc_factory_);
         */
+
         ClockCatalog_var clock_catalog = 
             CosClockService::ClockCatalog::_narrow(obj_);
         CPPUNIT_ASSERT( !CORBA::is_nil( clock_catalog.in() ) );
@@ -175,7 +177,7 @@ UTCTimeServiceTest::univ_time_test()
 void 
 UTCTimeServiceTest::abs_time_test_except()
 {
-    TimeBase::TimeT time = Cdmw::clock::macro::MAX_TIME_VAL;
+    TimeBase::TimeT time = Cdmw::clock::macro::MAX_TIMET;
     CORBA::ULong inacclo = 1;
     CORBA::UShort inacchi = 2;
     TimeBase::TdfT tdf = 3;
@@ -201,7 +203,7 @@ UTCTimeServiceTest::abs_time_test_except()
 void 
 UTCTimeServiceTest::abs_time_test()
 {
-    TimeBase::TimeT time = Cdmw::clock::macro::MAX_TIME_VAL>>1;
+    TimeBase::TimeT time = Cdmw::clock::macro::MAX_TIMET>>1;
     CORBA::ULong inacclo = 1;
     CORBA::UShort inacchi= 2;
     TimeBase::TdfT tdf = 3;

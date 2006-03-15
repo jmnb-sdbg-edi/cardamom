@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. All rights reserved.
+ * 
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<config>
+    <csc name="testcontrolledexecutor" owner="Time" lang="c++" type="unit-test">
+        <deliveries>        
+            <delivery basename="testcontrolledexecutor" type="exe" visibility="private">
+                <prerequisites>
+                    <libraries>
+                        Foundation/common
+                        Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
+                        Foundation/orbsupport
+                        Foundation/commonidl
+                        Foundation/commonsvcsfederation
+                        Foundation/testutils
+                        clockservice/clockservice
+                        Time/testcommon
+                    </libraries>
+                </prerequisites>
+                <sourcefiles>
+					ControlledClockTest.cpp
+					ControlledExecutorTest_ControlledClockTest.cpp
+					ControlledExecutorTest_ExecutorTest.cpp
+					FederatedControlledClockTest.cpp
+                </sourcefiles>
+                <idlfiles>
+                    <server />
+                    <client />
+                    <requireidlsfrom>
+                        Foundation/commonsvcs/federation
+                    </requireidlsfrom>
+                </idlfiles>
+                <addcflags>
+                    @config.Time.ORB.incl@
+                    -Wno-unused
+                </addcflags>
+                <addldflags>
+                    -l@config.Time.ORB.Lib.Prefix@CosProperty
+                    -lcppunit  -luuid 
+                </addldflags>
+            </delivery>
+            <delivery basename="start_clockservice.sh" type="data" visibility="public">
+                <sourcefiles>
+                    start_clockservice.sh
+                </sourcefiles>
+            </delivery>
+            <delivery basename="start_ClockCharacteristicsTest.sh" type="data" visibility="public">
+                <sourcefiles>
+                    start_ClockCharacteristicsTest.sh
+                </sourcefiles>
+            </delivery>
+            <delivery basename="start_clock_observers_test.sh" type="data" visibility="public">
+                <sourcefiles>
+                    start_clock_observers_test.sh
+                </sourcefiles>
+            </delivery>
+            <delivery basename="start_real_and_controlled_conversion_test.sh" type="data" visibility="public">
+                <sourcefiles>
+                    start_real_and_controlled_conversion_test.sh
+                </sourcefiles>
+            </delivery>
+            <delivery basename="test_Q_100" type="exe" visibility="private">
+                <prerequisites>
+                    <libraries>
+                        Foundation/common
+                        Foundation/ossupport
+                        Foundation/osthreads
+                        Foundation/logging
+                        Foundation/orbsupport
+                        Foundation/commonidl
+                        Foundation/commonsvcsfederation
+                        Foundation/testutils
+                        clockservice/clockservice
+                        Time/clockservice/test/testcommon
+                    </libraries>
+                </prerequisites>
+                <sourcefiles>
+					Test_Q_100.cpp
+                </sourcefiles>
+                <idlfiles>
+                    <server />
+                    <client />
+                    <requireidlsfrom>
+                        Foundation/commonsvcs/federation
+                    </requireidlsfrom>
+                </idlfiles>
+                <addcflags>
+                    @config.Time.ORB.incl@
+                    -Wno-unused
+                </addcflags>
+                <addldflags>
+                    -l@config.Time.ORB.Lib.Prefix@CosProperty
+                    -lcppunit  -luuid 
+                </addldflags>
+            </delivery>            
+        </deliveries>        
+        <runtest>
+            <test name="start_test_controlledexecutor.xml" nbtestable="1" >
+                <neededfiles>
+                    Time/clockservice/test/testcontrolledexecutor/start_clockservice.sh
+                    Time/clockservice/test/testcontrolledexecutor/start_test_controlledexecutor.xml
+                </neededfiles>
+                <neededprocesses>
+                    Time/clockservice/test/testcontrolledexecutor/testcontrolledexecutor
+                </neededprocesses>
+            </test>
+        </runtest>
+    </csc>
+</config>

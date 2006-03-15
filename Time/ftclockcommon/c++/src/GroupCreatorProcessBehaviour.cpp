@@ -1,21 +1,25 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 #include "Time/ftclockcommon/GroupCreatorProcessBehaviour.hpp"
 #include "Time/clockservice/StateTransferConfig.hpp"
@@ -46,6 +50,7 @@ Cdmw::clock::svcs::GroupCreatorProcessBehaviour::GroupCreatorProcessBehaviour(
     m_host1 = h1;
     m_host2 = h2; 
     m_host3 = h3;
+    m_application_name = "FTApplication";
 }
 
 Cdmw::clock::svcs::GroupCreatorProcessBehaviour::~GroupCreatorProcessBehaviour() throw ()
@@ -100,15 +105,33 @@ Cdmw::clock::svcs::GroupCreatorProcessBehaviour::on_initialise(
     std::cout << "m_host1 " << m_host1 << endl;
     std::cout << "m_host2 " << m_host2 << endl;
     std::cout << "m_host3 " << m_host3 << endl;
-
-    char c1[100];
-    char c2[100];
-    strcpy(c1,m_host1.c_str());
-    strcpy(c2,m_host2.c_str());
     
-    factoryInfos1.add_ftLocation(c1, "FTApplication", "FTClock1");
-    factoryInfos1.add_ftLocation(c2, "FTApplication", "FTClock2");
-    factoryInfos1.add_ftLocation(c2, "FTApplication", "FTClock3");
+    GroupCreatorProcessBehaviour::const_iterator
+    	cit = m_db.begin(),
+    	end = m_db.end();
+    
+    for(; cit != end ; ++cit )
+    {
+    	const std::string& process = cit->first;
+    	const std::string& host = cit->second;
+    	if( process.empty() ||
+    	    host.empty() )
+		{
+			std::cerr<<"process or host are empty!!!"<<std::cerr;
+			continue;
+		}
+		/*
+	    char c1[1000];
+	    strcpy(c1,host.c_str());
+    	factoryInfos1.add_ftLocation(host, 
+    	                             m_application_name, 
+                                     process);
+    	*/
+    	factoryInfos1.add_ftLocation(host.c_str(),
+    	                             m_application_name.c_str(), 
+                                     process.c_str());
+    }    	
+        
     prop[3].val <<= factoryInfos1.get_factoryInfos();
 
     ::FT::GenericFactory::FactoryCreationId_var factory_creation_id1;
@@ -118,8 +141,6 @@ Cdmw::clock::svcs::GroupCreatorProcessBehaviour::on_initialise(
     ft_criteria[0].nam[0].id="org.omg.ft.FTProperties";
     ft_criteria[0].val <<= prop;
 
-
- 
     
     if (m_point_to_point) {
         // For point-to-point State Transfer, the identifiers of 
@@ -171,7 +192,7 @@ Cdmw::clock::svcs::GroupCreatorProcessBehaviour::on_initialise(
     
 void
 Cdmw::clock::svcs::GroupCreatorProcessBehaviour::on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
 {
 }
@@ -184,4 +205,11 @@ Cdmw::clock::svcs::GroupCreatorProcessBehaviour::on_stop()
     m_orb->shutdown(true);
 }
 
+
+void  
+Cdmw::clock::svcs::GroupCreatorProcessBehaviour::link(const std::string& process,
+                                                      const std::string& host)
+{
+    m_db.insert(make_pair(process,host));	
+}
     

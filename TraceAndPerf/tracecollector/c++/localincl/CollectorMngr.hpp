@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #ifndef INCL_TRACE_COLLECTORMNGR_HPP 
@@ -34,6 +36,7 @@
 #include "Foundation/ossupport/OS.hpp"
 
 #include "TraceAndPerf/idllib/CdmwTraceCollector.stub.hpp"
+#include <TraceAndPerf/idllib/CdmwTraceTraceProducer.skel.hpp>
 
 
 /**
@@ -87,27 +90,27 @@ class CollectorMngr
         static const char* DEFAULT_TRACE_FILE;
 
 #       ifndef _MSC_VER
-	    /**
-	    * Default size for message circular buffer
-	    */
-	    static const size_t DEFAULT_QUEUE_SZ=1024*100;
-	    static const size_t DEFAULT_STRING_SZ=1024;
-	    static const size_t	DEFAULT_TRACE_FILE_MESG_NBR=100;
-	    static const size_t	DEFAULT_TRACE_FILE_BKP_NBR=1;
-	    static const size_t	DEFAULT_TRACE_FILE_NBR=1;
+        /**
+        * Default size for message circular buffer
+        */
+        static const size_t DEFAULT_QUEUE_SZ=1024*100;
+        static const size_t DEFAULT_STRING_SZ=1024;
+        static const size_t    DEFAULT_TRACE_FILE_MESG_NBR=100;
+        static const size_t    DEFAULT_TRACE_FILE_BKP_NBR=1;
+        static const size_t    DEFAULT_TRACE_FILE_NBR=1;
 #       else
         enum 
-		{
+        {
             DEFAULT_QUEUE_SZ=100,
             DEFAULT_STRING_SZ=1,
-			DEFAULT_TRACE_FILE_MESG_NBR=100,
-			DEFAULT_TRACE_FILE_BKP_NBR=1
-			DEFAULT_TRACE_FILE_NBR=1
+            DEFAULT_TRACE_FILE_MESG_NBR=100,
+            DEFAULT_TRACE_FILE_BKP_NBR=1
+            DEFAULT_TRACE_FILE_NBR=1
         };
 #       endif
 
 
-		
+        
 
         /**
         * Purpose:
@@ -119,66 +122,114 @@ class CollectorMngr
             throw();
 
 
-	    
+        
         /**
         * Purpose:
         * <p> Returns the CollectorMngr singleton
         * 
         *@return CollectorMngr singleton
-	    *
+        *
         *@exception
         */ 
-	    static
+        static
         CollectorMngr& Instance()
             throw ();
 
 
         /**
-        * Purpose:
-        * <p> Initialize the Trace collector. This function must be called
-        *   before any other call. The Trace collector must be closed
-        *   by a call to cleanup().
-        * 
-		*@param tracePOA POA used for trace servant.
-		*@param domain the domain where the level must be activated
-		*@param level  the level to be activated
-		*@param traceFormat contains format of trace (Horizontal or Vertical)
-		*@param queueStrategy contains strategie of circular when it is full
-		*                     - do not store new message
-		*                     - remove the oldest message
-		*
-        *@param queueSize size of queue in circular buffer in Kbytes
-	    *@param stringSize size of buffer used for string data in KBytes
-		*@param trace_file_name contains generic name for trace file
-		*@param trace_file_bkp_nbr contains number of backup of trace files
-	    *@param max_trace_file_nbr contains max number of trace files
-	    *@param max_trace_message_nbr contains max number of message in a trace file
-		*@param time_mode contains gmt or local mode for display time
-        *
-		*@return the pointer to the Collector servant object is returned
-		*
-        *@exception OutOfMemoryException
-        *@exception BadParameterException
-        *@exception InternalErrorException        
-        */
-        static
-        CdmwTrace::Collector_ptr Init (PortableServer::POA_ptr tracePOA,
-						                const std::string& domain, 
-										long level,
-										Message::TraceFormat trace_format = Message::V_FORMAT,
-										Message::CircularMode queueStrategy = Message::REMOVE_OLDEST,
-                                        size_t queueSize = DEFAULT_QUEUE_SZ,
-                                        size_t stringSize = DEFAULT_STRING_SZ,
-                                        const std::string& trace_file_name = DEFAULT_TRACE_FILE, 
-                                        short trace_file_bkp_nbr = DEFAULT_TRACE_FILE_BKP_NBR,
-					                    short max_trace_file_nbr = DEFAULT_TRACE_FILE_NBR, 
-					                    int max_trace_message_nbr = DEFAULT_TRACE_FILE_MESG_NBR,
-					                    OsSupport::OS::TimeMode time_mode = OsSupport::OS::LOCAL_TIME)
-            throw (OutOfMemoryException,
-                   BadParameterException,
-                   InternalErrorException);
+         * Initialize the Trace collector.
+         * This method must be called prior to any others.
+         * The Trace collector must be terminated by calling cleanup().
+         *
+         * @param tracePOA POA used for the trace servant.
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         * @param traceFormat contains format of trace (Horizontal or Vertical)
+         * @param queueStrategy strategy to follow when the circular buffer is
+         *                      full (whether to discard new messages or
+         *                      to remove the oldest)
+         * @param queueSize size of queue in circular buffer in Kbytes
+         * @param stringSize size of buffer used for string data in KBytes
+         * @param trace_file_name generic name for trace file
+         * @param trace_file_bkp_nbr contains number of backup of trace files
+         * @param max_trace_file_nbr max number of trace files
+         * @param max_trace_message_nbr max number of messages in a log file
+         * @param time_mode GMT or local mode for the time
+         *
+         * @return the pointer to the Collector servant object
+         *
+         * @exception OutOfMemoryException
+         * @exception BadParameterException
+         * @exception InternalErrorException
+         */
+        static CdmwTrace::Collector_ptr
+        Init(PortableServer::POA_ptr tracePOA,
+             // ECR-0145
+             std::list<CdmwTrace::TraceProducer::CollectorData>& globalCollectors,
+             const std::string& domain, 
+             long level,
+             Message::TraceFormat trace_format = Message::V_FORMAT,
+             Message::CircularMode queueStrategy = Message::REMOVE_OLDEST,
+             size_t queueSize = DEFAULT_QUEUE_SZ,
+             size_t stringSize = DEFAULT_STRING_SZ,
+             const std::string& trace_file_name = DEFAULT_TRACE_FILE, 
+             short trace_file_bkp_nbr = DEFAULT_TRACE_FILE_BKP_NBR,
+             short max_trace_file_nbr = DEFAULT_TRACE_FILE_NBR, 
+             int max_trace_message_nbr = DEFAULT_TRACE_FILE_MESG_NBR,
+             OsSupport::OS::TimeMode time_mode = OsSupport::OS::LOCAL_TIME)
+        throw(OutOfMemoryException,
+              BadParameterException,
+              InternalErrorException);
 
 
+        /**
+         * Initialize the Trace collector.
+         * This method must be called prior to any others.
+         * The Trace collector must be terminated by calling cleanup().
+         *
+         * @param tracePOA POA used for the trace servant.
+         * @param componentName the component to which the domain is associated
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         * @param traceFormat contains format of trace (Horizontal or Vertical)
+         * @param queueStrategy strategy to follow when the circular buffer is
+         *                      full (whether to discard new messages or
+         *                      to remove the oldest)
+         * @param queueSize size of queue in circular buffer in Kbytes
+         * @param stringSize size of buffer used for string data in KBytes
+         * @param trace_file_name generic name for trace file
+         * @param trace_file_bkp_nbr contains number of backup of trace files
+         * @param max_trace_file_nbr max number of trace files
+         * @param max_trace_message_nbr max number of messages in a log file
+         * @param time_mode GMT or local mode for the time
+         *
+         * @return the pointer to the Collector servant object
+         *
+         * @exception OutOfMemoryException
+         * @exception BadParameterException
+         * @exception InternalErrorException
+         */
+        // ECR-0123
+        static CdmwTrace::Collector_ptr
+        Init(PortableServer::POA_ptr tracePOA,
+             // ECR-0145
+             std::list<CdmwTrace::TraceProducer::CollectorData>& globalCollectors,
+             const std::string& componentName,
+             const std::string& domain,
+             long level,
+             Message::TraceFormat trace_format = Message::V_FORMAT,
+             Message::CircularMode queueStrategy = Message::REMOVE_OLDEST,
+             size_t queueSize = DEFAULT_QUEUE_SZ,
+             size_t stringSize = DEFAULT_STRING_SZ,
+             const std::string& trace_file_name = DEFAULT_TRACE_FILE,
+             short trace_file_bkp_nbr = DEFAULT_TRACE_FILE_BKP_NBR,
+             short max_trace_file_nbr = DEFAULT_TRACE_FILE_NBR,
+             int max_trace_message_nbr = DEFAULT_TRACE_FILE_MESG_NBR,
+             OsSupport::OS::TimeMode time_mode = OsSupport::OS::LOCAL_TIME)
+
+            throw(OutOfMemoryException,
+                  BadParameterException,
+                  InternalErrorException);
 
 
         /**
@@ -196,14 +247,14 @@ class CollectorMngr
         * Purpose:
         * <p> Writes the specified message for flushing in trace file
         * 
-		*@param messagesHdr contains the main header of trace message from collector servant
-		*@param fmtMessage contains the formatted trace message from collector servant
-		*@return true if successfull
+        *@param messagesHdr contains the main header of trace message from collector servant
+        *@param fmtMessage contains the formatted trace message from collector servant
+        *@return true if successfull
         *
         *@exception OutOfMemoryException        
         */ 
-		bool writeMessage (const CdmwTrace::MessagesHeader& messagesHdr,
-						   const CdmwTrace::FormattedMessage& fmtMessage)
+        bool writeMessage (const CdmwTrace::MessagesHeader& messagesHdr,
+                           const CdmwTrace::FormattedMessage& fmtMessage)
                 throw (OutOfMemoryException);
 
 
@@ -220,7 +271,23 @@ class CollectorMngr
         */ 
         static
         bool Is_to_be_traced (const std::string& domain, long level);
-        
+
+
+        /**
+         * Check if the specified level is activated.
+         *
+         * @param componentName the component to which the domain is associated
+         * @param domain look for the specified level in this domain
+         * @param level the level
+         *
+         * @return true or false
+         */
+        // ECR-0123
+        static bool
+        Is_to_be_traced(const std::string& componentName,
+                        const std::string& domain,
+                        long level);
+
 
     protected:
     
@@ -232,47 +299,89 @@ class CollectorMngr
         * Purpose:
         * <p> Constructor
         * 
-		*@param tracePOA POA used for trace servant.
-		*@param domain the domain where the level must be activated
-		*@param level  the level to be activated
-		*@param traceFormat contains format of trace (Horizontal or Vertical)
-		*@param queueStrategy contains strategie of circular when it is full
-		*                     - do not store new message
-		*                     - remove the oldest message
-		*
+        *@param tracePOA POA used for trace servant.
+        *@param domain the domain where the level must be activated
+        *@param level  the level to be activated
+        *@param traceFormat contains format of trace (Horizontal or Vertical)
+        *@param queueStrategy contains strategie of circular when it is full
+        *                     - do not store new message
+        *                     - remove the oldest message
+        *
         *@param queueSize size of queue in circular buffer in Kbytes
-	    *@param stringSize size of buffer used for string data in KBytes
-		*@param trace_file_name contains generic name for trace file
-		*@param trace_file_bkp_nbr contains number of backup of trace files
-	    *@param max_trace_file_nbr contains max number of trace files
-	    *@param max_trace_message_nbr contains max number of message in a trace file	    
-		*@param time_mode contains gmt or local mode for display time
+        *@param stringSize size of buffer used for string data in KBytes
+        *@param trace_file_name contains generic name for trace file
+        *@param trace_file_bkp_nbr contains number of backup of trace files
+        *@param max_trace_file_nbr contains max number of trace files
+        *@param max_trace_message_nbr contains max number of message in a trace file        
+        *@param time_mode contains gmt or local mode for display time
         *
         *@exception OutOfMemoryException
         *@exception BadParameterException
         *@exception InternalErrorException        
         */ 
-        CollectorMngr (PortableServer::POA_ptr tracePOA,
-                       const std::string& domain, 
-					   long level,
-					   Message::TraceFormat trace_format,
-					   Message::CircularMode queueStrategy,
-                       size_t queueSize,
-                       size_t stringSize,
-                       const std::string& trace_file_name,
-                       short trace_file_bkp_nbr, 
-					   short max_trace_file_nbr, 
-					   int max_trace_message_nbr,
-					   
-					   OsSupport::OS::TimeMode time_mode)
-            throw (OutOfMemoryException,
-				   BadParameterException,
-                   InternalErrorException);
+        CollectorMngr(PortableServer::POA_ptr tracePOA,
+                      // ECR-0145
+                      std::list<CdmwTrace::TraceProducer::CollectorData>& globalCollectors,
+                      const std::string& domain, 
+                      long level,
+                      Message::TraceFormat trace_format,
+                      Message::CircularMode queueStrategy,
+                      size_t queueSize,
+                      size_t stringSize,
+                      const std::string& trace_file_name,
+                      short trace_file_bkp_nbr, 
+                      short max_trace_file_nbr, 
+                      int max_trace_message_nbr,
+                      OsSupport::OS::TimeMode time_mode)
+            throw(OutOfMemoryException,
+                  BadParameterException,
+                  InternalErrorException);
 
 
-    
-    
-    
+        /**
+         * Constructor.
+         *
+         * @param tracePOA POA used for the trace servant.
+         * @param componentName the component to which the domain is associated
+         * @param domain the domain where the level must be activated
+         * @param level the level to be activated
+         * @param traceFormat contains format of trace (Horizontal or Vertical)
+         * @param queueStrategy strategy to follow when the circular buffer is
+         *                      full (whether to discard new messages or
+         *                      to remove the oldest)
+         * @param queueSize size of queue in circular buffer in Kbytes
+         * @param stringSize size of buffer used for string data in KBytes
+         * @param trace_file_name generic name for trace file
+         * @param trace_file_bkp_nbr contains number of backup of trace files
+         * @param max_trace_file_nbr max number of trace files
+         * @param max_trace_message_nbr max number of messages in a log file
+         * @param time_mode GMT or local mode for the time
+         *
+         * @exception OutOfMemoryException
+         * @exception BadParameterException
+         * @exception InternalErrorException
+         */
+        // ECR-0123
+        CollectorMngr(PortableServer::POA_ptr tracePOA,
+                      // ECR-0145
+                      std::list<CdmwTrace::TraceProducer::CollectorData>& globalCollectors,
+                      const std::string& componentName,
+                      const std::string& domain,
+                      long level,
+                      Message::TraceFormat trace_format,
+                      Message::CircularMode queueStrategy,
+                      size_t queueSize,
+                      size_t stringSize,
+                      const std::string& trace_file_name,
+                      short trace_file_bkp_nbr,
+                      short max_trace_file_nbr,
+                      int max_trace_message_nbr,
+                      OsSupport::OS::TimeMode time_mode)
+            throw(OutOfMemoryException,
+                  BadParameterException,
+                  InternalErrorException);
+
+
         /**
         * Purpose:
         * <p>  Copy constructor
@@ -302,10 +411,10 @@ class CollectorMngr
         static
         CollectorMngr* M_pSingleton; 
 
-		/**
-		* Contains the object in charge of flushing data to the trace file
-		*/
-		std::auto_ptr<CollectorFlusher> m_spCollectorFlusher;
+        /**
+        * Contains the object in charge of flushing data to the trace file
+        */
+        std::auto_ptr<CollectorFlusher> m_spCollectorFlusher;
 
         /**
         * This barrier is used to be synchronised with the CollectorFlusher

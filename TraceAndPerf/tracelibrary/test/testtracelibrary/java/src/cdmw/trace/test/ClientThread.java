@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 package cdmw.trace.test;
@@ -155,16 +157,18 @@ class ClientThread extends Thread {
                   + " | set_root_context <name>           | set root context for trace collector       |"  + "\n"
                   + " +-----------------------------------+--------------------------------------------+"  + "\n"
                   + " | set_collector_context <name>      | set context for trace collector            |"  + "\n"
-                  + " |                                   | default is CDMW/SERVICES/TRACE/COLLECTORS/|"  + "\n"
+                  + " |                                   | default is CDMW/SERVICES/TRACE/COLLECTORS/ |"  + "\n"
                   + " +-----------------------------------+--------------------------------------------+"  + "\n"
-                  + " | activate_level <domain> <level>   | activate the level    all-> [* -1]         |"  + "\n"
+                  + " | activate_level                    | activate the level    all-> [* -1]         |"  + "\n"
+                  + " |  [componentname] <domain> <level> |                                            |"  + "\n"
                   + " +-----------------------------------+--------------------------------------------+"  + "\n"
-                  + " | deactivate_level <domain> <level> | deactivate the level                       |"  + "\n"
+                  + " | deactivate_level                  | deactivate the level                       |"  + "\n"
+                  + " |  [componentname] <domain> <level> |                                            |"  + "\n"
                   + " +-----------------------------------+--------------------------------------------+"  + "\n"
                   + " | get_levels                        | get levels                                 |"  + "\n"
                   + " +-----------------------------------+--------------------------------------------+"  + "\n"
                   + " | register_collector                |                                            |"  + "\n"
-                  + " |               <name> <mnemonic>   | register the collector                     |"  + "\n"
+                  + " |  <name> <mnemonic>                | register the collector                     |"  + "\n"
                   + " +-----------------------------------+--------------------------------------------+"  + "\n"
                   + " | unregister_collector <ident>      | unregister the collector                   |"  + "\n"
                   + " +-----------------------------------+--------------------------------------------+"  + "\n"
@@ -301,6 +305,7 @@ class ClientThread extends Thread {
         // ------- get_levels -------
         OperationBase getLevels = new OperationBase() {
             public int execute(String[] arg, java.io.PrintStream os) {
+                String titleComponent = "component name          "; // ECR-0123
                 String titleName  = "domain name             ";
                 String titleLevel = "level    ";
                 String titleActiv = "activation";
@@ -316,9 +321,21 @@ class ClientThread extends Thread {
 
                 os.println("list of trace filters");
                 os.println("---------------------");
-                os.println(titleName + titleLevel + titleActiv);
+                os.println(titleComponent + titleName + titleLevel + titleActiv);
 
                 for (int i = 0; i < filters.length; i++) {
+                    // ECR-0123
+                    StringBuffer component =
+                        new StringBuffer(filters[i].the_component_name);
+                    component.setLength(titleComponent.length());
+                    for (int j = filters[i].the_component_name.length();
+                         j < titleComponent.length();
+                         j++)
+                    {
+                        component.setCharAt(j, ' ');
+                    }
+                    os.print(component.toString());
+
                     StringBuffer title = new StringBuffer(filters[i].the_domain);
                     title.setLength(titleName.length());
                     for (int j = filters[i].the_domain.length();
@@ -375,8 +392,8 @@ class ClientThread extends Thread {
                         repository.resolve_root_context(rootContext);
 
                     // NamingInterface on Root context
-                    cdmw.namingandrepository.NamingInterface niRoot =
-                        new cdmw.namingandrepository.NamingInterface(ncRoot);
+                    cdmw.commonsvcs.naming.NamingInterface niRoot =
+                        new cdmw.commonsvcs.naming.NamingInterface(ncRoot);
 
                     // set complete collector name
                     String collectorPath = collectorContext;
@@ -662,24 +679,40 @@ class ClientThread extends Thread {
                              String[] arg,
                              java.io.PrintStream os)
     {
+        String componentName;
         String domain;
         short  level;
 
         switch (arg.length) {
             case 0:
+                componentName = com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value; // ECR-0123
                 domain = com.thalesgroup.CdmwTrace.ALL_DOMAINS.value;
                 level  = com.thalesgroup.CdmwTrace.ALL_VALUES.value;
                 break;
 
             case 1:
+                componentName = com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value; // ECR-0123
                 domain = arg[0];
                 level  = com.thalesgroup.CdmwTrace.ALL_VALUES.value;
                 break;
 
-            default:
+            case 2:
+                componentName = com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value; // ECR-0123
                 domain = arg[0];
                 try {
                     level  = Short.parseShort(arg[1]);
+                } catch (NumberFormatException e) {
+                    os.println("bad value for domain level");
+                    return OperationBase.FAILURE;
+                }
+                break;
+
+            default:
+                // ECR-0123
+                componentName = arg[0];
+                domain = arg[1];
+                try {
+                    level  = Short.parseShort(arg[2]);
                 } catch (NumberFormatException e) {
                     os.println("bad value for domain level");
                     return OperationBase.FAILURE;
@@ -689,9 +722,9 @@ class ClientThread extends Thread {
 
         try {
             if (activation) {
-                traceProducer.activate_level(domain, level);
+                traceProducer.activate_level(componentName, domain, level); // ECR-0123
             } else {
-                traceProducer.deactivate_level(domain, level);
+                traceProducer.deactivate_level(componentName, domain, level); // ECR-0123
             }
         } catch (org.omg.CORBA.SystemException e) {
             printException(e, os);

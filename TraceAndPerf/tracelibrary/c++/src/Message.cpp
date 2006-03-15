@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include "TraceAndPerf/tracelibrary/Message.hpp"
@@ -58,6 +60,8 @@ Message::Message()
     m_messageHeaderRaw.m_fileLine = 0;
     m_messageHeaderRaw.m_pFileName = NULL;
     m_messageHeaderRaw.m_szFileName = 0;
+    m_messageHeaderRaw.m_pComponentName = NULL; // ECR-0123
+    m_messageHeaderRaw.m_szComponentName = 0; // ECR-0123
     m_messageHeaderRaw.m_pUserDomain = NULL;
     m_messageHeaderRaw.m_szUserDomain = 0;
     m_messageHeaderRaw.m_userLevel = 0;
@@ -118,9 +122,30 @@ Message::~Message()
 //
 size_t Message::getMessageHeaderStringSize (const MessageHeader& header)
 {
-  size_t hdrStrSize = header.m_fileName.length() + 1;
-  hdrStrSize += header.m_userDomain.length() + 1;
-  return hdrStrSize;
+    size_t hdrStrSize = header.m_fileName.length() + 1;
+    hdrStrSize += header.m_componentName.length() + 1; // ECR-0123
+    hdrStrSize += header.m_userDomain.length() + 1;
+
+    return hdrStrSize;
+}
+
+
+/**
+    * Compare 2 message headers.
+    * Note: the timestamp is ignored.
+    *
+    * @param hdr1 the first message header
+    * @param hdr2 the second message header
+    */
+bool
+Message::headercmp(const MessageHeader & hdr1, const MessageHeader & hdr2)
+{
+    return ((hdr1.m_tid == hdr2.m_tid) &&
+            (hdr1.m_fileLine == hdr2.m_fileLine) &&
+            (hdr1.m_fileName == hdr2.m_fileName) &&
+            (hdr1.m_componentName == hdr2.m_componentName) && /* ECR-0123 */
+            (hdr1.m_userDomain == hdr2.m_userDomain) &&
+            (hdr1.m_userLevel == hdr2.m_userLevel));
 }
 
 
@@ -150,7 +175,19 @@ void Message::set_message (const MessageHeader& header, const std::string& str)
 	// increment current pointer on buffer area and decrement current allocated size
 	pCurrentBuffer += szParameter;
 	szCurrentBuffer -= szParameter;
-	
+
+    // ECR-0123
+    // add the component name to the raw message header
+    szParameter = header.m_componentName.length() + 1;
+    CDMW_ASSERT(szParameter < szCurrentBuffer);
+    m_messageHeaderRaw.m_pComponentName = pCurrentBuffer;
+    ::strcpy(m_messageHeaderRaw.m_pComponentName,
+             header.m_componentName.c_str());
+    m_messageHeaderRaw.m_szComponentName = szParameter;
+
+	// increment current pointer on buffer area and decrement current allocated size
+	pCurrentBuffer += szParameter;
+	szCurrentBuffer -= szParameter;
 
     // check that the size of the buffer is enough for user domain
 	// store user domain in buffer area, its pointer and its size in header
@@ -159,6 +196,7 @@ void Message::set_message (const MessageHeader& header, const std::string& str)
     m_messageHeaderRaw.m_pUserDomain = pCurrentBuffer;
     ::strcpy (m_messageHeaderRaw.m_pUserDomain, header.m_userDomain.c_str());
     m_messageHeaderRaw.m_szUserDomain = szParameter;
+
 
 	// increment current pointer on buffer area and decrement current allocated size
 	pCurrentBuffer += szParameter;

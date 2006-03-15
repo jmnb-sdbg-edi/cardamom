@@ -1,65 +1,60 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
-
-#include <cstdlib>
-#include <string>
-#include <sstream>
-#include <iostream>
+#include <clocale>
 #include <fstream>
-#include <locale.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
-#include "Foundation/common/System.hpp"
-#include "Foundation/common/Exception.hpp"
-#include "Foundation/common/Assert.hpp"
-#include "Foundation/common/Locations.hpp"
-#include "Foundation/common/Options.hpp"
-#include "Foundation/ossupport/OS.hpp"
-#include "Foundation/orbsupport/CORBA.hpp"
-#include "Foundation/orbsupport/OrbSupport.hpp"
-#include "Foundation/orbsupport/ExceptionMinorCodes.hpp"
-#include "Foundation/orbsupport/StrategyList.hpp"
+#include <Foundation/common/Assert.hpp>
+#include <Foundation/common/Exception.hpp>
+#include <Foundation/common/Locations.hpp>
+#include <Foundation/common/Options.hpp>
+#include <Foundation/common/System.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingUtil.hpp>
+#include <Foundation/ossupport/OS.hpp>
+#include <Foundation/orbsupport/CORBA.hpp>
+#include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
+#include <Foundation/orbsupport/OrbSupport.hpp>
+#include <Foundation/orbsupport/StrategyList.hpp>
 
-#include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
-#include "SystemMngt/platforminterface/PlatformInterface.hpp"
-#include "SystemMngt/platforminterface/ProcessBehaviour.hpp"
-#include "SystemMngt/platforminterface/ServiceNames.hpp"
+#include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
 
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
-#include "Repository/repositoryinterface/RepositoryInterface.hpp"
+#include <SystemMngt/platforminterface/PlatformInterface.hpp>
+#include <SystemMngt/platforminterface/ProcessBehaviour.hpp>
+#include <SystemMngt/platforminterface/ServiceNames.hpp>
 
+#include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 #include "TraceAndPerf/idllib/CdmwTraceTraceProducer.stub.hpp"
 
-#include "tracecollector/CollectorMngr.hpp"
-
-#include "tracecollector/ProcessAgent_impl.hpp"
-
 #include "tracecollector/ClientThread.hpp"
-
-
-using namespace Cdmw;
-using namespace Cdmw::OsSupport;
+#include "tracecollector/CollectorMngr.hpp"
+#include "tracecollector/ProcessAgent_impl.hpp"
 
 
 namespace
@@ -70,6 +65,8 @@ namespace
 
     const std::string COLLECTOR_NAME_OPTION = "--collector-name";
     const std::string TRACE_FILE_NAME_OPTION = "--traceFile-name";
+    // ECR-0123
+    const std::string COMPONENT_NAME_OPTION = "--component-name";
     const std::string DOMAIN_NAME_OPTION = "--domain-name";
     const std::string LEVEL_OPTION = "--level";
     const std::string NAMING_REPOS_URL_OPTION = "--namingRepos-url";
@@ -92,10 +89,12 @@ namespace
     const std::string AGENT_CORBALOC_ID  = "CollectorAgent";
 
     const int SUCCESS = 0;
-    const int FAILURE = 1;  
+    const int FAILURE = 1;
 
-    const int POA_THREAD_POOL_SIZE = 5;    
-    
+    const int POA_THREAD_POOL_SIZE = 5;
+
+    const std::string GLOBAL_COLLECTOR_INI_MNEMONAME = "global_collector_ini_";
+
     static void
     usage(std::ostream & os, const std::string &program_name)
     {
@@ -108,6 +107,7 @@ namespace
            << "\n"
            << "--collector-name=<name>            Name of Trace Collector.\n"
            << "[--traceFile-name=<name>]          Name of Trace File.\n"
+           << "[--component-name=<name>]          Filter on this component name.\n" /* ECR-0123 */
            << "[--domain-name=<name>]             Name of domain to filter.\n"
            << "[--level=<value>]                  Level to filter.\n"
            << "[--trace-format=<H|V>]             Format of Trace : Horizontal or Vertical (default).\n"
@@ -128,127 +128,265 @@ namespace
     }
 
 
-
-
-
-
-    // Default Process Behaviour
-    class MyProcessBehaviour : public Cdmw::PlatformMngt::ProcessBehaviour
+    /**
+     * Default process behaviour.
+     */
+    class MyProcessBehaviour: public Cdmw::PlatformMngt::ProcessBehaviour
     {
-        
-      public:
-      
-        MyProcessBehaviour(CORBA::ORB_ptr orb)
-            throw(CORBA::SystemException)
-            : m_orb(CORBA::ORB::_duplicate(orb))
-        {
-        }
+        public:
+            MyProcessBehaviour(CORBA::ORB_ptr orb)
+                throw(CORBA::SystemException)
+                    : m_orb(CORBA::ORB::_duplicate(orb))
+            {
+            }
 
-         ~MyProcessBehaviour()
-            throw()
-        {
-        }
-      
-        virtual void initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
-            throw(CORBA::SystemException)
-        {
-            // Do nothing!
-        }
-        
-        virtual void run()
-            throw(CdmwPlatformMngt::Process::NotReadyToRun, CORBA::SystemException)
-        {
-            // Do nothing!
-        }
-        
-        virtual void stop()
-            throw(CORBA::SystemException)
-        {
-            m_orb->shutdown(false);
-        }
-        
-      private:
-      
-        CORBA::ORB_var m_orb;
+
+            ~MyProcessBehaviour()
+                throw()
+            {
+            }
+
+
+            virtual void
+            initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
+                throw(CORBA::SystemException)
+            {
+                // Do nothing!
+            }
+
+
+            virtual void
+            run()
+                throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
+                     CORBA::SystemException)
+            {
+                // Do nothing!
+            }
+
+
+            virtual void
+            stop()
+                throw(CORBA::SystemException)
+            {
+                m_orb->shutdown(false);
+            }
+
+
+            virtual bool
+            is_alive()
+                throw(CORBA::SystemException)
+            {
+                return true;
+            }
+
+
+        private:
+            CORBA::ORB_var m_orb;
     };
-    
-}; // End anonymous namespace
+}; // anonymous namespace
 
 
-//
-// start client thread in interactive mode and start orb
-//
-int run (CORBA::ORB_ptr orb,  bool interactive_mode)
+/**
+ * Start the client thread in interactive mode and start the ORB.
+ *
+ * @param orb the ORB.
+ * @param interactiveMode flag to set to true if interactive mode is wanted.
+ */
+int
+run(CORBA::ORB_ptr orb, bool interactiveMode)
 {
     int status = SUCCESS;
-    
-    // if intaeractive mode not set
-    if (!interactive_mode) 
-    {
-        // just run orb
+
+    // if interactive mode not set.
+    if (!interactiveMode) {
+        // just run the ORB.
         orb->run();
-    } 
-    else 
-    {
-        // in interactive mode create new client thread
-        Cdmw::Trace::ClientThread client(orb,std::cin,std::cout);
-    
-        // start client and run orb
+    }
+    else {
+        // in interactive mode, create a new client thread.
+        Cdmw::Trace::ClientThread client(orb, std::cin, std::cout);
+
+        // start the client and run the ORB.
         client.start();
         orb->run();
-    
-        // wait end of client thread after corba loop stopping
+
+        // wait for the completion of the client thread
+        // once the CORBA loop has stopped.
         client.join();
     }
 
     return status;
 }
 
-//
-// process initialization :
-//   create the POA for Collector Servant under root POA
-//   create CollectorMngr object : the collector servant is created and activated on its POA
-//                                 the flushing data background thread is started
-//   export the collector servant to the ior file
-//   create ProcessAgentImpl object : the process agent servant is created and activated on the rootPOA
-//   activate the POA Manager
-//   retrieve the naming and repository service
-//   register collector servant in Naming & Repository
-//   register collector to each defined Trace Producer in Naming & Repository
-//   register process agent servant as url under corbaloc
-// 
-int process_init(CORBA::ORB_ptr orb, PortableServer::POA_ptr rootPOA,
-                 const std::string &collectorName,
-                 const std::string &traceFileName,
-                 const std::string &domainName,
-                 long levelValue,
-                 Cdmw::Trace::Message::TraceFormat traceFormat,
-                 CdmwNamingAndRepository::Repository_ptr repositoryRef,
-                 const std::string &traceProducerContext,
-                 int traceProducerInx, int argc, char* argv[],
-                 CdmwNamingAndRepository::NameDomain_ptr &pTraceCollectorDom,
-                 Cdmw::Trace::Message::CircularMode queueStrategy,
-                 long queueSize,
-                 long queueStringSize,
-                 long traceFileBkpNbr,
-                 long traceFileNbr,
-                 long traceMessageNbr)
-{ 
+
+/**
+ * Process initialization:
+ *
+ * - create the POA for the collector servant under RootPOA.
+ * - create the CollectorMngr object:
+ *       + the collector servant is created and activated on its POA.
+ *       + the flushing data background thread is started.
+ * - export the collector servant to the IOR file.
+ * - create ProcessAgentImpl object: the process agent servant is created
+ *   and activated on the RootPOA.
+ * - activate the POA Manager.
+ * - retrieve the Naming & Repository service.
+ * - register the collector servant in Naming & Repository.
+ * - register the process agent servant as URL under corbaloc.
+ */
+int
+process_init(CORBA::ORB_ptr orb, PortableServer::POA_ptr rootPOA,
+             const std::string &collectorName,
+             const std::string &traceFileName,
+             const std::string& componentName, // ECR-0123
+             const std::string &domainName,
+             long levelValue,
+             Cdmw::Trace::Message::TraceFormat traceFormat,
+             CdmwNamingAndRepository::Repository_ptr repositoryRef,
+             const std::string &traceProducerContext,
+             int traceProducerInx, int argc, char* argv[],
+             /* ECR-0145 CdmwNamingAndRepository::NameDomain_ptr &pTraceCollectorDom,*/
+             Cdmw::Trace::Message::CircularMode queueStrategy,
+             long queueSize,
+             long queueStringSize,
+             long traceFileBkpNbr,
+             long traceFileNbr,
+             long traceMessageNbr,
+             std::vector<std::string>& collectorNames)
+{
     int status = FAILURE;
-    
+
     using Cdmw::Common::Locations;
     using namespace Cdmw::OrbSupport;
-    
+
     // Collector servant reference
     CdmwTrace::Collector_var collectorRef = CdmwTrace::Collector::_nil();
-    
+
     // Process Agent servant reference
     TraceCollector::ProcessAgent_var agentRef = TraceCollector::ProcessAgent::_nil();
-    
-    try 
-    {
-              
-        // create a new POA 
+
+    try {
+        // ECR-0145
+        // look for the global collectors.
+        // the global collectors are registered in the following Name domain:
+        // CDMW/SERVICES/TRACE/COLLECTORS/
+        std::string collectorDomainStr(Locations::CDMW_SERVICES_NAME_DOMAIN);
+        collectorDomainStr += "/";
+        collectorDomainStr += Locations::TRACE_COLLECTORS_NAME_DOMAIN;
+
+        std::list<CdmwTrace::TraceProducer::CollectorData> globalCollectors;
+        try {
+            // check if the collector domain name is a Name domain.
+            CdmwNamingAndRepository::NameDomain_var collectorDomain =
+                repositoryRef->resolve_name_domain(collectorDomainStr.c_str());
+
+            // get the default root context.
+            CosNaming::NamingContext_var nc_root_context =
+                repositoryRef->resolve_root_context(
+                    CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT);
+
+            using namespace Cdmw::CommonSvcs::Naming;
+            NamingInterface ni_root(nc_root_context.in());
+            CosNaming::NamingContext_var nc_collector_dom =
+                CosNaming::NamingContext::_nil();
+
+            // get the collector domain name.
+            typedef NamingUtil<CosNaming::NamingContext> Util;
+            nc_collector_dom = Util::resolve_name(ni_root,
+                                                  collectorDomainStr);
+
+            CosNaming::BindingIterator_var bindingItr;
+            CosNaming::BindingList_var bindingList;
+
+            NamingInterface ni_collector(nc_collector_dom.in());
+
+            // get all the global collectors registered in this domain.
+            ni_collector.list(NamingInterface::LIST_CHUNK_SIZE,
+                              bindingList,
+                              bindingItr);
+
+            bool hasMoreBinding = false;
+            int collectorIndex = 0;
+
+            do {
+                for (size_t iBinding = 0;
+                     iBinding < bindingList->length();
+                     ++iBinding)
+                {
+                    CosNaming::Binding binding = bindingList[iBinding];
+
+                    // get the collector name from the binding.
+                    std::string collectorName =
+                        ni_collector.to_string(binding.binding_name);
+
+                    // store the collector name.
+                    collectorNames.push_back(collectorName);
+
+                    CORBA::Object_var obj =
+                        ni_collector.resolve(collectorName);
+                    CdmwTrace::Collector_var collector =
+                        CdmwTrace::Collector::_narrow(obj.in());
+
+                    if (!CORBA::is_nil(collector.in())) {
+                        // create a mnemonic name for the collector.
+                        std::ostringstream mnemo_name_str;
+                        mnemo_name_str << GLOBAL_COLLECTOR_INI_MNEMONAME
+                                       << collectorIndex;
+                        collectorIndex++;
+
+                        // create a CollectorData structure.
+                        CdmwTrace::TraceProducer::CollectorData collector_data;
+                        collector_data.the_collectorMnemoName =
+                            CORBA::string_dup(mnemo_name_str.str().c_str());
+                        collector_data.the_collectorObjName =
+                            CORBA::string_dup(collectorName.c_str());
+                        collector_data.the_collector = collector;
+
+                        // append it to the list.
+                        globalCollectors.insert(globalCollectors.end(),
+                                                collector_data);
+                    }
+                }
+
+                // should we continue?
+                if (!CORBA::is_nil(bindingItr.in())) {
+                    hasMoreBinding =
+                        bindingItr->next_n(NamingInterface::LIST_CHUNK_SIZE,
+                                           bindingList);
+                }
+            } while (hasMoreBinding);
+        }
+        catch (const CosNaming::NamingContext::NotFound&) {
+            // should not happen!
+            std::cerr << "Trace Collector Name Domain not found \n"
+                      << collectorDomainStr.c_str()
+                      << std::endl;
+        }
+        catch (const CdmwNamingAndRepository::Repository::NoRootContext&) {
+            std::cerr << "Trace Collector Root Context does not exist"
+                      << std::endl;
+        }
+        catch (const CdmwNamingAndRepository::NoNameDomain&) {
+            std::cerr << "Trace Collector Name Domain does not exist \n"
+                      << collectorDomainStr.c_str()
+                      << std::endl;
+        }
+        catch (const CdmwNamingAndRepository::InvalidName&) {
+            std::cerr << "Trace Collector Name Domain has illegal form \n"
+                      << collectorDomainStr.c_str()
+                      << std::endl;
+        }
+        catch (const CosNaming::NamingContext::InvalidName&) {
+            std::cerr << "Trace Collector Name invalid \n"
+                      << collectorDomainStr.c_str()
+                      << std::endl;
+        }
+        catch (const Cdmw::Common::TypeMismatchException& e) {
+            std::cerr << "TypeMismatchException (Not a NamingContext) <"
+                      << e.what() << ">" << std::endl;
+        }
+
+        // create a new POA
         // Trace Collector framework use the following POA policies
         //
         // Lifespan policy            = PERSISTENT
@@ -258,10 +396,9 @@ int process_init(CORBA::ORB_ptr orb, PortableServer::POA_ptr rootPOA,
         // Request Processing policy  = USE_ACTIVE_OBJECT_MAP_ONLY;
         // Servant Retention policy   = RETAIN;
         //
-      
         CORBA::PolicyList policies;
         policies.length(6);
-    
+
         policies[0] =
             rootPOA->create_id_assignment_policy(PortableServer::USER_ID);
         policies[1] =
@@ -271,291 +408,263 @@ int process_init(CORBA::ORB_ptr orb, PortableServer::POA_ptr rootPOA,
         policies[3] =
             rootPOA->create_id_uniqueness_policy(PortableServer::UNIQUE_ID);
         policies[4] =
-            rootPOA->create_request_processing_policy(PortableServer::USE_ACTIVE_OBJECT_MAP_ONLY);
+            rootPOA->create_request_processing_policy(
+                PortableServer::USE_ACTIVE_OBJECT_MAP_ONLY);
         policies[5] =
-            rootPOA->create_implicit_activation_policy(PortableServer::NO_IMPLICIT_ACTIVATION);
-    
+            rootPOA->create_implicit_activation_policy(
+                PortableServer::NO_IMPLICIT_ACTIVATION);
+
         Cdmw::OrbSupport::StrategyList poaStrategies;
+
         // Strategies with MULTITHREAD policy will accept Single Thread and
         // Multi Thread strategies. However, SERIALIZE policy will only allow
         // Single Thread policy.
-    
+
         PortableServer::POAManager_var poaManager = rootPOA->the_POAManager();
-    
         PortableServer::POA_var collectorsPOA = PortableServer::POA::_nil();
-    
-        collectorsPOA = Cdmw::OrbSupport::OrbSupport::create_POA (rootPOA,
-                                   collectorName.c_str(),
-                                   poaManager.in(), 
-                                   policies,
-                                   poaStrategies);    
-    
+
+        collectorsPOA = Cdmw::OrbSupport::OrbSupport::create_POA(
+                            rootPOA,
+                            collectorName.c_str(),
+                            poaManager.in(),
+                            policies,
+                            poaStrategies);
+
         // create and initialize the collector manager
-        collectorRef = 
-            Cdmw::Trace::CollectorMngr::Init(collectorsPOA.in(),
-                          domainName,
-                          levelValue,
-                          traceFormat,
-                          queueStrategy,
-                          queueSize,queueStringSize,
-                          traceFileName,
-                          traceFileBkpNbr,traceFileNbr,traceMessageNbr,
-                          Cdmw::OsSupport::OS::LOCAL_TIME);
-    
-    
+        collectorRef =
+            Cdmw::Trace::CollectorMngr::Init(
+                collectorsPOA.in(),
+                globalCollectors, // ECR-0145
+                componentName, // ECR-0123
+                domainName,
+                levelValue,
+                traceFormat,
+                queueStrategy,
+                queueSize,
+                queueStringSize,
+                traceFileName,
+                traceFileBkpNbr,
+                traceFileNbr,
+                traceMessageNbr,
+                Cdmw::OsSupport::OS::LOCAL_TIME
+                );
+
         // export the object reference to a file
-        CORBA::String_var ref_string = orb->object_to_string(collectorRef.in());
+        CORBA::String_var ref_string =
+            orb->object_to_string(collectorRef.in());
         std::ofstream os("traceCollector.ior");
         os << ref_string.in();
         os.close();
-    
+
         // create the ProcessAgent Servant (ref count is incremented)
-        Cdmw::Trace::ProcessAgent_impl* pProcessAgentServant = 
-            new Cdmw::Trace::ProcessAgent_impl (orb,rootPOA); 
-    
+        Cdmw::Trace::ProcessAgent_impl* pProcessAgentServant =
+            new Cdmw::Trace::ProcessAgent_impl (orb,rootPOA);
+
         // create an object var to take pointer ownership
-        // (ref count will be decremented when var will be destroyed at the method end)
+        // (ref count will be decremented when var will be destroyed at
+        // the method end)
         PortableServer::ServantBase_var servant_var = pProcessAgentServant;
-    
+
         // activate servant on POA (ref count is incremented)
-        PortableServer::ObjectId_var oid = rootPOA->activate_object(pProcessAgentServant);
+        PortableServer::ObjectId_var oid =
+            rootPOA->activate_object(pProcessAgentServant);
         CORBA::Object_var object = rootPOA->id_to_reference(oid.in());
         agentRef = TraceCollector::ProcessAgent::_narrow(object.in());
-    
-    
-    
+
         status = SUCCESS;
-    
-        // Get the Naming and Repository service
-    
-    
-        // Trace Collector domain
-        CdmwNamingAndRepository::NameDomain_var collectorDomain;
-    
-        // Register Collector object in Naming & repository under root context
-        try 
-        {
-            if (status == SUCCESS) 
-            {
+
+        // ECR-0145
+        // Register Collector object in Naming & repository
+        // under AdminRootContext.
+        // trace collector location:
+        // <hostname>/SERVICES/TRACE/COLLECTORS/collectorName
+        
+        try {
+            if (status == SUCCESS) {
                 status = FAILURE;
-        
-                // get Domain of object
-                // set trace collector location
-                // Pattern is :
-                //    CDMW/SERVICES/TRACE/COLLECTORS/<CollectorName>"
-                std::string collectorDomainStr(Cdmw::Common::Locations::CDMW_SERVICES_NAME_DOMAIN);
-                collectorDomainStr += "/";
-                collectorDomainStr += Cdmw::Common::Locations::TRACE_COLLECTORS_NAME_DOMAIN;
-        
-                // Trace Collector domain
-                collectorDomain = repositoryRef->resolve_name_domain(collectorDomainStr.c_str());
-        
-                // export the collector domain
-                pTraceCollectorDom = 
-                    CdmwNamingAndRepository::NameDomain::_duplicate(collectorDomain.in());
-        
+
+                CosNaming::Name collectorName_;
+                collectorName_.length(5);
+                collectorName_[0].id =
+                    CORBA::string_dup(
+                        Cdmw::OsSupport::OS::get_hostname().c_str());
+                collectorName_[1].id = CORBA::string_dup("SERVICES");
+                collectorName_[2].id = CORBA::string_dup("TRACE");
+                collectorName_[3].id = CORBA::string_dup("COLLECTORS");
+                collectorName_[4].id = CORBA::string_dup(collectorName.c_str());
+
+                CosNaming::NamingContext_var adminRootCtx =
+                    repositoryRef->resolve_root_context(
+                        Locations::ADMIN_ROOT_CONTEXT_ID);
+
+                Cdmw::CommonSvcs::Naming::NamingInterface ni(adminRootCtx.in());
+                ni.bind(ni.to_string(collectorName_).c_str(),
+                        collectorRef.in(),
+                        true);
+
                 status = SUCCESS;
             }
-        } 
-        catch (const CdmwNamingAndRepository::NoNameDomain &) 
-        {
-            std::cerr << "Trace Collector Name Domain does not exist" << std::endl;
-        } 
-        catch (const CdmwNamingAndRepository::InvalidName &) 
-        {
-            std::cerr << "Trace Collector Name Domain has illegal form" << std::endl;
+        }
+        catch (const CdmwNamingAndRepository::Repository::NoRootContext&) {
+            std::cerr << "Trace Collector Root Context does not exist"
+                      << std::endl;
+        }
+        catch (const CdmwNamingAndRepository::NoNameDomain&) {
+            std::cerr << "Trace Collector Name Domain does not exist"
+                      << std::endl;
+        }
+        catch (const CdmwNamingAndRepository::InvalidName&) {
+            std::cerr << "Trace Collector Name Domain has illegal form"
+                      << std::endl;
         }
 
-        try 
-        {
-            if (status == SUCCESS) 
-            {
-                status = FAILURE;
-        
-                // register the object in the trace collector domain
-                collectorDomain->register_new_object(collectorName.c_str(), collectorRef.in());
-        
-                status = SUCCESS;
-            }
-        } 
-        catch (const CdmwNamingAndRepository::InvalidName &) 
-        {
-            std::cerr << "Trace Collector Name has illegal form" << std::endl;
-        } 
-        catch (const CdmwNamingAndRepository::NameDomain::AlreadyExists &) 
-        {
-            //throw CORBA::INTERNAL(INTERNALCdmwRepositoryError,CORBA::COMPLETED_NO);
-            std::cerr << "Collector object already registered in repository"
-                      << std::endl;
-            // process must continue in this case
-            status = SUCCESS;
-        } 
-        catch (const CORBA::BAD_PARAM &) 
-        {
-            std::cerr << "attempt to register a nil object" << std::endl;
-        }
-    
         // path of trace producer extracted from arguments list
         std::string traceProducerObjectPath = "";
-    
+
         // Register Collector object to each Trace Producer passed as argument
-        try 
-        {
-            if (status == SUCCESS) 
-            {
+        try {
+            if (status == SUCCESS) {
                 // set TraceProducer location under admin root context
                 // Pattern is :
                 //   "[<host_name>/<application_name>/<process_name>]/TRACE/TraceProducer"
-        
+
                 // Get trace producer root naming context
-                CosNaming::NamingContext_var producer_root_nc = 
-                    repositoryRef->resolve_root_context(traceProducerContext.c_str());
-        
+                CosNaming::NamingContext_var producer_root_nc =
+                    repositoryRef->resolve_root_context(
+                        traceProducerContext.c_str());
+
                 // NamingInterface on Root context
-                Cdmw::NamingAndRepository::NamingInterface producer_ni(producer_root_nc.in());
-        
-                typedef Cdmw::NamingAndRepository::NamingUtil<CdmwTrace::TraceProducer> Util;
-        
-                while (traceProducerInx < argc)  
-                {
+                Cdmw::CommonSvcs::Naming::NamingInterface
+                producer_ni(producer_root_nc.in());
+
+                typedef Cdmw::CommonSvcs::Naming::NamingUtil<CdmwTrace::TraceProducer> Util;
+
+                while (traceProducerInx < argc) {
                     // Get the path of the Trace Producer object
                     traceProducerObjectPath = argv[traceProducerInx];
-            
+
                     // Build the complete name of the Trace Producer object
                     std::string producer_context_name = traceProducerObjectPath;
                     //traceProducerObjectPath contains the complete object name
                     //  producer_context_name += "/TRACE/TraceProducer";
-            
-                    try 
-                    {
-                        // get TraceProducer object using Root context NamingInterface
-                        CdmwTrace::TraceProducer_var traceProducer = 
-                                Util::resolve_name(producer_ni,producer_context_name);
-            
-                        if (CORBA::is_nil (traceProducer.in())) 
-                        {
-                            std::cerr << traceProducerObjectPath 
-                                      << " is not a valid trace producer" << std::endl;
-                        } 
-                        else 
-                        {
-                            // register the collector in the trace producer
-                            traceProducer->register_collector (collectorRef.in(), 
-                                        collectorName.c_str(), collectorName.c_str());
+
+                    try {
+                        // get TraceProducer object using Root context
+                        // NamingInterface
+                        CdmwTrace::TraceProducer_var traceProducer =
+                            Util::resolve_name(producer_ni,
+                                               producer_context_name);
+
+                        if (CORBA::is_nil (traceProducer.in())) {
+                            std::cerr << traceProducerObjectPath
+                                      << " is not a valid trace producer"
+                                      << std::endl;
                         }
-                    } 
-                    catch (const CosNaming::NamingContext::NotFound & ) 
-                    {
-                        std::cerr << "Trace Producer Naming Context NotFound : " 
-                                  << traceProducerObjectPath.c_str() << std::endl;
-                    } 
-                    catch (const CosNaming::NamingContext::CannotProceed & ) 
-                    {
-                        std::cerr << "Unexpected Error (CannotProceed exception)!" << std::endl;
-                    } 
-                    catch (const CosNaming::NamingContext::InvalidName & ) 
-                    {
-                        std::cerr << "Invalid Name <" << traceProducerObjectPath << ">!" 
-                                  << std::endl;
-                    } 
-                    catch (const Cdmw::Common::TypeMismatchException & e) 
-                    {
-                        std::cerr << "TypeMismatchException (Not a Trace Producer object) <" 
-                                  << e.what() << ">" << std::endl;
-                    } 
-                    catch (const CORBA::Exception& ex) 
-                    {
-                        std::cerr << "Trace Producer access error : " << traceProducerObjectPath.c_str() << "\n";
-                        std::cerr << ex << std::endl;   
+                        else {
+                            // register the collector in the trace producer
+                            traceProducer->register_collector(
+                                collectorRef.in(),
+                                collectorName.c_str(),
+                                collectorName.c_str());
+                        }
                     }
-            
+                    catch (const CosNaming::NamingContext::NotFound&) {
+                        std::cerr << "Trace Producer Naming Context NotFound : "
+                                  << traceProducerObjectPath.c_str()
+                                  << std::endl;
+                    }
+                    catch (const CosNaming::NamingContext::CannotProceed&) {
+                        std::cerr
+                            << "Unexpected Error (CannotProceed exception)!"
+                            << std::endl;
+                    }
+                    catch (const CosNaming::NamingContext::InvalidName&) {
+                        std::cerr << "Invalid Name <"
+                                  << traceProducerObjectPath << ">!"
+                                  << std::endl;
+                    }
+                    catch (const Cdmw::Common::TypeMismatchException& e) {
+                        std::cerr << "TypeMismatchException "
+                                  << "(Not a Trace Producer object) <"
+                                  << e.what() << ">" << std::endl;
+                    }
+                    catch (const CORBA::Exception& ex) {
+                        std::cerr << "Trace Producer access error : "
+                                  << traceProducerObjectPath.c_str()
+                                  << std::endl << ex << std::endl;
+                    }
+
                     // get next Trace Producer
                     traceProducerInx++;
                 }
-            } 
-        } 
-        catch (const CdmwNamingAndRepository::Repository::NoRootContext & ) 
-        {
+            }
+        }
+        catch (const CdmwNamingAndRepository::Repository::NoRootContext&) {
             std::cerr << "Trace Root Context does not exist" << std::endl;
             status = FAILURE;
         }
-    
+
         // Register Agent object to Corbaloc
-        if (status == SUCCESS) 
-        {
+        if (status == SUCCESS) {
             status = FAILURE;
-        
+
             // Bind the ProcessAgent to a Corbaloc name
-            Cdmw::OrbSupport::OrbSupport::bind_object_to_corbaloc (orb, AGENT_CORBALOC_ID,
-                                                                    agentRef.in());
-        
+            Cdmw::OrbSupport::OrbSupport::bind_object_to_corbaloc(
+                    orb,
+                    AGENT_CORBALOC_ID,
+                    agentRef.in());
+
             status = SUCCESS;
-        }     
-    
-    } 
-        
-    catch (const std::bad_alloc&) 
-    {
-        std::cerr << "Process Initialisation : Bad Allocation Exception \n" ;
-    } 
-    catch (const Cdmw::Exception &ex) 
-    {
-        std::cerr << ex.what() << std::endl;
-    } 
-    catch (const CORBA::SystemException &ex) 
-    {
-        std::cerr << ex << std::endl;
-    } 
-    catch(const CORBA::Exception &ex) 
-    {     
-        std::cerr << ex << std::endl;   
+        }
     }
-    
+    catch (const std::bad_alloc&) {
+        std::cerr << "Process Initialisation : Bad Allocation Exception \n" ;
+    }
+    catch (const Cdmw::Exception& ex) {
+        std::cerr << ex.what() << std::endl;
+    }
+    catch (const CORBA::SystemException &ex) {
+        std::cerr << ex << std::endl;
+    }
+    catch(const CORBA::Exception& ex) {
+        std::cerr << ex << std::endl;
+    }
+
     return status;
 }
+
 
 //
 // end of processing
 //    release the Collector name in the domain
 //
-void process_end(const std::string &collectorName,
-                 const CdmwNamingAndRepository::NameDomain_ptr pTraceCollectorDom)
+void process_end(const std::string &collectorName /* ECR-0145 ,
+                 const CdmwNamingAndRepository::NameDomain_ptr pTraceCollectorDom*/)
 {
     using namespace Cdmw::OrbSupport;
 
     Cdmw::Trace::CollectorMngr::Cleanup();
-    
-    // Trace Collector domain
-    CdmwNamingAndRepository::NameDomain_var collectorDomain = 
-    CdmwNamingAndRepository::NameDomain::_duplicate(pTraceCollectorDom);
-    
-    // Collector name is not released in the domain as it is persistent
-    /******************************************************************
-    try
-    {
-        if (collectorDomain != CdmwNamingAndRepository::NameDomain::_nil())
-        {
-            collectorDomain->release_name (collectorName.c_str());
-        }
-    }
-    catch (const CdmwNamingAndRepository::NameDomain::NotRegistered &) 
-    {
-        std::cerr << "Collector does not registered " << collectorName.c_str() << std::endl;
-    }
-    catch (const CdmwNamingAndRepository::InvalidName &) 
-    {
-        std::cerr << "Name has illegal form" << std::endl;
-    }
-    catch (const CORBA::NO_PERMISSION &)
-    {
-        std::cerr << "attempt to release an object without permission" << std::endl;
-    }
-    *******************************************************************/
 }
 
 void exceptionHandler(void)
 {
     std::cout << "Trace Collector : UNEXPECTED EXCEPTION HANDLER" << std::endl;
+}
+
+
+
+// ORB reference
+CORBA::ORB_var orb = CORBA::ORB::_nil();
+
+void exit_handler(int sig) {
+    if (!CORBA::is_nil(orb.in())) {
+        try {
+            orb->shutdown(false);
+        } catch (const CORBA::SystemException& e) {
+            std::cerr << "Error while shuting ORB down in exit_handler:\n"
+                      << e << " - minor code: " << e.minor() << std::endl;
+        }
+    }
 }
 
 
@@ -616,10 +725,13 @@ int main(int argc, char* argv[])
     std::string collectorName = OS::get_option_value (argc, argv, COLLECTOR_NAME_OPTION);
     if (collectorName == "no" || collectorName == "yes") 
     {
+        /* ECR-0145
         std::cout << COLLECTOR_NAME_OPTION.c_str() << "=<name> option must be defined\n";
         std::cout << std::endl;
         usage(std::cout, argv[0]);
         return FAILURE;
+        */
+        collectorName = "LocalCollector";
     }
     
     //
@@ -637,8 +749,20 @@ int main(int argc, char* argv[])
         usage(std::cout, argv[0]);
         return FAILURE;
     }
-    
-    
+
+    // get the component name
+    // ECR-0123
+    std::string componentName = OS::get_option_value(argc, argv, COMPONENT_NAME_OPTION);
+    if (componentName == "no") {
+        componentName = CdmwTrace::ALL_COMPONENT_NAMES;
+    }
+    else if (componentName == "yes") {
+        std::cout << "missing value for option "
+                  << COMPONENT_NAME_OPTION.c_str() << "\n" << std::endl;
+        usage(std::cout, argv[0]);
+        return FAILURE;
+    }
+
     //
     // get Filter Domain Name
     //
@@ -814,7 +938,7 @@ int main(int argc, char* argv[])
     //
     
     using namespace Cdmw::PlatformMngt;
-    bool platformManaged =  PlatformInterface::isLaunchedByPlatformManagement(argc, argv);
+    bool platformManaged =  PlatformInterface::Is_launched_by_PlatformManagement(argc, argv);
 
     //
     // get Naming & Repository URL argument
@@ -966,7 +1090,8 @@ int main(int argc, char* argv[])
     }
 
     // set Trace producer context
-    std::string traceProducerContext = Common::Locations::ADMIN_ROOT_CONTEXT_ID;
+    std::string traceProducerContext =
+        Cdmw::Common::Locations::ADMIN_ROOT_CONTEXT_ID;
 
     // skip all arguments before the TRACE_PRODUCER_PATH_OPTION, after it there are
     // only path in the repository to find TraceProducer objects
@@ -985,12 +1110,11 @@ int main(int argc, char* argv[])
 
     int status = SUCCESS;
     
-    // ORB reference
-    CORBA::ORB_var orb;
-
     // Trace Collector domain
+    /* ECR-0145
     CdmwNamingAndRepository::NameDomain_var traceCollectorDom = 
                         CdmwNamingAndRepository::NameDomain::_nil();
+    */
     
     try 
     {
@@ -1021,11 +1145,11 @@ int main(int argc, char* argv[])
         if (platformManaged) 
         {
             // initialise the platform interface
-            PlatformInterface::setup(orb.in(), argc, argv);
+            PlatformInterface::Setup(orb.in(), argc, argv);
             
             // Create a Process Behaviour
             // acknowledge the creation of the process
-            PlatformInterface::acknowledgeCreation(
+            PlatformInterface::Acknowledge_creation(
                 new MyProcessBehaviour(orb.in()) );
     
     
@@ -1033,7 +1157,7 @@ int main(int argc, char* argv[])
             try 
             {
                 CORBA::Object_var obj =
-                      PlatformInterface::getService(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
+                      PlatformInterface::Get_service(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
                       
                 repositoryRef = CdmwNamingAndRepository::Repository::_narrow(obj.in());
             } 
@@ -1062,102 +1186,103 @@ int main(int argc, char* argv[])
                 throw;
             }
 
-        } 
-    
+        }
         // else process not started by PlatformManagement
-        else 
-        {
+        else {
             // get repository from url
-            try 
-            {
-                CORBA::Object_var obj = orb->string_to_object(namingReposURL.c_str());
-                repositoryRef = CdmwNamingAndRepository::Repository::_narrow(obj.in());
-            } 
-            catch(...) 
-            {
+            try {
+                CORBA::Object_var obj =
+                    orb->string_to_object(namingReposURL.c_str());
+                repositoryRef =
+                    CdmwNamingAndRepository::Repository::_narrow(obj.in());
+            }
+            catch (...) {
                 std::cerr << "Invalid Naming & Repository URL" << std::endl;
                 throw;
             }
         }
-        
-        if (CORBA::is_nil(repositoryRef.in()))
-        {
+
+        if (CORBA::is_nil(repositoryRef.in())) {
             throw CORBA::BAD_PARAM(BAD_PARAMInvalidRepositoryReference,
                                    CORBA::COMPLETED_NO);
         }
-    
+
         // Init the process
+        std::vector<std::string> collectorNames;
         status = process_init(orb.in(), rootPOA.in(), collectorName,
                               traceFileName,
+                              componentName, // ECR-0123
                               domainName, levelValue,
                               traceFormat,
                               repositoryRef.in(),
                               traceProducerContext,
                               traceProducerInx, argc, argv,
-                              traceCollectorDom.out(),
+                              /* ECR-0145 traceCollectorDom.out(), */
                               queueStrategy,
                               queueSize,
                               queueStringSize,
                               traceFileBkpNbr,
                               traceFileNbr,
-                              traceMessageNbr);
-    
-        if (status == SUCCESS)  
-        {
+                              traceMessageNbr,
+                              collectorNames);
+
+        if (status == SUCCESS) {
+            struct sigaction action;
+            action.sa_handler=exit_handler;
+            sigemptyset(&action.sa_mask);
+            sigaction(SIGTERM, &action, NULL);
+            sigaction(SIGINT, &action, NULL);
+            sigaction(SIGQUIT, &action, NULL);
+            sigaction(SIGABRT, &action, NULL);
+
             // run processing
             status = run(orb.in(), interactive_mode);
         }
 
-    
         // end of process
-        process_end(collectorName, traceCollectorDom.in());
+        process_end(collectorName/* ECR-0145 , traceCollectorDom.in()*/);
 
-    } 
-    catch (const Cdmw::Exception & ex) 
-    {
+        if (platformManaged) 
+        {
+            // cleanup the platform interface
+            PlatformInterface::Cleanup();
+        }
+    }
+    catch (const Cdmw::Exception& ex) {
         std::cerr << ex.what() << std::endl;
         status = FAILURE;
-    } 
-    catch(const CORBA::Exception& ex)  
-    {     
-        std::cerr << ex << std::endl;   
+    }
+    catch(const CORBA::Exception& ex) {
+        std::cerr << ex << std::endl;
         status = FAILURE;
-    } 
-    catch (...) 
-    {
+    }
+    catch (...) {
         std::cerr << "unknown exception in main" << std::endl;
         status = FAILURE;
     }
 
     // end of corba processing
-    
-    if(!CORBA::is_nil(orb.in())) 
-    {
-        try 
-        {
+
+    if(!CORBA::is_nil(orb.in())) {
+        try {
             Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
             orb->destroy();
-        } 
-        catch(const CORBA::Exception& ex) 
-        {     
+        }
+        catch(const CORBA::Exception& ex) {
             std::cerr << ex << std::endl;
             status = FAILURE;
         }
-    }        
+    }
 
     // if program arguments table has been rebuilt
-    if (arg_rebuilt) 
-    {
+    if (arg_rebuilt) {
         // release any allocated memory
-        for (int i=arg_ini_inx ; i < myArgc; i++) 
-        {
+        for (int i=arg_ini_inx ; i < myArgc; ++i) {
             delete[] myArgv[i];
         }
-    
+
         delete[] myArgv;
     }
 
-    return status;    
+    return status;
 }
-
-

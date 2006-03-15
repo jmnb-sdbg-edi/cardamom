@@ -1,313 +1,467 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
-#ifndef INCL_TRACE_FILTERMNGR_HPP 
-#define INCL_TRACE_FILTERMNGR_HPP 
+#ifndef _INCL_TRACE_FILTERMNGR_HPP_
+#define _INCL_TRACE_FILTERMNGR_HPP_
 
-#include "Foundation/common/System.hpp"
-#include "Foundation/common/Exception.hpp"
-#include "Foundation/osthreads/Mutex.hpp"
 
-#include "Foundation/orbsupport/CORBA.hpp"
-#include "TraceAndPerf/idllib/CdmwTraceCommon.stub.hpp"
-
-#include <map>
+#include <bitset>
+#include <list>
+#include <stdexcept>
+#include <sstream>
 #include <string>
 
+#include <Foundation/common/Exception.hpp>
+#include <Foundation/common/System.hpp>
+#include <Foundation/osthreads/Mutex.hpp>
+
+#include <TraceAndPerf/idllib/CdmwTraceCommon.stub.hpp>
+
 
 /**
-* Root namespace for CDMW runtime.
-*/
+ * ECR-0123
+ * In addition to the addition of a new field (the component name) to
+ * the traces, the handling of trace levels has been completely rewritten.
+ * The main difference with the previous implementation is that the number
+ * of possible levels is now fixed and equals to the constant NB_BITS.
+ */
+
+
+namespace
+{
+    const size_t NB_BITS = 32;
+    typedef std::bitset<NB_BITS> bitmask;
+}
+
+
 namespace Cdmw
 {
-/**
-* Namespace for CDMW Trace types and data.
-*/
+
 namespace Trace
 {
 
-/**
-*Purpose:
-*<p>    Contains all information defining a filter. A filter is
-*   a combination of a user level and domain. A filter is enabled
-*   when the user has ask to activate the specified Level/Domain
-*   If a Level/Domain has never been activated, it is considered as
-*   disabled.
-*
-*Features:
-*<p> No thread safe
-*
-*
-*/
-class Filter {
 
-    public:
-
-       /**
-       *Purpose:
-       *<p> Contruct a filter defined the specified Domain/Level
-       */
-       Filter (const std::string& domain, long level);
-
-
-       /**
-       *Purpose:
-       *<p> Allows filter to be sorted by STL algorithm.
-       *
-       */
-       friend bool operator < (const Filter& lhs, const Filter& rhs);
-
-
-
-       /**
-       *Purpose:
-       *<p> Returns the domain managed by this filter
-       *
-       */
-       const std::string& get_domain() const;
-
-
-       /**
-       *Purpose:
-       *<p> Returns the level managed by this filter
-       *
-       */
-       const long get_level() const;
-       
-
-    private:
-
-       /**
-       * Domain name associated with this filter.
-       */
-       std::string m_domain;
-
-       /**
-       * Which level in the Domain is associted with this filter.
-       */
-       long m_level;
-};
-
+// {{{ class Filter
 
 /**
-*Purpose:
-*<p>    Holds all the filter currently activated in the process.
-*
-*Features:
-*<p> Thread safe
-*
-*@see  Filter 
-*
-*/
-class FilterMngr 
+ * Define a filter that will either let a message be sent to a collector
+ * or prevent it from reaching any collector.
+ * At any time, a filter is either activated or deactivated.
+ * There are NB_BITS levels.
+ */
+class Filter
 {
-
     public:
-
         /**
-        * Purpose:
-        * <p> Constructor
-        * 
-        */ 
-        FilterMngr()
-                throw();
+         * Create a new Filter with a generic component name and
+         * a generic domain.
+         */
+        Filter(void);
 
 
         /**
-        * Purpose:
-        * <p> Destructor
-        * 
-        */ 
-        virtual 
-        ~FilterMngr()
-                throw();
-
-
-
+         * Create a new Filter with a generic component name and
+         * all the levels deactivated.
+         *
+         * @param domain the domain to match
+         */
+        Filter(const std::string& domain);
 
 
         /**
-        * Purpose:
-        * <p> Defines the specified level as activated
-        * 
-        *@param domain the domain where the level must be activated
-        *@param level  the level to be activated
-        *
-        *@exception OutOfMemoryException
-        */ 
-        void activate_level (const std::string& domain, const long level)
-            throw (OutOfMemoryException);
+         * Create a new Filter with a generic component name.
+         *
+         * @param domain the domain to match
+         * @param levels bit mask for the trace levels
+         */
+        Filter(const std::string& domain,
+               const bitmask levels);
 
-
-        
 
         /**
-        * Purpose:
-        * <p> Defines the specified level as deactivated
-        * 
-        *@param domain the domain where the level must be deactivated
-        *@param level  the level to be deactivated
-        *
-        *@exception OutOfMemoryException
-        *
-        */ 
-        void deactivate_level (const std::string& domain, const long level)
-            throw (OutOfMemoryException);
+         * Create a new Filter with all the levels deactivated.
+         *
+         * @param componentName the component name to match
+         * @param domain the domain to match
+         */
+        Filter(const std::string& componentName,
+               const std::string& domain);
+
 
         /**
-		* Purpose:
-		* <p> get the sequence of registered domain/level activated or not filters 
-		* 
-		*@return The sequence of trace filters
-		*
-		*@exception CORBA::SystemException
-		*/ 
-		CdmwTrace::TraceFilterSeq* get_trace_filters ()
-		    throw(OutOfMemoryException);
-				
+         * Create a new Filter.
+         *
+         * @param componentName the component name to match
+         * @param domain the domain to match
+         * @param levels bit mask for the trace levels
+         */
+        Filter(const std::string& componentName,
+               const std::string& domain,
+               const bitmask levels);
 
-        
+
         /**
-        * Purpose:
-        * <p> Returns true if the specified level is activated
-        * 
-        *@param domain the domain of trace message
-        *@param level  the level of trace message
-        *
-        *@return true if the level is activated, false elsewhere
-        *
-        *@exception OutOfMemoryException
-        */ 
-        bool is_activated (const std::string& domain, long level)
-            throw (OutOfMemoryException);
+         * @return the component name.
+         */
+        const std::string&
+        get_component_name(void) const
+        {
+            return m_componentName;
+        }
 
 
-    protected:
+        /**
+         * @return the domain.
+         */
+        const std::string&
+        get_domain(void) const
+        {
+            return m_domain;
+        }
+
+
+        /**
+         * @return the levels.
+         */
+        const bitmask&
+        get_levels(void) const
+        {
+            return m_levels;
+        }
+
+
+        /**
+         * @param the new levels.
+         */
+        void
+        set_levels(bitmask levels)
+        {
+            m_levels = levels;
+        }
+
+
+        /**
+         * @param level the level to activate
+         */
+        void
+        activate_level(const size_t level)
+            throw(BadParameterException)
+        {
+            try {
+                m_levels.set(level);
+            }
+            catch (std::out_of_range&) {
+                std::ostringstream oss;
+                oss << level << std::ends;
+                CDMW_THROW2(BadParameterException, "level", oss.str());
+            }
+        }
+
+
+        /**
+         * Activate all levels.
+         */
+        void
+        activate_all_levels(void)
+        {
+            m_levels.set();
+        }
+
+
+        /**
+         * @param level the level to deactivate
+         */
+        void
+        deactivate_level(const size_t level)
+            throw(BadParameterException)
+        {
+            try {
+                m_levels.set(level, 0);
+            }
+            catch (std::out_of_range&) {
+                std::ostringstream oss;
+                oss << level << std::ends;
+                CDMW_THROW2(BadParameterException, "level", oss.str());
+            }
+        }
+
+
+        /**
+         * Deactivate all levels.
+         */
+        void
+        deactivate_all_levels(void)
+        {
+            m_levels.reset();
+        }
+
+
+        /**
+         * Check if a level is activated.
+         *
+         * @return true or false
+         */
+        bool
+        is_activated(const size_t level)
+            throw(BadParameterException)
+        {
+            bool retval = false;
+
+            try {
+                retval = m_levels[level];
+            }
+            catch (std::out_of_range&) {
+                std::ostringstream oss;
+                oss << level << std::ends;
+                CDMW_THROW2(BadParameterException, "level", oss.str());
+            }
+
+            return retval;
+        }
 
 
     private:
+        std::string m_componentName;
+        std::string m_domain;
+        bitmask m_levels;
+
+}; // }}}
+
+
+// {{{ class FilterMngr
+
+/**
+ * A class that provides operations for activating/deactivating
+ * one or more Filters.
+ */
+class FilterMngr
+{
+    public:
+        /**
+         * Constructor.
+         */
+        FilterMngr(void)
+            throw();
 
 
         /**
-        * Purpose:
-        * <p>  Copy constructor 
-        * 
-        */ 
+         * Destructor.
+         */
+        virtual
+        ~FilterMngr(void)
+            throw();
+
+
+        /**
+         * Activate the specified level.
+         *
+         * @param domain activate the specified level of this domain.
+         * @param level the level to activate.
+         *
+         * @exception OutOfMemoryException
+         */
+        void
+        activate_level(const std::string& domain,
+                       const long level)
+            throw(OutOfMemoryException);
+
+
+        /**
+         * Activate the specified level.
+         *
+         * @param componentName the component to which the domain is associated.
+         * @param domain activate the specified level of this domain.
+         * @param level the level to activate.
+         *
+         * @exception OutOfMemoryException
+         */
+        void
+        activate_level(const std::string& componentName,
+                       const std::string& domain,
+                       const long level)
+            throw(OutOfMemoryException);
+
+
+        /**
+         * Deactivate the specified level.
+         *
+         * @param domain deactivate the specified level of this domain.
+         * @param level the level to activate.
+         *
+         * @exception OutOfMemoryException
+         */
+        void
+        deactivate_level(const std::string& domain,
+                         const long level)
+            throw(OutOfMemoryException);
+
+
+        /**
+         * Deactivate the specified level.
+         *
+         * @param componentName the component to which the domain is associated.
+         * @param domain activate the specified level of this domain.
+         * @param level the level to activate.
+         *
+         * @exception OutOfMemoryException
+         */
+        void
+        deactivate_level(const std::string& componentName,
+                         const std::string& domain,
+                         const long level)
+            throw(OutOfMemoryException);
+
+
+        /**
+         * @return a sequence of filters whether activated or not.
+         *
+         * @exception OutOfMemoryException
+         */
+        CdmwTrace::TraceFilterSeq*
+        get_trace_filters(void)
+            throw(OutOfMemoryException);
+
+
+        /**
+         * Check if the specified level is activated.
+         *
+         * @param domain activate the specified level of this domain.
+         * @param level the level to activate.
+         *
+         * @return true or false.
+         *
+         * @exception BadParameterException
+         * @exception OutOfMemoryException
+         */
+        bool
+        is_activated(const std::string& domain,
+                     const long level)
+            throw(BadParameterException,
+                  OutOfMemoryException);
+
+
+        /**
+         * Check if the specified level is activated.
+         *
+         * @param componentName component to which the domain is associated.
+         * @param domain activate the level for this domain.
+         * @param level level to activate.
+         *
+         * @return true or false.
+         *
+         * @exception BadParameterException
+         * @exception OutOfMemoryException
+         */
+        bool
+        is_activated(const std::string& componentName,
+                     const std::string& domain,
+                     const long level)
+            throw(BadParameterException,
+                  OutOfMemoryException);
+
+
+    private:
+        /**
+         * Copy constructor.
+         */
         FilterMngr(const FilterMngr& rhs)
-                throw();
-
+            throw();
 
 
         /**
-        * Purpose:
-        * <p> Assignement operator d
-        * 
-        */ 
+         * Assignment operator.
+         */
         FilterMngr&
         operator=(const FilterMngr& rhs)
-                throw();
+            throw();
 
 
         /**
-        * Purpose:
-        * <p> Check if the specified filter is activated
-        * 
-        *@param domain the domain of trace message
-        *@param level  the level of trace message
-        *
-        *@return true if the level is activated, false elsewhere
-        *
-        *@exception OutOfMemoryException
-        */ 
-        bool check_activated_filter (const std::string& domain, long level)
-            throw (OutOfMemoryException);
-
-        /**
-        * This variable indicates if all domains and level filter is activated
-        * if set, messages from all domains with any level can be traced
-        */
-        bool m_all_domains_levels;
-
-        /**
-        * This variable indicates if all domains filter has been defined in filter container
-        */
-        bool m_all_domains;
-
-        /**
-        * This variable indicates if all level filter has been defined in filter container
-        */
-        bool m_all_levels;
+         * Check if the specified level is activated.
+         * Not thread-safe.
+         *
+         * @param componentName component to which the domain is associated.
+         * @param domain activate the level for this domain.
+         * @param level level to activate.
+         *
+         * @return true or false.
+         *
+         * @exception BadParameterException
+         * @exception OutOfMemoryException
+         */
+        bool
+        _is_activated(const std::string& componentName,
+                      const std::string& domain,
+                      const long level)
+            throw(BadParameterException,
+                  OutOfMemoryException);
 
 
         /**
-        * This variable indicates the data filter : activation and order
-        */
-        struct FilterData
-        {
-            /**
-            * activation of filter
-            */
-            bool   activation;
-            
-            /**
-            * user activation order of filter
-            * : 0 filter is inhibited
-            * : 1 low order for D*,L and D,L* filters
-            * : 2 medium order for D*,L and D,L* filters
-            * : 3 high order for D,L filter
-            * : 4 high order for D,L filter but not visible
-            */
-            int    order;
-        };
-        
-        /**
-        * Defines the container used to store all filter activated
-        * or not
-        */
-        typedef std::map <Filter, FilterData> FilterCtr;
-
-
+         * Add a new Filter.
+         *
+         * @param componentName the component to which the domain is associated.
+         * @param domain activate the specified level of this domain.
+         * @param level the level to activate/deactivate
+         * @param activate if true the level will be deactivated
+         */
+        void
+        add_filter(const std::string& componentName,
+                   const std::string& domain,
+                   const long level,
+                   bool activate = true)
+            throw(OutOfMemoryException);
 
 
         /**
-        * This variable contains all the filter currently register
-        * activated or not. This variable must be manipulated with
-        * the Mutex m_filterMngr_mtx acquired.
-        */
+         * Class attributes.
+         */
+
+
+        // A container to store all the filters.
+        // The mutex must be aquired prior any manipulations.
+        typedef std::list<Filter> FilterCtr;
         FilterCtr m_filters;
 
 
-
-        /**
-        * Mutex protecting all access to the FilterMngr.
-        */
+        // mutex to control the access to the list of filters
         OsSupport::Mutex m_filterMngr_mtx;
 
-        
 
-}; // End class FilterMngr 
+        // the most generic filter (C*, D*, mask)
+        Filter m_filter_any;
+
+
+}; // end class FilterMngr
+
+// }}}
+
 
 } // End namespace Trace
-} // End namespace Cdmw
-#endif // INCL_TRACE_FILTERMNGR_HPP
 
+} // End namespace Cdmw
+
+
+#endif // _INCL_TRACE_FILTERMNGR_HPP_

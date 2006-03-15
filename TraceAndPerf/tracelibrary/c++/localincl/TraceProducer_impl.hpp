@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #ifndef INCL_TRACE_TRACEPRODUCER_IMPL_HPP 
@@ -157,38 +159,39 @@ class TraceProducer_impl : public virtual POA_CdmwTrace::TraceProducer,
             throw(CORBA::SystemException);
 
 
-        
-        
         /**
-        * Purpose:
-        * <p> Activate the specified level. All Trace specified
-        *     as in this Domain/Level are sent to Collectors
-        * 
-        *@param a_domain the domain name
-        *@param a_Value the level value
-        *
-        *@exception CORBA::SystemException
-        */ 
-        virtual 
-        void activate_level (const char* a_domain,
-                             CdmwTrace::Value a_Value)
+         * Activate the specified level.
+         * Traces that match the ComponentName/Domain/Level are
+         * sent to the TraceCollectors.
+         *
+         * @parma a_componentName the component name
+         * @param a_domain the domain name
+         * @param a_Value the level value
+         *
+         * @exception CORBA::SystemException
+         */
+        virtual void
+        activate_level(const char* a_componentName, // ECR-0123
+                       const char* a_domain,
+                       CdmwTrace::Value a_Value)
             throw(CORBA::SystemException);
 
-        
 
         /**
-        * Purpose:
-        * <p> Deactivate the specified level. All Trace specified
-        *     as in this Domain/Level are no more sent to Collectors
-        * 
-        *@param a_domain the domain name
-        *@param a_Value the level value
-        *
-        *@exception CORBA::SystemException
-        */ 
-        virtual 
-        void deactivate_level (const char* a_domain,
-                               CdmwTrace::Value a_Value)
+         * Deactivate the specified level.
+         * Traces that match the ComponentName/Domain/Level are
+         * discarded and not sent to the TraceCollectors.
+         *
+         * @parma a_componentName the component name
+         * @param a_domain the domain name
+         * @param a_Value the level value
+         *
+         * @exception CORBA::SystemException
+         */
+        virtual void
+        deactivate_level(const char* a_componentName, // ECR-0123
+                         const char* a_domain,
+                         CdmwTrace::Value a_Value)
             throw(CORBA::SystemException);
 
 

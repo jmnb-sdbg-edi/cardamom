@@ -1,30 +1,32 @@
-/* ========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * Copyright (C) SELEX-SI 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 #ifndef DATE_HPP
 #define DATE_HPP
+
 /**
- * @file
- * @brief  Date utily functions.
- * 
- * @author Fabrizio Morciano <fmorciano@amsjv.it>
- * @author Lello Mele <lellomele@yahoo.com>
+ * @author Fabrizio Morciano <fmorciano@selex-si.com>
+ * @author Raffaele Mele <rmele@progesi.it>
  */
 
 #include <stdexcept>
@@ -41,7 +43,6 @@
 namespace Date  
 {  
    /**
-    * @fn int leap_years( int from ,int to )
     * @brief  Find how many leap day are present between
     *         two years.
     * @param from start year.
@@ -53,7 +54,6 @@ namespace Date
                             int to );
     
     /**
-     * @fn int month2day( int month );
      * @brief Find how many day for selected month.
      * @param month month selected in [1,12].
      * @return day for month.
@@ -64,7 +64,8 @@ namespace Date
     /**
      * @brief Simple date structure.
      */
-    struct  CLOCK_API  DateT
+    struct  CLOCK_API  
+    DateT
     {
         unsigned int month;
         unsigned int day;
@@ -88,7 +89,6 @@ namespace Date
     };
     
     /**
-     * @fn int date2days( const DateT& to, const DateT& from );
      * @brief  Find how many day are present between 'from' and 'to' date.
      * @param from  initial day of date interval (Default to 10/15/1582).
      * @param to final day of date interval.
@@ -101,7 +101,6 @@ namespace Date
         throw(std::range_error);
     
     /**
-     * @fn int date2days( int month, int day, int year );
      * @brief  Find how many day are present between 10/15/1582 and date.
      * @param month  month of date.
      * @param day day of date.

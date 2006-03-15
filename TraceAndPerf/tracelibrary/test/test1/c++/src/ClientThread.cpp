@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include "test1/ClientThread.hpp"
@@ -40,8 +42,8 @@
 #include "Foundation/orbsupport/OrbSupport.hpp"
 #include "Foundation/orbsupport/ExceptionMinorCodes.hpp"
 
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 
 #include "TraceAndPerf/idllib/CdmwTraceTraceProducer.stub.hpp"
 #include "TraceAndPerf/tracelibrary/Trace.hpp"
@@ -363,11 +365,13 @@ CORBA::Long ClientThread::print_help(const std::string & arg, std::ostream & os)
 		<< " | set_root_context <name>           | set root context for trace collector       |" << "\n"
         << " +-----------------------------------+--------------------------------------------+" << "\n"
 		<< " | set_collector_context <name>      | set context for trace collector            |" << "\n"
-		<< " |                                   | default is CDMW/SERVICES/TRACE/COLLECTORS/|" << "\n"
+		<< " |                                   | default is CDMW/SERVICES/TRACE/COLLECTORS/ |" << "\n"
         << " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | activate_level <domain> <level>   | activate the level    all-> [* -1]         |" << "\n"
+		<< " | activate_level                    | activate the level    all-> [* -1]         |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | deactivate_level <domain> <level> | deactivate the level                       |" << "\n"
+		<< " | deactivate_level                  | deactivate the level                       |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
 		<< " | get_levels                        | get levels                                 |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
@@ -479,13 +483,75 @@ CORBA::Long ClientThread::process_level(const bool activation,
 {
   CORBA::Long result = OP_FAILURE;
 
-  // extract domain
-  std::string::const_iterator i = arg.begin();
-  std::string::const_iterator end = arg.end();
+    // ECR-0123
+    std::string componentName = CdmwTrace::ALL_COMPONENT_NAMES;
+    std::string domain = CdmwTrace::ALL_DOMAINS;
+    CdmwTrace::Value level_value = CdmwTrace::ALL_VALUES;
 
-  // find end of domain
-  std::string::const_iterator j = std::find_if(i,end,isspace);
+    std::string::const_iterator i = arg.begin();
+    std::string::const_iterator end = arg.end();
+    std::string::const_iterator j = arg.begin();
 
+    // this command expects up to 3 arguments
+    int max_nb_args = 3;
+    int nb_args = 0;
+    std::string args[max_nb_args];
+    for (int k = 0; k < max_nb_args; ++k) {
+        if (j != end) {
+            // skip leading whitespaces
+            i = std::find_if(j, end, not_space);
+            // position of the next whitespace from the current position
+            j = std::find_if(i, end, isspace);
+
+            // copy the word
+            if (i != j) {
+                args[k] = std::string(i, j);
+                nb_args++;
+            }
+        }
+    }
+
+    int componentName_arg_idx = -1;
+    int domain_arg_idx = -1;
+    int level_arg_idx = -1;
+
+    if (nb_args == 3) {
+        // arguments: component name/domain/level
+        componentName_arg_idx = 0;
+        domain_arg_idx = 1;
+        level_arg_idx = 2;
+    } else if (nb_args == 2) {
+        // arguments: domain/level
+        domain_arg_idx = 0;
+        level_arg_idx = 1;
+    } else if (nb_args == 1) {
+        // argument: domain
+        domain_arg_idx = 0;
+    }
+
+    if (componentName_arg_idx != -1) {
+        componentName = args[componentName_arg_idx];
+    }
+
+    if (domain_arg_idx != -1) {
+        domain = args[domain_arg_idx];
+    }
+
+    if (level_arg_idx != -1) {
+        if (args[level_arg_idx] == "*") {
+            level_value = -1;
+        }
+        else {
+            std::istringstream level_strm(args[level_arg_idx]);
+            level_strm >> level_value;
+            if (level_strm.fail()) {
+                os << "bad value for domain level" << std::endl;
+                return OP_FAILURE;
+            }
+        }
+    }
+
+    /*
   // copy the characters in [i,j)
   std::string domain;
   if (i != end)
@@ -497,7 +563,6 @@ CORBA::Long ClientThread::process_level(const bool activation,
   std::string level_strg;
 
   // copy level
-  CdmwTrace::Value level_value;
   if (i != end)
   {
     level_strg = std::string(i,end);
@@ -513,18 +578,23 @@ CORBA::Long ClientThread::process_level(const bool activation,
   {
     level_value = CdmwTrace::ALL_VALUES;
   }
+  */
 
   try 
   {
     if (activation)
     {
 	  // activate the level
-	  m_traceProducer->activate_level(domain.c_str(), level_value);
+	  m_traceProducer->activate_level(componentName.c_str(), // ECR-0123
+                                      domain.c_str(),
+                                      level_value);
     }
 	else
     {
 	  // deactivate the level
-	  m_traceProducer->deactivate_level(domain.c_str(), level_value);
+	  m_traceProducer->deactivate_level(componentName.c_str(), // ECR-0123
+                                        domain.c_str(),
+                                        level_value);
     }
 
 	result = OP_SUCCESS;
@@ -559,6 +629,9 @@ CORBA::Long ClientThread::get_levels(const std::string &arg, std::ostream &os)
 
   try
   {
+    // ECR-0123
+    std::string title_component_str = "component name             ";
+    std::string component_str = title_component_str;
     std::string title_name_str = "domain name             ";
 	std::string name_str = title_name_str;
 	std::string title_level_str = "level    ";
@@ -566,6 +639,8 @@ CORBA::Long ClientThread::get_levels(const std::string &arg, std::ostream &os)
 	std::string title_activ_str = "activation";
 	std::string activ_str;
 						    
+    // ECR-0123
+    int field0_maxsize = component_str.size() - 1;
 	int field1_maxsize = name_str.size() - 1;
 	int field2_maxsize = level_str.size() - 1;
 
@@ -579,11 +654,32 @@ CORBA::Long ClientThread::get_levels(const std::string &arg, std::ostream &os)
     os << "list of trace filters" << std::endl; 
     os << "---------------------" << std::endl; 
     
-    os << title_name_str.c_str() << title_level_str.c_str() 
+    // ECR-0123
+    os << title_component_str.c_str()
+       << title_name_str.c_str()
+       << title_level_str.c_str()
        << title_activ_str.c_str() << std::endl; 
 
     for (unsigned int i=0 ; i < filterSeq->length() ; i++)
     {
+        // ECR-0123
+        std::string componentName = (*filterSeq)[i].the_component_name.in();
+        int componentName_size = componentName.size();
+        if (componentName_size > field0_maxsize) {
+            // drop the end characters that do not fit into the field
+            componentName_size = field0_maxsize;
+        }
+        component_str.replace(0,
+                              componentName_size,
+                              componentName,
+                              0,
+                              componentName_size);
+        if (componentName_size < field0_maxsize) {
+            int nspace = field0_maxsize - componentName_size;
+            // fill the field with whitespaces
+            component_str.replace(componentName_size, nspace, nspace, ' ');
+        }
+
       std::string domain_name = (*filterSeq)[i].the_domain.in();
       int name_size = domain_name.size();
 
@@ -641,7 +737,11 @@ CORBA::Long ClientThread::get_levels(const std::string &arg, std::ostream &os)
       }
     
 	  // print info : domain , level, activation
-	  os << name_str.c_str() << level_str.c_str() << activ_str.c_str() << std::endl;
+      // ECR-0123
+	  os << component_str.c_str()
+         << name_str.c_str()
+         << level_str.c_str()
+         << activ_str.c_str() << std::endl;
     }
 
     os << std::endl; 
@@ -714,9 +814,9 @@ CORBA::Long ClientThread::register_collector(const std::string &arg, std::ostrea
 	else 
 	{        
 	  // NamingInterface on Root context
-      Cdmw::NamingAndRepository::NamingInterface ni_root(nc_root.in());
+      Cdmw::CommonSvcs::Naming::NamingInterface ni_root(nc_root.in());
 
-      typedef Cdmw::NamingAndRepository::NamingUtil<CdmwTrace::Collector> Util;
+      typedef Cdmw::CommonSvcs::Naming::NamingUtil<CdmwTrace::Collector> Util;
             
 	  // set complete collector name
 	  std::string collector_path = m_collector_context;

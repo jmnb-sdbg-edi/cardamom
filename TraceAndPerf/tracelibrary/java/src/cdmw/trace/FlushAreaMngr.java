@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 package cdmw.trace;
@@ -27,6 +29,8 @@ import java.util.Vector;
 
 import cdmw.common.BadParameterException;
 import cdmw.common.InternalErrorException;
+
+import cdmw.ossupport.OS;
 
 import com.thalesgroup.CdmwTrace.TraceProducerPackage.CollectorData;
 
@@ -78,6 +82,11 @@ public class FlushAreaMngr extends Thread {
     public static final int DEFAULT_FLUSHING_TIME = 5000;
 
     /**
+     * Default message threshold
+     */
+    public static final int DEFAULT_MSG_THRESHOLD = 100;
+
+    /**
      * Flush mode for flushing the data to the Collectors 
      * in a background thread.
      */
@@ -104,7 +113,7 @@ public class FlushAreaMngr extends Thread {
      * error message when running out of flush areas
      */
     private static final String OUT_FLUSH_AREA_MSG =
-        "trace Flush Area Manager is running out of flush areas";
+        "[FlushAreaMngr] running out of flush areas";
 
     /**
      * Singleton instance of FlushAreaMngr
@@ -131,6 +140,27 @@ public class FlushAreaMngr extends Thread {
     private int flushingTime;
 
     /**
+     * Silently add msgThreshold repeating messages.
+     */
+    private int msgThreshold;
+
+    /**
+     * Count the number of times that a same message is
+     * added to the flush area.
+     */
+    private long lastMsgCount;
+
+    /**
+     * The last message header.
+     */
+    private MessageHeader lastMsgHeader;
+
+    /**
+     * The last message body.
+     */
+    private String lastMsgBody;
+
+    /**
      * Contains the reference handling request of the outside world:
      * registration of collector, change of levels, ...
      */
@@ -140,6 +170,11 @@ public class FlushAreaMngr extends Thread {
      * Hold all Domain/Level which are to be traced or not
      */
     private FilterMngr filterMngr;
+
+    /**
+     * Contains the application name
+     */
+    private String applicationName;
 
     /**
      * Contains the process name
@@ -204,6 +239,9 @@ public class FlushAreaMngr extends Thread {
      * @param nbFlushArea number of FlushArea to be used to store messages
      * @param sizeFlushArea size of each FlushArea to be used to store messages
      * @param nbMessages maximum number of massages in each FlushArea
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
      *
      * @exception BadParameterException
      * @exception InternalErrorException
@@ -213,15 +251,22 @@ public class FlushAreaMngr extends Thread {
         CollectorData[] collectorList,
         String domain,
         short level,
+        String applicationName,
         String processName,
         int flushingTime,
         int nbFlushArea,
         int sizeFlushArea,
-        int nbMessages)
+        int nbMessages,
+        int msgThreshold)
         throws BadParameterException, InternalErrorException {
         super("cdmw.trace.FlushAreaMngr_thread");
+        this.applicationName = applicationName;
         this.processName = processName;
         this.flushingTime = flushingTime;
+        this.msgThreshold = msgThreshold;
+        this.lastMsgCount = 0;
+        this.lastMsgHeader = null;
+        this.lastMsgBody = "";
         this.threadMustTerminate = false;
         this.threadMonitor = new Object();
 
@@ -241,7 +286,10 @@ public class FlushAreaMngr extends Thread {
 
         // Initialize the domain and level to trace if defined
         if (domain != "") {
-            activateLevel(domain, level);
+            // ECR-0123
+            activateLevel(com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value,
+                          domain,
+                          level);
         }
 
         // Create the Servant to handle registration request
@@ -301,6 +349,129 @@ public class FlushAreaMngr extends Thread {
         areaFlusher.start();
     }
 
+
+    /**
+     * Class constructor
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param flushingTime time to wait in milliseconds before flushing
+     *       the current area although it is not full.
+     * @param nbFlushArea number of FlushArea to be used to store messages
+     * @param sizeFlushArea size of each FlushArea to be used to store messages
+     * @param nbMessages maximum number of massages in each FlushArea
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    // ECR-0123
+    private FlushAreaMngr(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String componentName,
+        String domain,
+        short level,
+        String applicationName,
+        String processName,
+        int flushingTime,
+        int nbFlushArea,
+        int sizeFlushArea,
+        int nbMessages,
+        int msgThreshold)
+        throws BadParameterException, InternalErrorException {
+        super("cdmw.trace.FlushAreaMngr_thread");
+        this.applicationName = applicationName;
+        this.processName = processName;
+        this.flushingTime = flushingTime;
+        this.msgThreshold = msgThreshold;
+        this.lastMsgCount = 0;
+        this.lastMsgHeader = null;
+        this.lastMsgBody = "";
+        this.threadMustTerminate = false;
+        this.threadMonitor = new Object();
+
+        // Default flush mode is ASYNCHRONOUS LINEAR
+        flushModeThread = ASYNCHRONOUS;
+        flushModeBackup = LINEAR;
+
+        // Create the required number of FlushArea
+        createFlushAreas(nbFlushArea, sizeFlushArea, nbMessages);
+
+        // Create the thread in charge of flushing Area as a background task
+        areaFlusher = new AreaFlusher();
+
+        // Create the object in charge of determining,
+        // if a specific level/domain must be traced
+        filterMngr = new FilterMngr();
+
+        // Initialize the domain and level to trace if defined
+        if (domain != "") {
+            activateLevel(componentName, domain, level);
+        }
+
+        // Create the Servant to handle registration request
+        TraceProducerImpl traceProducerServant =
+            new TraceProducerImpl(areaFlusher, filterMngr);
+
+        // Activate servant on tracePOA
+        try {
+            byte[] oid = tracePOA.activate_object(traceProducerServant);
+            org.omg.CORBA.Object object = tracePOA.id_to_reference(oid);
+            traceProducer =
+                com.thalesgroup.CdmwTrace.TraceProducerHelper.narrow(object);
+
+        } catch (org.omg.PortableServer.POAPackage.WrongPolicy e) {
+            throw new cdmw.common.BadParameterException(
+                "Wrong POA Policy for activate_object",
+                "NULL");
+        } catch (org.omg.CORBA.UserException e) {
+            System.err.println("Trace Producer servant activation error");
+            System.err.println(e.toString());
+            cdmw.common.Assert.assertionFailed();
+        } catch (org.omg.CORBA.SystemException e) {
+            System.err.println("Trace Producer servant activation error");
+            System.err.println(e.toString());
+            cdmw.common.Assert.assertionFailed();
+        }
+
+        // notify each collector of birth of TraceProducer
+        if (collectorList != null) {
+            for (int i = 0; i < collectorList.length; i++) {
+
+                try {
+                    // call collector update to register the trace producer
+                    collectorList[i].the_collector.update(traceProducer);
+
+                    // register collector in areaFlusher
+                    areaFlusher.registerCollector(
+                        collectorList[i].the_collector,
+                        collectorList[i].the_collectorObjName,
+                        collectorList[i].the_collectorMnemoName);
+
+                } catch (org.omg.CORBA.UserException e) {
+                    System.err.println(
+                        "Trace Collector access error : "
+                            + collectorList[i].the_collectorObjName);
+                    System.err.println(e.toString());
+                } catch (org.omg.CORBA.SystemException e) {
+                    System.err.println(
+                        "Trace Collector access error : "
+                            + collectorList[i].the_collectorObjName);
+                    System.err.println(e.toString());
+                }
+            }
+        }
+
+        // Ok, we start the background thread in charge of fluhsing data
+        areaFlusher.start();
+    }
+
+
     /**
      * Called by the garbage collector on an object when garbage collection
      * determines that there are no more references to the object.
@@ -324,6 +495,15 @@ public class FlushAreaMngr extends Thread {
     }
 
     /**
+     *  get the Application name
+     *
+     * @return A string containing the Application Name
+     */
+    public String getApplicationName() {
+        return applicationName;
+    }
+
+    /**
      *  get the Process name
      *
      * @return A string containing the Process Name
@@ -341,12 +521,16 @@ public class FlushAreaMngr extends Thread {
      * @param collectorList List of registered Trace Collectors.
      * @param domain the domain where the level must be activated
      * @param level  the level to be activated
+     * @param applicationName the name of the application
      * @param processName the name of the process
      * @param flushingTime time to wait before flushing the current area
      *       although it is not full.
      * @param nbFlushArea number of FlushArea to be used to store messages
      * @param sizeFlushArea size of each FlushArea to be used to store messages
      * @param nbMessages maximum number of massages in each FlushArea
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
      *
      * @return the pointer to the TraceProducer servant object is returned
      *
@@ -358,11 +542,13 @@ public class FlushAreaMngr extends Thread {
         CollectorData[] collectorList,
         String domain,
         short level,
+        String applicationName,
         String processName,
         int flushingTime,
         int nbFlushArea,
         int sizeFlushArea,
-        int nbMessages)
+        int nbMessages,
+        int msgThreshold)
         throws BadParameterException, InternalErrorException {
         // The user try to initialise twice the tracelibrary
         cdmw.common.Assert.check(!isInitDone);
@@ -373,11 +559,13 @@ public class FlushAreaMngr extends Thread {
                 collectorList,
                 domain,
                 level,
+                applicationName,
                 processName,
                 flushingTime,
                 nbFlushArea,
                 sizeFlushArea,
-                nbMessages);
+                nbMessages,
+                msgThreshold);
 
         // Start the thread in charge of flushing in case of timeout
         theInstance.start();
@@ -388,6 +576,77 @@ public class FlushAreaMngr extends Thread {
         // collector, it will be registered in the repository by the caller
         return theInstance.traceProducer;
     }
+
+
+    /**
+     *  Initialize the Trace library. This function must be called
+     *   before any other call. The Trace service must be closed
+     *   by a call to cleanup().
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param applicationName the name of the application
+     * @param processName the name of the process
+     * @param flushingTime time to wait before flushing the current area
+     *       although it is not full.
+     * @param nbFlushArea number of FlushArea to be used to store messages
+     * @param sizeFlushArea size of each FlushArea to be used to store messages
+     * @param nbMessages maximum number of massages in each FlushArea
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
+     *
+     * @return the pointer to the TraceProducer servant object is returned
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    // ECR-0123
+    public static com.thalesgroup.CdmwTrace.TraceProducer init(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String componentName,
+        String domain,
+        short level,
+        String applicationName,
+        String processName,
+        int flushingTime,
+        int nbFlushArea,
+        int sizeFlushArea,
+        int nbMessages,
+        int msgThreshold)
+        throws BadParameterException, InternalErrorException {
+        // The user try to initialise twice the tracelibrary
+        cdmw.common.Assert.check(!isInitDone);
+
+        theInstance =
+            new FlushAreaMngr(
+                tracePOA,
+                collectorList,
+                componentName,
+                domain,
+                level,
+                applicationName,
+                processName,
+                flushingTime,
+                nbFlushArea,
+                sizeFlushArea,
+                nbMessages,
+                msgThreshold);
+
+        // Start the thread in charge of flushing in case of timeout
+        theInstance.start();
+
+        isInitDone = true;
+
+        // Return the reference on the object managing communication with
+        // collector, it will be registered in the repository by the caller
+        return theInstance.traceProducer;
+    }
+
 
     /**
      * Initialize the Trace library with default value for nbMessages.
@@ -398,11 +657,15 @@ public class FlushAreaMngr extends Thread {
      * @param collectorList List of registered Trace Collectors.
      * @param domain the domain where the level must be activated
      * @param level  the level to be activated
+     * @param applicationName the name of the application
      * @param processName the name of the process
      * @param flushingTime time to wait before flushing the current area
      *       although it is not full.
      * @param nbFlushArea number of FlushArea to be used to store messages
      * @param sizeFlushArea size of each FlushArea to be used to store messages
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
      *
      * @return the pointer to the TraceProducer servant object is returned
      *
@@ -414,10 +677,12 @@ public class FlushAreaMngr extends Thread {
         CollectorData[] collectorList,
         String domain,
         short level,
+        String applicationName,
         String processName,
         int flushingTime,
         int nbFlushArea,
-        int sizeFlushArea)
+        int sizeFlushArea,
+        int msgThreshold)
         throws BadParameterException, InternalErrorException {
         // The user try to initialise twice the tracelibrary
         cdmw.common.Assert.check(!isInitDone);
@@ -428,11 +693,13 @@ public class FlushAreaMngr extends Thread {
                 collectorList,
                 domain,
                 level,
+                applicationName,
                 processName,
                 flushingTime,
                 nbFlushArea,
                 sizeFlushArea,
-                DEFAULT_AREA_NB_MESSAGES);
+                DEFAULT_AREA_NB_MESSAGES,
+                msgThreshold);
 
         // Start the thread in charge of flushing in case of timeout
         theInstance.start();
@@ -443,6 +710,75 @@ public class FlushAreaMngr extends Thread {
         // collector, it will be registered in the repository by the caller
         return theInstance.traceProducer;
     }
+
+
+    /**
+     * Initialize the Trace library with default value for nbMessages.
+     * This function must be called before any other call. 
+     * The Trace service must be closed by a call to cleanup().
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param applicationName the name of the application
+     * @param processName the name of the process
+     * @param flushingTime time to wait before flushing the current area
+     *       although it is not full.
+     * @param nbFlushArea number of FlushArea to be used to store messages
+     * @param sizeFlushArea size of each FlushArea to be used to store messages
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
+     *
+     * @return the pointer to the TraceProducer servant object is returned
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    // ECR-0123
+    public static com.thalesgroup.CdmwTrace.TraceProducer init(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String componentName,
+        String domain,
+        short level,
+        String applicationName,
+        String processName,
+        int flushingTime,
+        int nbFlushArea,
+        int sizeFlushArea,
+        int msgThreshold)
+        throws BadParameterException, InternalErrorException {
+        // The user try to initialise twice the tracelibrary
+        cdmw.common.Assert.check(!isInitDone);
+
+        theInstance =
+            new FlushAreaMngr(
+                tracePOA,
+                collectorList,
+                componentName,
+                domain,
+                level,
+                applicationName,
+                processName,
+                flushingTime,
+                nbFlushArea,
+                sizeFlushArea,
+                DEFAULT_AREA_NB_MESSAGES,
+                msgThreshold);
+
+        // Start the thread in charge of flushing in case of timeout
+        theInstance.start();
+
+        isInitDone = true;
+
+        // Return the reference on the object managing communication with
+        // collector, it will be registered in the repository by the caller
+        return theInstance.traceProducer;
+    }
+
 
     /**
      *  Initialize the Trace library with default values for
@@ -454,10 +790,14 @@ public class FlushAreaMngr extends Thread {
      * @param collectorList List of registered Trace Collectors.
      * @param domain the domain where the level must be activated
      * @param level  the level to be activated
+     * @param applicationName the name of the application
      * @param processName the name of the process
      * @param flushingTime time to wait before flushing the current area
      *       although it is not full.
      * @param nbFlushArea number of FlushArea to be used to store messages
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
      *
      * @return the pointer to the TraceProducer servant object is returned
      *
@@ -469,21 +809,80 @@ public class FlushAreaMngr extends Thread {
         CollectorData[] collectorList,
         String domain,
         short level,
+        String applicationName,
         String processName,
         int flushingTime,
-        int nbFlushArea)
+        int nbFlushArea,
+        int msgThreshold)
         throws BadParameterException, InternalErrorException {
         return init(
             tracePOA,
             collectorList,
             domain,
             level,
+            applicationName,
             processName,
             flushingTime,
             nbFlushArea,
             DEFAULT_AREA_SIZE,
-            DEFAULT_AREA_NB_MESSAGES);
+            DEFAULT_AREA_NB_MESSAGES,
+            msgThreshold);
     }
+
+
+    /**
+     *  Initialize the Trace library with default values for
+     *   sizeFlushArea and nbMessages.
+     *   This function must be called before any other call.
+     *   The Trace service must be closed by a call to cleanup().
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param applicationName the name of the application
+     * @param processName the name of the process
+     * @param flushingTime time to wait before flushing the current area
+     *       although it is not full.
+     * @param nbFlushArea number of FlushArea to be used to store messages
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
+     *
+     * @return the pointer to the TraceProducer servant object is returned
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    // ECR-0123
+    public static com.thalesgroup.CdmwTrace.TraceProducer init(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String componentName,
+        String domain,
+        short level,
+        String applicationName,
+        String processName,
+        int flushingTime,
+        int nbFlushArea,
+        int msgThreshold)
+        throws BadParameterException, InternalErrorException {
+        return init(
+            tracePOA,
+            collectorList,
+            componentName,
+            domain,
+            level,
+            applicationName,
+            processName,
+            flushingTime,
+            nbFlushArea,
+            DEFAULT_AREA_SIZE,
+            DEFAULT_AREA_NB_MESSAGES,
+            msgThreshold);
+    }
+    
 
     /**
      *  Initialize the Trace library with default values for
@@ -495,6 +894,107 @@ public class FlushAreaMngr extends Thread {
      * @param collectorList List of registered Trace Collectors.
      * @param domain the domain where the level must be activated
      * @param level  the level to be activated
+     * @param applicationName the name of the application
+     * @param processName the name of the process
+     * @param flushingTime time to wait before flushing the current area
+     *       although it is not full.
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
+     *
+     * @return the pointer to the TraceProducer servant object is returned
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    public static com.thalesgroup.CdmwTrace.TraceProducer init(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String domain,
+        short level,
+        String applicationName,
+        String processName,
+        int flushingTime,
+        int msgThreshold)
+        throws BadParameterException, InternalErrorException {
+        return init(
+            tracePOA,
+            collectorList,
+            domain,
+            level,
+            applicationName,
+            processName,
+            flushingTime,
+            DEFAULT_AREA_NB,
+            DEFAULT_AREA_SIZE,
+            DEFAULT_AREA_NB_MESSAGES,
+            msgThreshold);
+    }
+
+
+    /**
+     *  Initialize the Trace library with default values for
+     *   nbFlushArea, sizeFlushArea and nbMessages.
+     *   This function must be called before any other call.
+     *   The Trace service must be closed by a call to cleanup().
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param applicationName the name of the application
+     * @param processName the name of the process
+     * @param flushingTime time to wait before flushing the current area
+     *       although it is not full.
+     * @param msgThreshold the threshold at which an info message about the
+     *                     number of times the last added message was repeated
+     *                     is added to the flush area
+     *
+     * @return the pointer to the TraceProducer servant object is returned
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    // ECR-0123
+    public static com.thalesgroup.CdmwTrace.TraceProducer init(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String componentName,
+        String domain,
+        short level,
+        String applicationName,
+        String processName,
+        int flushingTime,
+        int msgThreshold)
+        throws BadParameterException, InternalErrorException {
+        return init(
+            tracePOA,
+            collectorList,
+            componentName,
+            domain,
+            level,
+            applicationName,
+            processName,
+            flushingTime,
+            DEFAULT_AREA_NB,
+            DEFAULT_AREA_SIZE,
+            DEFAULT_AREA_NB_MESSAGES,
+            msgThreshold);
+    }
+
+
+    /**
+     *  Initialize the Trace library with default values for
+     *   msgThreshold, nbFlushArea, sizeFlushArea and nbMessages.
+     *   This function must be called before any other call.
+     *   The Trace service must be closed by a call to cleanup().
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param applicationName the name of the application
      * @param processName the name of the process
      * @param flushingTime time to wait before flushing the current area
      *       although it is not full.
@@ -509,6 +1009,7 @@ public class FlushAreaMngr extends Thread {
         CollectorData[] collectorList,
         String domain,
         short level,
+        String applicationName,
         String processName,
         int flushingTime)
         throws BadParameterException, InternalErrorException {
@@ -517,16 +1018,68 @@ public class FlushAreaMngr extends Thread {
             collectorList,
             domain,
             level,
+            applicationName,
             processName,
             flushingTime,
             DEFAULT_AREA_NB,
             DEFAULT_AREA_SIZE,
-            DEFAULT_AREA_NB_MESSAGES);
+            DEFAULT_AREA_NB_MESSAGES,
+            DEFAULT_MSG_THRESHOLD);
     }
+
 
     /**
      *  Initialize the Trace library with default values for
-     *   flushingTime, nbFlushArea, sizeFlushArea and nbMessages.
+     *   msgThreshold, nbFlushArea, sizeFlushArea and nbMessages.
+     *   This function must be called before any other call.
+     *   The Trace service must be closed by a call to cleanup().
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param applicationName the name of the application
+     * @param processName the name of the process
+     * @param flushingTime time to wait before flushing the current area
+     *       although it is not full.
+     *
+     * @return the pointer to the TraceProducer servant object is returned
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    // ECR-0123
+    public static com.thalesgroup.CdmwTrace.TraceProducer init(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String componentName,
+        String domain,
+        short level,
+        String applicationName,
+        String processName,
+        int flushingTime)
+        throws BadParameterException, InternalErrorException {
+        return init(
+            tracePOA,
+            collectorList,
+            componentName,
+            domain,
+            level,
+            applicationName,
+            processName,
+            flushingTime,
+            DEFAULT_AREA_NB,
+            DEFAULT_AREA_SIZE,
+            DEFAULT_AREA_NB_MESSAGES,
+            DEFAULT_MSG_THRESHOLD);
+    }
+
+
+    /**
+     *  Initialize the Trace library with default values for
+     *   flushingTime, msgThreshold, nbFlushArea, sizeFlushArea
+     *   and nbMessages.
      *   This function must be called before any other call.
      *   The Trace service must be closed by a call to cleanup().
      *
@@ -534,6 +1087,7 @@ public class FlushAreaMngr extends Thread {
      * @param collectorList List of registered Trace Collectors.
      * @param domain the domain where the level must be activated
      * @param level  the level to be activated
+     * @param applicationName the name of the application
      * @param processName the name of the process
      *
      * @return the pointer to the TraceProducer servant object is returned
@@ -546,6 +1100,7 @@ public class FlushAreaMngr extends Thread {
         CollectorData[] collectorList,
         String domain,
         short level,
+        String applicationName,
         String processName)
         throws BadParameterException, InternalErrorException {
         return init(
@@ -553,12 +1108,61 @@ public class FlushAreaMngr extends Thread {
             collectorList,
             domain,
             level,
+            applicationName,
             processName,
             DEFAULT_FLUSHING_TIME,
             DEFAULT_AREA_NB,
             DEFAULT_AREA_SIZE,
-            DEFAULT_AREA_NB_MESSAGES);
+            DEFAULT_AREA_NB_MESSAGES,
+            DEFAULT_MSG_THRESHOLD);
     }
+
+
+    /**
+     *  Initialize the Trace library with default values for
+     *   flushingTime, msgThreshold, nbFlushArea, sizeFlushArea
+     *   and nbMessages.
+     *   This function must be called before any other call.
+     *   The Trace service must be closed by a call to cleanup().
+     *
+     * @param tracePOA POA to use for trace servant.
+     * @param collectorList List of registered Trace Collectors.
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     * @param applicationName the name of the application
+     * @param processName the name of the process
+     *
+     * @return the pointer to the TraceProducer servant object is returned
+     *
+     * @exception BadParameterException
+     * @exception InternalErrorException
+     */
+    // ECR-0123
+    public static com.thalesgroup.CdmwTrace.TraceProducer init(
+        org.omg.PortableServer.POA tracePOA,
+        CollectorData[] collectorList,
+        String componentName,
+        String domain,
+        short level,
+        String applicationName,
+        String processName)
+        throws BadParameterException, InternalErrorException {
+        return init(
+            tracePOA,
+            collectorList,
+            componentName,
+            domain,
+            level,
+            applicationName,
+            processName,
+            DEFAULT_FLUSHING_TIME,
+            DEFAULT_AREA_NB,
+            DEFAULT_AREA_SIZE,
+            DEFAULT_AREA_NB_MESSAGES,
+            DEFAULT_MSG_THRESHOLD);
+    }
+
 
     /**
      *  Activate trace message flushing by AreaFlusher
@@ -630,8 +1234,28 @@ public class FlushAreaMngr extends Thread {
      * @param level  the level to be activated
      */
     public void activateLevel(String domain, short level) {
-        filterMngr.activateLevel(domain, level);
+        filterMngr.activateLevel(
+            com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value, // ECR-0123
+            domain,
+            level);
     }
+
+
+    /**
+     *  Defines the specified level as activated
+     *
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be activated
+     * @param level  the level to be activated
+     */
+    // ECR-0123
+    public void activateLevel(String componentName,
+                              String domain,
+                              short level)
+    {
+        filterMngr.activateLevel(componentName, domain, level);
+    }
+
 
     /**
      *  Defines the specified level as deactivated
@@ -640,8 +1264,27 @@ public class FlushAreaMngr extends Thread {
      * @param level  the level to be deactivated
      */
     public void deactivateLevel(String domain, short level) {
-        filterMngr.deactivateLevel(domain, level);
+        filterMngr.deactivateLevel(
+            com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value, // ECR-0123
+            domain,
+            level);
     }
+
+
+    /**
+     *  Defines the specified level as deactivated
+     *
+     * @param componentName the component to which the domain is associated
+     * @param domain the domain where the level must be deactivated
+     * @param level  the level to be deactivated
+     */
+    public void deactivateLevel(String componentName,
+                                String domain,
+                                short level)
+    {
+        filterMngr.deactivateLevel(componentName, domain, level);
+    }
+
 
     /**
      * Returns true if the specified level has been noted
@@ -659,9 +1302,41 @@ public class FlushAreaMngr extends Thread {
             return false;
 
         } else {
-            return theInstance.filterMngr.isActivated(domain, level);
+            return theInstance.filterMngr.isActivated(
+                    com.thalesgroup.CdmwTrace.ALL_COMPONENT_NAMES.value, // ECR-0123
+                    domain,
+                    level);
         }
     }
+
+
+    /**
+     * Returns true if the specified level has been noted
+     * to be traced
+     *
+     * @param componentName the component to which the domain is associated
+     * @param domain the Domain from where the level status must be returned
+     * @param level the level to be interrogated
+     *
+     * @return true if the level is to be traced
+     */
+    // ECR-0123
+    public static boolean isToBeTraced(String componentName,
+                                       String domain,
+                                       short level)
+    {
+        if (!isInitDone) {
+            // The user has not called FlushAreaMngr::init() before
+            // message is not traced in this case
+            return false;
+
+        } else {
+            return theInstance.filterMngr.isActivated(componentName,
+                                                      domain,
+                                                      level);
+        }
+    }
+
 
     /**
      *  Fill the internal store of flush area with FlushArea, whose
@@ -718,58 +1393,196 @@ public class FlushAreaMngr extends Thread {
         cdmw.common.Assert.check(areaFlusher != null);
 
         boolean retry;
+        boolean isSameMsg = false;
 
-        do {
-            retry = false;
+        if (lastMsgCount == 0) {
+            // we do not have a last message
+            // (possibly because it is the first message or
+            // because we have just flushed the area)
+            // so do not waste time comparing anything
 
-            if (currentFlushArea == null) {
-                return false;
-            }
+            // make a copy so that we can compare it with the next message
+            lastMsgHeader = header;
+            lastMsgBody = body;
 
-            // Try to add message in current flush area
-            int areaStatus = currentFlushArea.addMessage(header, body);
+            // actually, we have a "last" message now
+            lastMsgCount = 1;
+        } else {
+            // Message.headerCmp() ignores the timestamping
+            isSameMsg = ((Message.headerCmp(lastMsgHeader, header)) &&
+                         (lastMsgBody == body));
 
-            switch (areaStatus) {
-                case FlushArea.OK :
-                    // nothing to do; true will be returned
-                    break;
+            if (isSameMsg) {
+                // same message, let us increment the counter
+                lastMsgCount++;
 
-                case FlushArea.AREA_FULL :
-                    // flush immediately the current area
-                    flushArea();
-                    // reset the timeout
-                    synchronized (threadMonitor) {
-                        flushAreaToBeDone = false;
-                        threadMonitor.notify();
-                    }
-                    break;
+                // need to flush?
+                boolean ret;
+                if (lastMsgCount == msgThreshold) {
+                    ret = insertInfoMessage();
+                } else {
+                    ret = true;
+                }
 
-                case FlushArea.SIZE_TOO_SMALL :
-                    // flush immediately the current area
-                    flushArea();
-                    // try to use the next current flush area
-                    retry = true;
-                    break;
+                return ret;
+            } else {
+                // new message
 
-                case FlushArea.MESSAGE_TOO_BIG :
-                    System.err.println(
-                        "Warning : Cdmw::Trace::FlushAreaMngr :");
-                    System.err.println(
-                        "Inappropriate area size. "
-                            + "Cannot manage message with body length of "
-                            + body.length()
-                            + " characters.");
+                if ((lastMsgCount == 1) ||
+                    ((lastMsgCount > 1) && insertInfoMessage()))
+                {
+                    // make a copy
+                    lastMsgHeader = header;
+                    lastMsgBody = body;
+
+                    // adjust the counter
+                    lastMsgCount = 1;
+                } else {
                     return false;
-
-                default :
-                    //CDMW_NEVER_HERE
-                    cdmw.common.Assert.check(false);
-                    break;
+                }
             }
+        }
 
-        } while (retry);
+        if (lastMsgCount == 1) {
+            do {
+                retry = false;
+
+                if (currentFlushArea == null) {
+                    // clean last message
+                    lastMsgBody = "";
+
+                    return false;
+                }
+
+                // Try to add message in current flush area
+                int areaStatus = currentFlushArea.addMessage(header, body);
+
+                switch (areaStatus) {
+                    case FlushArea.OK :
+                        // nothing to do; true will be returned
+                        break;
+
+                    case FlushArea.AREA_FULL :
+                        // flush immediately the current area
+                        flushArea();
+                        // reset the timeout
+                        synchronized (threadMonitor) {
+                            flushAreaToBeDone = false;
+                            threadMonitor.notify();
+                        }
+                        break;
+
+                    case FlushArea.SIZE_TOO_SMALL :
+                        // flush immediately the current area
+                        flushArea();
+                        // try to use the next current flush area
+                        retry = true;
+                        break;
+
+                    case FlushArea.MESSAGE_TOO_BIG :
+                        System.err.println(
+                            "Warning : Cdmw::Trace::FlushAreaMngr :");
+                        System.err.println(
+                            "Inappropriate area size. "
+                                + "Cannot manage message with body length of "
+                                + body.length()
+                                + " characters.");
+                        return false;
+
+                    default :
+                        //CDMW_NEVER_HERE
+                        cdmw.common.Assert.check(false);
+                        break;
+                }
+            } while (retry);
+        }
 
         return true;
+    }
+
+    /**
+     * Insert an info message about the number of times
+     * a message has been added to the flush area.
+     *
+     * @return true if the message has been successfully added
+     */
+    protected boolean insertInfoMessage() {
+        boolean retval = false;
+
+        if (lastMsgCount > 1) {
+            cdmw.common.Assert.check(areaFlusher != null);
+
+            boolean retry = false;
+
+            // update the time stamp in the header of the last message
+            MessageHeader infoMsgHeader = lastMsgHeader;
+            infoMsgHeader.timeStamping = OS.getTime();
+
+            // info message
+            String infoMsgBody = "Last message repeated " +
+                String.valueOf(lastMsgCount) + " times.";
+
+            do {
+                retry = false;
+
+                if (currentFlushArea == null) {
+                    break;
+                }
+
+                // Try to add message in current flush area
+                int areaStatus =
+                    currentFlushArea.addMessage(infoMsgHeader, infoMsgBody);
+
+                switch (areaStatus) {
+                    case FlushArea.OK :
+                        retval = true;
+                        break;
+
+                    case FlushArea.AREA_FULL :
+                        // flush immediately the current area
+                        flushArea();
+
+                        // reset the timeout
+                        synchronized (threadMonitor) {
+                            flushAreaToBeDone = false;
+                            threadMonitor.notify();
+                        }
+
+                        retval = true;
+                        break;
+
+                    case FlushArea.SIZE_TOO_SMALL :
+                        // flush immediately the current area
+                        flushArea();
+
+                        // try to use the next current flush area
+                        retry = true;
+                        break;
+
+                    case FlushArea.MESSAGE_TOO_BIG :
+                        System.err.println(
+                            "Warning : Cdmw::Trace::FlushAreaMngr :");
+                        System.err.println(
+                            "Inappropriate area size. "
+                                + "Cannot manage message with body length of "
+                                + infoMsgBody.length()
+                                + " characters.");
+                        break;
+
+                    default :
+                        //CDMW_NEVER_HERE
+                        cdmw.common.Assert.check(false);
+                        break;
+                }
+            } while (retry);
+        }
+
+        if (retval) {
+            lastMsgCount = 0;
+            lastMsgBody = "";
+        }
+
+        return retval;
     }
 
     /**
@@ -865,6 +1678,10 @@ public class FlushAreaMngr extends Thread {
             // If the time has expired, we must flush the area
             if (!threadMustTerminate && flushAreaToBeDone) {
                 flushArea();
+
+                if (lastMsgCount > 1) {
+                    insertInfoMessage();
+                }
             }
         }
     }

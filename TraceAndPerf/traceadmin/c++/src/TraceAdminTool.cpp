@@ -1,24 +1,26 @@
-/* =========================================================================== *
+/* ===================================================================== */
+/*
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
  * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
 
 
 #include "traceadmin/TraceAdminTool.hpp"
@@ -43,8 +45,8 @@
 #include "TraceAndPerf/idllib/CdmwTraceTraceProducer.stub.hpp"
 #include "TraceAndPerf/idllib/CdmwTraceCollector.stub.hpp"
 
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 
 
 #define ECHO_TRACEADM if (m_verbose) os 
@@ -77,7 +79,8 @@ namespace
     const CORBA::Long OP_FAILURE = -1;
 
 	const int PRODUCER = 0;
-	const int COLLECTOR = 1;
+	const int GLOBAL_COLLECTOR = 1;
+	const int LOCAL_COLLECTOR = 2;
     
 	void print_exception(const CORBA::SystemException & ex, std::ostream & os)
     {
@@ -136,15 +139,19 @@ TraceAdminTool::TraceAdminTool(CORBA::ORB_ptr orb,
 	  std::cout << "Cannot reach admin RootContext!" << std::endl;
     } 
 
-	// initialize trace collector context
+	// initialize the global trace collector context
 	// Pattern is :
 	//    CDMW/SERVICES/TRACE/COLLECTORS/
-    m_collector_context = Common::Locations::CDMW_SERVICES_NAME_DOMAIN;
-    m_collector_context	+= "/";
-    m_collector_context	+= Common::Locations::TRACE_COLLECTORS_NAME_DOMAIN;
+    m_global_collector_context = Common::Locations::CDMW_SERVICES_NAME_DOMAIN;
+    m_global_collector_context	+= "/";
+    m_global_collector_context	+= Common::Locations::TRACE_COLLECTORS_NAME_DOMAIN;
+    
+    // initialize the local trace collector context to localhost
+    m_local_collector_context = Cdmw::OsSupport::OS::get_hostname();
 
 	m_traceProducerRef = CdmwTrace::TraceProducer::_nil();
-    m_collectorRef = CdmwTrace::Collector::_nil();
+    m_global_collectorRef = CdmwTrace::Collector::_nil();
+    m_local_collectorRef = CdmwTrace::Collector::_nil();
 }
 
 //----------------------------------------------------------------------------
@@ -153,30 +160,33 @@ TraceAdminTool::~TraceAdminTool() throw()
 }
 
 //----------------------------------------------------------------------------
-const CORBA::ULong TraceAdminTool::nb_commands = 18;
+const CORBA::ULong TraceAdminTool::nb_commands = 21;
 
 // WARNING:
 // TraceAdminTool::commands should be sorted alphabetically (by operation name)
 const TraceAdminTool::command_def TraceAdminTool::commands[] = 
 { 
-	{ "activ_collector_level"     , &TraceAdminTool::activ_collector_level       },
-	{ "activ_producer_level"      , &TraceAdminTool::activ_producer_level        },
-	{ "deactiv_collector_level"   , &TraceAdminTool::deactiv_collector_level     },
-	{ "deactiv_producer_level"    , &TraceAdminTool::deactiv_producer_level      },
-	{ "exit"                      , &TraceAdminTool::exit                        },
-	{ "get_collector_levels"      , &TraceAdminTool::get_collector_levels        },
-	{ "get_collectors"            , &TraceAdminTool::get_collectors              },
-	{ "get_producer_levels"       , &TraceAdminTool::get_producer_levels         },
-	{ "get_producers"             , &TraceAdminTool::get_producers               },
-	{ "get_registered_collectors" , &TraceAdminTool::get_registered_collectors   },
-	{ "h"                         , &TraceAdminTool::print_help                  },
-	{ "help"                      , &TraceAdminTool::print_help                  },
-	{ "register_collector"        , &TraceAdminTool::register_collector          },  
-	{ "set_collector_context"     , &TraceAdminTool::set_collector_context       },    
-	{ "set_producer_context"      , &TraceAdminTool::set_producer_context        },    
-	{ "unregister_collector"      , &TraceAdminTool::unregister_collector        },
-	{ "verbose"                   , &TraceAdminTool::toggle_verbose              },
-	{ "x"                         , &TraceAdminTool::exit                        }
+	{ "activ_global_collector_level"   , &TraceAdminTool::activ_global_collector_level   },
+	{ "activ_local_collector_level"    , &TraceAdminTool::activ_local_collector_level    },
+	{ "activ_producer_level"           , &TraceAdminTool::activ_producer_level           },
+	{ "deactiv_global_collector_level" , &TraceAdminTool::deactiv_global_collector_level },
+	{ "deactiv_local_collector_level"  , &TraceAdminTool::deactiv_local_collector_level  },
+	{ "deactiv_producer_level"         , &TraceAdminTool::deactiv_producer_level         },
+	{ "exit"                           , &TraceAdminTool::exit                           },
+	{ "get_global_collector_levels"    , &TraceAdminTool::get_global_collector_levels    },	
+	{ "get_global_collectors"          , &TraceAdminTool::get_global_collectors          },
+	{ "get_local_collector_levels"     , &TraceAdminTool::get_local_collector_levels     },
+	{ "get_local_collectors"           , &TraceAdminTool::get_local_collectors           },
+	{ "get_producer_levels"            , &TraceAdminTool::get_producer_levels            },
+	{ "get_producers"                  , &TraceAdminTool::get_producers                  },
+	{ "get_registered_local_collectors", &TraceAdminTool::get_registered_local_collectors},
+	{ "h"                              , &TraceAdminTool::print_help                     },
+	{ "help"                           , &TraceAdminTool::print_help                     },
+	{ "register_local_collector"       , &TraceAdminTool::register_local_collector       },      
+	{ "set_producer_context"           , &TraceAdminTool::set_producer_context           },    
+	{ "unregister_local_collector"     , &TraceAdminTool::unregister_local_collector     },
+	{ "verbose"                        , &TraceAdminTool::toggle_verbose                 },
+	{ "x"                              , &TraceAdminTool::exit                           }
 };
 
     
@@ -337,78 +347,65 @@ CORBA::Long TraceAdminTool::print_help(const std::string & arg, std::ostream & o
         << " +-----------------------------------+--------------------------------------------+" << "\n" 
         << " | verbose                           | toggle verbose mode on/off                 |" << "\n"
         << " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | set_collector_context <path>      | set path of collector context              |" << "\n"
-		<< " |                                   | default is CDMW/SERVICES/TRACE/COLLECTORS/|" << "\n"
-        << " +-----------------------------------+--------------------------------------------+" << "\n"
 		<< " | set_producer_context <path>       | set path of producer context               |" << "\n"
 		<< " |                                   | path has the form <host>/<application>     |" << "\n"
+		<< " |                                   | <host> is used to set the local trace      |" << "\n"
+		<< " |                                   | collector context                          |" << "\n"
         << " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | get_collectors                    | get available collectors                   |" << "\n"
+		<< " | get_global_collectors             | get available global collectors            |" << "\n"
+		<< " +-----------------------------------+--------------------------------------------+" << "\n"
+		<< " | get_local_collectors              | get available local collectors             |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
 		<< " | get_producers                     | get available processes with producer      |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | activ_collector_level             | activate the level in collector            |" << "\n"
-		<< " |      <collector_name>             |                                            |" << "\n"
-		<< " |      <domain> <level>             |                                            |" << "\n"
+		<< " | activ_global_collector_level      | activate the level in global collector     |" << "\n"
+		<< " |  <collector_name>                 |                                            |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | deactiv_collector_level           | deactivate the level in collector          |" << "\n"
-		<< " |      <collector_name>             |                                            |" << "\n"
-		<< " |      <domain> <level>             |                                            |" << "\n"
+		<< " | deactiv_global_collector_level    | deactivate the level in global collector   |" << "\n"
+		<< " |  <collector_name>                 |                                            |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | get_collector_levels              | get levels of collector                    |" << "\n"
-		<< " |      <collector_name>             |                                            |" << "\n"
+		<< " | get_global_collector_levels       | get levels of global collector             |" << "\n"
+		<< " |  <collector_name>                 |                                            |" << "\n"
+		<< " +-----------------------------------+--------------------------------------------+" << "\n"
+		<< " | activ_local_collector_level       | activate the level in local collector      |" << "\n"
+		<< " |  <collector_name>                 |                                            |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
+		<< " +-----------------------------------+--------------------------------------------+" << "\n"
+		<< " | deactiv_local_collector_level     | deactivate the level in local collector    |" << "\n"
+		<< " |  <collector_name>                 |                                            |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
+		<< " +-----------------------------------+--------------------------------------------+" << "\n"
+		<< " | get_local_collector_levels        | get levels of local collector              |" << "\n"
+		<< " |  <collector_name>                 |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
 		<< " | activ_producer_level              | activate the level in producer             |" << "\n"
-		<< " |      <process_name>               |                                            |" << "\n"
-		<< " |      <domain> <level>             |                                            |" << "\n"
+		<< " |  <process_name>                   |                                            |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
 		<< " | deactiv_producer_level            | deactivate the level in producer           |" << "\n"
-		<< " |      <process_name>               |                                            |" << "\n"
-		<< " |      <domain> <level>             |                                            |" << "\n"
+		<< " |  <process_name>                   |                                            |" << "\n"
+		<< " |  [componentname] <domain> <level> |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
 		<< " | get_producer_levels               | get levels of producer                     |" << "\n"
-		<< " |      <process_name>               |                                            |" << "\n"
+		<< " |  <process_name>                   |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | register_collector                | register collector in the producer         |" << "\n"
-		<< " |      <process_name>               |                                            |" << "\n"
-		<< " |      <collector_name> <mnemonic>  |                                            |" << "\n"
+		<< " | register_local_collector          | register local collector in the producer   |" << "\n"
+		<< " |  <process_name>                   |                                            |" << "\n"
+		<< " |  <collector_name> <mnemonic>      |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | unregister_collector              | unregister the collector in the producer   |" << "\n"
-		<< " |      <process_name> <ident>       |                                            |" << "\n"
+		<< " | unregister_local_collector        | unregister the local collector in the      |" << "\n"
+		<< " |  <process_name> <ident>           | producer                                   |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
-		<< " | get_registered_collectors         | get registered collectors of producer      |" << "\n"
-		<< " |      <process_name>               |                                            |" << "\n"
+		<< " | get_registered_local_collectors   | get registered local collectors of producer|" << "\n"
+		<< " |  <process_name>                   |                                            |" << "\n"
 		<< " +-----------------------------------+--------------------------------------------+" << "\n"
         << std::endl;
 
      return OP_SUCCESS;
 }
 
-//----------------------------------------------------------------------------
-CORBA::Long TraceAdminTool::set_collector_context(const std::string &arg, std::ostream &os)
-{
-  CORBA::Long result = OP_FAILURE;
-  const char *p_arg = arg.c_str();
-  
-  // if undefined context name set defaut context
-  if (*p_arg == '\0')                
-  {
-	// CDMW/SERVICES/TRACE/COLLECTORS/
-    m_collector_context = Common::Locations::CDMW_SERVICES_NAME_DOMAIN;
-    m_collector_context	+= "/";
-    m_collector_context	+= Common::Locations::TRACE_COLLECTORS_NAME_DOMAIN;
-  }
-  else
-  {
-    m_collector_context = p_arg;
-  }
-
-  os << "collector context set to : " << m_collector_context.c_str() << std::endl;
-
-  result = OP_SUCCESS;
-
-  return result;
-}
 
 //----------------------------------------------------------------------------
 CORBA::Long TraceAdminTool::set_producer_context(const std::string &arg, std::ostream &os)
@@ -426,7 +423,22 @@ CORBA::Long TraceAdminTool::set_producer_context(const std::string &arg, std::os
     m_producer_context = p_arg;
 
     os << "producer context set to : " << m_producer_context.c_str() << std::endl;
-
+    
+    // set the associated local trace collector (extract the host name)
+    size_t ix = arg.find ('/');
+    
+    // if not found
+    if (ix == std::string::npos)
+    {
+        // initialize the local trace collector context to localhost
+        m_local_collector_context = Cdmw::OsSupport::OS::get_hostname();
+    }
+    else
+    {
+        // initialize the local trace collector context with extracted host
+        m_local_collector_context = arg.substr (0,ix);
+    }
+    
 	result = OP_SUCCESS;
   }
 
@@ -435,8 +447,8 @@ CORBA::Long TraceAdminTool::set_producer_context(const std::string &arg, std::os
 }
 
 //----------------------------------------------------------------------------
-CORBA::Long TraceAdminTool::get_collector_serv (const std::string &collectorName, 
-				                                bool check_serv, std::ostream &os)
+CORBA::Long TraceAdminTool::get_global_collector_serv (const std::string &collectorName, 
+				                                       bool check_serv, std::ostream &os)
 {
   CORBA::Long result = OP_FAILURE;
   
@@ -444,19 +456,22 @@ CORBA::Long TraceAdminTool::get_collector_serv (const std::string &collectorName
 
   try 
   {
+    // global trace collector location is:
+    // CDMW/SERVICES/TRACE/COLLECTORS/collectorName
+      
 	// NamingInterface on default Root context
-    Cdmw::NamingAndRepository::NamingInterface ni_root (m_defaultRootContext.in());
+    Cdmw::CommonSvcs::Naming::NamingInterface ni_root (m_defaultRootContext.in());
     
 	// set complete collector name
-	collector_path = m_collector_context;
+	collector_path = m_global_collector_context;
 	collector_path += "/";
 	collector_path += collectorName;
 
 	// get TraceCollector object using Root context NamingInterface
-    typedef Cdmw::NamingAndRepository::NamingUtil<CdmwTrace::Collector> Util;
-	m_collectorRef = Util::resolve_name(ni_root,collector_path);
+    typedef Cdmw::CommonSvcs::Naming::NamingUtil<CdmwTrace::Collector> Util;
+	m_global_collectorRef = Util::resolve_name(ni_root,collector_path);
 
-	if (CORBA::is_nil(m_collectorRef.in()))
+	if (CORBA::is_nil(m_global_collectorRef.in()))
     {
       // print error message only if call is to get and not to check object
       if (check_serv == false)
@@ -527,6 +542,70 @@ CORBA::Long TraceAdminTool::get_collector_serv (const std::string &collectorName
   return result;
 }
 
+//----------------------------------------------------------------------------
+CORBA::Long TraceAdminTool::get_local_collector_serv (const std::string &collectorName, 
+				                                      bool check_serv, std::ostream &os)
+{
+  CORBA::Long result = OP_FAILURE;
+  
+  Cdmw::CommonSvcs::Naming::NamingInterface ni_root(m_adminRootContext.in());
+  
+  std::string full_path;
+  
+  try 
+  {
+      // local trace collector location is:
+      // <hostname>/SERVICES/TRACE/COLLECTORS/collectorName
+        
+      CosNaming::Name collectorName_;
+      collectorName_.length(5);
+      collectorName_[0].id = CORBA::string_dup (m_local_collector_context.c_str());
+      collectorName_[1].id = CORBA::string_dup("SERVICES");
+      collectorName_[2].id = CORBA::string_dup("TRACE");
+      collectorName_[3].id = CORBA::string_dup("COLLECTORS");
+      collectorName_[4].id = CORBA::string_dup(collectorName.c_str());
+
+      full_path = ni_root.to_string(collectorName_);
+      
+      CORBA::Object_var obj = ni_root.resolve(full_path);
+      m_local_collectorRef = CdmwTrace::Collector::_narrow(obj.in());
+      
+      result = OP_SUCCESS;
+  }
+  catch (const std::bad_alloc&)
+  {
+    PRINT_EXCEPTION_MSG(__FILE__,__LINE__,
+					    "Bad Allocation Exception",
+						os);
+  }
+  catch (const CosNaming::NamingContext::NotFound&) 
+  {
+      std::cerr << "The local trace collector "
+                << full_path
+                << " could not be found in the repository."
+                << std::endl;
+  }
+  catch (const Cdmw::Common::TypeMismatchException & e) 
+  {
+    os << "TypeMismatchException <" 
+	   << e.what() << ">" << std::endl;
+  }
+  catch (const Cdmw::Exception &e ) 
+  {
+    PRINT_EXCEPTION(__FILE__,__LINE__,e,os);
+  }
+  catch (const CORBA::SystemException &e)
+  {
+    PRINT_EXCEPTION(__FILE__,__LINE__,e,os);
+  }
+  catch (const CORBA::Exception &e)
+  {
+    PRINT_EXCEPTION(__FILE__,__LINE__,e,os);
+  }
+  
+  return result;
+}
+
 
 //----------------------------------------------------------------------------
 CORBA::Long TraceAdminTool::get_producer_serv (const std::string &processName, 
@@ -549,10 +628,10 @@ CORBA::Long TraceAdminTool::get_producer_serv (const std::string &processName,
 	producer_context_name += "/TRACE/TraceProducer";
   
 	// NamingInterface on Admin Root context
-    Cdmw::NamingAndRepository::NamingInterface ni_root(m_adminRootContext.in());
+    Cdmw::CommonSvcs::Naming::NamingInterface ni_root(m_adminRootContext.in());
     
 	// get TraceProducer object using Root context NamingInterface
-    typedef Cdmw::NamingAndRepository::NamingUtil<CdmwTrace::TraceProducer> Util;
+    typedef Cdmw::CommonSvcs::Naming::NamingUtil<CdmwTrace::TraceProducer> Util;
 	m_traceProducerRef = Util::resolve_name(ni_root,producer_context_name);
 
 	if (CORBA::is_nil(m_traceProducerRef.in()))
@@ -627,19 +706,36 @@ CORBA::Long TraceAdminTool::get_producer_serv (const std::string &processName,
 }
 
 //----------------------------------------------------------------------------
-CORBA::Long TraceAdminTool::activ_collector_level (const std::string &arg, std::ostream &os)
+CORBA::Long TraceAdminTool::activ_global_collector_level (const std::string &arg, std::ostream &os)
 {
   CORBA::Long result;
 
-  result = process_level(true, COLLECTOR, arg, os);
+  result = process_level(true, GLOBAL_COLLECTOR, arg, os);
   return result;
 }
 
-CORBA::Long TraceAdminTool::deactiv_collector_level (const std::string &arg, std::ostream &os)
+CORBA::Long TraceAdminTool::deactiv_global_collector_level (const std::string &arg, std::ostream &os)
 {
   CORBA::Long result;
 
-  result = process_level(false, COLLECTOR, arg, os);
+  result = process_level(false, GLOBAL_COLLECTOR, arg, os);
+  return result;
+}
+
+//----------------------------------------------------------------------------
+CORBA::Long TraceAdminTool::activ_local_collector_level (const std::string &arg, std::ostream &os)
+{
+  CORBA::Long result;
+
+  result = process_level(true, LOCAL_COLLECTOR, arg, os);
+  return result;
+}
+
+CORBA::Long TraceAdminTool::deactiv_local_collector_level (const std::string &arg, std::ostream &os)
+{
+  CORBA::Long result;
+
+  result = process_level(false, LOCAL_COLLECTOR, arg, os);
   return result;
 }
 
@@ -668,6 +764,8 @@ CORBA::Long TraceAdminTool::process_level(bool activation, int serv_type,
   std::string servant_name;
   std::string domain;
   CdmwTrace::Value level_value;
+  // ECR-0123
+  std::string componentName;
 
   try 
   {
@@ -687,74 +785,117 @@ CORBA::Long TraceAdminTool::process_level(bool activation, int serv_type,
       os << "no value for servant name" << std::endl;
       return OP_FAILURE;
     }
-		
+
+    // ECR-0123
+    componentName = CdmwTrace::ALL_COMPONENT_NAMES;
     domain = CdmwTrace::ALL_DOMAINS;
     level_value = CdmwTrace::ALL_VALUES;
 
-    if (j != end)
-    {
-      // extract domain
-      // skip leading whitespaces
-      i = std::find_if(j,end,not_space);
+    // ECR-0123
+    // this command expects up to 3 arguments
+    int max_nb_args = 3;
+    int nb_args = 0;
+    std::string args[max_nb_args];
+    for (int k = 0; k < max_nb_args; ++k) {
+        if (j != end) {
+            // skip leading whitespaces
+            i = std::find_if(j, end, not_space);
+            // position of the next whitespace from the current position
+            j = std::find_if(i, end, isspace);
 
-      // find end of domain
-      j = std::find_if(i,end,isspace);
-
-      // copy the characters in [i,j)
-      if (i != j)
-        domain = std::string(i,j);
-    }
-		
-    if (j != end)
-    {
-      // extract level
-      // skip leading whitespaces
-      i = std::find_if(j,end,not_space);
-	  
-      // find end of level
-      j = std::find_if(i,end,isspace);
-
-      std::string level_strg;
-
-      // copy the characters in [i,j)
-      if (i != j)
-      {
-        level_strg = std::string(i,j);
-		if (level_strg == "*")
-        {
-          level_value = -1;
-		}
-		else
-        {
-          std::istringstream level_strm(level_strg);
-	      level_strm >> level_value;
-	      if (level_strm.fail())
-          {
-            os << "bad value for domain level" << std::endl;
-            return OP_FAILURE;
-          }
+            // copy the word
+            if (i != j) {
+                args[k] = std::string(i, j);
+                nb_args++;
+            }
         }
-      }
     }
 
-    if (serv_type == COLLECTOR)
+    int componentName_arg_idx = -1;
+    int domain_arg_idx = -1;
+    int level_arg_idx = -1;
+
+    if (nb_args == 3) {
+        // arguments: component name/domain/level
+        componentName_arg_idx = 0;
+        domain_arg_idx = 1;
+        level_arg_idx = 2;
+    } else if (nb_args == 2) {
+        // arguments: domain/level
+        domain_arg_idx = 0;
+        level_arg_idx = 1;
+    } else if (nb_args == 1) {
+        // argument: domain
+        domain_arg_idx = 0;
+    }
+
+    if (componentName_arg_idx != -1) {
+        componentName = args[componentName_arg_idx];
+    }
+
+    if (domain_arg_idx != -1) {
+        domain = args[domain_arg_idx];
+    }
+
+    if (level_arg_idx != -1) {
+        if (args[level_arg_idx] == "*") {
+            level_value = -1;
+        }
+        else {
+            std::istringstream level_strm(args[level_arg_idx]);
+            level_strm >> level_value;
+            if (level_strm.fail()) {
+                os << "bad value for domain level" << std::endl;
+                return OP_FAILURE;
+            }
+        }
+    }
+    
+
+    
+    if (serv_type == GLOBAL_COLLECTOR)
     {
-	  CORBA::Long err_retn = get_collector_serv (servant_name, false, os);
+	  CORBA::Long err_retn = get_global_collector_serv (servant_name, false, os);
 	  if (err_retn == OP_FAILURE)
       {
         return OP_FAILURE;
 	  }
 
-      if (activation)
+        // ECR-0123
+        if (activation) {
+	        // activate the level in collector
+	        m_global_collectorRef->activate_level(componentName.c_str(),
+                                           domain.c_str(),
+                                           level_value);
+        }
+	    else {
+	        // deactivate the level in collector
+	        m_global_collectorRef->deactivate_level(componentName.c_str(),
+                                             domain.c_str(),
+                                             level_value);
+        }
+    }
+    else if (serv_type == LOCAL_COLLECTOR)
+    {
+	  CORBA::Long err_retn = get_local_collector_serv (servant_name, false, os);
+	  if (err_retn == OP_FAILURE)
       {
-	    // activate the level in collector
-	    m_collectorRef->activate_level(domain.c_str(), level_value);
-      }
-	  else
-      {
-	    // deactivate the level in collector
-	    m_collectorRef->deactivate_level(domain.c_str(), level_value);
-      }
+        return OP_FAILURE;
+	  }
+
+        // ECR-0123
+        if (activation) {
+	        // activate the level in collector
+	        m_local_collectorRef->activate_level(componentName.c_str(),
+                                                 domain.c_str(),
+                                                 level_value);
+        }
+	    else {
+	        // deactivate the level in collector
+	        m_local_collectorRef->deactivate_level(componentName.c_str(),
+                                                   domain.c_str(),
+                                                   level_value);
+        }
     }
 	else
     {
@@ -764,16 +905,19 @@ CORBA::Long TraceAdminTool::process_level(bool activation, int serv_type,
         return OP_FAILURE;
 	  }
 
-      if (activation)
-      {
-	    // activate the level in producer
-	    m_traceProducerRef->activate_level(domain.c_str(), level_value);
-      }
-	  else
-      {
-	    // deactivate the level in producer
-	    m_traceProducerRef->deactivate_level(domain.c_str(), level_value);
-      }
+        // ECR-0123
+        if (activation) {
+	        // activate the level in producer
+	        m_traceProducerRef->activate_level(componentName.c_str(),
+                                               domain.c_str(),
+                                               level_value);
+        }
+	    else {
+	        // deactivate the level in producer
+	        m_traceProducerRef->deactivate_level(componentName.c_str(),
+                                                 domain.c_str(),
+                                                 level_value);
+        }
     }
 
 	result = OP_SUCCESS;
@@ -802,11 +946,19 @@ CORBA::Long TraceAdminTool::process_level(bool activation, int serv_type,
 }
 
 //----------------------------------------------------------------------------
-CORBA::Long TraceAdminTool::get_collector_levels (const std::string &arg, std::ostream &os)
+CORBA::Long TraceAdminTool::get_global_collector_levels (const std::string &arg, std::ostream &os)
 {
   CORBA::Long result;
 
-  result = get_levels(COLLECTOR, arg, os);
+  result = get_levels(GLOBAL_COLLECTOR, arg, os);
+  return result;
+}
+
+CORBA::Long TraceAdminTool::get_local_collector_levels (const std::string &arg, std::ostream &os)
+{
+  CORBA::Long result;
+
+  result = get_levels(LOCAL_COLLECTOR, arg, os);
   return result;
 }
 
@@ -848,9 +1000,17 @@ CORBA::Long TraceAdminTool::get_levels(int serv_type, const std::string &arg, st
 	
 	
     // get servant reference 
-    if (serv_type == COLLECTOR)
+    if (serv_type == GLOBAL_COLLECTOR)
     {
-	  CORBA::Long err_retn = get_collector_serv (servant_name, false, os);
+	  CORBA::Long err_retn = get_global_collector_serv (servant_name, false, os);
+	  if (err_retn == OP_FAILURE)
+      {
+        return OP_FAILURE;
+	  }
+    }
+    else if (serv_type == LOCAL_COLLECTOR)
+    {
+	  CORBA::Long err_retn = get_local_collector_serv (servant_name, false, os);
 	  if (err_retn == OP_FAILURE)
       {
         return OP_FAILURE;
@@ -868,14 +1028,18 @@ CORBA::Long TraceAdminTool::get_levels(int serv_type, const std::string &arg, st
  
 
 
-   
+    // ECR-0123
+    std::string title_component_str = "component name             ";
+    std::string component_str = title_component_str;
     std::string title_name_str = "domain name             ";
     std::string name_str = title_name_str;
     std::string title_level_str = "level    ";
     std::string level_str = title_level_str;
     std::string title_activ_str = "activation";
     std::string activ_str;
-    
+
+    // ECR-0123
+    int field0_maxsize = component_str.size() - 1;
     int field1_maxsize = name_str.size() - 1;
     int field2_maxsize = level_str.size() - 1;
 
@@ -883,9 +1047,13 @@ CORBA::Long TraceAdminTool::get_levels(int serv_type, const std::string &arg, st
 
     // get sequence of trace filter
  
-    if (serv_type == COLLECTOR)
+    if (serv_type == GLOBAL_COLLECTOR)
     {
-      filterSeq = m_collectorRef->get_trace_filters ();
+      filterSeq = m_global_collectorRef->get_trace_filters ();
+    }
+    else if (serv_type == LOCAL_COLLECTOR)
+    {
+      filterSeq = m_local_collectorRef->get_trace_filters ();
     }
 	else
     {
@@ -895,12 +1063,37 @@ CORBA::Long TraceAdminTool::get_levels(int serv_type, const std::string &arg, st
     
     os << "list of trace filters" << std::endl; 
     os << "---------------------" << std::endl; 
-    
-    os << title_name_str.c_str() << title_level_str.c_str() 
+
+    // ECR-0123
+    os << title_component_str.c_str()
+       << title_name_str.c_str()
+       << title_level_str.c_str()
        << title_activ_str.c_str() << std::endl; 
 
     for (unsigned int i=0 ; i < filterSeq->length() ; i++)
     {
+        // ECR-0123
+        std::string componentName = (*filterSeq)[i].the_component_name.in();
+        int componentName_size = componentName.size();
+        if (componentName_size > field0_maxsize) 
+        {
+            // drop the end characters that do not fit into the field
+            componentName_size = field0_maxsize;
+        }
+        
+        component_str.replace(0,
+                              componentName_size,
+                              componentName,
+                              0,
+                              componentName_size);
+                              
+        if (componentName_size < field0_maxsize) {
+            int nspace = field0_maxsize - componentName_size;
+            // fill the field with whitespaces
+            component_str.replace(componentName_size, nspace, nspace, ' ');
+        }
+
+
       std::string domain_name = (*filterSeq)[i].the_domain.in();
       int name_size = domain_name.size();
 
@@ -957,8 +1150,12 @@ CORBA::Long TraceAdminTool::get_levels(int serv_type, const std::string &arg, st
         activ_str = "no";
       }
     
-	  // print info : domain , level, activation
-	  os << name_str.c_str() << level_str.c_str() << activ_str.c_str() << std::endl;
+	  // print info : component name, domain , level, activation
+      // ECR-0123
+	  os << component_str.c_str()
+         << name_str.c_str()
+         << level_str.c_str()
+         << activ_str.c_str() << std::endl;
     }
 
     os << std::endl; 
@@ -989,7 +1186,7 @@ CORBA::Long TraceAdminTool::get_levels(int serv_type, const std::string &arg, st
 }
 
 //----------------------------------------------------------------------------
-CORBA::Long TraceAdminTool::register_collector(const std::string &arg, std::ostream &os)
+CORBA::Long TraceAdminTool::register_local_collector(const std::string &arg, std::ostream &os)
 {
   CORBA::Long result = OP_FAILURE;
   CORBA::Long err_retn;
@@ -1064,17 +1261,17 @@ CORBA::Long TraceAdminTool::register_collector(const std::string &arg, std::ostr
       return OP_FAILURE;
 	}
 	
-	// find trace collector servant
-    err_retn = get_collector_serv (collector_name, false, os);
+	// find local trace collector servant
+    err_retn = get_local_collector_serv (collector_name, false, os);
 	if (err_retn == OP_FAILURE)
     {
       return OP_FAILURE;
 	}
     
 	// register the collector servant in trace producer
-	m_traceProducerRef->register_collector(m_collectorRef.in(), 
-					                       collector_name.c_str(), 
-										   collector_mnemonic.c_str());
+	m_traceProducerRef->register_collector(m_local_collectorRef.in(), 
+					                             collector_name.c_str(), 
+										         collector_mnemonic.c_str());
 
 	result = OP_SUCCESS;
   }  
@@ -1102,7 +1299,7 @@ CORBA::Long TraceAdminTool::register_collector(const std::string &arg, std::ostr
 
 
 
-CORBA::Long TraceAdminTool::unregister_collector(const std::string &arg, std::ostream &os)
+CORBA::Long TraceAdminTool::unregister_local_collector(const std::string &arg, std::ostream &os)
 {
   CORBA::Long result = OP_FAILURE;
 
@@ -1195,7 +1392,7 @@ CORBA::Long TraceAdminTool::unregister_collector(const std::string &arg, std::os
 }
 
 //----------------------------------------------------------------------------
-CORBA::Long TraceAdminTool::get_registered_collectors(const std::string &arg, std::ostream &os)
+CORBA::Long TraceAdminTool::get_registered_local_collectors(const std::string &arg, std::ostream &os)
 {
   CORBA::Long result = OP_FAILURE;
 
@@ -1236,8 +1433,8 @@ CORBA::Long TraceAdminTool::get_registered_collectors(const std::string &arg, st
     int field1_size = mnemo_name_str.size();
     int field2_size = obj_name_str.size();
 
-    os << "list of registered collectors" << std::endl; 
-    os << "-----------------------------" << std::endl; 
+    os << "list of registered local collectors" << std::endl; 
+    os << "-----------------------------------" << std::endl; 
     os << mnemo_name_str.c_str() << obj_name_str.c_str() << "identifier" << std::endl; 
 
     for (unsigned int i=0 ; i < collectorSeq->length() ; i++)
@@ -1309,40 +1506,44 @@ CORBA::Long TraceAdminTool::get_registered_collectors(const std::string &arg, st
 }
 
 //----------------------------------------------------------------------------
-CORBA::Long TraceAdminTool::get_collectors(const std::string &arg, std::ostream &os)
+CORBA::Long TraceAdminTool::get_global_collectors(const std::string &arg, std::ostream &os)
 {
   CORBA::Long result = OP_FAILURE;
   
   try
   {
+    // set TraceCollector location under default root context
+    // Pattern is :
+    //   "CDMW/SERVICES/TRACE/COLLECTORS/<collectorName>"
+    
 	// NamingInterface on Root context
-    Cdmw::NamingAndRepository::NamingInterface ni_root(m_defaultRootContext.in());
+    Cdmw::CommonSvcs::Naming::NamingInterface ni_root(m_defaultRootContext.in());
     
 	// create Collector domain naming context
 	CosNaming::NamingContext_var collector_nc = CosNaming::NamingContext::_nil();
 	
-    typedef NamingAndRepository::NamingUtil<CosNaming::NamingContext> Util;
-	collector_nc = Util::resolve_name (ni_root,m_collector_context);
+    typedef CommonSvcs::Naming::NamingUtil<CosNaming::NamingContext> Util;
+	collector_nc = Util::resolve_name (ni_root,m_global_collector_context);
 
 	if (CORBA::is_nil(collector_nc.in()))
     {
       os << "Collector Name Context Resolve Error \n"
-	     << m_collector_context.c_str() 
+	     << m_global_collector_context.c_str() 
 		 << std::endl;
 	}
 	else
 	{	
 	  // NamingInterface on Producer context
-	  NamingAndRepository::NamingInterface ni(collector_nc.in());
+	  CommonSvcs::Naming::NamingInterface ni(collector_nc.in());
             
 	  CosNaming::BindingIterator_var bindingItr;
 	  CosNaming::BindingList_var bindingList;
             
-      os << "list of trace collectors" << std::endl; 
-      os << "------------------------" << std::endl;
+      os << "list of global trace collectors" << std::endl; 
+      os << "-------------------------------" << std::endl;
                
       // All binding in this list are Collectors, so we try to get all
-      ni.list (NamingAndRepository::NamingInterface::LIST_CHUNK_SIZE, bindingList, bindingItr);
+      ni.list (CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE, bindingList, bindingItr);
             
       // We stop when there is no more binding
       bool isMoreBinding = false;
@@ -1363,7 +1564,7 @@ CORBA::Long TraceAdminTool::get_collectors(const std::string &arg, std::ostream 
         if (!CORBA::is_nil(bindingItr.in())) 
         {
           isMoreBinding = 
-               bindingItr->next_n(NamingAndRepository::NamingInterface::LIST_CHUNK_SIZE, 
+               bindingItr->next_n(CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE, 
                                   bindingList);
         }          
       } while (isMoreBinding);
@@ -1383,7 +1584,7 @@ CORBA::Long TraceAdminTool::get_collectors(const std::string &arg, std::ostream 
   catch (const CosNaming::NamingContext::NotFound &)
   {
     std::cerr << "Trace Collector Name Domain not found \n"
-	          << m_collector_context.c_str() 
+	          << m_global_collector_context.c_str() 
 			  << std::endl;
   }
   catch (const CosNaming::NamingContext::CannotProceed & ) 
@@ -1393,18 +1594,18 @@ CORBA::Long TraceAdminTool::get_collectors(const std::string &arg, std::ostream 
   catch (const CdmwNamingAndRepository::NoNameDomain & ) 
   {
     std::cerr << "Trace Collector Name Domain does not exist \n"
-	          << m_collector_context.c_str() 
+	          << m_global_collector_context.c_str() 
 			  << std::endl;
   }
   catch (const CdmwNamingAndRepository::InvalidName &) 
   {
     std::cerr << "Trace Collector Name Domain has illegal form \n"
-	          << m_collector_context.c_str() 
+	          << m_global_collector_context.c_str() 
 			  << std::endl;
   }
   catch (const CosNaming::NamingContext::InvalidName & )
   {
-    os << "Trace Collector Domain invalid  \n<" << m_collector_context.c_str() 
+    os << "Trace Collector Domain invalid  \n<" << m_global_collector_context.c_str() 
 	   << ">!" << std::endl;
   } 
   catch (const Cdmw::Common::TypeMismatchException & e) 
@@ -1430,6 +1631,146 @@ CORBA::Long TraceAdminTool::get_collectors(const std::string &arg, std::ostream 
 }
 
 //----------------------------------------------------------------------------
+CORBA::Long TraceAdminTool::get_local_collectors(const std::string &arg, std::ostream &os)
+{
+  using namespace CosNaming;
+
+  CORBA::Long result = OP_FAILURE;
+  
+  // return if local trace collector context undefined
+  if (m_local_collector_context == "")
+  {
+    std::cerr << "Local Trace Collector Name Context is undefined \n -> use set_producer_context command"
+			  << std::endl;
+			  
+    return result;
+  }
+
+  try
+  {
+    // set TraceCollector location under admin root context
+    // Pattern is :
+    //   "<hostname>/SERVICES/TRACE/COLLECTORS/<collectorName>"
+         				
+	// NamingInterface on Admin Root context
+    Cdmw::CommonSvcs::Naming::NamingInterface ni_root(m_adminRootContext.in());
+    
+	// create TraceCollector domain naming context
+	CosNaming::NamingContext_var collector_nc = CosNaming::NamingContext::_nil();
+	
+	CosNaming::Name collectorName_;
+    collectorName_.length(4);
+    collectorName_[0].id = CORBA::string_dup (m_local_collector_context.c_str());
+    collectorName_[1].id = CORBA::string_dup("SERVICES");
+    collectorName_[2].id = CORBA::string_dup("TRACE");
+    collectorName_[3].id = CORBA::string_dup("COLLECTORS");
+    
+    typedef CommonSvcs::Naming::NamingUtil<CosNaming::NamingContext> Util;
+	collector_nc = Util::resolve_name (ni_root,ni_root.to_string(collectorName_));
+	  
+	if (CORBA::is_nil(collector_nc.in()))
+    {
+      os << "Local Trace Collector Name Context Resolve Error" << std::endl;
+	}
+	else
+	{	
+	  // NamingInterface on TraceCollector context
+	  CommonSvcs::Naming::NamingInterface ni(collector_nc.in());
+            
+	  CosNaming::BindingIterator_var bindingItr;
+	  CosNaming::BindingList_var bindingList;
+            
+      os << "list of local trace collectors" << std::endl; 
+      os << "------------------------------" << std::endl;
+               
+      // All binding in this list are TraceCollector, so we try to get all
+      ni.list (CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE, bindingList, bindingItr);
+            
+      // We stop when there is no more binding
+      bool isMoreBinding = false;
+            
+      do 
+      {            
+        for (size_t iBinding=0 ; iBinding < bindingList->length() ; iBinding++) 
+        {              
+		  CosNaming::Binding binding = bindingList[iBinding];
+		  
+		  // get collector name
+		  std::string collector_name = ni.to_string (binding.binding_name);  
+        
+          os << collector_name.c_str() << std::endl;
+        }
+
+        // If the iterator is not NULL, there is more binding to get back
+        if (!CORBA::is_nil(bindingItr.in())) 
+        {
+          isMoreBinding = 
+               bindingItr->next_n(CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE, 
+                                  bindingList);
+        }          
+      } while (isMoreBinding);
+  
+      os << std::endl;
+    
+  	  result = OP_SUCCESS;
+  	}
+  } 
+  
+  catch (const std::bad_alloc&)
+  {
+    PRINT_EXCEPTION_MSG(__FILE__,__LINE__,
+					    "Bad Allocation Exception",
+						os);
+  }
+  catch (const CosNaming::NamingContext::NotFound &)
+  {
+    std::cerr << "Trace Producer Name Context not found \n"
+	          << m_producer_context.c_str() 
+			  << std::endl;
+  }
+  catch (const CosNaming::NamingContext::CannotProceed & ) 
+  {
+    os << "Unexpected Error (CannotProceed exception)!" << std::endl;
+  }
+  catch (const CdmwNamingAndRepository::NoNameDomain & ) 
+  {
+    std::cerr << "Trace Producer Name Domain does not exist \n"
+	          << m_producer_context.c_str() 
+			  << std::endl;
+  }
+  catch (const CdmwNamingAndRepository::InvalidName &) 
+  {
+    std::cerr << "Trace Producer Name Context has illegal form \n"
+	          << m_producer_context.c_str() 
+			  << std::endl;
+  }
+  catch (const CosNaming::NamingContext::InvalidName & )
+  {
+    os << "Trace Producer Name invalid  \n<" << m_producer_context.c_str()
+	   << ">!" << std::endl;
+  } 
+  catch (const Cdmw::Common::TypeMismatchException & e) 
+  {
+    os << "TypeMismatchException (Not a NamingContext) <" 
+	   << e.what() << ">" << std::endl;
+  }
+  catch (const Cdmw::Exception &e ) 
+  {
+    PRINT_EXCEPTION(__FILE__,__LINE__,e,os);
+  }
+  catch (const CORBA::SystemException &e)
+  {
+    PRINT_EXCEPTION(__FILE__,__LINE__,e,os);
+  }
+  catch (const CORBA::Exception &e)
+  {
+    PRINT_EXCEPTION(__FILE__,__LINE__,e,os);
+  }
+
+  return result;
+}
+
+//----------------------------------------------------------------------------
 CORBA::Long TraceAdminTool::get_producers(const std::string &arg, std::ostream &os)
 {
   using namespace CosNaming;
@@ -1448,15 +1789,15 @@ CORBA::Long TraceAdminTool::get_producers(const std::string &arg, std::ostream &
   {
     // set TraceProducer location under admin root context
     // Pattern is :
-    //   "<host_name>/<application_name>"
+    //   "<host>/<appli_name>/<process_name>/TRACE/TraceProducer"
          				
 	// NamingInterface on Admin Root context
-    Cdmw::NamingAndRepository::NamingInterface ni_root(m_adminRootContext.in());
+    Cdmw::CommonSvcs::Naming::NamingInterface ni_root(m_adminRootContext.in());
     
 	// create Producer domain naming context
 	CosNaming::NamingContext_var producer_nc = CosNaming::NamingContext::_nil();
 	
-    typedef NamingAndRepository::NamingUtil<CosNaming::NamingContext> Util;
+    typedef CommonSvcs::Naming::NamingUtil<CosNaming::NamingContext> Util;
 	producer_nc = Util::resolve_name (ni_root,m_producer_context);
 	  
 	if (CORBA::is_nil(producer_nc.in()))
@@ -1466,7 +1807,7 @@ CORBA::Long TraceAdminTool::get_producers(const std::string &arg, std::ostream &
 	else
 	{	
 	  // NamingInterface on Producer context
-	  NamingAndRepository::NamingInterface ni(producer_nc.in());
+	  CommonSvcs::Naming::NamingInterface ni(producer_nc.in());
             
 	  CosNaming::BindingIterator_var bindingItr;
 	  CosNaming::BindingList_var bindingList;
@@ -1475,7 +1816,7 @@ CORBA::Long TraceAdminTool::get_producers(const std::string &arg, std::ostream &
       os << "-------------------------------" << std::endl;
                
       // All binding in this list are Producers, so we try to get all
-      ni.list (NamingAndRepository::NamingInterface::LIST_CHUNK_SIZE, bindingList, bindingItr);
+      ni.list (CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE, bindingList, bindingItr);
             
       // We stop when there is no more binding
       bool isMoreBinding = false;
@@ -1502,7 +1843,7 @@ CORBA::Long TraceAdminTool::get_producers(const std::string &arg, std::ostream &
         if (!CORBA::is_nil(bindingItr.in())) 
         {
           isMoreBinding = 
-               bindingItr->next_n(NamingAndRepository::NamingInterface::LIST_CHUNK_SIZE, 
+               bindingItr->next_n(CommonSvcs::Naming::NamingInterface::LIST_CHUNK_SIZE, 
                                   bindingList);
         }          
       } while (isMoreBinding);
