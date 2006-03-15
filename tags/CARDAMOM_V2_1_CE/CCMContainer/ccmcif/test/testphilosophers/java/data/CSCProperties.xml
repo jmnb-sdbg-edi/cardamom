@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<config>
+    <csc name="testphilosophers" owner="CCMContainer" lang="java" type="unit-test">
+        <deliveries>
+            <delivery basename="Philo" type="lib" visibility="private">
+                <condition antfile="Conditions.xml" target="-check-not-JacORB">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/common
+                            Foundation/testutils
+                            Foundation/ossupport
+                            LifeCycle/lifecycleidl
+                            CCMContainer/ccmcontaineridl
+                        </libraries>
+                        <generatedfilesfrom>
+                            DinnerExecutor.xml
+                        </generatedfilesfrom>
+                    </prerequisites>
+                    <sourcefiles>
+                        CCMForkHomeImpl.java
+                        CCMForkImpl.java
+                        CCMForkManagerImpl.java
+                        CCMObserverHomeImpl.java
+                        CCMObserverImpl.java
+                        CCMPhilosopherHomeImpl.java
+                        CCMPhilosopherImpl.java
+                        CCMRegistratorHomeImpl.java
+                        CCMRegistratorImpl.java
+                        StatusInfoFactoryImpl.java
+                        StatusInfoImpl.java
+                    </sourcefiles>
+                    <idlfiles>
+                        <server>
+                            Philo_cif.idl
+                            UserPhilo.idl
+                        </server>
+                        <client/>
+                    </idlfiles>
+                </condition>
+                <condition antfile="Conditions.xml" target="-check-JacORB">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/common
+                            Foundation/testutils
+                            Foundation/ossupport
+                            LifeCycle/lifecycleidl
+                            CCMContainer/ccmcontaineridl
+                        </libraries>
+                        <generatedfilesfrom>
+                            DinnerExecutor.xml
+                        </generatedfilesfrom>
+                    </prerequisites>
+                    <sourcefiles>
+                        CCMForkHomeImpl.java
+                        CCMForkImpl.java
+                        CCMForkManagerImpl.java
+                        CCMObserverHomeImpl.java
+                        CCMObserverImpl.java
+                        CCMPhilosopherHomeImpl.java
+                        CCMPhilosopherImpl.java
+                        CCMRegistratorHomeImpl.java
+                        CCMRegistratorImpl.java
+                        StatusInfoFactoryImpl.java
+                        StatusInfoImpl.java
+                    </sourcefiles>
+                    <idlfiles>
+                        <server>
+                            Philo_cif.idl
+                            UserPhilo.idl
+                        </server>
+                        <client/>
+                    </idlfiles>
+                    <addidlflags>
+                        -i2jpackagefile @this.csc.data.dir@${FS}package.txt
+                    </addidlflags>
+                </condition>
+            </delivery>
+            <delivery basename="main" type="exe" visibility="private">
+                <condition antfile="Conditions.xml" target="-check-not-JacORB">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/common
+                            Foundation/ossupport
+                            Foundation/orbsupport
+                            Foundation/testutils
+                            Foundation/pullmonitorableidl
+                            LifeCycle/lifecycle
+                            LifeCycle/lifecycleidl
+                            CCMContainer/ccmcommon
+                            CCMContainer/ccmcontainer
+                            CCMContainer/ccmcontaineridl
+                            CCMContainer/ccmcif
+                            CCMContainer/ccmdeploymentutil
+                            Repository/repositoryidl
+                            Foundation/commonsvcsnaming
+                            Repository/repositoryinterface
+                            ConfAndPlug/cdmwinit
+                            SystemMngt/smginterfaceidl
+                            SystemMngt/processadmintools
+                            Event/eventidl
+                            Repository/simrepository
+                            ccmcif/test/testphilosophers/Philo
+                        </libraries>
+                        <generatedfilesfrom>
+                            ComponentServer.xml
+                        </generatedfilesfrom>
+                    </prerequisites>
+                    <sourcefiles>
+                        MainTest.java
+                        NonCdmwStatusInfoConsumerImpl.java
+                        ClientThread.java
+                        PhiloTest.java
+                        TypedPhiloTest.java
+                    </sourcefiles>
+                    <idlfiles>
+                        <server>
+                            Cdmw_Philo_cif.idl
+                        </server>
+                        <client/>
+                        <tie>
+                            Philo_cif.idl
+                            Cdmw_Philo_cif.idl
+                        </tie>
+                    </idlfiles>
+                </condition>
+                <condition antfile="Conditions.xml" target="-check-JacORB">
+                    <prerequisites>
+                        <libraries>
+                            Foundation/common
+                            Foundation/ossupport
+                            Foundation/orbsupport
+                            Foundation/testutils
+                            Foundation/pullmonitorableidl
+                            LifeCycle/lifecycle
+                            LifeCycle/lifecycleidl
+                            CCMContainer/ccmcommon
+                            CCMContainer/ccmcontainer
+                            CCMContainer/ccmcontaineridl
+                            CCMContainer/ccmcif
+                            CCMContainer/ccmdeploymentutil
+                            Repository/repositoryidl
+                            Foundation/commonsvcsnaming
+                            Repository/repositoryinterface
+                            ConfAndPlug/cdmwinit
+                            SystemMngt/smginterfaceidl
+                            SystemMngt/processadmintools
+                            Event/eventidl
+                            Repository/simrepository
+                            ccmcif/test/testphilosophers/Philo
+                        </libraries>
+                        <generatedfilesfrom>
+                            ComponentServer.xml
+                        </generatedfilesfrom>
+                    </prerequisites>
+                    <sourcefiles>
+                        MainTest.java
+                        NonCdmwStatusInfoConsumerImpl.java
+                        ClientThread.java
+                        PhiloTest.java
+                        TypedPhiloTest.java
+                    </sourcefiles>
+                    <idlfiles>
+                        <server>
+                            Cdmw_Philo_cif.idl
+                        </server>
+                        <client/>
+                        <tie>
+                            Philo_cif.idl
+                            Cdmw_Philo_cif.idl
+                        </tie>
+                    </idlfiles>
+                    <addidlflags>
+                        -i2jpackagefile @this.csc.data.dir@${FS}package.txt
+                    </addidlflags>
+                </condition>
+            </delivery>
+        </deliveries>
+        <runtest>
+            <condition antfile="Conditions.xml" target="-check-not-JacORB">
+                <test name="main" nbtestable="10">
+                    <neededfiles>
+                        Event/eventchannelmanager/EventChannelManager_Desc.dtd
+                        CCMContainer/ccmcif/test/testphilosophers/java/EventChannelManager.xml
+                        CCMContainer/ccmcif/test/testphilosophers/java/EventChannel_Desc.dtd
+                        CCMContainer/ccmcif/test/testphilosophers/java/EventChannelConf1.xml
+                        CCMContainer/ccmcif/test/testphilosophers/java/obtest.conf
+                    </neededfiles>
+                    <neededprocesses>
+                        Event/eventchannelmanager/cdmw_event_channel_manager
+                    </neededprocesses>
+                    <neededjarfiles>
+                        Event/eventchannelmanager/eventchannelmanager
+                    </neededjarfiles>
+                </test>
+            </condition>
+            <condition antfile="Conditions.xml" target="-check-JacORB">
+                <test name="main" nbtestable="10">
+                    <testattributes>
+                        -Djacorb.implname=StandardImplName
+                    </testattributes>
+                    <neededfiles>
+                        Event/eventchannelmanager/EventChannelManager_Desc.dtd
+                        CCMContainer/ccmcif/test/testphilosophers/java/EventChannelManager.xml
+                        CCMContainer/ccmcif/test/testphilosophers/java/EventChannel_Desc.dtd
+                        CCMContainer/ccmcif/test/testphilosophers/java/EventChannelConf1.xml
+                        CCMContainer/ccmcif/test/testphilosophers/java/obtest.conf
+                    </neededfiles>
+                    <neededprocesses>
+                        Repository/simrepository/cdmw_simulated_repository
+                        Event/eventchannelmanager/cdmw_event_channel_manager
+                        Event/eventadmin/cdmw_event_admin
+                    </neededprocesses>
+                    <neededjarfiles>
+                        Event/eventinterface/eventinterface
+                    </neededjarfiles>
+                </test>
+            </condition>
+        </runtest>
+    </csc>
+</config>
+
+

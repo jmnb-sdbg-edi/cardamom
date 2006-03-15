@@ -1,0 +1,124 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef __CDMW_FT_ACTIVATION_IDL__
+#define __CDMW_FT_ACTIVATION_IDL__
+
+#include <FT.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW Fault Tolerance
+* service.
+*/
+module CdmwFT {
+/**
+* This module describes local interfaces and data types available for
+* a CDMW location (process).
+*/
+module Location {
+    /**
+     * Handler Identifier for use for ActivationHandler-Object Group Reference
+     * association.
+     */
+	typedef unsigned long HandlerId;
+    /** 
+    * Exception indicating that the handler identifier is invalid.
+    * This means it is not generated locally!
+    */
+    exception InvalidHandlerId {};
+
+    /** 
+    * Exception indicating that a handler is already defined for that group.
+    */
+    exception HandlerAlreadyExist {};
+
+    /** 
+    * The ActivationHandler local interface is a callback interface to be
+    * implemented by application (application frameworks) in order to be
+    * notified whever the local member is promoted to primary or rather
+    * discharged from primary to backup.
+    */
+    local interface ActivationHandler {
+        /**
+        * The local member is promoted primary. This may result in a call to
+        * ReplicationManager::set_primary_member or following an election of a new
+        * primary replica.
+        */
+        void activate();
+        /**
+        * The local member is not primary any more!
+        */
+        void deactivate();
+    };
+    /** 
+    * The ActivationManager is responsible for manager activation/deactivation
+    * notifications. It is a local object to be used by applications (or application
+    * frameworks) to register their activation handler in order to be notified
+    * when the local member is promoted toi primary.
+    * <p>NOTA: Applications can retrieve its object reference by calling
+    *  ORB::resolve_initial_references("FTActivationManager").
+    */
+    local interface ActivationManager
+    {
+        /**
+        * This operation registers an ActivationHandler object for an object
+        * group to be notified on activation/deactivation of the local member
+        * of the object group.
+        * <p>NOTA: The same handler object can be registered for several object
+        * groups.
+        *
+        * @param object_group_ref The interoperable object group reference
+        * @param handler The ActivationHandler object
+        *
+        * @return a Handler Identifier for use for any subsequent unregistration.
+        *
+        * @exception FT::ObjectGroupNotFound Raised when there is no local member
+        * for the object group.
+        * @exception HandlerAlreadyExist Raised when a handler is already defined
+        * for the object group. The user should call an unregister_activation_handler
+        * before registering a new one.
+        */
+        HandlerId register_activation_handler(in ::FT::ObjectGroup object_group_ref,
+                                              in ActivationHandler handler)
+            raises (FT::ObjectGroupNotFound, HandlerAlreadyExist);
+        /**
+        * This operation unregisters a previously registered ActivationHandler
+        * object. The handler will not be notified any more.
+        *
+        * @param handler_id A previously acquired handler identifier.
+        *
+        * @exception InvalidHandlerID There was no registration for <i>handler_id</i>.
+        */
+        void unregister_activation_handler(in HandlerId handler_id)
+            raises (InvalidHandlerId);
+    };
+    
+};  // Location
+};  // CdmwFT
+
+#endif // __CDMW_FT_ACTIVATION_IDL__
+

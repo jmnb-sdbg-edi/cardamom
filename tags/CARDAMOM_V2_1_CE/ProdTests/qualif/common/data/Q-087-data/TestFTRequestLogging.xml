@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * This file and the information it contains are confidential and proprietary. 
+ * They shall not be reproduced nor disclosed to any person except to those 
+ * having a need to know them without prior written consent of the owner.
+-->
+<!-- ===================================================================== -->
+
+<!DOCTYPE process SYSTEM "../TestFTRequestLogging_Desc.dtd">
+
+<process>
+    <services>
+        <repository-interface default-domain-name="dom4"/>
+        <fault-tolerance request-duration-policy="15000000" client-id="DBClient">
+            <datastores max-transaction-in-progress="10" 
+                max-transaction-done="20" 
+                cohort-timeout="3000"
+                coordinator-timeout="3000"
+                number-of-scheduler-thread="1"
+                chunk-size="200"
+                freeze-size="150"
+                freeze-timeout="500"/>
+        </fault-tolerance>
+    </services>
+</process>

@@ -1,0 +1,192 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_TRACE_TRACEPRODUCER_IDL_
+#define CDMW_TRACE_TRACEPRODUCER_IDL_
+
+
+
+#include <CdmwTraceCommon.idl>
+
+#pragma prefix "thalesgroup.com"
+
+
+/**
+* This module describes interfaces and data types of the CDMW
+* Trace service.
+*/
+module CdmwTrace
+{
+
+    interface Collector;
+
+
+    /**
+    * This interface allows to control the data and their destination
+    * produced by the Trace service. 
+    */
+    interface TraceProducer {
+	
+		/** 
+		* Definition of Trace Collector Ident
+		*/
+	    typedef unsigned long Ident;
+
+		/** 
+		* Definition of Trace Collector Data 
+        *   mnemonic name, collector name, object reference
+		*/
+        struct CollectorData
+        {
+            /** 
+            * The mnemonic name of the collector
+            */
+            string the_collectorMnemoName;
+
+            /** 
+            * The collector object name
+            */
+            string the_collectorObjName;
+
+            /** 
+            * The collector object reference
+            */
+			Collector the_collector;
+        };
+
+		/** 
+		* Definition of Trace Collector Registration
+        *   identification, mnemonic name, collector name
+		*/
+        struct Registration
+        {
+            /** 
+            * The actual identifier of the registration
+            */
+            Ident collectorId;
+
+            /** 
+            * The mnemonic name that is associated with
+            * the registration
+            */
+            string collectorMnemoName;
+
+            /** 
+            * The collector object name
+            */
+            string collectorObjName;
+        };
+
+		/** 
+		* Definition of sequence of registered Trace Collectors
+		*/
+        typedef sequence<Registration> RegistrationSeq;
+
+
+        /** 
+        * Exception to be raised whenever there is an attempt to unregister 
+        * entities using an invalid registeration Id.
+        */
+        exception InvalidRegistration 
+		{
+		  /**
+		  * The reason of the exception
+		  */
+          string reason;
+		};
+
+        /**
+        * This operation allows a Collector to be registered
+        * within the TraceProducer.
+        *
+        * @param the_collector The collector to be registered
+        * @param the_objName   The name of the collector object
+        * @param the_mnemoName The mnemonic name that may be used as a help
+        *                      to identify the collector.
+        *
+        * @return The actual registration identifier of the collector.
+        *
+        * @exception InvalidRegistration if collectorId cannot be allocated
+        */
+        Ident register_collector (in Collector the_collector, 
+		                          in string the_objName,
+		                          in string the_mnemoName)
+            raises (InvalidRegistration);
+
+        /**
+        * This operation unregisters a collector identified by
+        * its registration identifier.
+        *
+        * @param collectorId The actual registration identifier of the collector
+        *                    to be unregistered.
+        *
+        * @exception InvalidRegistration if collectorId doesn't denote a valid
+        *                                registration
+        */
+        void unregister_collector (in Ident collectorId)
+            raises (InvalidRegistration);
+
+        /**
+        * This operation returns the registered collectors.
+        */
+        RegistrationSeq get_registered_collectors ();
+
+        /**
+        * This operation returns the trace filters.
+        */
+        TraceFilterSeq get_trace_filters ();
+
+        /**
+         * This operation activates the specified level of a domain.
+         *
+         * @param the_component_name the component name.
+         * @param the_domain The domain
+         * @param the_value  The value
+         */
+        // ECR-0123
+        void
+        activate_level(in ComponentName the_component_name,
+                       in Domain the_domain,
+                       in Value the_value);
+
+        /**
+         * This operation deactivates the specified level of a domain.
+         *
+         * @param the_component_name the component name.
+         * @param the_domain The domain
+         * @param the_value  The value
+         */
+        // ECR-0123
+        void
+        deactivate_level(in ComponentName the_component_name,
+                         in Domain the_domain,
+                         in Value the_value);
+
+    };
+
+}; // End module CdmwTrace
+
+#endif // CDMW_TRACE_TRACEPRODUCER_IDL_
+

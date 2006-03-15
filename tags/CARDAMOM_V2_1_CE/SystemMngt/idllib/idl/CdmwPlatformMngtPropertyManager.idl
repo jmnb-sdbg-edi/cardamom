@@ -1,0 +1,131 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_PROPERTY_MANAGER_IDL_
+#define CDMW_PLATFORM_MNGT_PROPERTY_MANAGER_IDL_
+
+
+#include <CosPropertyService.idl>
+
+#include <CdmwPlatformMngtCommon.idl>
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwPlatformMngt
+{
+
+    interface SupervisionObserver;
+    
+
+    /**
+    * The PropertyManager
+    * Extend the PropertySetDef container
+    * See the CosPropertyService specification for details.
+    */
+    interface PropertyManager : CosPropertyService::PropertySetDef
+    {
+
+        /** facade to get the attribute:
+        * @param attr_name : attribute name
+        * @param ret_attr returned attribute
+        */
+
+        void get_attribute(in string attr_name, out any ret_attr, in char flag) raises(CdmwPlatformMngt::AttributeNotFound);
+
+        /** facade to set the attribute:
+        * @param attr_name : attribute name
+        * @param attr attribute value for setting
+        */
+
+        void set_attribute(in string attr_name, in any attr, in char flag) raises(CdmwPlatformMngt::AttributeNotFound); 
+
+        /**
+        * Registers a SupervisionObserver for all properties change.
+        *
+        * @param observer_name the name used to identify the observer
+        * @param observer the observer to be registered
+        * @param deeply indicate that observer is registered for
+        *        property change coming from child elements
+        *
+        * @return the observer that was previously registered with
+        * observer_name if any.
+        */
+        SupervisionObserver register_all_properties_observer (
+            in string observer_name,
+            in SupervisionObserver observer,
+            in boolean deeply);
+
+        /**
+        * Unregisters a SupervisionObserver for all properties change.
+        *
+        * @param observer_name the name identifying the observer to unregister
+        *
+        * @return the observer.
+        *
+        * @exception ObserverNotFound if observer_name doesn't denote
+        * a previously registered observer.
+        */
+        SupervisionObserver unregister_all_properties_observer (in string observer_name)
+            raises(ObserverNotFound);
+            
+        /**
+        * Registers a SupervisionObserver for a set of properties change.
+        *
+        * @param observer_name the name used to identify the observer
+        * @param observer the observer to be registered
+        * @param property_names the list of properties to register the observer
+        *
+        * @exception PropertyInListNotFound if property from the list cannot be found
+        *
+        */
+        void register_property_observer (
+            in string observer_name,
+            in SupervisionObserver observer,
+            in CosPropertyService::PropertyNames property_names)
+            raises(PropertyInListNotFound);
+
+        /**
+        * Unregisters a SupervisionObserver for a set of property change.
+        *
+        * @param observer_name the name identifying the observer to unregister
+        * @param property_names the list of properties to unregister the observer
+        *
+        * @exception PropertyInListNotFound if property from the list cannot be found
+        * @exception PropertyObserverNotFound if observer_name doesn't denote
+        *                             a previously registered observer.
+        */
+        void unregister_property_observer (
+            in string observer_name,
+            in CosPropertyService::PropertyNames property_names)
+            raises(PropertyInListNotFound,
+                   PropertyObserverNotFound);
+
+    }; // End interface PropertyManager
+
+
+}; // End Module CdmwPlatformMngt
+
+#endif //CDMW_PLATFORM_MNGT_PROPERTY_MANAGER_IDL_
+

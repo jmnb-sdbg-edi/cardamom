@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureXercesJAVA" default="-check-XercesJAVA" basedir=".">
+
+
+    <description>
+        This build file locates and checks Apache Xerces JAVA.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-XercesJAVA" target checks if Apache Xerces JAVA is suitable
+        for the build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-test1"
+            + "-set-XercesJAVA-properties"
+    -->
+    <target name="-check-XercesJAVA"
+            depends="-initialize, -test1, -set-XercesJAVA-properties">
+
+        <!-- save XercesJAVA properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-locate-XercesJAVA" target determines the installation directory
+        of Apache Xerces JAVA.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-XercesJAVA" depends="-initialize">
+        <!-- determine the XercesJAVA installation directory -->
+        <var name="my.var"
+             value="Enter the ${tool.fullname} installation directory"/>
+
+        <propertycopy property="xercesj.default.install.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.install.dir"/>
+
+        <if>
+            <isset property="xercesj.default.install.dir"/>
+            <then>
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${my.var}" dirPathOnly="true"
+                                addproperty="config.${tool.name}.install.dir"
+                                default="${xercesj.default.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.install.dir"
+                                      from="xercesj.default.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirPathOnly="true"
+                        addproperty="config.${tool.name}.install.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="xercesj.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.install.dir"
+                   value="${xercesj.install.dir}"/>
+        </propertyfile>
+
+        <!-- determine the lib directory -->
+        <propertycopy property="xercesj.default.lib.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.dir"/>
+
+        <if>
+            <not>
+                <isset property="xercesj.default.lib.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the lib directory -->
+                <findfile file="xercesImpl.jar"
+                          dir="${xercesj.install.dir}" findFirst="true"
+                          recursive="true" property="xercesj.xercesimpl.jar"/>
+
+                <dirname property="xercesj.default.lib.dir"
+                         file="${xercesj.xercesimpl.jar}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} lib directory"
+                        addproperty="config.${tool.name}.lib.dir"
+                        default="${xercesj.default.lib.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.lib.dir"
+                              from="xercesj.default.lib.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="xercesj.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.lib.dir"
+                   value="${xercesj.lib.dir}"/>
+        </propertyfile>
+
+        <!-- save the properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+    
+    
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for XercesJAVA -->
+        <propertycopy property="xercesj.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="Apache Xerces JAVA"/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-test1" target checks whether the Xerces JAVA JAR files can be
+        found.
+    -->
+    <target name="-test1">
+        <echo message="Checking the ${tool.fullname} lib directory"/>
+
+        <!--
+            the test is successful if all the required JAR files are found in
+            that directory
+        -->
+        <propertycopy property="xercesj.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- xercesImpl.jar -->
+        <property name="xercesj.xercesimpl.jar"
+                  location="${xercesj.lib.dir}${FS}xercesImpl.jar"/>
+              
+        <available file="${xercesj.xercesimpl.jar}"
+                   property="xercesj.xercesimpl.jar.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="xercesj.xercesimpl.jar.is.ok"
+              message="Could not find ${xercesj.xercesimpl.jar}."/>
+
+        <!-- xmlParserAPIs.jar -->
+        <property name="xercesj.xmlparserapis.jar"
+                  location="${xercesj.lib.dir}${FS}xmlParserAPIs.jar"/>
+              
+        <available file="${xercesj.xmlparserapis.jar}"
+                   property="xercesj.xmlparserapis.jar.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <fail unless="xercesj.xmlparserapis.jar.is.ok"
+              message="Could not find ${xercesj.xmlparserapis.jar}."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-set-XercesJAVA-properties" target defines properties that will be
+        saved into the site configuration file.
+    -->
+    <target name="-set-XercesJAVA-properties">
+        <!-- classpath -->
+        <findfile file="*.jar" dir="${xercesj.lib.dir}" recursive="true"
+                  separator="${PS}" property="config.${tool.name}.classpath"/>
+    </target>
+ 
+
+</project>
+

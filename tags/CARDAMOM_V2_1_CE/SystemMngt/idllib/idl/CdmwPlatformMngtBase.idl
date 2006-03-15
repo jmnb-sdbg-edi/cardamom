@@ -1,0 +1,218 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_BASE_IDL_
+#define CDMW_PLATFORM_MNGT_BASE_IDL_
+
+
+#pragma prefix "thalesgroup.com"
+
+/**
+ * Module defining base definitions of the CDMW Platform Management service.
+ */
+module CdmwPlatformMngtBase
+{
+
+
+    /**
+    * Applicative state retrieval
+    */
+    enum StateRetrieval
+    {
+        /**
+        * Application software shall retrieve their last stable state
+        */
+        LAST_STATE,
+        /**
+        * Application software shall recover their state from their last run
+        */
+        RECOVER_STATE,
+        /**
+        * Application software shall retrieve the specified state
+        */
+        SPECIFIED_STATE
+    };
+
+    /**
+    * The startup mode.
+    * Meaningful only to application software.
+    */
+    typedef short StartupMode;
+
+    /**
+    * The startup kind.
+    */
+    struct StartupKind
+    {
+        /**
+        * The state retrieval.
+        */
+        StateRetrieval state_retrieval;
+
+        /**
+        * The startup mode.
+        */
+        StartupMode startup_mode;
+
+        /**
+        * The identifier of the specified state.
+        * Meaningful only if state_retrieval is SPECIFIED_STATE.
+        */
+        string specified_state_id;
+
+    };
+
+
+    /**
+     * The structured time stamp.
+     */
+    struct TimeStamp
+    {
+        short year;
+        short month;
+        short day;
+
+        short hour;
+        short minute;
+        short second;
+        short millisecond;
+        short microsecond;
+    };
+
+
+    /**
+    * The information level of an event.
+    * User defined levels must not be negative.
+    */
+    typedef short EventLevel;
+
+
+    /**
+    * Predefined level for a piece of information.
+    */
+    const EventLevel INF = -1;
+
+    /**
+    * Predefined level for a warning.
+    */
+    const EventLevel WRN = -2;
+
+    /**
+    * Predefined level for an error.
+    */
+    const EventLevel ERR = -3;
+
+    /**
+    * Reserved level for a fatal error.
+    * Only issued by the Platform Management service.
+    */
+    const EventLevel FTL = -32767;
+
+
+    /**
+    * Predefined string for the INF level.
+    */
+    const string INF_STR = "INF";
+
+    /**
+    * Predefined string for the WRN level.
+    */
+    const string WRN_STR = "WRN";
+
+    /**
+    * Predefined string for the ERR level.
+    */
+    const string ERR_STR = "ERR";
+
+    /**
+    * Predefined string for the FTL level.
+    */
+    const string FTL_STR = "FTL";
+
+
+    /**
+    * The issuer of an event.
+    */
+    typedef string EventIssuer;
+
+    /**
+    * Reserved issuer identifying the Platform Management service.
+    */
+    const EventIssuer PFMMNG = "CDMW_PFMMNG";
+
+
+    /**
+     * Event TimeStamp used for emission.
+     */
+    struct EventKey
+    {
+        /**
+        * primary key of the event
+        */
+        unsigned long primary_key;
+        
+        /**
+        * "second" part of event emission time
+        */
+        unsigned long seconds;
+
+        /**
+        * "microsecond" part of event emission time
+        */
+        unsigned long microseconds;
+        
+        /**
+        * "counter index" part
+        */
+        unsigned long counter_inx;
+    };
+    
+    /**
+    * The header of an event.
+    */
+    struct EventHeader
+    {
+        /**
+         * The event key.
+         */
+        EventKey event_key;
+        
+        /**
+         * The time stamp of the event.
+         */
+        TimeStamp time_stamp;
+
+        /**
+         * The level of the event.
+         */
+        EventLevel level;
+    };
+
+
+
+}; // End Module CdmwPlatformMngtBase
+
+#endif // CDMW_PLATFORM_MNGT_BASE_IDL_
+

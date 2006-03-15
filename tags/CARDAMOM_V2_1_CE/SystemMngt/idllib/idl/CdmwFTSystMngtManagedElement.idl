@@ -1,0 +1,77 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_FTSYST_MNGT_MANAGED_ELEMENT_IDL_
+#define CDMW_FTSYST_MNGT_MANAGED_ELEMENT_IDL_
+
+
+
+
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwFTSystMngtPropertyManager.idl>
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwFTSystMngt
+{
+
+    /**
+     * The CDMW managed element accessor.
+     */
+    interface ManagedElementAccessor : PropertyManagerAccessor
+    {
+
+        /**
+        * Get the name of the managed element.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        */
+        CdmwPlatformMngt::ElementName get_name(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Get the parent of element.
+        *
+        * @param target_element_path path of target element to access
+        * @param parent_element_path  return path of the parent element (empty string if parent of root)
+        *
+        * @return the type of the parent element
+        *
+        * @exception ManagedElementNotFound if element not found
+        */    
+        CdmwPlatformMngt::ElementType get_parent(in CdmwPlatformMngt::ElementPath target_element_path,
+                                                 out CdmwPlatformMngt::ElementPath parent_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+            
+        
+    }; // End interface ManagedElementAccessor
+
+    
+}; // End Module CdmwFTSystMngt
+
+#endif // CDMW_FTSYST_MNGT_MANAGED_ELEMENT_IDL_
+

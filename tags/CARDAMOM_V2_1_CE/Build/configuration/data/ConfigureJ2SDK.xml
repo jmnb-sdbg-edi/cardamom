@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureJ2SDK" default="-check-J2SDK" basedir=".">
+
+
+    <description>
+        This build file locates and checks the SUN Java 2 SDK.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-J2SDK" target checks if the compiler is suitable for the
+        build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-test1"
+            + "-test2"
+            + "-set-J2SDK-properties"
+    -->
+    <target name="-check-J2SDK"
+            depends="-initialize, -test1, -test2, -set-J2SDK-properties">
+
+        <!-- save J2SDK properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-J2SDK" target determines the installation directory of the
+        SUN Java 2 SDK.
+    -->
+    <target name="-locate-J2SDK">
+        <!--
+            there is nothing to do here as we assume that the SUN Java 2 SDK
+            must be found in the PATH or else ANT even won't run.
+        -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for J2SDK -->
+        <propertycopy property="j2sdk.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="SUN Java 2 SDK"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1" target checks the version of the JRE.
+    -->
+    <target name="-test1">
+        <echo message="Checking the ${tool.fullname} version"/>
+
+        <!--
+            the test is successful is the versions are equal (unless version
+            checking is disabled or the check mode is set to "loose")
+        -->
+        <var name="s" value="warning: your version is ${java.version},"/>
+        <var name="s"
+             value="${s} expected version is ${j2sdk.required.version}"/>
+
+        <var name="s2" value="The required version for ${tool.fullname}"/>
+        <var name="s2" value="${s2} is ${j2sdk.required.version}, your"/>
+        <var name="s2" value="${s2} version is ${java.version}."/>
+
+        <if>
+            <istrue value="${require.tool.version.checking}"/>
+            <then>
+                <if>
+                    <not>
+                        <equals arg1="${java.version}"
+                                arg2="${j2sdk.required.version}" trim="true"/>
+                    </not>
+                    <then>
+                        <if>
+                            <equals arg1="${require.tool.check.mode}"
+                                    arg2="loose" trim="true"/>
+                            <then>
+                                <!-- issue a warning message -->
+                                <echo>${s}</echo>
+                            </then>
+                            <else>
+                                <!-- stop -->
+                                <fail>${s2}</fail>
+                            </else>
+                        </if>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test2" target checks whether the JAVA compiler can be found in the
+        PATH.
+    -->
+    <target name="-test2">
+        <echo message="Checking if javac is found in the PATH"/>
+
+        <!--
+            the ${java.home} returns the JRE directory so we need to go up one
+            level in the directory structure to find the installation directory
+        -->
+        <dirname property="install.dir" file="${java.home}"/>
+
+        <!-- the test is successful is 'javac' is found in the PATH -->
+        <property name="j2sdk.javac.location"
+                  location="${install.dir}${FS}bin${FS}javac"/>
+
+        <available file="${j2sdk.javac.location}" type="file"
+                   property="j2sdk.javac.is.ok"/>
+
+        <!-- stop checking if the JAVA compiler was not found -->
+        <fail unless="j2sdk.javac.is.ok"
+              message="Could not find 'javac' in the PATH."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-set-J2SDK-properties" target defines properties that will be saved
+        into the site configuration file.
+    -->
+    <target name="-set-J2SDK-properties">
+        <!-- install.dir -->
+        <property name="config.${tool.name}.install.dir"
+                  location="${java.home}${FS}.."/>
+
+        <!-- cflags.incl.dirs -->
+        <findfile file="jni.h" dir="${java.home}${FS}.." findFirst="true"
+                  recursive="true" property="j2sdk.jni.h"/>
+
+        <var name="my.var" value=""/>
+
+        <if>
+            <isset property="j2sdk.jni.h"/>
+            <then>
+                <dirname file="${j2sdk.jni.h}" property="j2sdk.incl.dir"/>
+                <var name="my.var" value="-I${j2sdk.incl.dir}"/>
+            </then>
+        </if>
+
+        <findfile file="jni_md.h" dir="${java.home}${FS}.." findFirst="true"
+                  recursive="true" property="j2sdk.jni_md.h"/>
+
+        <if>
+            <isset property="j2sdk.jni_md.h"/>
+            <then>
+                <dirname file="${j2sdk.jni_md.h}"
+                         property="j2sdk.targetos.incl.dir"/>
+
+                <if>
+                    <equals arg1="${my.var}" arg2=""/>
+                    <then>
+                        <var name="my.var"
+                             value="-I${j2sdk.targetos.incl.dir}"/>
+                    </then>
+                    <else>
+                        <var name="my.var"
+                             value="${my.var} -I${j2sdk.targetos.incl.dir}"/>
+                    </else>
+                </if>
+            </then>
+        </if>
+
+        <property name="config.${tool.name}.cflags.incl.dirs"
+                  value="${my.var}"/>
+    </target>
+
+
+</project>
+

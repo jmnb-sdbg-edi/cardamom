@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<!--Cdmw deployment file for integration test:-->
+<!--Cdmw Repository launched with traces enabled-->
+<!--...-->
+<!--...-->
+<!DOCTYPE System SYSTEM "CdmwPlatformMngtSystem.dtd">
+
+<!-- ***************** -->
+<!-- System definition -->
+<!--                   -->
+<!-- ***************** -->
+<System Name="system_deployment" Port="21869">
+
+    <!-- Default timeouts for processes of the entire system -->
+	<Timeout Init="30000" Run="10000" Stop="10000"/>
+
+    <!-- Default monitorings for the entire system -->
+	<Host-monitoring Pull-interval="1000" Pull-timeout="1500"/>
+	<App-monitoring  Pull-interval="060" Pull-timeout="070"/>
+    <Proc-monitoring Model="NO_MONITORING"
+                     Pull-interval="021" Pull-timeout="031"
+                     Push-interval="041" Push-timeout="051"/>
+
+    <!-- Services of the system -->
+	<Service Name="NamingAndRepositoryService"
+             App-name="CdmwServices"
+             Process-name="Repository"/>
+
+	<Service Name="XMLService"
+             App-name="CdmwServices"
+             Process-name="XML"/>
+
+    <!-- Hosts of the system -->
+	<Host Name="@hostname1val@"
+          App-exec-path="cdmw_platform_application"
+          Agent-exec-path="cdmw_platform_agent"/>
+
+        <Host Name="@hostname2val@"
+          App-exec-path="cdmw_platform_application"
+          Agent-exec-path="cdmw_platform_agent">
+    </Host>
+
+
+    <!-- ********************** -->
+    <!-- Application definition -->
+    <!--                        -->
+    <!-- ********************** -->
+	<Application Name="CdmwServices"
+                 Host-name="@hostname2val@"
+                 Agent-port="-1"
+                 App-port="-1">
+
+        <!-- Default timeouts for processes of this application -->
+	    <Timeout Init="20000" Run="20000" Stop="20000"/>
+
+        <!-- Monitoring of this application -->
+    	<App-monitoring Pull-interval="021" Pull-timeout="031"/>
+
+
+        <!-- ******************* -->
+        <!-- Process definitions -->
+        <!--                     -->
+        <!-- ******************* -->
+		<Managed-process Name="Repository"
+                         Host-name="@hostname2val@"
+                         Type="SERVICE-PROVIDER"
+                         Autoended="FALSE"
+                         Exec-path="cdmw_naming_and_repository" 
+                         Args="--id=GlobalRepository --conf=cdmw_nar_integ_ccm.xml --trace" 
+                         Port="22456">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="10000"/>
+			<Stop-timeout Timeout="10000"/>  -->
+		</Managed-process>
+
+		<Managed-process Name="XML"
+                         Host-name="@hostname2val@"
+                         Type="SERVICE-PROVIDER"
+                         Autoended="FALSE"
+                         Exec-path="cdmw_xml_server.sh"
+                         Args="--doctypedir=. --validate"
+                         Port="-1">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+		
+		<Unmanaged-process Name="InterfaceRepository"
+                         Host-name="@hostname2val@"
+		                 Autoended="FALSE"
+		                 Exec-path="cdmw_start_ifr_service.sh"
+		                 Port="-1"
+                         Args=""/>
+		
+		<Unmanaged-process Name="IfrFeed"
+                         Host-name="@hostname2val@"
+		                 Autoended="TRUE"
+		                 Exec-path="cdmw_start_ifr_feed.sh"
+		                 Port="-1"
+                         Args="../idl/Basic.idl"/>
+
+	    <Init-graph>
+            <Graph-element Name="Repository">
+                <Graph-element-successor Name="XML"/>
+            </Graph-element>
+            
+	        <Graph-element Name="XML"/>
+		    		    
+            <Graph-element Name="InterfaceRepository">
+                <Graph-element-successor Name="IfrFeed"/>
+            </Graph-element>
+            
+            <Graph-element Name="IfrFeed"/>
+                        
+   	        <Graph-element-root Name="Repository"/>
+	        <Graph-element-root Name="InterfaceRepository"/>
+    	</Init-graph>
+ 
+		<Stop-graph>
+		    <Graph-element Name="XML">
+                <Graph-element-successor Name="Repository"/>
+                <Graph-element-successor Name="InterfaceRepository"/>
+            </Graph-element>
+
+            <Graph-element Name="Repository"/>
+            
+            <Graph-element Name="InterfaceRepository"/>
+                        
+			<Graph-element-root Name="XML"/>
+    	</Stop-graph>
+    	
+    </Application>
+
+
+
+	<Application Name="PackagingAndAssembly"
+                 Host-name="@hostname1val@"
+                 Agent-port="-1"
+                 App-port="-1">
+
+        <!-- Default timeouts for processes of this application -->
+	   <!-- <Timeout Init="20000" Run="20000" Stop="20000"/> -->
+
+        <!-- Monitoring of this application -->
+    	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
+
+        <Managed-process Name="PackageManager"
+                         Host-name="@hostname2val@"
+                         Type="MANAGED-PROCESS"
+                         Autoended="FALSE"
+                         Exec-path="cdmw_package_manager.sh"
+                         Port="24010"
+                         Args="--installDir=@config.Ftp.homedir@/cdmw/integration 
+                               --ftpHomeDir=@config.Ftp.homedir@
+                               --saveFile=workDir/PackageManager.save">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+                          
+        <Managed-process Name="ServerActivator1"
+                          Host-name="@hostname2val@"
+                          Type="MANAGED-PROCESS"
+                          Autoended="FALSE"
+                          Exec-path="cdmw_server_activator.sh"
+                          Port="24020"
+                          Args="">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+
+        <Managed-process Name="ServerActivator2"
+                          Host-name="@hostname1val@"
+                          Type="MANAGED-PROCESS"
+                          Autoended="FALSE"
+                          Exec-path="cdmw_server_activator.sh"
+                          Port="24020"
+                          Args="">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+
+        <Managed-process Name="ComponentInstallation1"
+                          Host-name="@hostname2val@"
+                          Type="MANAGED-PROCESS"
+                          Autoended="FALSE"
+                          Exec-path="cdmw_component_installation.sh"
+                          Port="24030"
+                          Args="--installDir=workDir/ComponentInstallationDir
+                                --saveFile=workDir/ComponentInstallation.save">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+                          
+        <Managed-process Name="ComponentInstallation2"
+                          Host-name="@hostname1val@"
+                          Type="MANAGED-PROCESS"
+                          Autoended="FALSE"
+                          Exec-path="cdmw_component_installation.sh"
+                          Port="24030"
+                          Args="--installDir=workDir/ComponentInstallationDir
+                                --saveFile=workDir/ComponentInstallation.save">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+                          
+        <Managed-process Name="AssemblyFactory"
+                          Host-name="@hostname1val@"
+                          Type="MANAGED-PROCESS"
+                          Autoended="FALSE"
+                          Exec-path="cdmw_assembly_factory.sh"
+                          Port="24040"
+                          Args="-ORBInitRef InterfaceRepository=corbaloc::@hostname2val@:22789/DefaultRepository
+                                -ORBInitRef NameService=corbaloc::@hostname2val@:22456/NameService">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+                          
+		<Init-graph>
+            
+            <Graph-element Name="PackageManager">
+                <Graph-element-successor Name="ComponentInstallation1"/>
+                <Graph-element-successor Name="ComponentInstallation2"/>
+            </Graph-element>
+
+            <Graph-element Name="ComponentInstallation1">
+                <Graph-element-successor Name="AssemblyFactory"/>
+            </Graph-element>
+            
+            <Graph-element Name="ComponentInstallation2">
+                <Graph-element-successor Name="AssemblyFactory"/>
+            </Graph-element>
+            
+            <Graph-element Name="ServerActivator1">
+                <Graph-element-successor Name="AssemblyFactory"/>
+            </Graph-element>
+
+            <Graph-element Name="ServerActivator2">
+                <Graph-element-successor Name="AssemblyFactory"/>
+            </Graph-element>
+            
+            <Graph-element Name="AssemblyFactory"/>
+            
+			<Graph-element-root Name="PackageManager"/>
+			<Graph-element-root Name="ServerActivator1"/>
+			<Graph-element-root Name="ServerActivator2"/>
+    	</Init-graph>
+    	
+    	
+    	<Stop-graph>
+			<Graph-element Name="AssemblyFactory">
+				<Graph-element-successor Name="ComponentInstallation1"/>
+				<Graph-element-successor Name="ComponentInstallation2"/>
+				<Graph-element-successor Name="ServerActivator1"/>
+				<Graph-element-successor Name="ServerActivator2"/>
+			</Graph-element>
+			
+			<Graph-element Name="ComponentInstallation1">
+				<Graph-element-successor Name="PackageManager"/>
+			</Graph-element>
+
+			<Graph-element Name="ComponentInstallation2">
+				<Graph-element-successor Name="PackageManager"/>
+			</Graph-element>
+
+			<Graph-element Name="PackageManager"/>
+						
+			<Graph-element-root Name="AssemblyFactory"/>
+    	</Stop-graph>
+
+	</Application>
+
+	<Application Name="TestApplication"
+                 Host-name="@hostname2val@"
+                 Agent-port="-1"
+                 App-port="-1">
+
+        <!-- Default timeouts for processes of this application -->
+	   <!-- <Timeout Init="20000" Run="20000" Stop="20000"/> -->
+
+        <!-- Monitoring of this application -->
+    	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
+
+        <Managed-process Name="ServerProcess"
+                         Host-name="@hostname2val@"
+                         Type="MANAGED-PROCESS"
+                         Autoended="FALSE"
+                         Exec-path="component_server1"
+                         Port="24110"
+                         Args="--CdmwXMLFile=test_ccm_c++/ComponentServer1.xml --validateXML">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+                          
+        <Managed-process Name="ClientProcess"
+                          Host-name="@hostname1val@"
+                          Type="MANAGED-PROCESS"
+                          Autoended="FALSE"
+                          Exec-path="component_server2"
+                          Port="24120"
+                          Args="--CdmwXMLFile=test_ccm_c++/ComponentServer2.xml --validateXML">
+			<Init-step Name="initialisation" Timeout="30000"/>
+		<!--	<Run-timeout Timeout="1000"/>
+			<Stop-timeout Timeout="2000"/> -->
+		</Managed-process>
+
+		<Init-graph>           
+            <Graph-element Name="ServerProcess"/>
+            <Graph-element Name="ClientProcess"/>
+            
+			<Graph-element-root Name="ServerProcess"/>
+			<Graph-element-root Name="ClientProcess"/>
+    	</Init-graph>
+    	
+    	
+    	<Stop-graph>
+            <Graph-element Name="ServerProcess"/>
+            <Graph-element Name="ClientProcess"/>
+            
+			<Graph-element-root Name="ServerProcess"/>
+			<Graph-element-root Name="ClientProcess"/>
+    	</Stop-graph>
+
+	</Application>
+
+
+
+    <!-- ****************************** -->
+    <!--                                -->
+    <!-- End of application definitions -->
+    <!-- ****************************** -->
+
+    <!-- Init graph of applications of the system-->
+    <Init-graph>
+        <Graph-element Name="CdmwServices"> 
+            <Graph-element-successor Name="PackagingAndAssembly"/>
+    	</Graph-element>
+        
+        <Graph-element Name="PackagingAndAssembly"> 
+            <Graph-element-successor Name="TestApplication"/>
+    	</Graph-element>
+        
+        <Graph-element Name="TestApplication"/> 
+        
+        <Graph-element-root Name="CdmwServices"/> 
+    </Init-graph>
+
+<!-- ************************ -->
+<!--                          -->
+<!-- End of system definition -->
+<!-- ************************ -->
+</System>
+

@@ -1,0 +1,1177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_config_targets SYSTEM "file:@COMMON_CONFIG_TARGETS_XML@">
+    <!ENTITY common_build_targets SYSTEM "file:@COMMON_BUILD_TARGETS_XML@">
+]>
+
+
+<project name="BuildJAVA" default="make-deliveries" basedir=".">
+
+
+    <description>
+        This build file compiles the JAVA source files and make the deliveries.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_config_targets;
+    &common_build_targets;
+
+
+    <!-- =======================================================================
+        The "-set-local-aliases" target defines some global aliases unless they
+        are already set by the master build.
+
+        It depends on the following targets:
+            + "-set-aliases"
+    -->
+    <target name="-set-local-aliases" depends="-set-aliases">
+        <echo>=&gt;   [CSC] ${basedir}</echo>
+
+        <!--
+            the token XSD_DIR will be replaced with the appropriate path during
+            the configuration.
+        -->
+        <property name="xsd.dir" location="@XSD_DIR@"/>
+
+        <!--
+            the cdmwtasks jar file: the token CDMWTASKS_JAR will be replaced
+            with the appropriate path during the configuration.
+        -->
+        <property name="cdmwtasks.jar.location" location="@CDMWTASKS_JAR@"/>
+
+        <property name="start.compilation" value="true"/>
+
+        <!-- make the CDMW tasks available -->
+        <typedef resource="cdmwtasks.properties"
+                 classpath="${cdmwtasks.jar.location}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-site-properties" target checks if the site properties file
+        is present.
+    -->
+    <target name="-check-site-properties">
+        <!--
+            the site properties file: the token SITE_PROPERTIES_LOC will be
+            replaced with the appropriate path during the configuration.
+        -->
+        <property name="build.site.properties"
+                  location="@SITE_PROPERTIES_LOC@"/>
+
+        <property name="build.dev.tokens.properties"
+                  location="@DEV_TOKENS_PROPERTIES_LOC@"/>
+
+        <property name="build.install.tokens.properties"
+                  location="@INSTALL_TOKENS_PROPERTIES_LOC@"/>
+
+        <available file="${build.site.properties}"
+                   property="build.site.properties.present"/>
+
+        <fail unless="build.site.properties.present"
+              message="Could not find ${build.site.properties}."/>
+
+        <if>
+            <not><isset property="site.id"/></not>
+            <then>
+                <getcounter file="${build.site.properties}" property="site.id"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-load-csc-properties" target loads the CSC properties file and
+        ensures that it belongs to this CSC.
+
+        It depends on the following targets:
+            + "-check-csc-properties"
+    -->
+    <target name="-load-csc-properties" depends="-check-csc-properties">
+        <!-- load the CSCI global dependencies -->
+        <property file="${csci.global.dependencies}" prefix="deps"/>
+
+        <property name="cscproperties.cache"
+                  location="${basedir}${FS}.cache#${site.id}"/>
+
+        <if>
+            <and>
+                <available file="${cscproperties.cache}"/>
+                <uptodate targetfile="${cscproperties.cache}"
+                          srcfile="${my.csc.properties}"/>
+            </and>
+            <then>
+                <property file="${cscproperties.cache}"/>
+            </then>
+            <else>
+                <loadcscproperties file="${my.csc.properties}">
+                    <filterset>
+                        <filtersfile file="${build.site.properties}"/>
+                        <filter token="this.csc.data.dir"
+                            value="${basedir}${FS}${config.csc.data.dir}${FS}"/>
+                    </filterset>
+                </loadcscproperties>
+
+                <!-- cache the results -->
+                <propertyselector property="cscprops"
+                                  match="^csc\.(.*)" select="\1"/>
+
+                <for list="${cscprops}" param="p">
+                    <sequential>
+                        <propertycopy property="cb.prop" from="csc.@{p}"/>
+
+                        <propertyfile file="${cscproperties.cache}">
+                            <entry key="csc.@{p}" value="${cb.prop}"/>
+                        </propertyfile>
+
+                        <!-- clean up -->
+                        <xvar name="cb.prop" unset="true"/>
+                    </sequential>
+                </for>
+
+                <!-- clean up -->
+                <xvar name="cscprops" unset="true"/>
+            </else>
+        </if>
+
+        <!-- check the attributes -->
+        <checkcscattributes
+            my.csc.dir="${basedir}"
+            my.csc.name="${csc.name}"
+            my.csc.owner="${csc.owner}"
+            my.csc.lang="java"
+            my.csc.properties="${my.csc.properties}"/>
+
+        <!-- unset properties -->
+        <propertyselector property="deps.props"
+                          match="^deps\.(.*)" select="\1"/>
+
+        <for list="${deps.props}" param="p">
+            <sequential>
+                <xvar name="deps.@{p}" unset="true"/>
+            </sequential>
+        </for>
+
+        <xvar name="deps.props" unset="true"/>
+        <callgc/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-build-key-string" target constructs a string that will be used
+        when creating directories to allow the same source tree to be compiled
+        on various OSes and with different tools configurations.
+
+        It depends on the following targets:
+            + "-build-compiler-key-string"
+            + "-build-orb-key-string"
+    -->
+    <target name="-build-key-string"
+            depends="-build-compiler-key-string, -build-orb-key-string">
+        <if>
+            <isset property="bjava.orb.key.string"/>
+            <then>
+                <property name="my.key.string"
+                          value="${bjava.orb.key.string}"/>
+            </then>
+            <else>
+                <property name="my.key.string" value=""/>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-build-compiler-key-string" target constructs a compound string
+        with the compiler name and the compiler version.
+    -->
+    <target name="-build-compiler-key-string">
+        <!-- get the compiler name and version -->
+        <propertycopy name="bjava.csci.compiler"
+                      from="config.${csc.owner}.java.compiler"/>
+
+        <propertycopy name="bjava.csci.compiler.ver"
+                      from="config.${csc.owner}.java.compiler.ver"/>
+
+        <!-- construct the compound string -->
+        <property name="bjava.compiler.key.string"
+                  value="${bjava.csci.compiler}-${bjava.csci.compiler.ver}"/>
+
+        <!-- for JNI support -->
+
+        <!-- get the compiler name and version -->
+        <propertycopy name="bjni.csci.compiler" silent="true"
+                      from="config.${csc.owner}.cpp.compiler"/>
+
+        <propertycopy name="bjni.csci.compiler.ver" silent="true"
+                      from="config.${csc.owner}.cpp.compiler.ver"/>
+
+        <!-- construct the compound string -->
+        <if>
+            <and>
+                <isset property="bjni.csci.compiler"/>
+                <isset property="bjni.csci.compiler.ver"/>
+            </and>
+            <then>
+                <var name="my.var" value="${bjni.csci.compiler}-"/>
+                <var name="my.var" value="${my.var}${bjni.csci.compiler.ver}"/>
+                <property name="bjni.compiler.key.string" value="${my.var}"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-build-orb-key-string" target constructs a compound string with the
+        orb name and the orb version.
+    -->
+    <target name="-build-orb-key-string">
+        <!-- get the orb name and version -->
+        <propertycopy name="my.csci.orb" silent="true"
+                      from="config.${csc.owner}.java.orb"/>
+
+        <if>
+            <isset property="my.csci.orb"/>
+            <then>
+                <propertycopy name="bjava.csci.orb.ver"
+                              from="config.${csc.owner}.java.orb.ver"/>
+
+                <!-- construct the second part of the key -->
+                <property name="bjava.orb.key.string"
+                          value="${my.csci.orb}-${bjava.csci.orb.ver}"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-get-orb-settings" target gets the ORB settings from the site
+        properties file.
+    -->
+    <target name="-get-orb-settings" if="my.csci.orb">
+        <!-- orb.lib.classpath -->
+        <propertycopy name="bjava.orb.classpath"
+                      from="config.${my.csci.orb}.classpath"/>
+
+        <!-- idl.compiler -->
+        <propertycopy name="bjava.idl.compiler"
+                      from="config.${my.csci.orb}.idlcompiler"/>
+
+        <!-- idl.compiler.dir -->
+        <propertycopy name="bjava.idl.compiler.dir"
+                      from="config.${my.csci.orb}.idlcompiler.dir"/>
+
+        <!-- idl.opt.output.dir -->
+        <propertycopy name="bjava.idl.opt.output.dir"
+            from="config.${my.csci.orb}.idlcompiler.opt.outputdir"/>
+
+        <!-- orb.idlflags.svr -->
+        <propertycopy name="bjava.idlflags.incl.dirs" silent="true"
+                      from="config.${my.csci.orb}.idlflags.incl.dirs"/>
+        <propertycopy name="bjava.idlflags.svr" silent="true"
+                      from="config.${my.csci.orb}.idlflags.svr"/>
+
+        <if>
+            <isset property="bjava.idlflags.svr"/>
+            <then>
+                <var name="my.var" value="${bjava.idlflags.svr}"/>
+
+                <if>
+                    <isset property="bjava.idlflags.incl.dirs"/>
+                    <then>
+                        <var name="my.var"
+                             value="${my.var} ${bjava.idlflags.incl.dirs}"/>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <var name="my.var" value=""/>
+            </else>
+        </if>
+
+        <property name="bjava.orb.idlflags.svr" value="${my.var}"/>
+
+        <!-- orb.idlflags.clt -->
+        <propertycopy name="bjava.idlflags.clt" silent="true"
+                      from="config.${my.csci.orb}.idlflags.clt"/>
+
+        <if>
+            <isset property="bjava.idlflags.clt"/>
+            <then>
+                <var name="my.var" value="${bjava.idlflags.clt}"/>
+
+                <if>
+                    <isset property="bjava.idlflags.incl.dirs"/>
+                    <then>
+                        <var name="my.var"
+                             value="${my.var} ${bjava.idlflags.incl.dirs}"/>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <var name="my.var" value=""/>
+            </else>
+        </if>
+
+        <property name="bjava.orb.idlflags.clt" value="${my.var}"/>
+
+        <!-- orb.idlflags.tie -->
+        <propertycopy name="bjava.idlflags.tie" silent="true"
+                      from="config.${my.csci.orb}.idlflags.tie"/>
+
+        <if>
+            <isset property="bjava.idlflags.tie"/>
+            <then>
+                <var name="my.var" value="${bjava.idlflags.tie}"/>
+
+                <if>
+                    <isset property="bjava.idlflags.incl.dirs"/>
+                    <then>
+                        <var name="my.var"
+                             value="${my.var} ${bjava.idlflags.incl.dirs}"/>
+                    </then>
+                </if>
+            </then>
+            <else>
+                <var name="my.var" value=""/>
+            </else>
+        </if>
+
+        <property name="bjava.orb.idlflags.tie" value="${my.var}"/>
+
+        <!-- orb.idlflags.incl.dirs -->
+        <propertycopy name="bjava.orb.idlflags.incl.dirs" silent="true"
+                      from="config.${tool.name}.idlflags.incl.dirs"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-get-compiler-settings" target gets the compiler settings from the
+        site properties file.
+    -->
+    <target name="-get-compiler-settings" if="bjni.csci.compiler">
+        <!-- for JNI support -->
+
+        <!-- cpp.shared.flags -->
+        <propertycopy name="bjni.cpp.shared.flags"
+            from="config.${bjni.csci.compiler}.cxx.sharedflags"/>
+
+        <!-- ar.flags -->
+        <propertycopy name="bjni.ar.shared.flags"
+                      from="config.${bjni.csci.compiler}.ar.shared.flags"/>
+
+        <property name="bjni.ar.flags"
+                  value="${bjni.cpp.shared.flags} ${bjni.ar.shared.flags}"/>
+
+        <!-- cxx -->
+        <propertycopy name="bjni.cc"
+                      from="config.${bjni.csci.compiler}.cc"/>
+
+        <!-- cxx.compiler.flags -->
+        <propertycopy name="bjni.cxx.compiler.flags"
+                      from="config.${bjni.csci.compiler}.cxx.compilerflags"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-get-tools-settings" target gets the classpath of all the tools
+        that this CSCI needs.
+    -->
+    <target name="-get-tools-settings">
+        <propertycopy name="bjava.csci.tools.list.orig"
+                      from="config.${csc.owner}.tools"/>
+
+        <!--
+            construct the list of JAVA tools this CSCI needs, the compiler and
+            ORB will be removed from the list as well as they are handled
+            separately.
+        -->
+        <var name="bjava.csci.tools.classpath" value=""/>
+
+        <for list="${bjava.csci.tools.list.orig}" delimiter=" "
+             param="bjava.param.tool">
+
+            <sequential>
+                <if>
+                    <!-- discard compilers and ORBs -->
+                    <not>
+                        <or>
+                            <equals arg1="@{bjava.param.tool}"
+                                    arg2="${bjava.csci.compiler}"
+                                    trim="true"/>
+                            <equals arg1="@{bjava.param.tool}"
+                                    arg2="${my.csci.orb}"
+                                    trim="true"/>
+                        </or>
+                    </not>
+                    <then>
+                        <!-- check classpath -->
+                        <propertycopy name="bjava.tool.classpath" silent="true"
+                                from="config.@{bjava.param.tool}.classpath"
+                                override="true"/>
+
+                        <if>
+                            <and>
+                                <isset property="bjava.tool.classpath"/>
+                                <not>
+                                    <equals arg1="${bjava.tool.classpath}"
+                                            arg2="${bjava.tool.classpath.old}"/>
+                                </not>
+                            </and>
+                            <then>
+                                <var name="s" value="${bjava.tool.classpath}"/>
+                                <var name="bjava.csci.tools.classpath"
+                                value="${bjava.csci.tools.classpath}${PS}${s}"/>
+
+                                <var name="bjava.tool.classpath.old"
+                                     value="${bjava.tool.classpath}"/>
+                                <var name="bjava.tool.classpath" value=""/>
+                            </then>
+                        </if>
+                    </then>
+                </if>
+            </sequential>
+        </for>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-linux-delivery-name" targets constructs the delivery
+        file name on the Linux platform.
+    -->
+    <target name="-construct-linux-delivery-name" if="is.linux">
+        <switch value="${my.delivery.type}">
+            <case value="exe">
+                <property name="my.delivery.name"
+                          value="${my.delivery.basename}.jar"/>
+            </case>
+            <case value="lib">
+                <var name="my.var" value="${my.delivery.basename}.jar"/>
+
+                <property name="my.delivery.name"
+                          value="lib${product.lcase.name}${my.var}"/>
+            </case>
+            <case value="jnilib">
+                <var name="my.var" value="${my.delivery.basename}.so"/>
+                <property name="my.delivery.name"
+                          value="lib${product.lcase.name}${my.var}"/>
+            </case>
+            <case value="data">
+                <property name="my.delivery.name"
+                          value="${my.delivery.basename}"/>
+            </case>
+            <default>
+                <fail>unknown delivery type '${my.delivery.type}'.</fail>
+            </default>
+        </switch>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-sunos-delivery-name" targets constructs the delivery
+        file name on the SUN Solaris platform.
+    -->
+    <target name="-construct-sunos-delivery-name" if="is.sunos">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-aix-delivery-name" targets constructs the delivery file
+        name on the IBM AIX platform.
+    -->
+    <target name="-construct-aix-delivery-name" if="is.aix">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-windows-delivery-name" targets constructs the delivery
+        file name on the Windows platform.
+    -->
+    <target name="-construct-windows-delivery-name" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-generated-files" target compiles the source files that
+        have been generated from the XSLT templates.
+
+        It depends on the following targets:
+            + "-run-code-generation"
+            + "-export-generated-files"
+            + "-construct-compilation-flags"
+    -->
+    <target name="-compile-generated-files"
+            depends="-run-code-generation, -export-generated-files,
+                     -construct-compilation-flags">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-idl-files" target compiles the IDL files required by the
+        specified delivery.
+
+        It depends on the following targets:
+            + "-require-idl-compilation"
+            + "-generate-stubs-and-skels"
+            + "-export-idl-files"
+            + "-compile-stubs-and-skels"
+    -->
+    <target name="-compile-idl-files" unless="my.delivery.is.jnilib"
+            depends="-require-idl-compilation, -generate-stubs-and-skels,
+                     -export-idl-files, -compile-stubs-and-skels">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-generate-stubs-and-skels" target runs the IDL compiler to generate
+        the stubs and skels.
+
+        It depends on the following targets:
+            + "-make-csc-stubskel-dir"
+    -->
+    <target name="-generate-stubs-and-skels" if="my.csc.stubskel.dir"
+            depends="-make-csc-stubskel-dir">
+
+        <!-- server -->
+        <if>
+            <isset property="my.idl.server"/>
+            <then>
+                <!-- fix invalid path for generated IDL files -->
+                <stringmanip property="my.idl.server.copy" action="replace"
+                             string="${my.idl.server}" substring="@GENERATED@"
+                             replaceWith="${my.codegen.generated.dir}"/>
+                <var name="my.idl.server" value="${my.idl.server.copy}"/>
+
+                <foreach list="${my.idl.server}" target="-compile-idl-file"
+                         param="my.idl.file" inheritall="true" delimiter=" ">
+
+                    <param name="bjava.orb.idlflags"
+                           value="${bjava.orb.idlflags.svr}"/>
+                    <param name="bjava.idl.tstamp.suffix" value=".server"/>
+                </foreach>
+            </then>
+        </if>
+
+        <!-- client -->
+        <if>
+            <isset property="my.idl.client"/>
+            <then>
+                <!-- fix invalid path for generated IDL files -->
+                <stringmanip property="my.idl.client.copy" action="replace"
+                             string="${my.idl.client}" substring="@GENERATED@"
+                             replaceWith="${my.codegen.generated.dir}"/>
+                <var name="my.idl.client" value="${my.idl.client.copy}"/>
+
+                <foreach list="${my.idl.client}" target="-compile-idl-file"
+                         param="my.idl.file" inheritall="true" delimiter=" ">
+
+                    <param name="bjava.orb.idlflags"
+                           value="${bjava.orb.idlflags.clt}"/>
+                    <param name="bjava.idl.tstamp.suffix" value=".client"/>
+                </foreach>
+            </then>
+        </if>
+
+        <!-- tie -->
+        <if>
+            <isset property="my.idl.tie"/>
+            <then>
+                <!-- fix invalid path for generated IDL files -->
+                <stringmanip property="my.idl.tie.copy" action="replace"
+                             string="${my.idl.tie}" substring="@GENERATED@"
+                             replaceWith="${my.codegen.generated.dir}"/>
+                <var name="my.idl.tie" value="${my.idl.tie.copy}"/>
+
+                <foreach list="${my.idl.tie}" target="-compile-idl-file"
+                         param="my.idl.file" inheritall="true" delimiter=" ">
+
+                    <param name="bjava.orb.idlflags"
+                           value="${bjava.orb.idlflags.tie}"/>
+                    <param name="bjava.idl.tstamp.suffix" value=".tie"/>
+                </foreach>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-csc-stubskel-dir-path" target constructs the path to the
+        directories in which the generated stubs and skels are stored.
+    -->
+    <target name="-construct-csc-stubskel-dir-path"
+            if="require.idl.compilation">
+
+        <property name="my.stubskel.dirname" value="stubskel"/>
+
+        <!--
+            set the name of the directory which will contain the stubs and
+            skels generated by the IDL compiler.
+        -->
+        <var name="my.var" value="${config.csc.generated.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${my.delivery.name}${FS}"/>
+        <var name="my.var" value="${my.var}${my.stubskel.dirname}"/>
+        <var name="my.var" value="${my.var}${FS}${bjava.orb.key.string}"/>
+
+        <property name="my.csc.stubskel.dir" location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-idl-file" target compiles the specified IDL file.
+
+        It depends on the following targets:
+            + "-check-tstamp-file"
+            + "-construct-idl-compilation-flags"
+    -->
+    <target name="-compile-idl-file"
+            depends="-check-tstamp-file, -construct-idl-compilation-flags"
+            if="my.tstamp.file.outdated">
+
+        <if>
+            <isset property="my.tstamp.file.outdated"/>
+            <then>
+                <if>
+                    <isset property="require.code.generation"/>
+                    <then>
+                        <var name="my.var"
+                             value="${bjava.idl.compilation.flags}"/>
+                        <var name="my.var"
+                             value="${my.var} ${codegen.idlflags.incl.dirs}"/>
+                        <var name="my.var"
+                             value="${my.var} -I${my.csc.delivery.idl.dir}"/>
+                        <var name="bjava.idl.compilation.flags"
+                             value="${my.var}"/>
+                    </then>
+                </if>
+
+                <!-- run the IDL compiler -->
+                <var name="my.var" value="${bjava.idl.opt.output.dir}"/>
+
+                <xexec executable="${bjava.idl.compiler}"
+                       showCmd="true"
+                       failonerror="true"
+                       resolveExecutable="true"
+                       dir="${bjava.idl.compiler.dir}"
+                       vmlauncher="false">
+
+                    <env key="CLASSPATH"
+                         value="${bjava.orb.classpath}${PS}${java.classpath}"/>
+                    <arg line="${bjava.idl.compilation.flags}"/>
+                    <arg line="${my.var} ${my.csc.stubskel.dir}"/>
+                    <arg value="${my.idl.file}"/>
+                </xexec>
+
+                <!-- update the tstamp file -->
+                <touch file="${my.idl.tstamp.file}"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-tstamp-file-path" target constructs the path to the time
+        stamp file associated with the specified IDL file.
+    -->
+    <target name="-construct-tstamp-file-path">
+        <basename property="bjava.idl.file.basename" file="${my.idl.file}"/>
+
+        <var name="my.var" value="${my.csc.stubskel.dir}"/>
+        <var name="my.var" value="${my.var}${FS}${bjava.idl.file.basename}"/>
+        <var name="my.var" value="${my.var}${bjava.idl.tstamp.suffix}"/>
+
+        <property name="my.idl.tstamp.file" location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-idl-compilation-flags" target constructs the IDL
+        compilation flags.
+    -->
+    <target name="-construct-idl-compilation-flags">
+        <!--
+            list of directories which may contains IDL files that this CSC
+            depends on.
+        -->
+        <propertycopy name="bjava.dep.idl.incl.dirs" silent="true"
+                      from="csc.${my.delivery.basename}.idl.incl.dirs"/>
+        <var name="my.var" value=" "/>
+        <if>
+            <isset property="bjava.dep.idl.incl.dirs"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bjava.dep.idl.incl.dirs}"/>
+            </then>
+        </if>
+
+        <!-- IDLs from the ORB -->
+        <if>
+            <isset property="bjava.orb.idlflags.incl.dirs"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bjava.orb.idlflags.incl.dirs}"/>
+            </then>
+        </if>
+
+        <!-- include the directory where the specified IDL file is stored -->
+        <dirname property="bjava.idl.file.dirname" file="${my.idl.file}"/>
+
+        <var name="my.var_" value="${my.var} -I${bjava.idl.file.dirname}"/>
+
+        <!-- include the delivery idl directory -->
+        <antcallback target="-construct-csc-delivery-idl-dir-path"
+                     return="my.csc.delivery.idl.dir"/>
+
+        <var name="my.var" value="${my.var_} -I${my.csc.delivery.idl.dir}"/>
+        
+        <var name="my.var" value="${my.var} ${bjava.orb.idlflags}"/>
+
+        <!-- add flags from the CSC properties file -->
+        <propertycopy name="bjava.delivery.addidlflags" silent="true"
+                      from="csc.${my.delivery.basename}.addidlflags"/>
+
+        <if>
+            <isset property="bjava.delivery.addidlflags"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bjava.delivery.addidlflags}"/>
+            </then>
+        </if>
+
+        <!-- add any extra ORB idlflags -->
+        <propertycopy name="bjava.orb.idlflags.extra" silent="true"
+                      from="config.${my.csci.orb}.idlflags.extra"/>
+
+        <if>
+            <isset property="bjava.orb.idlflags.extra"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bjava.orb.idlflags.extra}"/>
+            </then>
+        </if>
+
+        <property name="bjava.idl.compilation.flags" value="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-stubs-and-skels" target compiles the generated stubs and
+        skels files.
+
+        It depends on the following targets:
+            + "-construct-compilation-flags"
+    -->
+    <target name="-compile-stubs-and-skels" if="require.idl.compilation"
+            depends="-construct-compilation-flags">
+
+        <depend srcdir="${my.csc.stubskel.dir}"
+                destdir="${csc.build.dir}"/>
+
+        <javac
+            compiler="${my.java.compiler}"
+            destdir="${csc.build.dir}"
+            srcdir="${my.csc.stubskel.dir}"
+            listfiles="yes"
+            includes="**/*.java"
+            bootclasspath="${my.csc.classpath}"
+        />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-compile-source-files" target compiles all the source files
+        required by the specified delivery.
+
+        It depends on the following targets:
+            + "-generate-class-files"
+            + "-create-jar-file"
+            + "-create-jnilib-file"
+    -->
+    <target name="-compile-source-files"
+            depends="-generate-class-files, -create-jar-file,
+                     -create-jnilib-file">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-generate-class-files" target compiles the source files into
+        class files.
+
+        It depends on the following targets:
+            + "-construct-compilation-flags"
+    -->
+    <target name="-generate-class-files" depends="-construct-compilation-flags"
+            if="my.csc.classpath">
+
+        <!-- set the list of files to compile -->
+        <propertycopy name="bjava.source.files" silent="true"
+                      from="csc.${my.delivery.basename}.sourcefiles"/>
+
+        <!--
+            create a compound source path so that generated source files get
+            compiled at the same time as the static source files, this get
+            round dependencies problems.
+        -->
+        <if>
+            <isset property="my.codegen.generated.dir"/>
+            <then>
+                <dirname property="bjava.sourcepath"
+                         file="${my.codegen.generated.dir}"/>
+
+                <basename property="bjava.codegen.gendir"
+                          file="${my.codegen.generated.dir}"/>
+
+                <var name="my.var" value="${bjava.codegen.gendir}${FS}*.java"/>
+
+                <var name="bjava.source.files"
+                     value="${bjava.source.files} ${my.var}"/>
+            </then>
+        </if>
+
+        <if>
+            <available file="${config.csc.java.src.dir}" type="dir"/>
+            <then>
+                <if>
+                    <isset property="bjava.sourcepath"/>
+                    <then>
+                        <var name="my.var" value="${config.csc.java.src.dir}"/>
+                        <var name="bjava.sourcepath"
+                             value="${bjava.sourcepath}${PS}${my.var}"/>
+                    </then>
+                    <else>
+                        <property name="bjava.sourcepath"
+                                  value="${config.csc.java.src.dir}"/>
+                    </else>
+                </if>
+            </then>
+        </if>
+
+        <!-- compile -->
+        <if>
+            <and>
+                <isset property="bjava.sourcepath"/>
+                <not>
+                    <equals arg1="${bjava.sourcepath}" arg2="" trim="true"/>
+                </not>
+            </and>
+            <then>
+                <depend srcdir="${bjava.sourcepath}"
+                        destdir="${csc.build.dir}"/>
+
+                <javac
+                    compiler="${my.java.compiler}"
+                    destdir="${csc.build.dir}"
+                    srcdir="${bjava.sourcepath}"
+                    listfiles="yes"
+                    includes="${bjava.source.files}"
+                    bootclasspath="${my.csc.classpath}"
+                />
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-compilation-flags" target creates the property
+        bjava.compilation.flags.
+    -->
+    <target name="-construct-compilation-flags">
+        <!-- set the JAVA compiler to use -->
+        <switch value="${bjava.csci.compiler}">
+            <!-- SUN Java 2 SDK -->
+            <case value="J2SDK">
+                <property name="my.java.compiler" value="modern"/>
+            </case>
+            <!-- Jikes -->
+            <case value="JIKES">
+                <property name="my.java.compiler" value="jikes"/>
+            </case>
+            <!-- Microsoft Visual J++ Command-line Compiler -->
+            <case value="JVC">
+                <property name="my.java.compiler" value="jvc"/>
+            </case>
+            <!-- Kopi Compiler -->
+            <case value="KJC">
+                <property name="my.java.compiler" value="kjc"/>
+            </case>
+            <!-- GCC Java Compiler -->
+            <case value="GCJ">
+                <property name="my.java.compiler" value="gcj"/>
+            </case>
+            <!-- Symantec Java Compiler -->
+            <case value="SJ">
+                <property name="my.java.compiler" value="sj"/>
+            </case>
+        </switch>
+
+        <!-- get the classpath from the required libs -->
+        <propertycopy name="my.delivery.req.libs" silent="true"
+                      from="csc.${my.delivery.basename}.requiredlibs"/>
+
+        <var name="my.var" value="${java.home}${FS}lib${FS}rt.jar"/>
+        <var name="my.var" value="${my.var}${PS}${java.class.path}"/>
+        
+        <if>
+            <isset property="my.delivery.req.libs"/>
+            <then>
+                <var name="my.var"
+                     value="${my.delivery.req.libs}${PS}${my.var}"/>
+            </then>
+        </if>
+
+        <!-- get ORB's classpath -->
+        <if>
+            <isset property="bjava.orb.classpath"/>
+            <then>
+                <var name="my.var"
+                     value="${bjava.orb.classpath}${PS}${my.var}"/>
+            </then>
+        </if>
+
+        <!-- tools' classpath -->
+        <if>
+            <isset property="bjava.csci.tools.classpath"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var}${PS}${bjava.csci.tools.classpath}"/>
+            </then>
+        </if>
+
+        <path id="my.csc.classpath.tmp">
+            <pathelement path="${my.var}"/>
+        </path>
+
+        <!--
+            ensure that the classpath contains the OS-specific path and file
+            separators.
+        -->
+        <pathconvert targetos="${my.target.os}" property="my.csc.classpath"
+                     refid="my.csc.classpath.tmp"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-jar-file" target creates a JAVA archive (JAR) file which
+        will contain all the class files found in the build directory.
+
+        It depends on the following targets:
+            + "-make-csc-delivery-dir"
+            + "-construct-delivery-file-path"
+    -->
+    <target name="-create-jar-file" unless="my.delivery.is.jnilib"
+            depends="-make-csc-delivery-dir, -construct-delivery-file-path">
+
+        <if>
+            <isset property="my.delivery.file"/>
+            <then>
+                <jar destfile="${my.delivery.file}" basedir="${csc.build.dir}"
+                     includes="**/*.class" index="yes"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-create-jnilib-file" target generates the JNI headers from the JAVA
+        class and compiles the stubs into a native library.
+
+        It depends on the following targets:
+            + "-generate-jni-headers"
+            + "-check-jni-source-files"
+            + "-require-jni-compilation"
+            + "-construct-compilation-cflags"
+    -->
+    <target name="-create-jnilib-file" if="require.jni.compilation"
+            depends="-generate-jni-headers, -check-jni-source-files,
+                     -require-jni-compilation, -construct-compilation-cflags">
+
+        <xexec
+            executable="${bjni.cc}"
+            showCmd="true"
+            failonerror="true"
+            vmlauncher="false">
+
+            <arg line="${bjni.compilation.cflags}"/>
+        </xexec>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-require-jni-compilation" target checks if the JNI source files
+        need to be (re)compiled.
+    -->
+    <target name="-require-jni-compilation" if="bjni.source.files">
+        <if>
+            <available file="${my.delivery.file}" type="file"/>
+            <then>
+                <outofdate property="require.jni.compilation">
+                    <sourcefiles>
+                        <fileset dir="${config.csc.java.src.dir}"
+                                 includes="*.c"/>
+                    </sourcefiles>
+                    <targetfiles>
+                        <pathelement path="${my.delivery.file}"/>
+                    </targetfiles>
+                </outofdate>
+            </then>
+            <else>
+                <property name="require.jni.compilation" value="true"/>
+            </else>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-generate-jni-headers" target generates the JNI headers from the
+        specified JAVA class.
+
+        It depends on the following targets:
+            + "-make-csc-jni-dir"
+            + "-construct-compilation-flags"
+    -->
+    <target name="-generate-jni-headers" if="bjni.csc.jni.dir"
+            depends="-make-csc-jni-dir, -construct-compilation-flags">
+
+        <!-- get the JAVA class to generate JNI headers from -->
+        <propertycopy name="bjni.fqn.classname" silent="true"
+                      from="csc.${my.delivery.basename}.fqnclassname"/>
+
+        <if>
+            <isset property="bjni.fqn.classname"/>
+            <then>
+                <javah destdir="${bjni.csc.jni.dir}"
+                       class="${bjni.fqn.classname}"
+                       classpath="${my.csc.classpath}"/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-make-csc-jni-dir" target creates a directory in the CSC generated
+        directory to store the JNI header files generated by javah.
+
+        It depends on the following targets:
+            + "-construct-csc-jni-dir"
+    -->
+    <target name="-make-csc-jni-dir" depends="-construct-csc-jni-dir-path"
+            if="bjni.csc.jni.dir">
+
+        <mkdir dir="${bjni.csc.jni.dir}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-csc-jni-dir-path" target constructs the path to the
+        directory which will stores the JNI header files created by javah.
+    -->
+    <target name="-construct-csc-jni-dir-path" if="my.delivery.is.jnilib">
+        <var name="my.var" value="${config.csc.generated.dir}${FS}"/>
+        <var name="my.var" value="${my.var}${my.delivery.name}${FS}jni"/>
+        <var name="my.var" value="${my.var}${FS}${config.site.csn}-"/>
+        <var name="my.var" value="${my.var}${bjni.compiler.key.string}"/>
+
+        <property name="bjni.csc.jni.dir" location="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-jni-source-files" target ensures that all the sources files
+        exist before compiling them.
+    -->
+    <target name="-check-jni-source-files" if="my.delivery.is.jnilib">
+        <!-- set the list of files to compile -->
+        <propertycopy name="bjni.source.files" silent="true"
+                      from="csc.${my.delivery.basename}.sourcefiles"/>
+
+        <if>
+            <isset property="bjni.source.files"/>
+            <then>
+                <foreach list="${bjni.source.files}" target="-check-source-file"
+                         param="my.source.file" delimiter=" "/>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-construct-compilation-cflags" target gathers all the compiler
+        flags into a single property: bjni.compiler.cflags.
+    -->
+    <target name="-construct-compilation-cflags" if="my.delivery.is.jnilib">
+        <!-- add the C++ compiler flags -->
+        <var name="my.var" value="${bjni.cxx.compiler.flags}"/>
+
+        <!-- add the include directories -->
+        <var name="my.var" value="${my.var} -I${bjni.csc.jni.dir}"/>
+
+        <propertycopy name="bjni.compiler.cflags.incl.dirs" silent="true"
+                      from="config.${bjava.csci.compiler}.cflags.incl.dirs"/>
+
+        <if>
+            <isset property="bjni.compiler.cflags.incl.dirs"/>
+            <then>
+                <var name="my.var"
+                     value="${my.var} ${bjni.compiler.cflags.incl.dirs}"/>
+            </then>
+        </if>
+
+        <!-- add the list of source files -->
+        <if>
+            <isset property="bjni.source.files"/>
+            <then>
+                <var name="my.var" value="${my.var} ${bjni.source.files}"/>
+            </then>
+        </if>
+
+        <!-- add the output flags -->
+        <var name="my.var" value="${my.var} ${bjni.ar.flags}"/>
+
+        <!-- add the delivery file -->
+        <var name="my.var" value="${my.var} ${my.delivery.file}"/>
+
+        <property name="bjni.compilation.cflags" value="${my.var}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-export-local-generated-source-files" target copies the generated
+        source files into the local delivery directory.
+    -->
+    <target name="-export-local-generated-source-files"
+            if="require.code.generation">
+
+        <!-- nothing to be done -->
+    </target>
+
+
+</project>
+

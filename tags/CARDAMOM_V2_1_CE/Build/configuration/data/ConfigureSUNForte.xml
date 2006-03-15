@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureSUNForte" default="-check-SUNForte" basedir=".">
+
+
+    <description>
+        This build file locates and checks the SUN Forte compiler.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-SUNForte" target checks if the compiler is suitable for the
+        build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-check-SUNForte-sunos"
+    -->
+    <target name="-check-SUNForte" depends="-initialize, -check-SUNForte-sunos">
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-SUNForte-sunos" target checks if the compiler is suitable
+        for the build on a SUN Solaris platform.
+    -->
+    <target name="-check-SUNForte-sunos" if="is.sunos">
+        <antcallback target="-test1-sunos"/>
+        <antcallback target="-test2-sunos"/>
+        <antcallback target="-test3-sunos"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-SUNForte" target determines the installation directory of
+        the SUNForte compiler.
+    -->
+    <target name="-locate-SUNForte">
+        <!--
+            there is nothing to do here as we assume that the SUNForte compiler
+            must be found in the PATH.
+        -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for SUNForte -->
+        <propertycopy name="sunforte.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="SUN Forte Compiler"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-sunos" target checks if the compiler can compile a basic
+        C++ program.
+    -->
+    <target name="-test1-sunos">
+        <var name="my.var" value="Checking if ${tool.fullname} can compile"/>
+        <var name="my.var" value="${my.var} a basic C++ program"/>
+        <echo>${my.var}</echo>
+
+        <tempfile property="sunforte.test1.source.file" destdir="${TMP}"
+                  prefix="${tmpfile.prefix}_SUNForte_test1_" suffix=".cpp"/>
+
+        <!-- write the code to compile into the file -->
+        <echo file="${sunforte.test1.source.file}">int main() {}</echo>
+
+        <fixcrlf srcdir="${TMP}"
+                 includes="${tmpfile.prefix}_SUNForte_test*.cpp"/>
+
+        <property name="sunforte.test1.output.file"
+                  value="${TMP}${FS}maintest"/>
+
+        <!-- compile the file -->
+        <exec executable="CC"
+              outputproperty="sunforte.test1.compilation.messages"
+              resultproperty="sunforte.test1.return.code"
+              vmlauncher="false">
+
+            <arg value="${sunforte.test1.source.file}"/>
+            <arg line="-o ${sunforte.test1.output.file}"/>
+        </exec>
+
+        <!-- the test is successful if the return code equals 0 -->
+        <condition property="sunforte.compilation.is.ok">
+            <equals arg1="${sunforte.test1.return.code}" arg2="0"/>
+        </condition>
+
+        <!-- clean up -->
+        <delete file="${sunforte.test1.source.file}"/>
+        <delete file="${sunforte.test1.output.file}"/>
+
+        <!-- stop checking if the compilation was not ok -->
+        <fail unless="sunforte.compilation.is.ok"
+              message="Error while compiling a basic C++ program."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test2-Sunos" target checks if the compiler version is ok.
+    -->
+    <target name="-test2-sunos">
+        <echo>Checking the SUNForte version</echo>
+
+        <!-- make CC print its version -->
+        <exec executable="CC"
+              outputproperty="sunforte.test2.cmdline.output"
+              resultproperty="sunforte.test2.return.code"
+              vmlauncher="false">
+
+            <arg value="-V"/>
+        </exec>
+
+        <!--
+            the test is successful if the return code equals 0 and the versions
+            are equal (unless version checking is disabled)
+        -->
+        <!-- TODO: get the current version of SUNForte -->
+        <condition property="sunforte.version.is.ok">
+            <or>
+                <!-- either the versions are equal -->
+                <and>
+                    <contains string="${sunforte.test2.cmdline.output}"
+                          substring="${sunforte.required.version}"/>
+                    <equals arg1="${sunforte.test2.return.code}" arg2="0"/>
+                </and>
+
+                <!-- or the version checking is disabled -->
+                <isfalse value="${require.tool.version.checking}"/>
+            </or>
+        </condition>
+        
+        <!-- stop checking if the version is not ok -->
+        <!-- TODO -->
+        <!--
+        <var name="my.var" value="The required version for ${tool.fullname}"/>
+        <var name="my.var" value="${my.var} is ${sunforte.required.version}, your"/>
+        <var name="my.var" value="${my.var} version is ${sunforte.current.ver}."/>
+        <fail unless="sunforte.version.is.ok" message="${my.var}"/>
+        -->
+        <fail unless="sunforte.version.is.ok" message="Incorrect version"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test3-sunos" target checks if the compiler has multithread
+        support.
+    -->
+    <target name="-test3-sunos">
+        <echo>Checking if ${tool.fullname} has multithread support</echo>
+
+        <tempfile property="sunforte.test3.source.file" destdir="${TMP}"
+                  prefix="${tmpfile.prefix}_SUNForte_test3_" suffix=".cpp"/>
+
+        <!-- write the code to compile into the file -->
+        <echo file="${sunforte.test3.source.file}">int main() {}</echo>
+
+        <fixcrlf srcdir="${TMP}"
+                 includes="${tmpfile.prefix}_SUNForte_test*.cpp"/>
+
+        <property name="sunforte.test3.output.file"
+                  value="${TMP}${FS}maintest"/>
+
+        <!-- compile the file -->
+        <exec executable="CC"
+              outputproperty="sunforte.test3.compilation.messages"
+              resultproperty="sunforte.test3.return.code"
+              vmlauncher="false">
+
+            <arg value="${sunforte.test3.source.file}"/>
+            <arg line="-mt -o ${sunforte.test3.output.file}"/>
+        </exec>
+
+        <!-- the test is successful if the return code equals 0 -->
+        <condition property="sunforte.is.multithreaded">
+            <equals arg1="${sunforte.test3.return.code}" arg2="0"/>
+        </condition>
+
+        <!-- clean up -->
+        <delete file="${sunforte.test3.source.file}"/>
+        <delete file="${sunforte.test3.output.file}"/>
+
+        <!-- stop checking if SUNForte has no multithreading -->
+        <fail unless="sunforte.is.multithreaded"
+              message="Missing multithread support."/>
+    </target>
+
+
+</project>
+

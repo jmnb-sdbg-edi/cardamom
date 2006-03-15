@@ -1,0 +1,12 @@
+verbose
+install_assembly @runtime_root@/integration/data/JavaBasicDemo.aar
+create_assembly BasicAssembly myAssembly
+build_assembly myAssembly
+sleep 5000
+tear_assembly_down myAssembly
+destroy_assembly myAssembly
+remove_assembly BasicAssembly
+remove_component Client 1,0,1,0
+remove_component Server 1,0,1,0
+exit
+

@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!-- ===========================================================================
+    The "-set-aliases" target defines the common properties.
+-->
+<target name="-set-aliases" unless="global.aliases.loaded">
+    <!-- make the ant-contrib tasks available -->
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+
+    <!-- convenient aliases -->
+    <property name="FS"  value="${file.separator}"/>
+    <property name="LS"  value="${line.separator}"/>
+    <property name="PS"  value="${path.separator}"/>
+    <property name="TMP" value="${java.io.tmpdir}"/>
+
+    <!-- parametrize the start condition of OS-specific tasks/targets -->
+    <condition property="is.linux">
+        <equals arg1="${os.name}" arg2="Linux"/>
+    </condition>
+    
+    <condition property="is.sunos">
+        <equals arg1="${os.name}" arg2="SunOS"/>
+    </condition>
+    
+    <condition property="is.aix">
+        <equals arg1="${os.name}" arg2="AIX"/>
+    </condition>
+
+    <condition property="is.windows">
+        <os family="windows"/>
+    </condition>
+
+    <condition property="is.mac">
+        <os family="mac"/>
+    </condition>
+
+    <!--
+        ${os.name} may return a string containing space characters and
+        therefore prevent the use of ${os.name} in XML element names.
+        The property "my.os.name" is a customization of ${os.name} and
+        will stand for ${os.name} in all the build files.
+    -->
+    <if>
+        <isset property="is.windows"/>
+        <then>
+            <property name="my.os.name" value="Windows"/>
+        </then>
+    </if>
+    
+    <if>
+        <isset property="is.mac"/>
+        <then>
+            <property name="my.os.name" value="MacOS"/>
+        </then>
+    </if>
+
+    <property name="my.os.name" value="${os.name}"/>
+
+    <!-- the target OS for the "pathconvert" task -->
+    <osfamily property="my.target.os"/>
+
+    <!-- load the environment variables -->
+    <property environment="env"/>
+
+    <!-- the custom ANT taskdefs package -->
+    <property name="my.taskdefs.classpath"
+              value="com.thalesgroup.tools.ant.taskdefs"/>
+
+    <!-- set a prefix for all the temporary files to be created -->
+    <property name="tmpfile.prefix" value="${user.name}"/>
+
+    <property name="global.aliases.loaded" value="true"/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-check-global-aliases" target ensures that a particular build file is
+    called by the master build and not directly from the command line.
+-->
+<target name="-check-global-aliases">
+    <fail unless="global.aliases.loaded"
+          message="Please run the 'configure' target from the master build."/>
+</target>
+
+
+<!-- ===========================================================================
+    The "-define-global-macros" target defines the common macros.
+-->
+<target name="-define-global-macros" unless="global.macros.defined">
+    <!--
+        The "checkxmlpropertiesfile" macro checks if the specified file exists
+        and validates it against its XML schema.
+    -->
+    <macrodef name="checkxmlpropertiesfile">
+        <attribute name="my.properties.file"/>
+        <attribute name="my.xsd.dir"/>
+        <attribute name="require.validation" default="true"/>
+
+        <sequential>
+            <if>
+                <available file="@{my.properties.file}" type="file"/>
+                <then>
+                    <!-- the XML schema to validate against -->
+                    <basename file="@{my.properties.file}" suffix=".xml"
+                              property="my.props.file.name"/>
+
+                    <var name="my.properties.file.xsd"
+                         value="@{my.xsd.dir}${FS}${my.props.file.name}.xsd"/>
+
+                    <!-- validate -->
+                    <if>
+                        <and>
+                            <istrue value="@{require.validation}"/>
+                            <available file="${my.properties.file.xsd}"/>
+                        </and>
+                        <then>
+                            <xsdvalidate file="@{my.properties.file}"
+                                         xsd="${my.properties.file.xsd}"
+                                         warn="true"/>
+                        </then>
+                    </if>
+
+                    <!-- unset properties -->
+                    <xvar name="my.props.file.name"     unset="true"/>
+                    <xvar name="my.properties.file.xsd" unset="true"/>
+                </then>
+                <else>
+                    <fail>@{my.properties.file} does not exist.</fail>
+                </else>
+            </if>
+        </sequential>
+    </macrodef>
+
+    <!--
+        The "checkcsciattributes" macro checks the attributes of the specified
+        CSCI.
+    -->
+    <macrodef name="checkcsciattributes">
+        <attribute name="my.csci.name"/>
+        <attribute name="my.req.csci.name"/>
+        <attribute name="my.csci.version"/>
+        <attribute name="my.req.csci.ver"/>
+        <attribute name="my.csci.properties"/>
+        <attribute name="require.csci.version.checking" default="true"/>
+
+        <sequential>
+            <!-- check the name -->
+            <if>
+                <not>
+                    <equals arg1="@{my.csci.name}" arg2="@{my.req.csci.name}"
+                            trim="true"/>
+                </not>
+                <then>
+                    <var name="s" value="@{my.req.csci.name} CSCI: wrong"/>
+                    <var name="s" value="${s} properties file:"/>
+                    <var name="s" value="${s} @{my.csci.properties}."/>
+                    <fail>${s}</fail>
+                </then>
+            </if>
+
+            <!-- check the version -->
+            <var name="s" value="warning: your @{my.req.csci.name} CSCI"/>
+            <var name="s" value="${s} version is @{my.csci.version}, expected"/>
+            <var name="s" value="${s} version is @{my.req.csci.ver}."/>
+
+            <var name="s2" value="@{my.req.csci.name} CSCI: version"/>
+            <var name="s2" value="${s2} mismatch: current ="/>
+            <var name="s2" value="${s2} @{my.csci.version},"/>
+            <var name="s2" value="${s2} required = @{my.req.csci.ver}."/>
+
+            <var name="s3" value="warning: your @{my.req.csci.name} CSCI"/>
+            <var name="s3" value="${s3} version is @{my.csci.version}, this"/>
+            <var name="s3" value="${s3} CSCI was previously patched"/>
+
+            <if>
+                <istrue value="${require.csci.version.checking}"/>
+                <then>
+
+
+                    <switch value="${require.csci.check.mode}">
+                        <case value="strict">
+                            <if>
+                                <not>
+                                    <equals arg1="@{my.csci.version}"
+                                        arg2="@{my.req.csci.ver}" trim="true"/>
+                                </not>
+                                <then>
+                                    <fail>${s2} </fail>
+                                </then>
+                            </if>
+                        </case>
+                        <case value="loose">
+                            <if>
+                                <not>
+                                    <equals arg1="@{my.csci.version}"
+                                        arg2="@{my.req.csci.ver}" trim="true"/>
+                                </not>
+                                <then>
+                                    <echo>${s} </echo>
+                                </then>
+                            </if>                            
+                        </case>
+                        <case value="lenient">
+                            <if>
+                                <not>
+                                    <or>
+                                        <contains string="@{my.csci.version}"
+                                            substring="@{my.req.csci.ver}p"/>                                        
+                                        <equals arg1="@{my.csci.version}"
+                                            arg2="@{my.req.csci.ver}" trim="true"/>                                       
+                                    </or>
+                                </not>
+                                <then>
+                                    <fail>${s2} </fail>                                   
+                                </then>
+                                <else>
+                                    <if>
+                                        <contains string="@{my.csci.version}"
+                                            substring="@{my.req.csci.ver}p"/>  
+                                        <then>
+                                            <echo>${s3} </echo>
+                                        </then>
+                                    </if>
+                                </else>
+                            </if>
+                        </case>
+                        <default>
+                            <fail>unknown check mode type '${require.csci.check.mode}'.</fail>
+                        </default>
+                    </switch>
+
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+
+    <!--
+        The "checkcscattributes" macro checks the attributes of the specified
+        CSC.
+    -->
+    <macrodef name="checkcscattributes">
+        <attribute name="my.csc.dir"/>
+        <attribute name="my.csc.name"/>
+        <attribute name="my.csc.owner"/>
+        <attribute name="my.csc.lang"/>
+        <attribute name="my.csc.properties"/>
+
+        <sequential>
+            <!-- check the name -->
+            <basename property="my.csc.basename.orig" file="@{my.csc.dir}"/>
+
+            <!--
+                if the CSC basename is equal to either c++, java or ada then we
+                need to drop it and use its parent directory name instead.
+            -->
+            <if>
+                <or>
+                    <equals arg1="${my.csc.basename.orig}" arg2="c++"/>
+                    <equals arg1="${my.csc.basename.orig}" arg2="java"/>
+                    <equals arg1="${my.csc.basename.orig}" arg2="ada"/>
+                </or>
+                <then>
+                    <dirname  property="my.csc.dirname" file="@{my.csc.dir}"/>
+                    <basename property="my.csc.basename"
+                              file="${my.csc.dirname}"/>
+                </then>
+                <else>
+                    <var name="my.csc.basename"
+                         value="${my.csc.basename.orig}"/>
+                </else>
+            </if>
+
+            <if>
+                <not>
+                    <equals arg1="@{my.csc.name}" arg2="${my.csc.basename}"
+                            trim="true"/>
+                </not>
+                <then>
+                    <var name="s" value="${my.csc.basename} CSC: wrong CSC"/>
+                    <var name="s" value="${s} name in file"/>
+                    <var name="s" value="${s} @{my.csc.properties}, expected"/>
+                    <var name="s" value="${s} ${my.csc.basename} not"/>
+                    <var name="s" value="${s} @{my.csc.name}."/>
+                    <fail message="${s}"/>
+                </then>
+            </if>
+
+            <!-- check the owner -->
+            <if>
+                <not>
+                    <contains string="@{my.csc.dir}"
+                              substring="${FS}@{my.csc.owner}${FS}"/>
+                </not>
+                <then>
+                    <var name="s" value="${my.csc.basename} CSC: wrong CSC"/>
+                    <var name="s" value="${s} owner in file"/>
+                    <var name="s" value="${s} @{my.csc.properties}."/>
+                    <fail message="${s}"/>
+                </then>
+            </if>
+
+            <!-- check the lang -->
+            <if>
+                <and>
+                    <not>
+                        <equals arg1="${my.csc.basename.orig}"
+                                arg2="@{my.csc.lang}" trim="true"/>
+                    </not>
+                    <not>
+                        <equals arg1="@{my.csc.lang}" arg2="none" trim="true"/>
+                    </not>
+                </and>
+                <then>
+                    <var name="s" value="${my.csc.basename} CSC: wrong CSC"/>
+                    <var name="s" value="${s} lang in file"/>
+                    <var name="s" value="${s} @{my.csc.properties}."/>
+                </then>
+            </if>
+
+            <!-- unset properties -->
+            <xvar name="my.csc.basename.orig" unset="true"/>
+            <xvar name="my.csc.dirname"       unset="true"/>
+            <xvar name="my.csc.basename"      unset="true"/>
+        </sequential>
+    </macrodef>
+
+    <!--
+        The "getcounter" macro returns the site properties file counter.
+    -->
+    <macrodef name="getcounter">
+        <attribute name="file"/>
+        <attribute name="property"/>
+
+        <sequential>
+            <basename file="@{file}" property="file.name"/>
+
+            <selecttoken string="${file.name}" delimiter="#"
+                         tokenNumber="1" property="counter"/>
+
+            <selecttoken string="${counter}" delimiter="."
+                         property="@{property}" override="true"/>
+
+            <!-- unset properties -->
+            <xvar name="file.name" unset="true"/>
+            <xvar name="counter"   unset="true"/>
+        </sequential>
+    </macrodef>
+
+    <!--
+        The "getnextcounter" macro returns the next site properties file
+        counter.
+    -->
+    <macrodef name="getnextcounter">
+        <attribute name="file"/>
+        <attribute name="property"/>
+
+        <sequential>
+            <getcounter file="@{file}" property="current"/>
+
+            <math result="@{property}" datatype="int"
+                  operand1="${current}" operation="+" operand2="1"/>
+
+            <!-- unset properties -->
+            <xvar name="current"   unset="true"/>
+        </sequential>
+    </macrodef>
+
+    <!--
+        The "cleanupincompletecfgfiles" macro deletes any configuration files
+        that do not define the "config.completed" property.
+    -->
+    <macrodef name="cleanupincompletecfgfiles">
+        <attribute name="configfiles.dir"/>
+
+        <sequential>
+            <property name="configfilesdir" value="@{configfiles.dir}"/>
+
+            <for param="file">
+                <path>
+                    <fileset dir="${configfilesdir}"
+                             includes="Site-*.properties"/>
+                </path>
+
+                <sequential>
+                    <loadfile property="is.complete" srcFile="@{file}">
+                        <filterchain>
+                            <linecontains>
+                                <contains value="config.completed"/>
+                            </linecontains>
+                        </filterchain>
+                    </loadfile>
+
+                    <if>
+                        <not>
+                            <isset property="is.complete"/>
+                        </not>
+                        <then>
+                            <delete file="@{file}" quiet="true"/>
+                        </then>
+                    </if>
+
+                    <!-- unset properties -->
+                    <xvar name="is.complete" unset="true"/>
+                </sequential>
+            </for>
+
+            <!-- unset properties -->
+            <xvar name="configfilesdir" unset="true"/>
+        </sequential>
+    </macrodef>
+
+    <!--
+        The "safeant" macro ensures that the configuration files exist before
+        executing any ant build file.
+    -->
+    <macrodef name="safeant">
+        <attribute name="dir"/>
+        <attribute name="antfile"/>
+        <attribute name="target"/>
+        <element name="properties" optional="yes"/>
+
+        <sequential>
+            <if>
+                <isset property="mb.site.properties.present"/>
+                <then>
+                    <ant dir="@{dir}" antfile="@{antfile}" target="@{target}">
+                        <properties/>
+                    </ant>
+                </then>
+                <else>
+                    <var name="s" value="You must configure"/>
+                    <var name="s" value="${s} ${config.product.name}"/>
+                    <var name="s" value="${s} at least once."/>
+                    <fail message="${s}"/>
+                </else>
+            </if>
+        </sequential>
+    </macrodef>
+
+    <property name="global.macros.defined" value="true"/>
+</target>

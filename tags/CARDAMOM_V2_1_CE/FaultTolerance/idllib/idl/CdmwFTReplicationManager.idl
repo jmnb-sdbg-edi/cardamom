@@ -1,0 +1,297 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef _CDMW_FT_REPLICATION_MANAGER_IDL_
+#define _CDMW_FT_REPLICATION_MANAGER_IDL_
+
+#include <CdmwFTCommon.idl>
+#include <CdmwFTFaultDetector.idl>
+#include <CdmwFTMembersAdmin.idl>
+#include <CdmwFTStateFullPrimaryBackupAdmin.idl>
+#include <CdmwFTStateTransfer.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW Fault Tolerance
+* service.
+*/
+module CdmwFT { 
+
+    typedef FT::Name GroupName;
+    
+    
+    /**
+    * Group state definition
+    */
+    enum GroupState {
+           /*
+            * group is created but has no member
+            */
+            GRP_INITIAL_STATE,
+            
+           /*
+            * group has only one member
+            */
+            GRP_LOST_REDUNDANCY_STATE,
+            
+           /*
+            * group has members but less than the minimum number of replica
+            */
+            GRP_DEGRADED_REDUNDANCY_STATE,
+            
+           /*
+            * group has at least the minimum number of replica
+            */
+            GRP_FULL_REDUNDANCY_STATE,
+            
+           /*
+            * group has no more member
+            */
+            GRP_COMPLETE_FAILURE};
+            
+            
+    typedef unsigned long long GroupObserverID;
+    
+    /** 
+    * Exception indicating that the handler identifier is invalid.
+    * This means it is not generated locally!
+    */
+    exception InvalidGroupObserverId {};
+    
+    interface GroupObserver {
+          void handle_state_change(in FT::ObjectGroupId  object_group_id,
+                                   in CdmwFT::GroupState     new_state,
+                                   in long           nb_of_replicas,
+                                   in long           minimum_nb_of_replicas);
+     };
+  /**
+   *
+   */
+  exception AlreadyPrimary {};
+            
+    /**
+    * The CDMW ReplicationManager extends the standard ReplicationManager with
+    * CDMW Fault Tolerance specific operations based on object group id and
+    * for registering locations...
+    */
+    interface ReplicationManager : FT::ReplicationManager
+    {
+        /**
+         * Finds the object group reference from the object group id.
+         *
+         * @param object_group_id the object group id to use for the search.
+         *
+         * @return the object group reference.
+         *
+         * @exception FT::ObjectGroupNotFound if the object group cannot be located.
+         */
+        FT::ObjectGroup get_object_group_ref_from_gid(
+                in FT::ObjectGroupId object_group_id)
+            raises(FT::ObjectGroupNotFound);
+
+        /**
+         * Finds the object group reference from its group name.
+         *
+         * @param group_name the name which was specified at group creation.
+         *
+         * @return the object group reference.
+         *
+         * @exception FT::ObjectGroupNotFound if the object group cannot be found.
+         */
+        FT::ObjectGroup get_object_group_ref_from_name(
+                in GroupName group_name)
+            raises(FT::ObjectGroupNotFound);
+            
+        /**
+         * Extracts the object group version from the object group reference.
+         *
+         * @param object_group_ref the object group reference.
+         *
+         * @return the object group reference version.
+         *
+         * @exception FT::ObjectGroupNotFound if the object group cannot be located.
+         */
+        FT::ObjectGroupRefVersion get_object_group_version_from_ref(
+                in FT::ObjectGroup object_group)
+            raises(FT::ObjectGroupNotFound);
+
+        /**
+         * Extracts the object group version from the object group id.
+         *
+         * @param object_group_id the object group id.
+         *
+         * @return the object group reference version.
+         *
+         * @exception FT::ObjectGroupNotFound if the object group cannot be located.
+         */
+        FT::ObjectGroupRefVersion get_object_group_version_from_gid(
+                in FT::ObjectGroupId object_group_id)
+            raises(FT::ObjectGroupNotFound);
+
+        /**
+         * Returns the FT domain id in which this Replication Manager is running.
+         *
+         * @return the FT domain id.
+         */
+        FT::FTDomainId get_ft_domain_id();
+
+        /**
+         * Returns a group info from an object group reference.
+         *
+         * @param object_group the object group reference.
+         *
+         * @return a group info.
+         *
+         * @exception FT::ObjectGroupNotFound if the object group cannot be located.
+         */
+        GroupInfo get_object_group_info(in FT::ObjectGroup object_group)
+            raises(FT::ObjectGroupNotFound);
+
+        /**
+         * Returns a group info from an object group id.
+         *
+         * @param object_group_id the object group id.
+         *
+         * @return a group info.
+         *
+         * @exception FT::ObjectGroupNotFound if the object group cannot be located.
+         */
+        GroupInfo get_object_group_info_from_gid(
+                in FT::ObjectGroupId object_group_id)
+            raises(FT::ObjectGroupNotFound);
+
+        /**
+         * Register the CDMW Fault Detector object 
+         *
+         * @param fault_detector Object Reference of the CDMW Fault Notifier object
+         *
+         */        
+        void register_fault_detector(in FaultManagement::FaultDetector fault_detector);
+
+
+        /**
+         * Get the CDMW Fault Detector object 
+         *
+         * @execption InterfaceNotFound if the Fault Detector is not found.
+         *
+         */        
+        FaultManagement::FaultDetector get_fault_detector()
+            raises (FT::InterfaceNotFound); 
+
+
+        /**
+         * Registers a CDMW MembersAdmin object of a specific location. If a location
+         * is already registered, the new registration will override the previous one.
+         *
+         * @param location A CDMW Location
+         * @param members_admin Object Reference of the MembersAdmin object of that location.
+         *
+         */        
+        void register_location(in ::FT::Location             the_location,
+                               in Location::MembersAdmin     members_admin);
+
+       /**
+         * Registers a CDMW MembersAdmin object of a specific location. If a location
+         * is already registered, the new registration will override the previous one.
+         *
+         * @param location A CDMW Location
+         * @param members_admin Object Reference of the MembersAdmin object of that location.
+         * @param datastore_info Object Set of information on Datastores used in the location.
+         * @param with_reply_logging the location uses the reply logging mechanism.
+         *
+         */        
+        void register_statefull_location(
+                     in ::FT::Location                         the_location,
+                     in Location::StatefullPrimaryBackupAdmin  members_admin,
+                     in StateTransfer::LocalDataStoreInfos     local_datastore_infos,
+                     in boolean                                with_reply_logging);
+        /**
+         * change the fallback reference on all the IOGR
+         */
+        void update_fallback(in ::FT::Location the_failed_location);
+        
+        /**
+         * This operation is called by the local replication manager to advise the 
+         * primary replication manager that a new inserted member has initialized its 
+         * datastore and is ready to be elected primary (BACKUP) or has succeeded 
+         * in its initialisation to become PRIMARY.
+         * This operation has been created to allow asynchronous initialization 
+         * and allows a crash of the Replication Manager: it will then used the IOGR 
+         * to advise the new elected Replication Manager that the initialisation 
+         * has succeeded.
+         *
+         * @param object_group_id the group id.
+         * @param the_location the CDMW Location embedding the group member.
+         *
+         * @exception MemberNotFound raised if member is already removed or has not
+         * been created by this Replication Manager.
+         */
+        void handle_member_ready(in ::FT::ObjectGroupId   object_group_id,
+                                 in ::FT::Location       the_location)
+           raises (::FT::MemberNotFound);
+                                 
+        /**
+         * This operation is called by the local replication manager to advise the 
+         * primary replication manager that a new inserted member has failed its 
+         * initialization process.
+         * This operation has been created to allow asynchronous initialization 
+         * and allows a crash of the Replication Manager: it will then used the IOGR 
+         * to advise the new elected Replication Manager that the initialisation 
+         * has not succeeded.
+         *
+         * @param object_group_id the group id.
+         * @param the_location the CDMW Location embedding the group member.
+         *
+         * @exception MemberNotFound raised if member is already removed or has not
+         * been created by this Replication Manager.
+         */
+        void handle_member_failure(in ::FT::ObjectGroupId   object_group_id,
+                                   in ::FT::Location       the_location)
+           raises (::FT::MemberNotFound);
+                               
+        /**
+         * This operation ask to all group member in that location to become 
+         * primary. This opeation is used when Fault Tolerance is managed at
+         * process level.
+         */
+        void set_primary_location(in ::FT::Location       the_location)
+          raises(::FT::PrimaryNotSet, ::FT::BadReplicationStyle);
+             
+        void set_first_backup (in ::FT::Location       the_location)
+          raises (AlreadyPrimary,::FT::MemberNotFound, ::FT::BadReplicationStyle);
+             
+        GroupObserverID register_group_state_observer(in GroupObserver group_observer);
+        
+        void unregister_group_state_observer(in GroupObserverID observer_id)
+           raises (InvalidGroupObserverId);
+        
+
+
+    };
+};
+
+#endif // _CDMW_FT_REPLICATION_MANAGER_IDL_
+

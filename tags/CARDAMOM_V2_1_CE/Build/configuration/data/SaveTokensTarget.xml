@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<!--
+    The "-save-tokens" target saves the value-pair (token_name,value) into the
+    site properties file.
+-->
+<target name="-save-tokens">
+    <!-- HOSTNAME -->
+
+    <if>
+        <isset property="env.COMPUTERNAME"/>
+        <then>
+            <!--
+                on a Windows platform, the host name is set in COMPUTERNAME
+            -->
+            <property name="env.HOSTNAME" value="${env.COMPUTERNAME}"/>
+        </then>
+        <elseif>
+            <isset property="env.HOST"/>
+            <then>
+                <property name="env.HOSTNAME" value="${env.HOST}"/>
+            </then>
+        </elseif>
+    </if>
+
+
+
+    <xexec executable="id" failonerror="true"
+        showCmd="false" outputproperty="userid">           
+        <arg line="-u"/>
+    </xexec>
+
+    <xexec executable="id" failonerror="true"
+        showCmd="false" outputproperty="groupid">           
+        <arg line="-g"/>
+    </xexec>
+
+
+    <propertyfile file="${mb.new.site.props}">       
+        <entry key="HOSTNAME" value="${env.HOSTNAME}"/>
+        <entry key="USERID" value="${userid}"/>
+        <entry key="GROUPID" value="${groupid}"/>
+    </propertyfile>
+
+
+    <!--
+        ORB.Lib.Prefix
+        ORB.Libs
+    -->
+    <for list="${config.sel.min.cscis}" delimiter=" " param="my.csci.name">
+        <sequential>
+            <propertycopy property="my.orb.cpp.name" silent="true"
+                          from="config.@{my.csci.name}.cpp.orb"/>
+
+            <if>
+                <isset property="my.orb.cpp.name"/>
+                <then>
+                    <propertycopy property="my.orb.lib.prefix"
+                        from="config.${my.orb.cpp.name}.ORB.Lib.Prefix"/>
+
+                    <propertyfile file="${mb.new.site.props}">
+                        <entry key="config.@{my.csci.name}.ORB.Lib.Prefix"
+                               value="${my.orb.lib.prefix}"/>
+                    </propertyfile>
+                </then>
+            </if>
+
+            <propertycopy property="my.orb.libs" silent="true"
+                from="config.${my.orb.cpp.name}.@{my.csci.name}.ORB.Libs"/>
+                    
+            <if>
+                <isset property="my.orb.libs"/>
+                <then>
+                    <propertyfile file="${mb.new.site.props}">
+                        <entry key="config.@{my.csci.name}.ORB.Libs"
+                               value="${my.orb.libs}"/>
+                    </propertyfile>
+                </then>
+            </if>
+
+            <propertycopy property="my.orb.incl" silent="true"
+                from="config.${my.orb.cpp.name}.@{my.csci.name}.ORB.incl"/>
+
+            <if>
+                <isset property="my.orb.incl"/>
+                <then>
+                   <propertyfile file="${mb.new.site.props}">
+                        <entry key="config.@{my.csci.name}.ORB.incl"
+                               value="${my.orb.incl}"/>
+                    </propertyfile>
+                </then>
+            </if>
+            <!-- unset properties -->
+            <xvar name="my.orb.cpp.name"   unset="true"/>
+            <xvar name="my.orb.lib.prefix" unset="true"/>
+            <xvar name="my.orb.libs"       unset="true"/>
+            <xvar name="my.orb.incl"       unset="true"/>
+        </sequential>
+    </for>
+</target>

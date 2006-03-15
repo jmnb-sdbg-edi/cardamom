@@ -1,0 +1,142 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_CCM_CONTAINER_IDL_
+#define CDMW_CCM_CONTAINER_IDL_
+
+
+#include "Components.idl"
+#include "CdmwLifeCycle.idl"
+#include "CosEventChannelAdmin.idl"
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW
+* CCM Container.
+*/
+module CdmwCcmContainer
+{
+   /** 
+   * IDL interface of CDMW Containers
+   */
+    interface Container : Components::Deployment::Container, 
+        CdmwLifeCycle::FactoryBase
+    {
+    };
+
+    /**
+     * A handle to a registered valuetype factory.
+     */
+    local interface ValueTypeRegistration
+    {
+        /**
+         * Requests unregistration of a valuetype factory unloading of corresponding
+         * shared/dynamic link library module.
+         * <b>NOTA:</b> The valuetype factory will only be effectively unregistered once
+         * all internal users (homes and components) are finished with it.
+         */
+        void unregister();
+    };
+
+    /**
+     * A factory object for registering a valuetype factory within the component server
+     */
+    local interface ValueTypeInstaller
+    {
+        /**
+         * Installs a valuetype factory from a shared/dynamic link library.
+         * <b>NOTA:</b> The valuetype factory will not override a previously registered valuetype
+         * factory for <i>repid</i>
+         *
+         *@param repid Repository Id of the value type
+         *@param location A file homding the valuetype factory
+         *@entrypoint Entry point used for use to locate the valuetype factory within
+         * <i>location</i>.
+         *
+         *@return A registration object for use to unregister/uninstall the valuetype factory.
+         */
+        ValueTypeRegistration
+        install_valuetype_factory(in string repid,
+                                  in string location,
+                                  in string entrypoint);
+    };
+
+    /** 
+     * Exception indicating that the there is no available channel.
+     */
+    exception NoChannel
+    {
+        /**
+        * The reason of the exception (may give more information).
+        */
+        ::Components::FailureReason reason;
+    };
+    
+    /**
+     * A CDMW-specific CCM2Context with event channel creation operations
+     */
+    local interface CCM2Context : Components::CCM2Context
+    {   
+        /**
+         * Obtains an event channel object for emit ports.
+         *
+         *@param port Description of the emitter port. This provides both the name of the port and
+         * its repository id.
+         *
+         *@return An event channel object for use to emit events.
+         *
+         *@exception NoChannel if failed to obtain appropriate event channel. A common reason is
+         * a channel not created.
+         */
+        CosEventChannelAdmin::EventChannel
+        obtain_event_channel_for_emitter(in Components::PortDescription port)
+            raises (NoChannel);
+        
+        /**
+         * Creates an avent channel for publishing events.
+         *
+         *@param port Description of the publisher port. This provides both the name of the port and
+         * its repository id.
+         *
+         *@return An event channel object for use to publish events.
+         *
+         *@exception Components::CreateFailure if failed to create appropriate event channel.
+         */
+        CosEventChannelAdmin::EventChannel
+        create_event_channel_for_publisher(in Components::PortDescription port)
+           raises (Components::CreateFailure);
+    };
+
+    /**
+     * A CDMW-specific Session2Context with event channel creation operations
+     */
+    local interface Session2Context : Components::Session2Context, CCM2Context
+    {
+    };
+};  // end module CdmwCcmContainer
+
+#endif // CDMW_CCM_CONTAINER_IDL_
+

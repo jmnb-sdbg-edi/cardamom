@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            Schema definition for GlobalProperties.xml.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <!-- the root element -->
+    <xsd:element name="config" type="configType"/>
+
+    <!-- define the content of the root element -->
+    <xsd:complexType name="configType">
+        <xsd:sequence>
+            <xsd:element name="delivery" type="deliveryType"/>
+            <xsd:element name="csc"      type="cscType"/>
+            <xsd:element name="csci"     type="csciType"/>
+            <xsd:element name="global"   type="globalType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "delivery" element -->
+    <xsd:complexType name="deliveryType">
+        <xsd:sequence>
+            <xsd:element name="executable" type="dirType"/>
+            <xsd:element name="library"    type="dirType"/>
+            <xsd:element name="include"    type="dirType"/>
+            <xsd:element name="data"       type="dirType"/>
+            <xsd:element name="idl"        type="dirType"/>
+        </xsd:sequence>
+        <xsd:attribute name="dir"     type="xsd:string"  use="required"/>
+        <xsd:attribute name="uselink" type="xsd:boolean" use="required"/>
+    </xsd:complexType>
+
+    <!-- define the content of the "csci" element -->
+    <xsd:complexType name="csciType">
+        <xsd:sequence>
+            <xsd:element name="properties" type="fileType"/>
+            <xsd:element name="exporttokens"
+                         type="fileType" minOccurs="0"/>
+            <xsd:element name="data"       type="dirType"/>
+            <xsd:element name="idl"        type="dirType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "csc" element -->
+    <xsd:complexType name="cscType">
+        <xsd:complexContent>
+            <xsd:extension base="csciType">
+                <xsd:sequence>
+                    <xsd:element name="build"     type="dirType"/>
+                    <xsd:element name="generated" type="dirType"/>
+                    <xsd:element name="runtest"   type="dirType"/>
+                    <xsd:element name="cpp"       type="cppDirStructType"/>
+                    <xsd:element name="java"      type="javaDirStructType"/>
+                    <xsd:element name="ada"       type="cppDirStructType"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <!-- define the content of the "global" element -->
+    <xsd:complexType name="globalType">
+        <xsd:sequence>
+            <xsd:element name="dependencies" type="xsd:string"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define some common types -->
+    <xsd:complexType name="dirType">
+        <xsd:attribute name="dir" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="fileType">
+        <xsd:attribute name="file"     type="xsd:string"  use="required"/>
+        <xsd:attribute name="validate" type="xsd:boolean" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="javaDirStructType">
+        <xsd:sequence>
+            <xsd:element name="src" type="dirType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="cppDirStructType">
+        <xsd:complexContent>
+            <xsd:extension base="javaDirStructType">
+                <xsd:sequence>
+                    <xsd:element name="include" type="cppInclType"/>
+                </xsd:sequence>
+            </xsd:extension>
+        </xsd:complexContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="cppInclType">
+        <xsd:attribute name="public.dir" type="xsd:string" use="required"/>
+        <xsd:attribute name="local.dir"  type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+</xsd:schema>
+

@@ -1,0 +1,96 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#include "Components.idl"
+
+#pragma prefix "thalesgroup.com"
+
+module HelloModule
+{
+    interface Hello;
+    interface HelloWorld;
+    local interface CCM_HelloWorld_Executor;
+    local interface CCM_HelloWorld;
+    local interface CCM_HelloWorld_Context;
+    interface HelloHomeExplicit;
+    interface HelloHomeImplicit;
+    interface HelloHome;
+    local interface CCM_HelloHomeExplicit;
+    local interface CCM_HelloHomeImplicit;
+    local interface CCM_HelloHome;
+
+    valuetype Message
+    {
+        public string the_message;
+    };
+
+    valuetype TraceMessage : Message
+    {
+        public long the_level;
+    };
+    
+    interface Hello
+    {
+        void say_hello(in Message msg);
+        void log_message (in TraceMessage msg);
+    };
+    interface HelloWorld : ::Components::CCMObject, ::HelloModule::Hello
+    {
+    };
+    local interface CCM_HelloWorld_Executor : ::Components::EnterpriseComponent, ::HelloModule::Hello
+    {
+        attribute string message;
+    };
+    local interface CCM_HelloWorld : ::HelloModule::CCM_HelloWorld_Executor
+    {
+    };
+    local interface CCM_HelloWorld_Context : ::Components::CCMContext
+    {
+    };
+    interface HelloHomeExplicit : ::Components::CCMHome
+    {
+    };
+    interface HelloHomeImplicit : ::Components::KeylessCCMHome
+    {
+        ::HelloModule::HelloWorld create()
+            raises(::Components::CreateFailure);
+    };
+    interface HelloHome : ::HelloModule::HelloHomeExplicit, ::HelloModule::HelloHomeImplicit
+    {
+    };
+    local interface CCM_HelloHomeExplicit : ::Components::HomeExecutorBase
+    {
+    };
+    local interface CCM_HelloHomeImplicit
+    {
+        ::Components::EnterpriseComponent create()
+            raises(::Components::CCMException);
+    };
+    local interface CCM_HelloHome : ::HelloModule::CCM_HelloHomeExplicit, ::HelloModule::CCM_HelloHomeImplicit
+    {
+    };
+};
+
+

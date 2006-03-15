@@ -1,0 +1,501 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_FTSYST_MNGT_PROCESS_IDL_
+#define CDMW_FTSYST_MNGT_PROCESS_IDL_
+
+
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwFTSystMngtManagedElement.idl>
+#include <CdmwFTSystMngtEntityContainer.idl>
+#include <CdmwFTSystMngtServiceContainer.idl>
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwFTSystMngt
+{
+
+    /**
+    * The CDMW process accessor.
+    */
+    interface ProcessAccessor : ManagedElementAccessor, 
+        RWEntityContainerAccessor,
+        RWServiceDefContainerAccessor
+    {
+        /**
+        * Get the type of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::ProcessType get_type(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+
+        /**
+        * Get the embedded service or NIL if the process
+        * is not a service provider.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        Object get_embedded_service(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Get the process pid.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::ProcessPID get_pid(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+                
+        /**
+        * Flag indicate that process is created dynamically
+        * and not described in start graph of the application
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        boolean get_created_dynamically(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Indicate the type of restart (Cold/Hot) currently applied to the process
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::RestartType get_restart_type(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Indicate the current nbr of restart attempt
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        long get_restart_attempt(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Indicate the time when process start
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngtBase::TimeStamp get_start_time(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Indicate the time when process stop
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngtBase::TimeStamp get_stop_time(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+
+        
+        /**
+        * Indicates whether the process is started manually.
+        *   if flag is set the process (defined in init graph) is not started
+        *   during a cold start and is skipped from the starting sequence
+        *   defined by init graph.
+        *   During an hot restart the process is started following the init
+        *   graph if it is running during the stop command
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        boolean is_manual_starting(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Sets the process to be started manually.
+        *
+        * @param target_element_path path of target element to access
+        * @param manual_starting true if process is started manually
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_manual_starting(in CdmwPlatformMngt::ElementPath target_element_path,
+                                 in boolean manual_starting)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+
+        /**
+        * Returns the status of the process with its additional information.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::ProcessStatus get_status(
+                                 in CdmwPlatformMngt::ElementPath target_element_path,
+                                 out string status_info)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+                                         
+        /**
+        * Indicates whether the process is authorised to end itself.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        boolean is_auto_ending(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+        
+        /**
+        * Sets the process as ending itself.
+        *
+        * @param target_element_path path of target element to access
+        * @param autoending true if process is authorised to end itself
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_auto_ending(in CdmwPlatformMngt::ElementPath target_element_path,
+                             in boolean auto_ending)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleStatus);
+                    
+        /**
+        * Returns the host.
+        *
+        * @param target_element_path path of target element to access
+        * @return the host element path
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::ElementPath get_host(
+                                 in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+                                 
+        /**
+        * Returns the information needed for the process creation.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        */
+        CdmwPlatformMngt::ProcessInfo get_process_info(in CdmwPlatformMngt::ElementPath target_element_path)
+            raises (CdmwPlatformMngt::ManagedElementNotFound);
+
+        /**
+        * Changes the information needed for the process creation.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_process_info(in CdmwPlatformMngt::ElementPath target_element_path,
+                              in CdmwPlatformMngt::ProcessInfo process_info)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+        /*
+        * get the process_mode attribute
+        */
+         CdmwPlatformMngt::ProcessMode get_process_mode(in CdmwPlatformMngt::ElementPath target_element_path) raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        /*
+        * get the run_as_root attribute
+        */
+         boolean get_run_as_root(in CdmwPlatformMngt::ElementPath target_element_path) raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        /*
+        * get the memory resident attribute
+        */
+        boolean get_memory_resident(in CdmwPlatformMngt::ElementPath target_element_path)raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        /*
+        * set the memory resident attribute
+        * @param in CdmwPlatformMngt::ElementPath target_element_path, in boolean memory_resident 
+        */
+        void set_memory_resident(in CdmwPlatformMngt::ElementPath target_element_path,in boolean memory_resident) raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        /*
+        * get the core dump size attribute
+        */
+        long get_core_dump_size(in CdmwPlatformMngt::ElementPath target_element_path) raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+
+
+        /**
+        * Returns the lifecycle of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleType if the process is not a managed process.
+        */
+        CdmwPlatformMngt::LifeCycleDef get_life_cycle(
+                   in CdmwPlatformMngt::ElementPath target_element_path)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleType);
+
+        /**
+        * Changes the lifecycle of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception DuplicateStep if the definition of the lifecycle
+        * has a duplicate step.
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_life_cycle(in CdmwPlatformMngt::ElementPath target_element_path,
+                            in CdmwPlatformMngt::LifeCycleDef life_cycle)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::DuplicateStep, 
+                   CdmwPlatformMngt::IncompatibleType, 
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+        /**
+        * Returns the information about the monitoring of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleType if the process is not a managed process.
+        */
+        CdmwPlatformMngt::CompleteMonitoringInfo get_monitoring_info(
+                   in CdmwPlatformMngt::ElementPath target_element_path)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleType);
+
+        /**
+        * Changes the information about the monitoring of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_monitoring_info(
+                   in CdmwPlatformMngt::ElementPath target_element_path,
+                   in CdmwPlatformMngt::CompleteMonitoringInfo monitoring_info)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleType, 
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+          
+        /**
+        * Returns the information about the exit-autorestart info of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::ExitAutoRestartInfo get_exit_autorestart_info(
+              in CdmwPlatformMngt::ElementPath target_element_path)
+            raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        /**
+        * Changes the information about the exit-autorestart info of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_exit_autorestart_info(
+                   in CdmwPlatformMngt::ElementPath target_element_path,
+                   in CdmwPlatformMngt::ExitAutoRestartInfo exit_autorestart_info)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+
+        /**
+        * Returns a snapshot of the process.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @exception ManagedElementNotFound if element not found
+        *
+        */
+        CdmwPlatformMngt::ProcessSnapshot get_snapshot(
+                   in CdmwPlatformMngt::ElementPath target_element_path)
+            raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        /**
+        * Creates the actual process and starts its initialisation if it
+        * is a managed process.
+        *
+        * @param target_element_path path of target element to access
+        * @param startup_kind the startup kind of the whole system.
+        *
+        * @return the status of the request.
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        CdmwPlatformMngt::RequestStatus initialise(
+                   in CdmwPlatformMngt::ElementPath target_element_path,
+                   in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleStatus);
+        
+        /**
+        * Requests the managed process to perform its next step.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @return the status of the request.
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception InvalidStep if there is no step to perform.
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        CdmwPlatformMngt::RequestStatus next_step(
+                   in CdmwPlatformMngt::ElementPath target_element_path)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::InvalidStep, 
+                   CdmwPlatformMngt::IncompatibleType, 
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+        /**
+        * Requests the managed process to run.
+        *
+        * @param target_element_path path of target element to access
+        *
+        * @return the status of the request.
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception NotReadyToRun if the process has not been requested
+        * to perform all its necessary initialisation steps.
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        CdmwPlatformMngt::RequestStatus run(
+                   in CdmwPlatformMngt::ElementPath target_element_path)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::NotReadyToRun, 
+                   CdmwPlatformMngt::IncompatibleType, 
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+        /**
+        * Requests the process to stop properly if it is a managed process
+        * or kills it if it is an unmanaged process.
+        *
+        * @param target_element_path path of target element to access
+        * @param emergency if true, the managed process will be killed
+        * immediately without requested to stop properly. Irrelevant for
+        * an unmanaged process.
+        *
+        * @return the status of the request.
+        *
+        * @exception ManagedElementNotFound if element not found
+        */
+        CdmwPlatformMngt::RequestStatus stop(
+                   in CdmwPlatformMngt::ElementPath target_element_path,
+                   in boolean emergency)
+            raises(CdmwPlatformMngt::ManagedElementNotFound);
+        
+        
+        /**
+        * Stop and make a Cold Start of the process.
+        *
+        * All user properties of element retrieve their initial values
+        *
+        * @param target_element_path path of target element to access
+        * @param startup_kind the startup kind of the whole system.
+        *
+        * @return the status of the request.
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        CdmwPlatformMngt::RequestStatus cold_restart(
+                   in CdmwPlatformMngt::ElementPath target_element_path,
+                   in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleStatus);
+            
+        /**
+        * Stop and make a Hot Start of the process.
+        *
+        * All user properties of element keep their current values
+        *
+        * @param target_element_path path of target element to access
+        * @param startup_kind the startup kind of the whole system.
+        * @return the status of the request.
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        CdmwPlatformMngt::RequestStatus hot_restart(
+                   in CdmwPlatformMngt::ElementPath target_element_path,
+                   in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::IncompatibleStatus);
+
+    }; // End interface ProcessAccessor
+
+
+}; // End Module CdmwFTSystMngt
+
+#endif // CDMW_FTSYST_MNGT_PROCESS_IDL_
+
