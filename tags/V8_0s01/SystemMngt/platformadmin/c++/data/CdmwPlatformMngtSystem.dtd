@@ -1,0 +1,280 @@
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<!-- Perco deployment file DTD (Thales ISR ) -->
+
+<!-- ***************** -->
+<!-- System definition -->
+<!-- ***************** -->
+<!ELEMENT System (
+    Timeout,
+    Host-monitoring,
+    App-monitoring,
+    Proc-monitoring,
+    Service*,
+    Entity*,
+    Host*,
+    Application*,
+    Init-graph?,
+    Stop-graph?,
+    Run-set*,
+    Property* )>
+<!ATTLIST System
+    Name CDATA #REQUIRED
+	Port CDATA #REQUIRED
+>
+
+<!-- ******************************** -->
+<!-- Timeout definition for processes -->
+<!-- ******************************** -->
+<!ELEMENT Timeout EMPTY>
+<!ATTLIST Timeout
+	Init CDATA #REQUIRED
+	Run  CDATA #REQUIRED
+	Stop CDATA #REQUIRED
+>
+
+<!-- ************************** -->
+<!-- Host monitoring definition -->
+<!-- ************************** -->
+<!ELEMENT Host-monitoring EMPTY>
+<!ATTLIST Host-monitoring
+    Pull-interval CDATA #REQUIRED
+    Pull-timeout  CDATA #REQUIRED
+>
+
+
+<!-- *************************  -->
+<!--    Property definition     -->
+<!-- *************************  -->
+
+<!ELEMENT Property EMPTY>
+<!ATTLIST Property
+	Name  CDATA #REQUIRED
+	Type  (Short|Float|String) #REQUIRED
+	Value CDATA #IMPLIED
+	Mode  CDATA #IMPLIED 
+>
+   
+<!-- ********************************* -->
+<!-- Application monitoring definition -->
+<!-- ********************************* -->
+<!ELEMENT App-monitoring EMPTY>
+<!ATTLIST App-monitoring
+    Pull-interval CDATA #REQUIRED
+    Pull-timeout  CDATA #REQUIRED
+>
+
+<!-- ***************************** -->
+<!-- Process monitoring definition -->
+<!-- ***************************** -->
+<!ELEMENT Proc-monitoring EMPTY>
+<!ATTLIST Proc-monitoring
+    Model ( NO_MONITORING |
+            PULL_MONITORING |
+            PUSH_MONITORING |
+            FULL_MONITORING )
+            #REQUIRED
+    Pull-interval CDATA #REQUIRED
+    Pull-timeout  CDATA #REQUIRED
+    Push-interval CDATA #REQUIRED
+    Push-timeout  CDATA #REQUIRED
+>
+
+<!-- ****************** -->
+<!-- Service definition -->
+<!-- ****************** -->
+<!ELEMENT Service EMPTY>
+<!ATTLIST Service
+	Name         CDATA #REQUIRED
+	App-name     CDATA #REQUIRED
+	Process-name CDATA #REQUIRED
+	Host-name    CDATA #IMPLIED
+>
+
+<!-- ***************** -->
+<!-- Entity definition -->
+<!-- ***************** -->
+<!ELEMENT Entity ( Property* )>
+<!ATTLIST Entity
+	Name CDATA #REQUIRED
+>
+
+<!-- *************** -->
+<!-- Host definition -->
+<!-- *************** -->
+<!ELEMENT Host (
+    Host-monitoring?,
+    Entity*,
+    Property* )>
+<!ATTLIST Host
+	Name            CDATA #REQUIRED
+	App-exec-path   CDATA #IMPLIED
+	Agent-exec-path CDATA #IMPLIED
+>
+
+<!-- ********************** -->
+<!-- Application definition -->
+<!-- ********************** -->
+<!ELEMENT Application (
+    Timeout?,
+    App-monitoring?,
+    Proc-monitoring?,
+    Service*,
+    Entity*,
+    ( Managed-process | Unmanaged-process )*,
+    Init-graph?,
+    Stop-graph?,
+    Property* )>
+<!ATTLIST Application
+	Name          CDATA #REQUIRED
+    Host-name     CDATA #IMPLIED
+    Agent-port    CDATA #IMPLIED
+    Agent-args    CDATA #IMPLIED
+    Agent-run-dir CDATA #IMPLIED
+    App-port      CDATA #IMPLIED
+    App-args      CDATA #IMPLIED
+    App-run-dir   CDATA #IMPLIED
+>
+
+<!-- ************************** -->
+<!-- Managed process definition -->
+<!-- ************************** -->
+<!ELEMENT Managed-process (
+    Init-step+,
+    Run-timeout?,
+    Stop-timeout?,
+    Proc-monitoring?,
+    Service*,
+    Entity*,
+    Property* )>
+<!ATTLIST Managed-process
+	Name      CDATA #REQUIRED
+	Host-name CDATA #REQUIRED
+	Type      ( MANAGED-PROCESS |
+                SERVICE-PROVIDER |
+                COMPONENT-SERVER )
+                #REQUIRED
+	Autoended ( FALSE | TRUE ) #REQUIRED
+	Exec-path CDATA #REQUIRED
+    Port      CDATA #IMPLIED
+	Args      CDATA #IMPLIED
+	Run-dir   CDATA #IMPLIED
+>
+
+<!-- ******************** -->
+<!-- Init step definition -->
+<!-- ******************** -->
+<!ELEMENT Init-step EMPTY>
+<!ATTLIST Init-step
+	Name    CDATA #REQUIRED
+    Timeout CDATA #IMPLIED
+>
+
+<!-- ********************** -->
+<!-- Run timeout definition -->
+<!-- ********************** -->
+<!ELEMENT Run-timeout EMPTY>
+<!ATTLIST Run-timeout
+    Timeout CDATA #REQUIRED
+>
+
+<!-- *********************** -->
+<!-- Stop timeout definition -->
+<!-- *********************** -->
+<!ELEMENT Stop-timeout EMPTY>
+<!ATTLIST Stop-timeout
+    Timeout CDATA #REQUIRED
+>
+
+<!-- *************************** -->
+<!-- Unamaged process definition -->
+<!-- *************************** -->
+<!ELEMENT Unmanaged-process ( Property* )>
+<!ATTLIST Unmanaged-process
+	Name      CDATA #REQUIRED
+	Host-name CDATA #REQUIRED
+	Autoended ( FALSE | TRUE ) #REQUIRED
+	Exec-path CDATA #REQUIRED
+	Port      CDATA #IMPLIED
+	Args      CDATA #IMPLIED
+	Run-dir   CDATA #IMPLIED
+>
+
+<!-- *************************** -->
+<!-- Dependency graph definition -->
+<!-- *************************** -->
+<!ELEMENT Init-graph (
+    Graph-element+,
+    Graph-element-root+ )>
+    
+<!ELEMENT Stop-graph (
+    Graph-element+,
+    Graph-element-root+ )>
+    
+<!ELEMENT Graph-element (
+    Graph-element-successor* )>
+<!ATTLIST Graph-element
+	Name CDATA #REQUIRED
+	Host CDATA #IMPLIED
+	Step CDATA #IMPLIED
+>
+
+<!ELEMENT Graph-element-successor EMPTY>
+<!ATTLIST Graph-element-successor
+	Name CDATA #REQUIRED
+	Host CDATA #IMPLIED
+	Step CDATA #IMPLIED
+>
+
+<!ELEMENT Graph-element-root EMPTY>
+<!ATTLIST Graph-element-root
+	Name CDATA #REQUIRED
+	Host CDATA #IMPLIED
+	Step CDATA #IMPLIED
+>
+
+<!-- ****************** -->
+<!-- Run set definition -->
+<!-- ****************** -->
+<!ELEMENT Run-set (
+    Run-set-element+ )>
+<!ATTLIST Run-set
+	Name CDATA #REQUIRED
+>
+<!ELEMENT Run-set-element EMPTY>
+<!ATTLIST Run-set-element
+    Name CDATA #REQUIRED
+>
+
+<!-- ******************************* -->
+<!-- Additional definitions used for -->
+<!-- hot process modification        -->
+<!-- ******************************* -->
+<!ELEMENT Life-cycle (
+    Init-step+,
+    Run-timeout,
+    Stop-timeout )>
+
+

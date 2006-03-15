@@ -1,0 +1,860 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_DEPLOYMENT_IDL_
+#define CDMW_DEPLOYMENT_IDL_
+
+
+#include "Components.idl"
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW
+* Life Cycle service.
+*/
+module CdmwDeployment {
+    
+    const unsigned long CDMW_VID = 0x5448000;
+    
+    
+    
+    /**
+     * FeatureNames for ConfigValues
+     */
+    const Components::FeatureName PROCESS_DESTINATION            = "ProcessDestination";
+    const Components::FeatureName COMPONENT_KIND                 = "ComponentKind";
+    const Components::FeatureName SERVANT_LIFETIME               = "ServantLifeTime";
+    const Components::FeatureName POA_POLICIES_FOR_UNCLASSIFIED  = "POAPoliciesForUnclassified";
+    const Components::FeatureName THREADING_POLICY               = "ThreadingPolicy";
+    const Components::FeatureName EXTENDED_POA_POLICIES          = "ExtendedPOAPolicies";
+    const Components::FeatureName HOME_REPOSITORY_ID             = "HomeRepositoryId";
+    const Components::FeatureName HOME_SERVANT_CLASSNAME         = "HomeServantClassName";
+    const Components::FeatureName VALUETYPE_FACTORY_DEPENDENCIES = "ValuetypeFactoryDependencies";
+
+
+    //
+    // Types for Config Values
+    //
+    
+    /**
+     * Description of a requirement.
+     */
+    struct RequirementDescription {
+        string name;
+        string version;
+    };
+    
+    /**
+     * Sequence of requirement descriptions.
+     * Config type for OS_LIST config value.
+     */
+    typedef sequence<RequirementDescription> RequirementDescriptionSeq;
+    
+    /**
+     * Definition of component kinds.
+     * Config type for COMPONENT_KIND config value.
+     */
+    enum ComponentKindValue {
+        SERVICE, 
+        SESSION, 
+        PROCESS, 
+        ENTITY, 
+        UNCLASSIFIED
+    };
+
+    /**
+     * Definition of servant lifetimes.
+     * Config type for SERVANT_LIFETIME config value.
+     */
+    enum ServantLifetimeValue {
+        COMPONENT_LIFETIME,
+        METHOD_LIFETIME, 
+        TRANSACTION_LIFETIME, 
+        CONTAINER_LIFETIME
+    };
+    
+    /**
+     * Definition of threading policies.
+     * Config type for THREADING_POLICY config value.
+     */
+    enum ThreadingPolicyValue {
+        SERIALIZE, 
+        MULTITHREAD
+    };
+   
+    /**
+     * Definition of POA policies.
+     * Config type for EXTENDED_POA_POLICIES config value.
+     */
+    struct PoaPolicy {
+        string name;
+        string value;
+    };
+    typedef sequence<PoaPolicy> PoaPolicySeq;    
+
+    
+    /**
+     * Description of a valuetype factory
+     */
+    struct ValuetypeFactoryDescription {
+        /**
+         * The repository id of the valuetype created by the factory.
+         */
+        CORBA::RepositoryId repid;
+        
+        /**
+         * The entrypoint for creation of an instance of this valuetype factory.
+         */
+        string factory_entrypoint;
+    };
+    typedef sequence<ValuetypeFactoryDescription> ValuetypeFactoryDescriptionSeq;
+    
+
+    
+    
+    const Components::FailureReason GENERAL_FAILURE_BASE = CDMW_VID | 0x100;
+    /**
+     * FailureReasons for all Failure exceptions
+     */
+    const Components::FailureReason NOT_IMPLEMENTED    = GENERAL_FAILURE_BASE | 1;
+    const Components::FailureReason ERROR_IN_CSD       = GENERAL_FAILURE_BASE | 2;
+    const Components::FailureReason ERROR_IN_CCD       = GENERAL_FAILURE_BASE | 3;
+    const Components::FailureReason ERROR_IN_CAD       = GENERAL_FAILURE_BASE | 4;
+    const Components::FailureReason ERROR_IN_CPF       = GENERAL_FAILURE_BASE | 5;
+    const Components::FailureReason WRONG_CONTEXT_KIND = GENERAL_FAILURE_BASE | 6;
+    const Components::FailureReason ILLEGAL_STATE      = GENERAL_FAILURE_BASE | 7;
+    
+    
+
+    
+    const Components::FailureReason INSTALLATION_FAILURE_BASE = CDMW_VID | 0x200;
+    /**
+     * FailureReasons for InstallationFailure exceptions
+     */
+    const Components::FailureReason BAD_LOCATION                  = INSTALLATION_FAILURE_BASE | 1;
+    const Components::FailureReason READ_WRITE_ERROR              = INSTALLATION_FAILURE_BASE | 2;
+    const Components::FailureReason ERROR_IN_ARCHIVE              = INSTALLATION_FAILURE_BASE | 3;
+    const Components::FailureReason FILE_NOT_INSTALLED            = INSTALLATION_FAILURE_BASE | 7;
+    const Components::FailureReason FILE_ALREADY_INSTALLED        = INSTALLATION_FAILURE_BASE | 8;                
+    const Components::FailureReason ASSEMBLY_ALREADY_INSTALLED    = INSTALLATION_FAILURE_BASE | 9; 
+    const Components::FailureReason COMPONENT_ALREADY_INSTALLED   = INSTALLATION_FAILURE_BASE | 10;
+    const Components::FailureReason UNSUPPORTED_COMPONENT_TYPE    = INSTALLATION_FAILURE_BASE | 11;   
+    const Components::FailureReason UUID_NOT_FOUND                = INSTALLATION_FAILURE_BASE | 12;
+    const Components::FailureReason PACKAGE_MANAGER_ERROR         = INSTALLATION_FAILURE_BASE | 13;
+    const Components::FailureReason CANNOT_REPLACE_IMPLEMENTATION = INSTALLATION_FAILURE_BASE | 14;
+
+
+    const Components::FailureReason REMOVE_FAILURE_BASE = CDMW_VID | 0x300;
+    /**
+     * FailureReasons for RemoveFailure exceptions
+     */
+    const Components::FailureReason COMPONENT_IN_USE          = REMOVE_FAILURE_BASE | 1;
+    const Components::FailureReason DELETE_ERROR              = REMOVE_FAILURE_BASE | 2;
+    const Components::FailureReason BAD_COMPONENT_REFERENCE   = REMOVE_FAILURE_BASE | 3;
+    const Components::FailureReason ASSEMBLY_ALREADY_INACTIVE = REMOVE_FAILURE_BASE | 4;
+
+    const Components::FailureReason CREATE_FAILURE_BASE = CDMW_VID | 0x400;
+    /**
+     * FailureReasons for CreateFailure exceptions
+     */
+    const Components::FailureReason CREATE_FAILURE                             = CREATE_FAILURE_BASE;
+    const Components::FailureReason NO_COMPONENT_SERVANT_PROVIDER              = CREATE_FAILURE_BASE | 1;
+    const Components::FailureReason UNKNOWN_HOME                               = CREATE_FAILURE_BASE | 2;
+    const Components::FailureReason CONTAINER_ERROR                            = CREATE_FAILURE_BASE | 3;
+    const Components::FailureReason CANNOT_OPEN_SHARED_LIB                     = CREATE_FAILURE_BASE | 4;
+    const Components::FailureReason ASSEMBLY_PACKAGE_NOT_INSTALLED             = CREATE_FAILURE_BASE | 5;
+    const Components::FailureReason COMPONENT_PACKAGE_NOT_INSTALLED            = CREATE_FAILURE_BASE | 6;
+    const Components::FailureReason INVALID_CONFIGURATION_FOR_COMPONENT_SERVER = CREATE_FAILURE_BASE | 7;
+    const Components::FailureReason INVALID_CONFIGURATION_FOR_CONTAINER        = CREATE_FAILURE_BASE | 8;
+    const Components::FailureReason INVALID_CONFIGURATION_FOR_HOME             = CREATE_FAILURE_BASE | 9;
+    const Components::FailureReason UNKOWN_IMPL_ID                             = CREATE_FAILURE_BASE | 10;
+    const Components::FailureReason IMPL_ENTRY_POINT_NOT_FOUND                 = CREATE_FAILURE_BASE | 11;
+    const Components::FailureReason INSTALLATION_FAILURE                       = CREATE_FAILURE_BASE | 12;
+    const Components::FailureReason WRONG_HOME_KIND                            = CREATE_FAILURE_BASE | 13;
+    const Components::FailureReason PORT_NOT_FOUND                             = CREATE_FAILURE_BASE | 14;
+    const Components::FailureReason CONNECTION_FAILED                          = CREATE_FAILURE_BASE | 15;
+    const Components::FailureReason DISCONNECTION_FAILED                       = CREATE_FAILURE_BASE | 16;
+    const Components::FailureReason PROPERTIES_CONFIGURATION_ERROR             = CREATE_FAILURE_BASE | 17;
+    const Components::FailureReason NO_DESTINATION                             = CREATE_FAILURE_BASE | 18;
+    const Components::FailureReason DESTINATION_NOT_CONFORM                    = CREATE_FAILURE_BASE | 19;
+    const Components::FailureReason SEVERAL_IMPLEMENTATIONS_IN_PACKAGE         = CREATE_FAILURE_BASE | 20;
+    const Components::FailureReason INTERFACE_REPOSITORY_ERROR                 = CREATE_FAILURE_BASE | 21;
+    const Components::FailureReason NAMING_SERVICE_ERROR                       = CREATE_FAILURE_BASE | 22;
+    const Components::FailureReason HOME_FINDER_ERROR                          = CREATE_FAILURE_BASE | 23;
+    const Components::FailureReason NOT_A_HOME                                 = CREATE_FAILURE_BASE | 24;
+    const Components::FailureReason NOT_A_COMPONENT                            = CREATE_FAILURE_BASE | 25;
+    const Components::FailureReason COMPONENT_SERVER_NOT_FOUND                 = CREATE_FAILURE_BASE | 26;
+    const Components::FailureReason COMPONENT_SERVER_ALREADY_CREATED           = CREATE_FAILURE_BASE | 27;
+    const Components::FailureReason INVALID_PROCESS_DESTINATION                = CREATE_FAILURE_BASE | 28;
+    const Components::FailureReason UNKNOWN_COMPONENT_SERVER                   = CREATE_FAILURE_BASE | 29;
+    const Components::FailureReason SERVER_ACTIVATOR_NOT_FOUND                 = CREATE_FAILURE_BASE | 30;
+    const Components::FailureReason COMPONENT_INSTALLATION_NOT_FOUND           = CREATE_FAILURE_BASE | 31;
+    const Components::FailureReason WRONG_COMPONENT_KIND                       = CREATE_FAILURE_BASE | 32;
+    const Components::FailureReason INVALID_COMPONENT_EXECUTOR                 = CREATE_FAILURE_BASE | 33;
+    const Components::FailureReason NO_EVENT_CHANNEL_FACTORY                   = CREATE_FAILURE_BASE | 34;
+    const Components::FailureReason EVENT_CHANNEL_ALREADY_EXISTS               = CREATE_FAILURE_BASE | 35;
+    const Components::FailureReason ASSEMBLY_NAME_ALREADY_USED                 = CREATE_FAILURE_BASE | 36;
+    const Components::FailureReason ASSEMBLY_ALREADY_IN_SERVICE                = CREATE_FAILURE_BASE | 37;
+    /**
+     * The HomeConfigurator configures home's attributes.
+     */
+    interface HomeConfigurator 
+    {
+        /**
+         * This operation established its encapsulated configuration
+         * on the target home.
+         *
+         * @param  home_ref  The home to be configured.
+         *
+         * @throws  Components::WrongComponentType 
+         *          If the home is not of the type expected by the configurator.
+         */
+        void configure_home (in Components::CCMHome home_ref)
+            raises (Components::WrongComponentType);
+    };
+    
+    /**
+     * The StandardHomeConfigurator supports the ability to provide the
+     * HomeConfigurator with a set of values defining an attribute configuration.
+     */
+    interface StandardHomeConfigurator: HomeConfigurator 
+    {
+        /**
+         * This operation sets the configuration which will be applied to homes.
+         *
+         * @param  descr  The list of ConfigValues, where each ConfigValue contains
+         *                the name of an attribute and a value for that attribute.
+         */
+        void set_home_configuration (in Components::ConfigValues descr);
+    };
+    
+    
+    /**
+     * A GenericConfigurator could configure a home type or a component type.
+     * (depending of it's implementation).
+     */
+    interface GenericConfigurator: Components::StandardConfigurator, StandardHomeConfigurator 
+    {
+        /**
+         * This operation stops the GenericConfigurator and remove it.
+         */
+        void remove();
+    };
+    
+
+    /**
+     * The StandardConfiguratorFactory supports operations to create
+     * Standard Configurators for home or for components.
+     */
+    interface StandardConfiguratorFactory 
+    {
+        /**
+         * This operation create a StandardConfigurator for a 
+         * specified component type.
+         *
+         * @param  type_id  The RepositoryId of the component type for which a
+         *                  StandardConfigurator is required.
+         *
+         * @throws  Components::WrongComponentType 
+         *          If the StandardConfiguratorFactory doesn't know 
+         *          the component type.
+         */
+        Components::StandardConfigurator create_configurator(in CORBA::RepositoryId type_id)
+            raises (Components::WrongComponentType);
+
+        /**
+         * This operation create a StandardHomeConfigurator for a 
+         * specified home type.
+         *
+         * @param  type_id  The RepositoryId of the home type for which a
+         *                  StandardHomeConfigurator is required.
+         *
+         * @throws Components::WrongComponentType 
+         *         If the StandardConfiguratorFactory doesn't know the home type.
+         */
+        StandardHomeConfigurator create_home_configurator(in CORBA::RepositoryId type_id)
+            raises (Components::WrongComponentType);
+    };
+    
+    
+    
+    
+    /**
+     * Exception to be raised whenever a required package 
+     * has not been installed by the PackageManager.
+     */
+    exception PackageNotFound {};
+    
+    /**
+     * Exception to be raised whenever a file for which location is required 
+     * is not referenced in by the descriptors of a package.
+     */
+    exception FileNotReferenced {};
+    
+    /**
+     * Exception to be raised by the PackageManager if it could not create
+     * the location which is required for a file.
+     */
+    exception LocationCreationException {};
+    
+    
+    
+    /**
+     * The Package interface represents a package which has been installed
+     * by the PackageManager. It provides operations to retrieve locations
+     * of installed files of the package.
+     */
+    interface Package 
+    {
+        /**
+         * This operation returns the location of a file of the package which
+         * is referenced as a <link> in a descriptor of the package.
+         *
+         * @param link_href The value of the href attribute of the 
+         * <link> element.
+         *
+         * @return  The location of the file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If no descriptors of package references such a link.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for 
+         *          this file (e.g. if the file is not installed in a FTP dir).
+         */
+        Components::Deployment::Location
+        get_link_location(in string link_href)
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+        
+        /**
+         * This operation returns the location of a file of the package which
+         * is referenced as a <fileinarchive> in a descriptor of the package.
+         *
+         * @param  name  The value of the name attribute of the 
+         *               <fileinarchive> element.
+         * @param  archive_link  The value of the href attribute of the <link> 
+         *                       element which specify in which archive the file 
+         *                       is. It could be an empty string if the file is 
+         *                       in the package archive.
+         *
+         * @return  The location of the file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If no descriptors of package references such a fileinarchive.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for this file 
+         *          (e.g. if the file is not installed in a FTP dir).
+         */
+        Components::Deployment::Location
+        get_fileinarchive_location(in string name, in string archive_link)
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+            
+        /**
+         * This operation returns the location of a file of the package
+         * which is referenced as a <codebase> in a descriptor of the package.
+         *
+         * @param  filename  The value of the filename attribute of the 
+         *                   <codebase> element.
+         *
+         * @return The location of the file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If no descriptors of package references such a codebase.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for this file 
+         *          (e.g. if the file is not installed in a FTP dir).
+         */
+        Components::Deployment::Location
+        get_codebase_location(in string filename)
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+    };
+    
+    
+
+    /**
+     * The ComponentPackage interface represents a component package which 
+     * has been installed by the PackageManager. It provides operations to 
+     * retrieve locations of installed files of the package.
+     */
+    interface ComponentPackage: Package
+    {
+        /**
+         * This operation returns the name of the component package.
+         *
+         * @return  The name of the component package.
+         */
+        string get_name();
+        
+        
+        /**
+         * This operation returns the version of the component package.
+         *
+         * @return  The version of the component package or an empty string
+         *          if the version is not specified for this package.
+         */
+        string get_version();
+              
+                
+        /**
+         * This operation returns the location of the .csd file for this package.
+         *
+         * @return  The location of the .csd file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .csd file has not been installed.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for the .csd file.
+         */
+        Components::Deployment::Location
+        get_CSD_location()
+            raises (Components::Deployment::InstallationFailure,
+                    LocationCreationException);
+        
+        
+        /**
+         * This operation returns the location of the .ccd file for this package.
+         *
+         * @return  The location of the .ccd file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .ccd file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If the .csd doesn't reference a .ccd file.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for the .csd file.
+         */
+        Components::Deployment::Location
+        get_CCD_location()
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+        
+
+        /**
+         * This operation returns the location of the code file for an
+         * implementation present in this package.
+         *
+         * @param  implUUID  The uuid of the implementation for which the 
+         *                   code location is required.
+         *
+         * @return  The location of the code file.
+         *
+         * @throws  Components::Deployment::UnknownImplId 
+         *          If the implUUID doesn't correspond to an 
+         *          implementation in this package.
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the code file has not been installed.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location 
+         *          for the code file.
+         */
+        Components::Deployment::Location
+        get_code_location(in Components::Deployment::UUID implUUID)
+            raises (Components::Deployment::UnknownImplId, 
+                    Components::Deployment::InstallationFailure, 
+                    LocationCreationException);
+        
+        
+        /**
+         * This operation returns the location of the default component .cpf
+         * file for this package.
+         *
+         * @return The location of the component .cpf file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .cpf file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If there is no default .cpf for component is 
+         *          specified in this package.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location 
+         *          for the .cpf file.
+         */
+        Components::Deployment::Location
+        get_component_CPF_location()
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+        
+        
+        /**
+         * This operation returns the location of the default home .cpf
+         * file for this package.
+         *
+         * @return  The location of the home .cpf file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .cpf file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If there is no default .cpf for home is specified in this package.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for the .cpf file.
+         */
+        Components::Deployment::Location
+        get_home_CPF_location()
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+    };
+    
+
+    /**
+     * The AssemblyPackage interface represents an assembly package which 
+     * has been installed by the PackageManager. It provides operations to 
+     * retrieve locations of installed files of the package.
+     */
+    interface AssemblyPackage: Package
+    {
+        /**
+         * This operation returns the UUID of the assembly package.
+         *
+         * @return The UUID of the assembly package.
+         */
+        Components::Deployment::UUID 
+        get_uuid();
+        
+        /**
+         * This operation returns the location of the .cad file for this package.
+         *
+         * @return The location of the .cad file.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .cad file has not been installed.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for the .cad file.
+         */
+        Components::Deployment::Location
+        get_CAD_location()
+            raises (Components::Deployment::InstallationFailure,
+                    LocationCreationException);
+
+        /**
+         * This operation returns the ComponentPackage corresponding to the
+         * <componentfile_id> which is specified in the .cad file of this 
+         * assembly package.
+         *
+         * @param  componentfile_id  The value of the id attribute of the
+         *                           <componentfile> element corresponding to 
+         *                           the required component package.
+         *
+         * @return  A ComponentPackage object corresponding to the required 
+         *          component package which has been installed by the PackageManager.
+         *
+         * @throws  FileNotReferenced 
+         *          If there is no corresponding <componentfile> element in the 
+         *          .cad of this assembly package.
+         */
+        ComponentPackage 
+        get_component_package(in string componentfile_id)
+            raises (FileNotReferenced);
+            
+        /**
+         * This operation returns the location of a home .cpf file which
+         * is specified for a <homeplacement> by a <homeproperties> element.
+         *
+         * @param  homeplacement_id  The value of the id attribute of the
+         *                           <homeplacement> element.
+         *
+         * @return  The location of the home .cpf file for the specified 
+         *          <homeplacement>.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .cpf file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If there is no corresponding <homeplacement> element in the .cad,
+         *           or if the <homeplacement> has no <homeproperties> specified.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for the .cpf file.
+         */
+        Components::Deployment::Location
+        get_home_CPF_location(in string homeplacement_id)
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+            
+        /**
+         * This operation returns the location of a component .cpf file which
+         * is specified for a <homeplacement> by a <componentproperties> element.
+         *
+         * @param  homeplacement_id  The value of the id attribute of the
+         *                           <homeplacement> element.
+         *
+         * @return  The location of the component .cpf file for the specified 
+         *          <homeplacement>.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .cpf file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If there is no corresponding <homeplacement> element in the 
+         *          .cad, or if the <homeplacement> has no <componentproperties> specified.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for the .cpf file.
+         */
+        Components::Deployment::Location
+        get_component_CPF_location(in string homeplacement_id)
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+                    
+        /**
+         * This operation returns the location of a component .cpf file which
+         * is specified for a <componentinstantiation> by a <componentproperties> 
+         * element.
+         *
+         * @param  componentinstantiation_id  The value of the id attribute of 
+         *                                    the <componentinstantiation> element.
+         *
+         * @return  The location of the component .cpf file for the specified 
+         *          <componentinstantiation>.
+         *
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If the .cpf file has not been installed.
+         * @throws  FileNotReferenced 
+         *          If there is no corresponding <componentinstantiation> element 
+         *          in the .cad, or if the <componentinstantiation> has no 
+         *          <componentproperties> specified.
+         * @throws  LocationCreationException 
+         *          If the PackageManager cannot create a location for the .cpf file.
+         */
+        Components::Deployment::Location
+        get_instantiation_CPF_location(in string componentinstantiation_id)
+            raises (Components::Deployment::InstallationFailure,
+                    FileNotReferenced, 
+                    LocationCreationException);
+                    
+        
+    };
+
+
+    /**
+     * The PackageManager interface supports operations for installation,
+     * removal and retrieving of component packages and assembly packages.
+     */
+    interface PackageManager
+    {
+        /**
+         * This operation makes the PackageManager to install an 
+         * assembly package. 
+         *
+         * @param  assembly_loc  The location of the assembly package 
+         *                       (archive or .cad).
+         *
+         * @return  An AssemblyPackage corresponding to the installed
+         *          assembly package.
+         *
+         * @throws  Components::Deployment::InvalidLocation 
+         *          If the location of the assembly package is not valid.
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If an error occurs during assembly package installation.
+         */
+        AssemblyPackage 
+        install_assembly_package(in string assembly_loc)
+            raises (Components::Deployment::InvalidLocation,
+                    Components::Deployment::InstallationFailure);
+
+        /**
+         * This operation makes the PackageManager to install an 
+         * component package. 
+         *
+         * @param  component_loc  The location of the component package 
+         * (                      archive or .csd).
+         *
+         * @return  An ComponentPackage corresponding to the installed
+         *          component package.
+         *
+         * @throws  Components::Deployment::InvalidLocation 
+         *          If the location of the component package is not valid.
+         * @throws  Components::Deployment::InstallationFailure 
+         *          If an error occurs during component package installation.
+         */
+        ComponentPackage 
+        install_component_package(in string component_loc)
+            raises (Components::Deployment::InvalidLocation,
+                    Components::Deployment::InstallationFailure);
+
+        /**
+         * This operation makes the PackageManager to remove an 
+         * installed assembly package. 
+         *
+         * @param  assemblyUUID  The UUID of the assembly package to be removed.
+         *
+         * @throws  PackageNotFound 
+         *          If no assembly package with the specified UUID has been 
+         *          installed by the PackageManager.
+         * @throws  Components::Deployment::RemoveFailure 
+         *          If an error occurs during assembly package removal.
+         */
+        void remove_assembly_package(in Components::Deployment::UUID assemblyUUID)
+            raises (PackageNotFound,
+                    Components::RemoveFailure);
+
+        /**
+         * This operation makes the PackageManager to remove an 
+         * installed component package. 
+         *
+         * @param  name  The name of the component package to be removed.
+         * @param  version The version of the component package to be removed,
+         *                 or an empty string if the component package as no 
+         *                 defined version.
+         *
+         * @throws  PackageNotFound 
+         *          If no component package with the specified name and 
+         *          version has been installed by the PackageManager.
+         * @throws  Components::Deployment::RemoveFailure 
+         *          If an error occurs during component package removal.
+         */
+        void remove_component_package(in string name, in string version)
+            raises (PackageNotFound,
+                    Components::RemoveFailure);
+
+        /**
+         * This operation return the AssemblyPackage object associated to an
+         * installed assembly package. 
+         *
+         * @param  assemblyUUID  The UUID of the required assembly package.
+         *
+         * @throws  PackageNotFound 
+         *          If no assembly package with the specified UUID has been 
+         *          installed by the PackageManager.
+         */
+        AssemblyPackage 
+        get_assembly_package(in Components::Deployment::UUID assemblyUUID)
+            raises (PackageNotFound);
+
+        /**
+         * This operation return the ComponentPackage object associated to an
+         * installed component package. 
+         *
+         * @param  name  The name of the required component package.
+         * @param  version  The version of the required component package,
+         *                  or an empty string if the component package as no 
+         *                  defined version.
+         *
+         * @throws PackageNotFound 
+         *         If no component package with the specified name and version 
+         *         has been installed by the PackageManager.
+         */
+        ComponentPackage 
+        get_component_package(in string name, in string version)
+            raises (PackageNotFound);
+
+        /**
+         * This operation return the ComponentPackage object associated to an
+         * installed component package with the specified implementation. 
+         *
+         * @param  implUUID  The UUID of the implementation present in the 
+         *                   required component package.
+         *
+         * @throws  PackageNotFound 
+         *          If no component package with such a specified implementation 
+         *          has been installed by the PackageManager.
+         */
+        ComponentPackage 
+        get_component_package_for_uuid(in Components::Deployment::UUID implUUID)
+            raises (PackageNotFound);
+
+    };
+    
+
+
+    /**
+     * Exception raised by CdmwDeployment::ComponentInstallation when the
+     * location of an unknown valuetype is requested.
+     */
+    exception UnknownValuetype {};
+    
+
+    /**
+     * This interface extends the Components::Deployment::ComponentInstallation
+     * interface, adding a method for retrieving the location of valuetype 
+     * factories installed with component implementations.
+     */
+    interface ComponentInstallation: Components::Deployment::ComponentInstallation {
+        
+        /**
+         * Returns the location of the valuetypefactory packaged with the component
+         * implementation 'implUUID' and which cretaes specified valuetypes.
+         * 
+         * @param  implUUID  The UUID of the component implementation with which 
+         *                   the valuetype factory was packaged
+         * @param  repid  The repository id of the valuetype created by the 
+         *                valuetype factory.
+         *
+         * @throws  org.omg.Components.Deployment.UnknownImplId
+         *          If the imlUUID parameter doesn't correspond to a previously
+         *          installed installed component package.
+         * @throws  UnknownValuetype
+         *          If the component package doesn't specify a valuetype factory
+         *          for the valuetype repository id.
+         * @throws  org.omg.Components.Deployment.InstallationFailure
+         *          If the valuetype factory cannot be retrieved.
+         */
+        Components::Deployment::Location 
+        get_valuetypefactory_location(in Components::Deployment::UUID implUUID,
+                                      in CORBA::RepositoryId repid)
+            raises (Components::Deployment::UnknownImplId,
+                    UnknownValuetype,
+                    Components::Deployment::InstallationFailure);
+
+    };
+    
+
+    /**
+     * This interface extends the Components::Deployment::AssemblyFactory
+     * interface, adding methods for creation of Assemblies with a user name.
+     */
+    interface AssemblyFactory: Components::Deployment::AssemblyFactory {
+            Components::Cookie create_with_name(in Components::Deployment::Location assembly_loc, 
+                                      in string assembly_name)
+                raises (Components::Deployment::InvalidLocation, 
+                        Components::CreateFailure);
+
+            Components::Deployment::Assembly lookup_with_name(in string assembly_name)
+                raises (Components::Deployment::InvalidAssembly);
+
+            void destroy_with_name(in string assembly_name)
+                raises (Components::Deployment::InvalidAssembly, 
+                        Components::RemoveFailure);        
+    };
+
+
+};
+
+
+#endif // CDMW_DEPLOYMENT_IDL_
+
+

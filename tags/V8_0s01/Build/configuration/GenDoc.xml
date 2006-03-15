@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<project name="GenDoc" default="-genpublicdoc" basedir=".">
+
+
+    <description>
+        This build file defines targets for the generation of the API
+        documentation.
+    </description>
+
+
+    <!-- =======================================================================
+        The "-genpublicdoc" target generates the API documentation for all the
+        interfaces for public use.
+
+        It depends on the following targets:
+            + "-set-publicdoc-properties"
+            + "-gendoc"
+    -->
+    <target name="-genpublicdoc" depends="-set-publicdoc-properties, -gendoc" />
+
+
+    <!-- =======================================================================
+        The "-genfulldoc" target generates the full API documentation for all
+        the interfaces.
+
+        It depends on the following targets:
+            + "-gendoc"
+    -->
+    <target name="-genfulldoc" depends="-gendoc" />
+
+
+    <!-- =======================================================================
+        The "-set-publicdoc-properties" target defines properties to constraint
+        the generation of docs.
+    -->
+    <target name="-set-publicdoc-properties">
+        <property name="is.public.doc" value="true" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-gendoc" target generates API documentation for all the interfaces.
+
+        It depends on the following targets:
+            + "-get-output-dir"
+            + "-gendoc-cpp"
+            + "-gendoc-java"
+    -->
+    <target name="-gendoc" depends="-get-output-dir">
+        <antcall target="-gendoc-cpp" />
+        <antcall target="-gendoc-java" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-get-output-dir" target determines the output directory.
+    -->
+    <target name="-get-output-dir">
+        <propertycopy
+            property="gd.install.dir"
+            from="${mb.prev}.config.install.dir"
+        />
+
+        <property
+            name="config.apidoc.dir"
+            location="${gd.install.dir}${FS}Docs"
+        />
+
+        <!-- unset properties -->
+        <xvar name="gd.install.dir" unset="true" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-gendoc-cpp" target generates API documentation for the C++
+        interface.
+
+        It depends on the following targets:
+            + "-init-gendoc-cpp"
+            + "-run-doxygen"
+    -->
+    <target name="-gendoc-cpp" depends="-init-gendoc-cpp, -run-doxygen" />
+
+
+    <!-- =======================================================================
+        The "-init-gendoc-cpp" target defines token values and looks for the
+        CSCs to scan.
+    -->
+    <target name="-init-gendoc-cpp">
+        <property name="lang" value="c++" />
+
+        <!-- find the CSCs to visit -->
+        <var name="gd.list" value="" />
+
+        <propertycopy
+            property="gd.available.cscis"
+            from="${mb.prev}.config.available.cscis"
+        />
+
+        <property name="file.patterns" value="*.h *.hpp *.inl *.idl" />
+
+        <for list="${gd.available.cscis}" delimiter=" " param="gd.csci">
+            <sequential>
+                <propertycopy
+                    property="gd.csci.location"
+                    silent="true"
+                    from="${mb.prev}.config.@{gd.csci}.location"
+                />
+
+                <if>
+                    <isset property="gd.csci.location" />
+                    <then>
+                    <if>
+                        <isset property="is.public.doc" />
+                        <then>
+                            <pathconvert property="list" pathSep=" ">
+                                <path>
+                                    <dirset dir="${gd.csci.location}">
+                                        <include name="**/c++/incl" />
+                                        <include name="**/idl" />
+
+                                        <exclude name="**/delivery/**" />
+                                        <exclude name="**/java/**" />
+                                        <exclude name="**/ada/**" />
+                                        <exclude name="**/test/**" />
+                                        <exclude name="**/runtest/**" />
+                                        <exclude name="**/ProdTests/**" />
+                                        <exclude name="**/valid/**" />
+                                    </dirset>
+                                </path>
+                            </pathconvert>
+                        </then>
+                        <else>
+                            <pathconvert property="list" pathSep=" ">
+                                <path>
+                                    <dirset dir="${gd.csci.location}">
+                                        <include name="**/c++/incl" />
+                                        <include name="**/c++/localincl" />
+                                        <include name="**/idl" />
+
+                                        <exclude name="**/delivery/**" />
+                                        <exclude name="**/java/**" />
+                                        <exclude name="**/ada/**" />
+                                        <exclude name="**/test/**" />
+                                        <exclude name="**/runtest/**" />
+                                        <exclude name="**/ProdTests/**" />
+                                        <exclude name="**/valid/**" />
+                                    </dirset>
+                                </path>
+                            </pathconvert>
+                        </else>
+                    </if>
+                    </then>
+                </if>
+
+                <if>
+                    <isset property="list" />
+                    <then>
+                        <var name="gd.list" value="${gd.list} ${list}" />
+                    </then>
+                </if>
+
+                <!-- unset properties -->
+                <xvar name="gd.csci.location" unset="true" />
+                <xvar name="list"             unset="true" />
+            </sequential>
+        </for>
+
+        <!-- unset properties -->
+        <xvar name="gd.available.cscis" unset="true" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-run-doxygen" target instanciates the template doxygen.cfg file and
+        runs doxygen with the generated doxygen.cfg.
+    -->
+    <target name="-run-doxygen">
+        <property name="gd.doxygen.cfg" value="doxygen.cfg" />
+
+        <var name="p" value="${config.Build.location}${FS}" />
+        <var name="p" value="${p}configuration${FS}" />
+        <var name="p" value="${p}${config.csc.data.dir}${FS}" />
+
+        <property name="gd.data.dir" location="${p}" />
+
+        <!-- location of the template doxygen.cfg -->
+        <property
+            name="gd.source.doxygen.cfg"
+            location="${p}${gd.doxygen.cfg}"
+        />
+
+        <!-- location of the instance to generate -->
+        <property
+            name="gd.target.doxygen.cfg"
+            location="${TMP}${FS}${gd.doxygen.cfg}"
+        />
+
+        <!-- find where perl is located -->
+        <if>
+            <os family="unix" />
+            <then>
+                <exec executable="which" outputproperty="gd.perl.location">
+                    <arg value="perl" />
+                </exec>
+            </then>
+        </if>
+
+        <!-- generate full docs ? -->
+        <var name="p" value="${config.apidoc.dir}${FS}html${FS}" />
+
+        <if>
+            <isset property="is.public.doc" />
+            <then>
+                <property name="extract.prv" value="NO" />
+                <property name="gd.out.dir"  location="${p}public${FS}${lang}" />
+            </then>
+            <else>
+                <property name="extract.prv" value="YES" />
+                <property name="gd.out.dir"  location="${p}full${FS}${lang}" />
+            </else>
+        </if>
+
+        <if>
+            <not><equals arg1="${gd.list}" arg2="" trim="true" /></not>
+            <then>
+                <!-- create the output directory -->
+                <mkdir dir="${gd.out.dir}" />
+
+                <!-- generate the doxygen configuration file -->
+                <copy file="${gd.source.doxygen.cfg}"
+                      tofile="${gd.target.doxygen.cfg}"
+                      overwrite="true">
+
+                    <filterset>
+                        <filtersfile file="${mb.site.properties}" />
+                        <filter token="product.version"
+                                value="${product.version}" />
+                        <filter token="cscs"          value="${gd.list}" />
+                        <filter token="docdir"        value="${gd.out.dir}" />
+                        <filter token="perldir"       value="${gd.perl.location}" />
+                        <filter token="htmlheaderdir" value="${gd.data.dir}" />
+                        <filter token="extract.prv"   value="${extract.prv}" />
+                        <filter token="file.patterns" value="${file.patterns}" />
+                    </filterset>
+                </copy>
+
+                <!-- generate -->
+                <exec executable="doxygen">
+                    <arg value="${gd.target.doxygen.cfg}" />
+                </exec>
+
+                <!-- clean up -->
+                <delete file="${gd.target.doxygen.cfg}" quiet="true" />
+
+                <!-- determine the doxygen version -->
+                <exec executable="doxygen" outputproperty="doxygen.ver">
+                    <arg value="--version" />
+                </exec>
+
+                <if>
+                    <contains string="${doxygen.ver}" substring="1.2" />
+                    <then>
+                        <!-- generate index -->
+                        <exec executable="doxytag" dir="${gd.out.dir}">
+                            <arg line="-s search.idx" />
+                        </exec>
+                    </then>
+                </if>
+
+                <copy todir="${gd.out.dir}">
+                    <fileset dir="${gd.data.dir}">
+                        <include name="header-doc.html" />
+                        <include name="logo-doc.gif" />
+                    </fileset>
+                </copy>
+            </then>
+        </if>
+
+        <!-- unset properties -->
+        <xvar name="gd.source.doxygen.cfg" unset="true" />
+        <xvar name="gd.target.doxygen.cfg" unset="true" />
+        <xvar name="gd.out.dir"            unset="true" />
+        <xvar name="gd.data.dir"           unset="true" />
+        <xvar name="gd.perl.location"      unset="true" />
+        <xvar name="gd.list"               unset="true" />
+        <xvar name="gd.doxygen.cfg"        unset="true" />
+        <xvar name="doxygen.ver"           unset="true" />
+        <xvar name="lang"                  unset="true" />
+        <xvar name="file.patterns"         unset="true" />
+        <xvar name="gd.perl.location"      unset="true" />
+        <xvar name="extract.prv"           unset="true" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-gendoc-java" target generates API documentation for the JAVA
+        interface.
+
+        It depends on the following targets:
+            + "-init-gendoc-java"
+            + "-run-doxygen"
+    -->
+    <target name="-gendoc-java" depends="-init-gendoc-java, -run-doxygen" />
+
+
+    <!-- =======================================================================
+        The "-init-gendoc-java" target defines token values and looks for the
+        CSCs to scan.
+    -->
+    <target name="-init-gendoc-java">
+        <property name="lang" value="java" />
+
+        <!-- find the CSCs to visit -->
+        <var name="gd.list" value="" />
+
+        <propertycopy
+            property="gd.available.cscis"
+            from="${mb.prev}.config.available.cscis"
+        />
+
+        <property name="file.patterns" value="*.java" />
+
+        <for list="${gd.available.cscis}" delimiter=" " param="gd.csci">
+            <sequential>
+                <propertycopy
+                    property="gd.csci.location"
+                    silent="true"
+                    from="${mb.prev}.config.@{gd.csci}.location"
+                />
+
+                <if>
+                    <isset property="gd.csci.location" />
+                    <then>
+                        <pathconvert property="list" pathSep=" ">
+                            <path>
+                                <dirset dir="${gd.csci.location}">
+                                    <include name="**/java/src/**"/>
+
+                                    <exclude name="**/delivery/**" />
+                                    <exclude name="**/c++/**" />
+                                    <exclude name="**/ada/**" />
+                                    <exclude name="**/test/**" />
+                                    <exclude name="**/runtest/**" />
+                                    <exclude name="**/ProdTests/**" />
+                                    <exclude name="**/valid/**" />
+                                </dirset>
+                            </path>
+                        </pathconvert>
+                    </then>
+                </if>
+
+                <if>
+                    <isset property="list" />
+                    <then>
+                        <var name="gd.list" value="${gd.list} ${list}" />
+                    </then>
+                </if>
+
+                <!-- unset properties -->
+                <xvar name="gd.csci.location" unset="true" />
+                <xvar name="list"             unset="true" />
+            </sequential>
+        </for>
+
+        <!-- unset properties -->
+        <xvar name="gd.available.cscis" unset="true" />
+    </target>
+
+
+    <!-- =======================================================================
+        The "-genpublicdoc-ada" target generates API documentation for the ADA
+        interface.
+    -->
+    <target name="-gendoc-ada">
+        <!-- TODO -->
+    </target>
+
+
+</project>

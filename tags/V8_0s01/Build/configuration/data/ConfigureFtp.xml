@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureFtp" default="-check-Ftp" basedir=".">
+
+
+    <description>
+        This build file ask for FTP home dir.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-Ftp" target checks if FTP is suitable for the
+        build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-test1"
+    -->
+    <target name="-check-Ftp"
+            depends="-initialize, -test1">
+
+        <!-- save Ftp properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-locate-Ftp" target determines the home directory of FTP.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-Ftp" depends="-initialize">
+
+        <!-- determine the FTP home directory -->
+        <var name="my.var"
+             value="Enter the FTP home directory"/>
+
+        <propertycopy name="ftpserver.default.homedir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.homedir"/>
+
+        <if>
+            <isset property="ftpserver.default.homedir"/>
+            <then>
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${my.var}" dirPathOnly="true"
+                                addproperty="config.${tool.name}.homedir"
+                                default="${ftpserver.default.homedir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.homedir"
+                                      from="ftpserver.default.homedir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirPathOnly="true"
+                        addproperty="config.${tool.name}.homedir"/>
+            </else>
+        </if>
+
+        <propertycopy name="ftpserver.homedir"
+                      from="config.${tool.name}.homedir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.homedir"
+                   value="${ftpserver.homedir}"/>
+        </propertyfile>
+
+        <!-- save the properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+
+        <property file="${cb.tools.conf}"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1" target checks whether the FTP home directory exists and is
+        not write-protected.
+    -->
+    <target name="-test1">
+        <!--
+        <echo message="Checking the ${tool.fullname} home directory"/>
+        -->
+        <echo message="Checking the FTP home directory"/>
+
+        <!-- the test is successful if the directory exists -->
+        <propertycopy name="ftpserver.homedir"
+                      from="config.${tool.name}.homedir"/>
+
+        <available file="${ftpserver.homedir}" type="dir"
+                   property="ftpserver.homedir.is.ok"/>
+
+        <!-- stop checking if the directory doesn't exist -->
+        <fail unless="ftpserver.homedir.is.ok"
+              message="${ftpserver.homedir} does not exist."/>
+
+        <!-- the test is successful if the directory is not write-protected -->
+        <trycatch>
+            <try>
+                <touch file="${ftpserver.homedir}${FS}test.txt"/>
+                <delete file="${ftpserver.homedir}${FS}test.txt"/>
+            </try>
+            <catch>
+                <fail message="${ftpserver.homedir} is write-protected."/>
+            </catch>
+        </trycatch>
+    </target>
+
+</project>
+

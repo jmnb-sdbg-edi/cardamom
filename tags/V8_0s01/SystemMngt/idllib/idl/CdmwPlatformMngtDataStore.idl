@@ -1,0 +1,430 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_DATA_STORE_IDL_
+#define CDMW_PLATFORM_MNGT_DATA_STORE_IDL_
+
+#include <CdmwPlatformMngtCommon.idl>
+
+
+#pragma prefix "thalesgroup.com"
+
+/**
+ * Module defining the CDMW Platform Management service.
+ */
+module CdmwPlatformMngt
+{
+    interface SupervisionObserver;
+
+    /**
+     * ManagedElement DataStore:
+     * key: ElementPath, the full name identifying the managed element as unique.
+     * data: ManagedElementRecord
+     */
+    struct ManagedElementRecord
+    {
+        /**
+        * The name of the managed element.
+        */
+        ElementName name;
+   
+        /**
+        * The Current User defined Attributes (as Properties) contained in the Supervised Object
+        */
+        CosPropertyService::PropertyDefs user_defined_attributes;
+	
+        /**
+	* The Default User Defined Attributes read at configuration time 
+	*/
+	CosPropertyService::PropertyDefs default_user_defined_attributes;
+		
+    };
+    
+    
+    
+    /**
+     * Entity DataStore.
+     * key: ElementPath, the full name identifying the managed element as unique.
+     * data: EntityRecord
+     */
+    struct EntityRecord
+    {
+        /**
+        * The entity status.
+        */
+        EntityStatus entity_status;
+        
+        /**
+        * The entity info.
+        */
+        string entity_info;
+        
+        /**
+        * The list of entity status values.
+        */
+        EntityStatusValues status_values;
+    };
+    
+    
+    /**
+     * Host DataStore.
+     * key: ElementPath, the full name identifying the managed element as unique.
+     * data: HostRecord
+     */
+    struct HostRecord
+    {
+        /**
+         * The status of the host.
+         */
+        HostStatus status;
+
+        /**
+	* status additional info. ...
+	**/
+	string host_status_info ;
+
+        /**
+        * The full path to the platform application executable.
+        */
+        string platform_application_exe;
+        
+        /**
+         * The monitoring information about the daemon running on the host.
+         */
+        MonitoringInfo daemon_monitoring_info;
+
+        //monitoring parameters
+	CompleteMonitoringInfo monitoring_parameters;
+       
+    };
+   
+    
+    /**
+     * System DataStore.
+     * key: ElementPath, the full name identifying the managed element as unique.
+     * data: SystemRecord
+     */
+    struct SystemRecord
+    {
+       /** 
+        * a user-defined value which, for example, allows to define
+        * whether the system is 
+        * running as operational, simulation, training, test, etc…
+        */
+
+        string system_mission;
+
+        /**
+        * The port used by the whole system for contacting hosts' daemon.
+        */
+        Port system_port;
+        
+
+        /**
+         * The status of the system.
+         */
+        SystemStatus status;
+        
+        /**
+         * The status info of the system.
+         */
+        string status_info;
+        
+        /**
+         * The mode of the system.
+         */
+        FunctioningMode mode;
+        
+        /**
+         * The mode info of the system.
+         */
+        string mode_info;
+        
+        /**
+         * The current state machine.
+         */
+        string state_machine;
+        
+        /**
+         * The startup kind.
+         */
+        CdmwPlatformMngtBase::StartupKind startup_kind;
+        
+        /**
+         * The stop emergency.
+         */
+        boolean stop_emergency;
+        
+        /**
+         * The new graph requested.
+         */
+        boolean new_graph;
+        
+        /**
+         * The init graph for application.
+         */
+        GraphElements application_init_graph;
+        
+        /**
+         * The stop graph for application (from configuration).
+         */
+        GraphElements application_stop_graph;
+        
+        /**
+         * The built stop graph for application.
+         */
+        GraphElements stop_graph;
+    };
+
+    
+    
+    /**
+     * Application DataStore.
+     * key: ElementPath, the full name identifying the managed element as unique.
+     * data: ApplicationRecord
+     */
+    struct ApplicationRecord
+    {
+        /**
+         * The status of the application.
+         */
+        ApplicationStatus status;
+        
+        /**
+         * The status info of the application.
+         */
+        string status_info;
+        
+        /**
+         * The mode of the application.
+         */
+        FunctioningMode mode;
+        
+        /**
+         * The mode info of the application.
+         */
+        string mode_info;
+        
+        /**
+         * The current state machine.
+         */
+        string state_machine;
+        
+        /**
+         * The startup kind.
+         */
+        CdmwPlatformMngtBase::StartupKind startup_kind;
+        
+        /**
+         * The stop emergency.
+         */
+        boolean stop_emergency;
+        
+        /**
+         * The new graph requested.
+         */
+        boolean new_graph;
+        
+        /**
+         * The init graph for process.
+         */
+        GraphElements process_init_graph;
+        
+        /**
+         * The stop graph for process.
+         */
+        GraphElements process_stop_graph;
+    };
+    
+    /**
+     * Process DataStore.
+     * key: ElementPath, the full name identifying the managed element as unique.
+     * data: ProcessRecord
+     */
+    struct ProcessRecord
+    {
+        /**
+        * The name of the host where the process should run.
+        */
+        ElementName host_name;
+        
+        /**
+        * The type of process.
+        */
+        ProcessType type;
+        
+        /**
+        * The auto ending flag.
+        */
+        boolean auto_ending;
+        
+        /**
+        * The information for creating the associated Operating System Process.
+        */
+        ProcessInfo process_info;
+        
+        /**
+        * The lifecycle of the process.
+        */
+        LifeCycleDef life_cycle;
+        
+        /**
+        * The monitoring information for the process.
+        */
+        CompleteMonitoringInfo monitoring_info;
+        
+        /**
+         * The status of the process.
+         */
+        ProcessStatus status;
+        
+        /**
+         * The status info of the process.
+         */
+        string status_info;
+        
+        /**
+         * The current state machine.
+         */
+        string state_machine;
+        
+        /**
+         * The startup kind.
+         */
+        CdmwPlatformMngtBase::StartupKind startup_kind;
+        
+        /**
+         * The counter of init steps.
+         */
+        unsigned long step_counter;
+        
+        /**
+         * The status of the last action.
+         */
+        RequestStatus last_request_status;
+        
+        /**
+         * The date and the time of the last error event.
+         */
+        CdmwPlatformMngtBase::EventHeader last_error_header;
+
+        /**
+         * The issuer of the last error event.
+         */
+        string last_error_issuer;
+    };
+    
+    
+    /**
+     * System Observer Registration Definition.
+     * key: string, the observer name
+     * data: SystemObserverRegistrationRecord
+     */
+    struct SystemObserverRegistrationRecord
+    {
+        /**
+        * The host where observer is running.
+        */
+        ElementName host_name;
+        
+        /**
+        * The observer object reference.
+        */
+        SupervisionObserver observer;
+    };
+    
+    
+    
+    /**
+     * The different types of report events.
+     */
+    enum EventReportType
+    {
+        INVALIDATE_PROCESS_EVENT,
+        PROCESS_MESSAGE_EVENT,
+        PROCESS_ERROR_EVENT,
+        PROCESS_ENDING_EVENT,
+        PROCESS_MONITORING_FAILURE,
+        PROCESS_USER_EVENT
+    };
+    
+     
+    /**
+     * Event Handler DataStore
+     * key EventKey
+     * data: EventReportRecord
+     */
+    struct EventReportRecord
+    {
+        /**
+        * The type of event.
+        */
+        EventReportType event_type;
+        
+        /**
+        * The event time stamp, the time and the date of the message issuance.
+        */
+        CdmwPlatformMngtBase::EventHeader header;
+        
+        /**
+        * The system name.
+        */
+        ElementName system_name;
+        
+        /**
+        * The application name.
+        */
+        ElementName application_name;
+        
+        /**
+        * The host name.
+        */
+        ElementName host_name;
+        
+        /**
+        * The process name.
+        */
+        ElementName process_name;                        
+
+        /**
+        * The issuer of the message.
+        */
+        string issuer;
+
+        /**
+        * The message to be notified.
+        */
+        string message;
+        
+        /**
+        * The data.
+        */
+        any data;
+    };
+    
+}; // End Module CdmwPlatformMngt
+
+#endif // CDMW_PLATFORM_MNGT_DATA_STORE_IDL_
+

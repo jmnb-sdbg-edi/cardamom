@@ -1,0 +1,709 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+
+<!DOCTYPE project [
+    <!ENTITY common_targets SYSTEM "file:../../data/CommonConfigTargets.xml">
+]>
+
+
+<project name="ConfigureORBacusCPP" default="-check-ORBacusCPP" basedir=".">
+
+
+    <description>
+        This build file locates and checks IONA ORBacus C++.
+    </description>
+
+
+    <!-- Include XML fragments -->
+    &common_targets;
+
+
+    <!-- =======================================================================
+        The "-check-ORBacusCPP" target checks if the ORB is suitable for the
+        build.
+
+        It depends on the following targets:
+            + "-initialize"
+            + "-check-TAO-linux"
+            + "-check-TAO-sunos"
+            + "-check-TAO-windows"
+            + "-check-TAO-aix"
+            + "-set-ORBacusCPP-properties"
+    -->
+    <target name="-check-ORBacusCPP"
+            depends="-initialize, -check-ORBacusCPP-linux,
+                     -check-ORBacusCPP-sunos, -check-ORBacusCPP-windows,
+                     -check-ORBacusCPP-aix, -set-ORBacusCPP-properties">
+
+        <!-- save TAO properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-ORBacusCPP-linux" target checks if the ORB is suitable for
+        the build on a Linux platform.
+    -->
+    <target name="-check-ORBacusCPP-linux" if="is.linux">
+        <antcallback target="-test1-linux"
+                     return="orbacuscpp.include.dir,
+                             orbacuscpp.ob.include.dir,
+                             orbacuscpp.bin.dir"/>
+        <antcallback target="-test2-linux" return="orbacuscpp.lib.dir"/>
+        <antcallback target="-test3-linux" return="orbacuscpp.idl.dir"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-ORBacusCPP-sunos" target checks if the ORB is suitable for
+        the build on a SUN Solaris platform.
+    -->
+    <target name="-check-ORBacusCPP-sunos" if="is.sunos">
+        <antcallback target="-test1-sunos"
+                     return="orbacuscpp.include.dir,
+                             orbacuscpp.ob.include.dir,
+                             orbacuscpp.bin.dir"/>
+        <antcallback target="-test2-sunos" return="orbacuscpp.lib.dir"/>
+        <antcallback target="-test3-sunos" return="orbacuscpp.idl.dir"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-ORBacusCPP-aix" target checks if the ORB is suitable for the
+        build on an IBM AIX platform.
+    -->
+    <target name="-check-ORBacusCPP-aix" if="is.aix">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- =======================================================================
+        The "-check-ORBacusCPP-windows" target checks if the ORB is suitable for
+        the build on a Windows platform.
+    -->
+    <target name="-check-ORBacusCPP-windows" if="is.windows">
+        <!-- TODO -->
+    </target>
+
+
+    <!-- ======================================================================
+        The "-locate-ORBacusCPP" target determines the installation directory
+        of IONA ORBacus C++.
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-locate-ORBacusCPP" depends="-initialize">
+        <!-- determine the ORBacus C++ installation directory -->
+        <var name="my.var"
+             value="Enter the ${tool.fullname} installation directory"/>
+
+        <propertycopy property="orbacuscpp.default.install.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.install.dir"/>
+
+        <if>
+            <isset property="orbacuscpp.default.install.dir"/>
+            <then>
+                <if>
+                    <isfalse value="${passive.mode}"/>
+                    <then>
+                        <xinput message="${my.var}" dirPathOnly="true"
+                                addproperty="config.${tool.name}.install.dir"
+                                default="${orbacuscpp.default.install.dir}"/>
+                    </then>
+                    <else>
+                        <propertycopy property="config.${tool.name}.install.dir"
+                                      from="orbacuscpp.default.install.dir"/>
+                    </else>
+                </if>
+            </then>
+            <else>
+                <xinput message="${my.var}" dirPathOnly="true"
+                        addproperty="config.${tool.name}.install.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="orbacuscpp.install.dir"
+                      from="config.${tool.name}.install.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.install.dir"
+                   value="${orbacuscpp.install.dir}"/>
+        </propertyfile>
+
+        <!-- determine the bin directory -->
+        <propertycopy property="orbacuscpp.default.bin.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.bin.dir"/>
+
+        <if>
+            <not>
+                <isset property="orbacuscpp.default.bin.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the bin directory -->
+                <findfile file="idl" dir="${orbacuscpp.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="orbacuscpp.idl.compiler"/>
+
+                <dirname property="orbacuscpp.default.bin.dir"
+                         file="${orbacuscpp.idl.compiler}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} bin directory"
+                        addproperty="config.${tool.name}.bin.dir"
+                        default="${orbacuscpp.default.bin.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.bin.dir"
+                              from="orbacuscpp.default.bin.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="orbacuscpp.bin.dir"
+                      from="config.${tool.name}.bin.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.bin.dir"
+                   value="${orbacuscpp.bin.dir}"/>
+        </propertyfile>
+
+        <!-- determine the include directory -->
+        <propertycopy property="orbacuscpp.default.include.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.include.dir"/>
+
+        <if>
+            <not>
+                <isset property="orbacuscpp.default.include.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the bin directory -->
+                <findfile file="orb.h" dir="${orbacuscpp.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="orbacuscpp.orb.h"/>
+
+                <!--
+                    we need to run the "dirname" task twice because the ORBacus
+                    include files are stored in .../include/OB/
+                -->
+                <dirname property="orbacuscpp.ob.include.dir"
+                         file="${orbacuscpp.orb.h}"/>
+                <dirname property="orbacuscpp.default.include.dir"
+                         file="${orbacuscpp.ob.include.dir}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} include directory"
+                        addproperty="config.${tool.name}.include.dir"
+                        default="${orbacuscpp.default.include.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.include.dir"
+                              from="orbacuscpp.default.include.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="orbacuscpp.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.include.dir"
+                   value="${orbacuscpp.include.dir}"/>
+        </propertyfile>
+
+        <!-- determine the lib directory -->
+        <propertycopy property="orbacuscpp.default.lib.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.lib.dir"/>
+
+        <if>
+            <not>
+                <isset property="orbacuscpp.default.lib.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the lib directory -->
+                <findfile file="libOB.*" dir="${orbacuscpp.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="orbacuscpp.libOB.file"/>
+
+                <dirname property="orbacuscpp.default.lib.dir"
+                         file="${orbacuscpp.libOB.file}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} lib directory"
+                        addproperty="config.${tool.name}.lib.dir"
+                        default="${orbacuscpp.default.lib.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.lib.dir"
+                              from="orbacuscpp.default.lib.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="orbacuscpp.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.lib.dir"
+                   value="${orbacuscpp.lib.dir}"/>
+        </propertyfile>
+
+        <!-- determine the idl directory -->
+        <propertycopy property="orbacuscpp.default.idl.dir" silent="true"
+                      from="${mb.prev}.config.${tool.name}.idl.dir"/>
+
+        <if>
+            <not>
+                <isset property="orbacuscpp.default.idl.dir"/>
+            </not>
+            <then>
+                <!-- try to guess the bin directory -->
+                <findfile file="OBORB.idl" dir="${orbacuscpp.install.dir}"
+                          findFirst="true" recursive="true"
+                          property="orbacuscpp.oborb.idl"/>
+
+                <!--
+                    we need to run the "dirname" task twice because the ORBacus
+                    IDL files are stored in .../idl/OB/
+                -->
+                <dirname property="orbacuscpp.ob.idl.dir"
+                         file="${orbacuscpp.oborb.idl}"/>
+                <dirname property="orbacuscpp.default.idl.dir"
+                         file="${orbacuscpp.ob.idl.dir}"/>
+            </then>
+        </if>
+
+        <if>
+            <isfalse value="${passive.mode}"/>
+            <then>
+                <xinput message="Enter the ${tool.fullname} idl directory"
+                        addproperty="config.${tool.name}.idl.dir"
+                        default="${orbacuscpp.default.idl.dir}"
+                        dirPathOnly="true"/>
+            </then>
+            <else>
+                <propertycopy property="config.${tool.name}.idl.dir"
+                              from="orbacuscpp.default.idl.dir"/>
+            </else>
+        </if>
+
+        <propertycopy property="orbacuscpp.idl.dir"
+                      from="config.${tool.name}.idl.dir"/>
+
+        <!-- save some properties temporarily -->
+        <propertyfile file="${tmpconfig.cache}">
+            <entry key="config.${tool.name}.idl.dir"
+                   value="${orbacuscpp.idl.dir}"/>
+        </propertyfile>
+
+        <!-- save the properties -->
+        <echoproperties destfile="${cb.tools.conf}" prefix="config."/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-initialize" target defines some properties for the build.
+
+        It depends on the following targets:
+            + "-check-global-aliases"
+    -->
+    <target name="-initialize" depends="-check-global-aliases">
+        <!-- the required version for ORBacus C++ -->
+        <propertycopy property="orbacuscpp.required.version"
+                      from="require.${my.os.name}.${tool.name}.version"/>
+
+        <!--
+            load properties from the temporary file so that next time the
+            "echoproperties" task overwrites this file, the properties are not
+            lost.
+        -->
+        <property file="${cb.tools.conf}"/>
+
+        <property name="tool.fullname" value="ORBacus C++"/>
+    </target> 
+
+
+    <!-- ======================================================================
+        The "-test1-linux" target checks whether the ORBacus C++ version is ok.
+    -->
+    <target name="-test1-linux">
+        <echo message="Checking the ${tool.fullname} version"/>
+
+        <!--
+            the test is successful if orb.h is found in the include directory
+            and contains the required version and the IDL compiler prints the
+            required version as well.
+        -->
+        <propertycopy property="orbacuscpp.include.dir"
+                      from="config.${tool.name}.include.dir"/>
+
+        <property name="orbacuscpp.ob.include.dir"
+                  value="${orbacuscpp.include.dir}${FS}OB"/>
+
+        <property name="orbacuscpp.orb.h"
+                  location="${orbacuscpp.ob.include.dir}${FS}orb.h"/>
+
+        <available file="${orbacuscpp.orb.h}" type="file"
+                   property="orbacuscpp.orb.h.present"/>
+
+        <!-- stop checking if orb.h is not found -->
+        <var name="my.var" value="Could not find the ${tool.fullname}"/>
+        <var name="my.var" value="${my.var} include files in"/>
+        <var name="my.var" value="${my.var} ${orbacuscpp.ob.include.dir}."/>
+        <fail unless="orbacuscpp.orb.h.present" message="${my.var}"/>
+
+        <!-- load the content of the file orb.h into a property -->
+        <loadfile srcFile="${orbacuscpp.orb.h}"
+                  property="orbacuscpp.orb.h.content">
+
+            <filterchain>
+                <linecontains>
+                    <contains value="Version:"/>
+                </linecontains>
+            </filterchain>
+        </loadfile>
+
+        <propertycopy property="orbacuscpp.bin.dir"
+                      from="config.${tool.name}.bin.dir"/>
+
+        <property name="orbacuscpp.idl.compiler"
+                  location="${orbacuscpp.bin.dir}${FS}idl"/>
+
+        <available file="${orbacuscpp.idl.compiler}" type="file"
+                   property="orbacuscpp.idl.compiler.present"/>
+
+        <!-- stop checking if the IDL compiler is not found -->
+        <fail unless="orbacuscpp.idl.compiler.present"
+              message="Could not find ${orbacuscpp.idl.compiler}."/>
+
+        <!-- make idl print its version -->
+        <exec executable="idl" dir="${orbacuscpp.bin.dir}"
+              outputproperty="orbacuscpp.test1.cmdline.output"
+              resultproperty="orbacuscpp.test1.return.code"
+              vmlauncher="false">
+
+            <arg value="--version"/>
+        </exec>
+
+        <if>
+            <not>
+                <equals arg1="${orbacuscpp.test1.return.code}" arg2="0"/>
+            </not>
+            <then>
+                <!-- should never happen -->
+                <fail>could not obtain ${tool.fullname} version</fail>
+            </then>
+        </if>
+
+        <!-- get the version from the IDL compiler output -->
+        <selecttoken string="${orbacuscpp.test1.cmdline.output}" delimiter=" "
+                     tokenNumber="1" property="orbacuscpp.idl.curr.ver"/>
+
+        <!-- get the version from the orb.h header file -->
+        <selecttoken string="${orbacuscpp.orb.h.content}" delimiter=" "
+                     tokenNumber="2" property="orbacuscpp.orb.h.curr.ver"/>
+
+        <!--
+            the test is successful if the versions are equal (unless version
+            checking is disabled or the check mode is set to "loose")
+        -->
+        <var name="s" value="warning: your version is"/>
+        <var name="s" value="${s} ${orbacuscpp.idl.curr.ver}, expected"/>
+        <var name="s" value="${s} version is ${orbacuscpp.required.version}"/>
+
+        <var name="s2" value="The required version for ${tool.fullname}"/>
+        <var name="s2" value="${s2} is ${orbacuscpp.required.version}, your"/>
+        <var name="s2" value="${s2} version is ${orbacuscpp.idl.curr.ver}."/>
+
+        <if>
+            <istrue value="${require.tool.version.checking}"/>
+            <then>
+                <if>
+                    <not>
+                        <and>
+                            <equals arg1="${orbacuscpp.idl.curr.ver}"
+                                    arg2="${orbacuscpp.required.version}"
+                                    trim="true"/>
+                            <equals arg1="${orbacuscpp.orb.h.curr.ver}"
+                                    arg2="${orbacuscpp.required.version}"
+                                    trim="true"/>
+                        </and>
+                    </not>
+                    <then>
+                        <if>
+                            <equals arg1="${require.tool.check.mode}"
+                                    arg2="loose" trim="true"/>
+                            <then>
+                                <!-- issue a warning message -->
+                                <echo>${s}</echo>
+                            </then>
+                            <else>
+                                <!-- stop -->
+                                <fail>${s2}</fail>
+                            </else>
+                        </if>
+                    </then>
+                </if>
+            </then>
+        </if>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-test1-sunos" target checks whether the ORBacus C++ version is ok.
+    -->
+    <target name="-test1-sunos" depends="-test1-linux"/>
+
+
+    <!-- ======================================================================
+        The "-test2-linux" target checks whether the ORBacus C++ libraries can
+        be found.
+    -->
+    <target name="-test2-linux">
+        <echo message="Checking the ${tool.fullname} lib directory"/>
+
+        <!--
+            the test is succefful if the libOB.so is found in that directory
+        -->
+        <propertycopy property="orbacuscpp.lib.dir"
+                      from="config.${tool.name}.lib.dir"/>
+
+        <available file="${orbacuscpp.lib.dir}${FS}libOB.so" type="file"
+                   property="orbacuscpp.lib.dir.is.ok"/>
+
+        <!-- stop checking if the file was not found -->
+        <var name="my.var" value="Could not find the ${tool.fullname}"/>
+        <var name="my.var" value="${my.var} libraries in"/>
+        <var name="my.var" value="${my.var} ${orbacuscpp.lib.dir}."/>
+        <fail unless="orbacuscpp.lib.dir.is.ok" message="${my.var}"/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-test2-sunos" target checks whether the ORBacus C++ libraries can
+        be found.
+    -->
+    <target name="-test2-sunos" depends="-test2-linux"/>
+
+
+    <!-- ======================================================================
+        The "-test3" target checks whether the ORBacus C++ contains custom
+        patches.
+    -->
+    <target name="-test3-linux">
+        <var name="my.var" value="Checking if ${tool.fullname} contains"/>
+        <var name="my.var" value="${my.var} ${config.product.name}'s patches"/>
+        <var name="my.var" value="${my.var} (this may take a while)"/>
+        <echo message="${my.var}"/>
+
+        <propertycopy property="orbacuscpp.idl.dir"
+                      from="config.${tool.name}.idl.dir"/>
+
+        <!-- set the test root dir -->
+        <var name="my.var" value="${config.Build.location}${FS}configuration"/>
+        <var name="my.var" value="${my.var}${FS}test${FS}testORBacusPatch"/>
+
+        <property name="orbacuscpp.test.rootdir" location="${my.var}"/>
+    
+        <!-- get the IDL test file -->
+        <property name="idl.test.file.basename" value="check-patched.idl"/>
+
+        <var name="my.var" value="${orbacuscpp.test.rootdir}${FS}c++"/>
+        <var name="my.var"
+             value="${my.var}${FS}idl${FS}${idl.test.file.basename}"/>
+
+        <property name="orbacuscpp.idl.test.file" location="${my.var}"/>
+
+        <available file="${orbacuscpp.idl.test.file}" type="file"
+                   property="orbacuscpp.idl.test.file.present"/>
+
+        <!-- stop checking if the test IDL file was not found -->
+        <fail unless="orbacuscpp.idl.test.file.present"
+              message="Could not find ${orbacuscpp.idl.test.file}."/>
+
+        <!-- get the test program -->
+        <var name="my.var" value="${orbacuscpp.test.rootdir}${FS}c++"/>
+        <var name="my.var"
+             value="${my.var}${FS}src${FS}check-patched-main.cpp"/>
+
+        <property name="orbacuscpp.test.program.file" location="${my.var}"/>
+
+        <available file="${orbacuscpp.test.program.file}" type="file"
+                   property="orbacuscpp.test.program.file.present"/>
+
+        <!-- stop checking if the test program file was not found -->
+        <fail unless="orbacuscpp.test.program.file.present"
+              message="Could not find ${orbacuscpp.test.program.file}."/>
+
+        <!-- create a directory for the compilation of the test program -->
+        <tempfile property="tmp.compilation.dir" destdir="${TMP}"
+                  prefix="${tmpfile.prefix}"/>
+
+        <mkdir dir="${tmp.compilation.dir}"/>
+
+        <!--
+            copy the test IDL file and the test program file into the temporary
+            directory
+        -->
+        <copy file="${orbacuscpp.idl.test.file}"
+              todir="${tmp.compilation.dir}"/>
+        <copy file="${orbacuscpp.test.program.file}"
+              todir="${tmp.compilation.dir}"/>
+
+        <property name="orbacuscpp.idl.test.file.copy"
+            location="${tmp.compilation.dir}${FS}${idl.test.file.basename}"/>
+
+        <!-- compile the IDL file -->
+        <exec executable="idl" dir="${orbacuscpp.bin.dir}" failonerror="true"
+              outputproperty="orbacuscpp.test3-1.cmdline.output"
+              resultproperty="orbacuscpp.test3-1.return.code"
+              vmlauncher="false">
+
+            <arg line="--output-dir ${tmp.compilation.dir}"/>
+            <arg value="-I${orbacuscpp.idl.dir}"/>
+            <arg value="-I${orbacuscpp.idl.dir}${FS}OB"/>
+            <arg value="${orbacuscpp.idl.test.file.copy}"/>
+        </exec>
+
+        <findfile file="*.cpp" dir="${tmp.compilation.dir}" recursive="true"
+                  property="orbacuscpp.patch.files"/>
+
+        <!-- compile the test program file -->
+        <propertycopy property="cpp.compiler"
+                      from="config.Foundation.cpp.compiler"/>
+
+        <propertycopy property="cpp.compiler.exec"
+                      from="config.${cpp.compiler}.cxx"/>
+    
+        <propertycopy property="cpp.compiler.flags"
+                      from="config.${cpp.compiler}.ld.shared.flags"/>
+
+        <property name="orbacuscpp.test.program"
+                  location="${tmp.compilation.dir}${FS}check-patch"/>
+
+        <exec executable="${cpp.compiler.exec}" failonerror="true"
+              outputproperty="orbacuscpp.test3-2.cmdline.output"
+              resultproperty="orbacuscpp.test3-2.return.code"
+              vmlauncher="false">
+        
+            <arg line=" -o ${orbacuscpp.test.program}"/>
+            <arg line="${orbacuscpp.patch.files}"/>
+            <arg line="-I${tmp.compilation.dir} -I${orbacuscpp.include.dir}"/>
+            <arg line="-lOB -lJTC ${cpp.compiler.flags}"/>
+            <arg line="-L${orbacuscpp.lib.dir}"/>
+        </exec>
+
+        <!-- execute the test program -->
+        <exec executable="${orbacuscpp.test.program}"
+              outputproperty="orbacuscpp.test3-3.cmdline.output"
+              resultproperty="orbacuscpp.test3-3.return.code"
+              vmlauncher="false"/>
+
+        <condition property="orbacuscpp.patch.is.ok">
+            <equals arg1="${orbacuscpp.test3-3.cmdline.output}" arg2="Ok"/>
+        </condition>
+
+        <!-- stop checking if the compilation failed -->
+        <fail unless="orbacuscpp.patch.is.ok"
+              message="${config.product.name} patch(es) not applied"/>
+
+        <!-- clean up -->
+        <delete dir="${tmp.compilation.dir}"/>
+    </target>
+
+
+    <!-- ======================================================================
+        The "-test3" target checks whether the ORBacus C++ contains custom
+        patches.
+    -->
+    <target name="-test3-sunos" depends="-test3-linux"/>
+
+
+    <!-- =======================================================================
+        The "-set-ORBacusCPP-properties" target defines properties that will be
+        saved into the site configuration file.
+    -->
+    <target name="-set-ORBacusCPP-properties">
+        <!-- idlcompiler.dir -->
+        <property name="config.${tool.name}.idlcompiler.dir"
+                  location="${orbacuscpp.bin.dir}"/>
+
+        <!-- naming.service.dir -->
+        <property name="config.${tool.name}.naming.service.dir"
+                  location="${orbacuscpp.bin.dir}"/>
+
+        <!-- idlflags.incl.dirs -->
+        <var name="my.var" value="-I${orbacuscpp.idl.dir}"/>
+        <var name="my.var" value="${my.var} -I${orbacuscpp.idl.dir}${FS}OB"/>
+
+        <property name="config.${tool.name}.idlflags.incl.dirs"
+                  value="${my.var}"/>
+
+        <!-- idlflags.ami -->
+        <property name="config.orbcpp.idlflags.ami"
+                  value=""/>
+
+        <!-- cflags.incl.dirs -->
+        <var name="my.var" value="-I${orbacuscpp.include.dir}"/>
+        <var name="my.var" value="${my.var} -I${orbacuscpp.ob.include.dir}"/>
+ 
+        <property name="config.${tool.name}.cflags.incl.dirs"
+                  value="${my.var}"/>
+
+        <!-- ldflags.lib.dirs -->
+        <property name="config.${tool.name}.ldflags.lib.dirs"
+                  value="-L${orbacuscpp.lib.dir}"/>
+
+        <!-- ORB.Lib.Prefix -->
+        <property name="config.${tool.name}.ORB.Lib.Prefix" value=""/>
+
+        <!-- ORB.lib (package dependent) -->
+        <property name="config.${tool.name}.FaultTolerance.ORB.Libs"
+                  value=""/>
+
+        <!-- code generation specific -->
+        <property name="config.${tool.name}.codegen.defines" value="-DORBACUS"/>
+    </target>
+
+
+</project>
+

@@ -1,0 +1,133 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_PLATFORM_MNGT_SERVICE_CONTAINER_IDL_
+#define CDMW_PLATFORM_MNGT_SERVICE_CONTAINER_IDL_
+
+
+#include <CdmwPlatformMngtService.idl>
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwPlatformMngtService
+{
+
+
+    /**
+     * The container providing service definitions.
+     * A ServiceDefContainer may delegate to a higher level ServiceDefContainer
+     * in order to build a service inheritance.
+     *
+     * As a service is only a bootstrap to a well known CORBA or CDMW service,
+     * a service definition container is not intended to provide a lot of
+     * services. Thus there is no list method nor iterators defined.
+     */
+    interface ServiceDefContainer
+    {
+
+        /**
+        * Returns the specified service definition.
+        *
+        * @param service_name the name identifying the service.
+        * @exception ServiceNotFound if service_name doesn't denote
+        * a defined service.
+        */
+        ServiceProviderID get_service_def (in ServiceName service_name)
+            raises(ServiceNotFound);                  
+
+
+    }; // End interface ServiceDefContainer
+
+
+    /**
+     * The writable ServiceDefContainer.
+     * The write access operations operates directly at the level of
+     * the RWServiceDefContainer in order to provide service redefinition
+     * useful in a service inheritance.
+     */
+    interface RWServiceDefContainer : ServiceDefContainer
+    {
+
+        /**
+        * Adds a service to this container.
+        * The service may already been defined in an higher level container
+        * but this definition is shadowed by the new one.
+        *
+        * @param service_def the definition of the service to add. The service
+        * provider referenced in service_def is not checked.
+        *
+        * @exception ServiceAlreadyExists if the service name is already used
+        * within this container.
+        */
+        void add_service_def (in ServiceDef service_def)
+            raises(ServiceAlreadyExists);
+
+        /**
+        * Removes a service from this container.
+        * The same service may still be accessible through a higher level
+        * container.
+        *
+        * @param service_name the name identifying the service to remove.
+        * @exception ServiceNotFound if service_name doesn't denote
+        * an existing service within this container.
+        */
+        void remove_service_def (in ServiceName service_name)
+            raises(ServiceNotFound);
+            
+        /**
+        * Removes all services from this container.
+        *
+        */
+        void remove_all_service_defs ();
+
+    }; // End interface RWServiceDefContainer
+
+
+    /**
+     * The interface providing bindings between
+     * a service provider and its embedded service.
+     */
+    interface ServiceBinding
+    {
+
+        /**
+        * Returns the service embedded by the specified service provider.
+        *
+        * @param service_provider the identifier of the service provider.
+        * @exception ServiceProviderNotFound if service_provider doesn't denote
+        * an existing process.
+        * @exception ServiceUnavailable if the service provider is not running
+        * and consequently the binding has not been done.
+        */
+        Object get_service(in ServiceProviderID service_provider)
+            raises(ServiceProviderNotFound, ServiceUnavailable);
+
+    }; // End interface ServiceBinding
+
+
+}; // End Module CdmwPlatformMngtService
+
+#endif // CDMW_PLATFORM_MNGT_SERVICE_CONTAINER_IDL_
+

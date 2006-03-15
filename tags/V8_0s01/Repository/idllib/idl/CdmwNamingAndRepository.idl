@@ -1,0 +1,396 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_NAMING_AND_REPOSITORY_IDL_
+#define CDMW_NAMING_AND_REPOSITORY_IDL_
+
+
+#ifdef ORBACUS
+#include <OB/CosNaming.idl>
+#elif defined(TAO)
+#include <orbsvcs/CosNaming.idl>
+#else
+#include <CosNaming.idl>
+#endif
+
+#include <CdmwLifeCycle.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW
+* Naming and Repository service.
+*/
+module CdmwNamingAndRepository {
+
+    // Types
+    typedef CosNaming::NamingContextExt::StringName Key;
+
+    typedef string RootContextId;
+
+    /** 
+    * Identifier of the default Root naming context
+    */
+    const RootContextId DEFAULT_ROOT_CONTEXT = "CdmwRootContext";
+
+    /** 
+    * The string name identifying the factory finder
+    * within the default root context
+    */
+    const CosNaming::NamingContextExt::StringName FACTORY_FINDER = "FactoryFinder";
+
+    /** 
+    * Exception indicating that the request does not denote a name domain.
+    */
+    exception NoNameDomain {};
+
+    /** 
+    * Exception indicating that the name is invalid.
+    */
+    exception InvalidName {
+        /**
+        * The reason of the exception (may give more information).
+        */
+        string reason;
+    };
+
+    // Interfaces
+
+    
+    /** 
+    * The name domain interface provides operations to register and unregister:
+    * <UL>
+    * <LI> CDMW objects,
+    * <LI> CDMW factories, and
+    * <LI> user-supplied CDMW name domains.
+    * </UL>
+    * <P>
+    * <B><U>NOTA</U>:</B>
+    * The registration can me made either:
+    * <UL>
+    * <LI> in one step:  an object is registered with its associated name, or
+    * <LI> in two steps: a name is reserved and then it is bound to an object.
+    * </UL>
+    */
+    interface NameDomain {
+
+        /**
+        * Opaque type for registration Ids. Clients have no knowledge of its
+        * internal structure.
+        */
+        typedef any RegistrationId;
+
+        /**
+        * This data structure describes a name domain.<P>
+        * It is used for registering a user supplied name domain within a 
+        * name domain.
+        */
+        struct NameDomainDescription {
+            /**
+            * The user-supplied name domain.
+            */
+            NameDomain the_name_domain;
+            /**
+            * The user-supplied factory finder attached to the name domain.
+            */
+            CdmwLifeCycle::FactoryFinder the_factory_finder;
+            /**
+            * The user-supplied naming context associated with the name domain.
+            * <P>
+            * <B><U>NOTA:</U></B> This should be a "read-only" context (It 
+            * should not allow adding or removing bindings).
+            */
+            CosNaming::NamingContext the_context;
+        };
+
+
+        // Exceptions
+
+        /** 
+        * Exception to be raised whenever there is an attempt to register 
+        * entities using an invalid registeration Id.
+        */
+        exception InvalidRegistration {};
+
+        /** 
+        * Exception to be raised whenever there is an attempt to register 
+        * already registered entities.
+        */
+        exception AlreadyExists {};
+
+        /** 
+        * Exception to be raised whenever there is an attempt to use entities
+        * that needed registration first.
+        */
+        exception NotRegistered {};
+
+
+        /**
+        * This operation registers a name to be used to register a CDMW
+        * object, a CDMW factory or a user-supplied CDMW name domain.
+        *
+        * @param name The name to be reserved within the name domain.
+        *
+        * @return A registration identifier
+        *
+        * @exception AlreadyExists if the name is already in use
+        * @exception InvalidName if the name has an illegal form or denotes
+        * a compound name
+        */
+        RegistrationId 
+        new_name (in Key name)
+            raises (AlreadyExists, InvalidName);
+
+
+        /**
+        * This operation binds an already registered name to a CDMW object.
+        *
+        * @param reg_id The identifier of a previous registration.
+        * @param the_object The CDMW object to be registered.
+        *
+        * @exception InvalidRegistration if reg_id doesn't denote 
+        * a valid registration.
+        * @exception AlreadyExists If an object has already been registered 
+        * with the reg_id.
+        * @exception CORBA::BAD_PARAM If there is an attempt to register 
+        * a nil object. 
+        */
+        void register_object(in RegistrationId reg_id,
+                             in Object         the_object)
+            raises (InvalidRegistration, AlreadyExists);
+
+
+        /** 
+        * This operation registers a CDMW object with the specified name.
+        *
+        * @param object_name The name of the CDMW object.
+        * @param the_object The CDMW object to be registered within the 
+        * name domain.
+        *
+        * @exception AlreadyExists If the name has already been 
+        * registered within the name domain.
+        * @exception InvalidName if the name has an illegal form or denotes
+        * a compound name
+        * @exception CORBA::BAD_PARAM If there is an attempt to register 
+        * a nil object.
+        */
+        void register_new_object(in Key     object_name,
+                                 in Object  the_object)
+            raises (AlreadyExists, InvalidName);
+
+        /**
+        * This operation binds an already registered name to a CDMW factory.
+        *
+        * @param reg_id The identifier of a previous registration.
+        * @param the_factory The CDMW factory to be registered within the 
+        * name domain.
+        *
+        * @exception InvalidRegistration if reg_id doesn't denote 
+        * a valid registration.
+        * @exception AlreadyExists If a factory has already been registered 
+        * with the reg_id.
+        * @exception CORBA::BAD_PARAM If there is an attempt to register 
+        * a nil FactoryBase object.
+        */
+        void register_factory(in RegistrationId         reg_id,
+                         in CdmwLifeCycle::FactoryBase the_factory)
+            raises (InvalidRegistration, AlreadyExists);
+
+
+        /**
+        * This operation registers a CDMW factory with the specified name.
+        *
+        * @param factory_name The name of the CDMW factory.
+        * @param the_factory The CDMW factory to be registered within the 
+        * name domain.
+        *
+        * @exception AlreadyExists If the name has already been 
+        * registered within the name domain.
+        * @exception InvalidName if the name has an illegal form or denotes
+        * a compound name
+        * @exception CORBA::BAD_PARAM If there is an attempt to register 
+        * a nil FactoryBase object.
+        */
+        void register_new_factory(in Key                         factory_name,
+                                  in CdmwLifeCycle::FactoryBase the_factory)
+            raises (AlreadyExists, InvalidName);
+
+
+        /**
+        * This operation retrieves the name domain specified by the name.
+        *
+        * @param domain_name the relative name of the name domain to retrieve.
+        *
+        * @return The name domain.
+        *
+        * @exception NoNameDomain if the domain_name does not refer to a 
+        * Name Domain.
+        * @exception InvalidName if the name has an illegal form.
+        */
+        NameDomain resolve_sub_domain (in Key domain_name)
+            raises (NoNameDomain, InvalidName);
+
+
+        /**
+        * This operation binds an already registered name to a CDMW name 
+        * domain.
+        *
+        * @param reg_id The identifier of a previous registration.
+        * @param the_name_domain The user-supplied name domain description 
+        * needed for the registration.
+        *
+        * @exception InvalidRegistration if reg_id doesn't denote 
+        * a valid registration.
+        * @exception AlreadyExists If an object has already been registered 
+        * with the reg_id.
+        * @exception CORBA::BAD_PARAM If there is an attempt to register 
+        * a nil object from the NameDomainDescription struct.
+        */
+        void register_name_domain(in RegistrationId        reg_id,
+                                  in NameDomainDescription the_name_domain)
+            raises (InvalidRegistration, AlreadyExists);
+
+            
+        /** 
+        * This operation registers a CDMW name domain with the specified name.
+        *
+        * @param domain_name The name of the CDMW name domain.
+        * @param the_name_domain The user-supplied name domain description 
+        * needed for the registration.
+        *
+        * @exception AlreadyExists If the name has already been 
+        * registered within the name domain in the global (logical) repository.
+        * @exception InvalidName if the name has an illegal form or denotes
+        * a compound name
+        * @exception CORBA::BAD_PARAM If there is an attempt to register 
+        * a nil object from the NameDomainDescription struct.
+        */
+        void register_new_name_domain(in Key                   domain_name,
+                                      in NameDomainDescription the_name_domain)
+            raises (AlreadyExists, InvalidName);
+
+
+        /**
+        * This operation releases a name. It invalidates the registration 
+        * identifier of a previously registered name that has no actual 
+        * association.<P>
+        * This applies to a CDMW object, a CDMW factory, and also 
+        * a user-supplied CDMW name domain.
+        * CDMW name domains managed by the repository cannot be released.
+        *
+        * @param name The name to be released.
+        *
+        * @exception NotRegistered If the name is not registered within the 
+        * name domain.
+        * @exception InvalidName if the name has an illegal form or denotes
+        * a compound name.
+        * @exception CORBA::NO_PERMISSION If there is an attempt to unregister 
+        * a name domain managed by the repository.
+        */
+        void release_name(in Key name)
+            raises (NotRegistered, InvalidName);
+    };
+
+
+
+    /** 
+    * The Repository interface provides operations to retrieve 
+    * root naming contexts and name domains.
+    */
+    interface Repository {
+    
+        /** 
+        * Exception indicating that the request does not denote a root naming 
+        * context.
+        */
+        exception NoRootContext {};
+
+
+        /**
+        * This operation retrieves the root naming context specified by the 
+        * identifier. The Default Root Context has <B>DEFAULT_ROOT_CONTEXT</B>
+        * as identifier.
+        * <p>
+        * <B><U>NOTA</U>:</B>
+        * <OL TYPE=0 START=1>
+        * <LI>Only the Default Root Context can hold name domain contexts.
+        * <LI>The destroy operation of the RootContext should raise a 
+        *     CORBA::NO_PERMISSION system exception if accessed through 
+        *     the public CosNaming::NamingContext interface. 
+        *     This should only be allowed via an administrative interface.
+        * <LI>Unbinding Name Domain contexts should be prohibited through 
+        *     the Default Root Context public CosNaming::NamingContext 
+        *     interface (raise a CORBA::NO_PERMISSION system exception). 
+        *     This should only be allowed via an administrative interface.
+        * </OL>
+        *
+        * @param root_id The identifier of the root naming context. Default 
+        * value is DEFAULT_ROOT_CONTEXT.
+        *
+        * @return The root naming context of the CDMW Naming and Repository
+        *
+        * @exception NoRootContext if the root_id does not refer to a 
+        * Root Naming Context.
+        */
+        CosNaming::NamingContext resolve_root_context(in RootContextId root_id)
+            raises (NoRootContext);
+
+
+        /**
+        * This operation retrieves the name domain specified by the name.
+        * Name domains are defined within the default root context only.
+        *
+        * @param domain_name The full name of the name domain.
+        *
+        * @return The name domain.
+        *
+        * @exception NoNameDomain if the domain_name does not refer to a 
+        * Name Domain.
+        * @exception InvalidName if the name has an illegal form.
+        */
+        NameDomain resolve_name_domain (in Key domain_name)
+            raises (NoNameDomain, InvalidName);
+    };
+
+
+   /** 
+    * The ProxyFeatureNamingContextExt interface provides get_id() operation for interaction with Repository-Proxyy.
+    */
+  interface ProxyFeatureNamingContextExt : CosNaming::NamingContextExt {
+    string get_id();
+  };
+  
+  /** 
+    * The ProxyFeatureNameDomain interface provides get_id() operation for interaction with Repository-Proxyy.
+    */
+    interface ProxyFeatureNameDomain : NameDomain {
+	string get_id();
+    };
+
+
+}; 
+
+#endif // CDMW_NAMING_AND_REPOSITORY_IDL_
+

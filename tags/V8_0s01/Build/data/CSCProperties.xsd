@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            Schema definition for CSCProperties.xml.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <!-- the root element -->
+    <xsd:element name="config" type="configType">
+        <xsd:key name="deliveryId">
+            <xsd:selector xpath="./csc/deliveries/delivery"/>
+            <xsd:field    xpath="@basename"/>
+        </xsd:key>
+        <xsd:key name="validationId">
+            <xsd:selector xpath="./csc/inspection/validation"/>
+            <xsd:field    xpath="@id"/>
+        </xsd:key>
+        <xsd:key name="qualificationId">
+            <xsd:selector xpath="./csc/inspection/qualification"/>
+            <xsd:field    xpath="@id"/>
+        </xsd:key>
+    </xsd:element>
+
+    <!-- define the content of the root element -->
+    <xsd:complexType name="configType">
+        <xsd:sequence>
+            <xsd:element name="csc" type="cscType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "csc" element -->
+    <xsd:complexType name="cscType">
+        <xsd:sequence>
+            <xsd:element name="deliveries"
+                         type="deliveriesType" minOccurs="0"/>
+            <xsd:element name="runtest"
+                         type="runtestType" minOccurs="0"/>
+            <xsd:element name="inspection"
+                         type="inspectionType" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="name"  type="xsd:string"  use="required"/>
+        <xsd:attribute name="owner" type="xsd:string"  use="required"/>
+        <xsd:attribute name="lang"  type="langEnum"    use="required"/>
+        <xsd:attribute name="type"  type="cscTypeEnum" use="optional"/>
+    </xsd:complexType>
+
+    <!-- define the content of the "deliveries" element -->
+    <xsd:complexType name="deliveriesType">
+        <xsd:sequence>
+            <xsd:element name="delivery"
+                         type="deliveryType" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "runtest" element -->
+    <xsd:complexType name="runtestType">
+        <xsd:sequence maxOccurs="unbounded">
+            <xsd:choice>
+                <xsd:sequence>
+                    <xsd:element name="condition">
+                        <xsd:complexType>
+                            <xsd:sequence>
+                                <xsd:element name="test" type="testType"/>
+                            </xsd:sequence>
+                            <xsd:attribute name="antfile" type="xsd:string"
+                                           use="required"/>
+                            <xsd:attribute name="target"  type="xsd:string"
+                                           use="optional"/>
+                        </xsd:complexType>
+                    </xsd:element>
+                </xsd:sequence>
+                <xsd:sequence>
+                    <xsd:element name="test" type="testType"/>
+                </xsd:sequence>
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "test" element -->
+    <xsd:complexType name="testType">
+        <xsd:sequence>
+            <xsd:element name="testattributes"
+                         type="xsd:string" minOccurs="0"/>
+            <xsd:element name="neededfiles"
+                         type="xsd:string" minOccurs="0"/>
+            <xsd:element name="neededprocesses"
+                         type="xsd:string" minOccurs="0"/>
+            <xsd:element name="neededjarfiles"
+                         type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="name"
+                       type="xsd:string" use="required"/>
+        <xsd:attribute name="nbtestable"
+                       type="xsd:unsignedByte" default="1"/>
+        <xsd:attribute name="maxwait"
+                       type="xsd:positiveInteger"
+                       default="180"
+                       use="optional"/>
+    </xsd:complexType>
+
+    <!-- define the content of the "delivery" element -->
+    <xsd:complexType name="deliveryType">
+        <xsd:choice>
+            <xsd:sequence>
+                <xsd:element name="prerequisites"
+                             type="prerequisitesType" minOccurs="0"/>
+                <xsd:element name="fqnclassname"
+                             type="xsd:string" minOccurs="0"/>
+                <xsd:element name="sourcefiles"
+                             type="xsd:string" minOccurs="0"/>
+                <xsd:element name="idlfiles"
+                             type="idlfilesType" minOccurs="0"/>
+                <xsd:element name="addcflags"
+                             type="xsd:string" minOccurs="0"/>
+                <xsd:element name="addldflags"
+                             type="xsd:string" minOccurs="0"/>
+                <xsd:element name="addidlflags"
+                             type="xsd:string" minOccurs="0"/>
+            </xsd:sequence>
+            <xsd:element name="condition" maxOccurs="unbounded">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="prerequisites"
+                                     type="prerequisitesType" minOccurs="0"/>
+                        <xsd:element name="fqnclassname"
+                                     type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="sourcefiles"
+                                     type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="idlfiles"
+                                     type="idlfilesType" minOccurs="0"/>
+                        <xsd:element name="addcflags"
+                                     type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="addldflags"
+                                     type="xsd:string" minOccurs="0"/>
+                        <xsd:element name="addidlflags"
+                                     type="xsd:string" minOccurs="0"/>
+                    </xsd:sequence>
+                    <xsd:attribute name="antfile"
+                                   type="xsd:string" use="required"/>
+                    <xsd:attribute name="target"
+                                   type="xsd:string" use="optional"/>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:choice>
+        <xsd:attribute name="basename"
+                       type="xsd:string" use="required"/>
+        <xsd:attribute name="type"
+                       type="typeEnum" use="required"/>
+        <xsd:attribute name="visibility"
+                       type="visibilityEnum" use="required"/>
+    </xsd:complexType>
+
+    <!-- define the content of the "prerequisites" element -->
+    <xsd:complexType name="prerequisitesType">
+        <xsd:sequence>
+            <xsd:element name="libraries"
+                         type="xsd:string" minOccurs="0"/>
+            <xsd:element name="jnilibraries"
+                         type="xsd:string" minOccurs="0"/>
+            <xsd:element name="executables"
+                         type="xsd:string" minOccurs="0"/>
+            <xsd:element name="generatedfilesfrom"
+                         type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "idlfiles" element -->
+    <xsd:complexType name="idlfilesType">
+        <xsd:sequence>
+            <xsd:element name="server" type="xsd:string"/>
+            <xsd:element name="client" type="xsd:string"/>
+            <xsd:element name="tie"    type="xsd:string" minOccurs="0"/>
+            <xsd:element name="requireidlsfrom"
+                         type="xsd:string" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "inspection" element -->
+    <xsd:complexType name="inspectionType">
+        <xsd:sequence>
+            <xsd:element name="validation"
+                         type="inspectedfilesType"
+                         minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="qualification"
+                         type="inspectedfilesType"
+                         minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- define the content of the "validation" element -->
+    <xsd:complexType name="inspectedfilesType">
+        <xsd:sequence>
+            <xsd:element name="files" type="xsd:string"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+    </xsd:complexType>
+
+    <!-- define the possible lang values -->
+    <xsd:simpleType name="langEnum">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="none"/>
+            <xsd:enumeration value="xslt"/>
+            <xsd:enumeration value="c++"/>
+            <xsd:enumeration value="java"/>
+            <xsd:enumeration value="ada"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- define the possible CSC type values -->
+    <xsd:simpleType name="cscTypeEnum">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="unit-test"/>
+            <xsd:enumeration value="integration-test"/>
+            <xsd:enumeration value="validation-test"/>
+            <xsd:enumeration value="qualification-test"/>
+            <xsd:enumeration value="demo"/>
+            <xsd:enumeration value="perftest"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- define the possible type values -->
+    <xsd:simpleType name="typeEnum">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="exe"/>
+            <xsd:enumeration value="lib"/>
+            <xsd:enumeration value="jnilib"/>
+            <xsd:enumeration value="data"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- define the possible visibility values -->
+    <xsd:simpleType name="visibilityEnum">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="public"/>
+            <xsd:enumeration value="protected"/>
+            <xsd:enumeration value="private"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+</xsd:schema>

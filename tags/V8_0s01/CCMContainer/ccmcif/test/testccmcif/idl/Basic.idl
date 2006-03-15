@@ -1,0 +1,202 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef  BASIC_DEMO_IDL_
+#define BASIC_DEMO_IDL_
+
+#include <Components.idl>
+
+#ifdef INCLUDE_REGISTRATION
+#include <Registration.idl>
+#endif
+
+#pragma prefix "acme.com"
+
+module BasicDemo
+{
+
+  /**
+   **  The Event valuetype published by the Server component
+   **  and consumed by its Consumer components.
+   **/
+  valuetype Event
+  {
+      /**
+       **  Just contains a string.
+       **/
+       public string text;
+  };
+
+  struct s1 
+  {
+    long l;
+  };
+
+  typedef sequence<s1> s1s;
+
+  struct s2
+  {
+    string s;
+  };
+
+
+  /*
+   * print a text
+   */
+  interface Display {
+    void print(in string text);
+    void print_event(in Event event);
+
+    enum enum1 { INSERTION, UPDATE, REMOVAL };
+
+    union union1 switch(enum1)
+    {
+        case INSERTION:
+          short s;
+        case UPDATE:
+          long l;
+    };
+
+    union union2 switch(enum1)
+    {
+        case INSERTION:
+          string s1;
+        case UPDATE:
+          string s2;
+    };
+
+    typedef long array1[5];
+    typedef string array2[5];
+
+    short test_short(in short p1, inout short p2, out short p3);
+    long test_long(in long p1, inout long p2, out long p3);
+    long long test_long_long(in long long p1, inout long long p2, out long long p3);
+    unsigned short test_unsigned_short(in unsigned short p1, inout unsigned short p2, out unsigned short p3);
+    unsigned long test_unsigned_long(in unsigned long p1, inout unsigned long p2, out unsigned long p3);
+    unsigned long long test_unsigned_long_long(in unsigned long long p1, inout unsigned long long p2, out unsigned long long p3);
+    float test_float(in float p1, inout float p2, out float p3);
+    double test_double(in double p1, inout double p2, out double p3);
+    boolean test_boolean(in boolean p1, inout boolean p2, out boolean p3);
+    char test_char(in char p1, inout char p2, out char p3);
+    wchar test_wchar(in wchar p1, inout wchar p2, out wchar p3);
+    octet test_octet(in octet p1, inout octet p2, out octet p3);
+    //enum1 test_enum(in enum1 p1, inout enum1 p2, out enum1 p3);
+    Display test_function(in Display p1, inout Display p2, out Display p3);
+    s1 test_fixed_struct(in s1 p1, inout s1 p2, out s1 p3);
+    s2 test_var_struct(in s2 p1, inout s2 p2, out s2 p3);
+    union1 test_fixed_union(in union1 p1, inout union1 p2, out union1 p3);
+    union2 test_var_union(in union2 p1, inout union2 p2, out union2 p3);
+    s1s test_seq_struct(in s1s p1, inout s1s p2, out s1s p3);
+    string test_string(in string p1, inout string p2, out string p3);
+    wstring test_wstring(in wstring p1, inout wstring p2, out wstring p3);
+    array1 test_fixed_array(in array1 p1, inout array1 p2, out array1 p3);
+    array2 test_var_array(in array2 p1, inout array2 p2, out array2 p3);
+    any test_any(in any p1, inout any p2, out any p3);
+    Event test_event(in Event p1, inout Event p2, out Event p3);
+    void set(in long l);
+    long get();
+
+
+  };
+
+  /**
+   **  The Client component type.
+   **/
+  component Client
+  {
+      /**
+       **  The identifier name property.
+       **/
+       readonly attribute string name;
+       attribute Event event;
+
+      /**
+       **  The receptable to_server to connect the Client component
+       **  to a Display object or facet reference.
+       **/ 
+       uses Display to_server;
+
+      /**
+       **  The receptable to_server to connect the Client component
+       **  to a Registration object or facet reference.
+       **/ 
+       uses CommonDemo::Registration to_register;
+  };
+
+  /**
+   **  Simple home for instantiating Client components.
+   **/
+  home ClientHome manages Client 
+  {
+  };
+
+  /**
+   **  A base type for named components.
+   **/
+  component NamedComponent
+  {
+     /**
+      **  The identifier name property.
+      **/
+      attribute string name;
+  };
+
+  /**
+   **  Simple home for instantiating Server components.
+   **/
+  home NamedComponentHome manages NamedComponent 
+  {
+     /**
+      **  The identifier home_name property.
+      **/
+     attribute string home_name; 
+      
+     /**
+      **  To create a new Consumer identified by the name.
+      **/
+      factory create_named_component(in string name);
+  };
+
+  /**
+   **  The Server component type.
+   **/
+  component Server : NamedComponent supports CommonDemo::Registration 
+  {
+     /**
+      **  The facet for Clients components.
+      **/
+      provides Display for_clients;
+  };
+
+  /**
+   **  Simple home for instantiating Server components.
+   **/
+  home ServerHome : NamedComponentHome manages Server 
+  {
+  };
+};
+
+#endif // BASIC_DEMO_IDL_
+
