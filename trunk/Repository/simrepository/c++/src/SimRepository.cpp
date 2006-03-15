@@ -1,40 +1,40 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 #include "Foundation/orbsupport/CORBA.hpp"
 #include "Foundation/orbsupport/OrbSupport.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "SystemMngt/platforminterface/ServiceNames.hpp"
 #include "simrepository/SimRepository_impl.hpp"
 #include "simrepository/SimServiceBroker_impl.hpp"
-#include "simrepository/SimEntityObserver_impl.hpp"
 #include "simrepository/SimProcessMessageBroker_impl.hpp"
 #include "simrepository/SimProcessCallback_impl.hpp"
 #include "simrepository/MessageLogger_impl.hpp"
 
 #include <fstream>
+#include <signal.h>
 
 namespace
 {
@@ -129,14 +129,14 @@ run(CORBA::ORB_ptr orb, int& argc, char** argv)
                       << std::endl;
             throw 1;
         }
-        Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+        Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
         //
         // Create Simulated Repository object
         //
         CdmwNamingAndRepository::Repository_var rep_reference
             = CdmwNamingAndRepository::Repository::_nil();
         {
-            Cdmw::NamingAndRepository::NamingInterface repository_ni_base
+            Cdmw::CommonSvcs::Naming::NamingInterface repository_ni_base
                 = ni.bind_new_context(REPOSITORY_NC_PREFIX, true);
             CosNaming::NamingContext_var rep_nc = repository_ni_base.name_context();
             
@@ -205,35 +205,9 @@ run(CORBA::ORB_ptr orb, int& argc, char** argv)
                 singlethread_poa -> activate_object_with_id(oid.in(), loggerServant.in());
                 logger_ref = logger -> _this();
             }
-
-            // Create a ProcessMessageBroker object
-            Cdmw::Tools::SimProcessMessageBroker_impl * message_broker
-                = new Cdmw::Tools::SimProcessMessageBroker_impl(multithread_poa.in(),logger_ref.in());                   
-            PortableServer::ServantBase_var message_brokerServant = message_broker;
-            CdmwPlatformMngt::ProcessMessageBroker_var  message_broker_ref
-                = CdmwPlatformMngt::ProcessMessageBroker::_nil();
-            {
-                PortableServer::ObjectId_var oid 
-                    = PortableServer::string_to_ObjectId(PROCESS_MESSAGE_BROKER_USER_OBJECT_ID);
-                multithread_poa -> activate_object_with_id(oid.in(), message_brokerServant.in());
-                message_broker_ref = message_broker -> _this();
-            }
             
-            // Create an EntityObserver object
-            Cdmw::Tools::SimEntityObserver_impl * entity_observer
-                = new Cdmw::Tools::SimEntityObserver_impl(multithread_poa.in(),logger_ref.in());
-
-            PortableServer::ServantBase_var entity_observerServant = entity_observer;
-            CdmwPlatformMngtEntity::EntityObserver_var  entity_observer_ref
-                = CdmwPlatformMngtEntity::EntityObserver::_nil();
-            {
-                PortableServer::ObjectId_var oid 
-                    = PortableServer::string_to_ObjectId(ENTITY_OBSERVER_USER_OBJECT_ID);
-                multithread_poa -> activate_object_with_id(oid.in(), entity_observerServant.in());
-                entity_observer_ref = entity_observer -> _this();
-            }
             // Create a ServiceBroker object
-            Cdmw::NamingAndRepository::NamingInterface service_broker_ni_base
+            Cdmw::CommonSvcs::Naming::NamingInterface service_broker_ni_base
                 = ni.bind_new_context(SERVICE_BROKER_NC_PREFIX, true);
             CosNaming::NamingContext_var service_broker_nc
                 = service_broker_ni_base.name_context();
@@ -242,12 +216,7 @@ run(CORBA::ORB_ptr orb, int& argc, char** argv)
                 = new Cdmw::Tools::SimServiceBroker_impl(multithread_poa.in(),
                                                           service_broker_nc.in(),
                                                           logger_ref.in());
-            //
-            // Register the Repository as a service within the ServiceBroker
-            //
-            const char* sn=Cdmw::PlatformMngt::ServiceNames::NAMING_AND_REPOSITORY_SERVICE;
-            service_broker->set_service(sn,rep_reference.in());
-
+                                                          
             PortableServer::ServantBase_var service_brokerServant = service_broker;
             CdmwPlatformMngtService::ServiceBroker_var  service_broker_ref
                 =  CdmwPlatformMngtService::ServiceBroker::_nil();
@@ -258,7 +227,28 @@ run(CORBA::ORB_ptr orb, int& argc, char** argv)
                 service_broker_ref = service_broker -> _this();
             }
             
-				            //
+            //
+            // Register the Repository as a service within the ServiceBroker
+            //
+            const char* sn=Cdmw::PlatformMngt::ServiceNames::NAMING_AND_REPOSITORY_SERVICE;
+            service_broker->set_service(sn,rep_reference.in());
+
+            // Create a ProcessMessageBroker object
+            Cdmw::Tools::SimProcessMessageBroker_impl * message_broker
+                = new Cdmw::Tools::SimProcessMessageBroker_impl(multithread_poa.in(),
+                                          service_broker_ref.in(),logger_ref.in());                   
+            PortableServer::ServantBase_var message_brokerServant = message_broker;
+            CdmwPlatformMngt::ProcessMessageBroker_var  message_broker_ref
+                = CdmwPlatformMngt::ProcessMessageBroker::_nil();
+            {
+                PortableServer::ObjectId_var oid 
+                    = PortableServer::string_to_ObjectId(PROCESS_MESSAGE_BROKER_USER_OBJECT_ID);
+                multithread_poa -> activate_object_with_id(oid.in(), message_brokerServant.in());
+                message_broker_ref = message_broker -> _this();
+            }
+            
+                      
+			//
             // Create a single thread POA for the message logger and the
             // ProcessCallback objects
             //
@@ -266,7 +256,7 @@ run(CORBA::ORB_ptr orb, int& argc, char** argv)
                 root -> create_POA("SimProcessCallback", poaManager.in(), policies);
 
             // Create a ProcessCallback object
-            Cdmw::NamingAndRepository::NamingInterface process_callback_ni_base
+            Cdmw::CommonSvcs::Naming::NamingInterface process_callback_ni_base
                 = ni.bind_new_context(PROCESS_CALLBACK_NC_PREFIX, true);
             CosNaming::NamingContext_var process_callback_nc
                 = process_callback_ni_base.name_context();
@@ -274,7 +264,6 @@ run(CORBA::ORB_ptr orb, int& argc, char** argv)
                 = new Cdmw::Tools::SimProcessCallback_impl(pcb_singlethread_poa.in(),
                                                             process_callback_nc.in(),
                                                             message_broker_ref.in(),
-                                                            entity_observer_ref.in(),
                                                             service_broker_ref.in(),
                                                             logger_ref.in(),
                                                             DEFAULT_APPLICATION_NAME);
@@ -322,10 +311,25 @@ run(CORBA::ORB_ptr orb, int& argc, char** argv)
     return SUCCESS;
 }
 
+
+CORBA::ORB_var orb = CORBA::ORB::_nil();
+
+void exit_handler(int sig) {
+    if (!CORBA::is_nil(orb.in())) {
+        try {
+            orb->shutdown(false);
+        } catch (const CORBA::SystemException& e) {
+            std::cerr << "Error while shuting ORB down in exit_handler:\n"
+                      << e << " - minor code: " << e.minor() << std::endl;
+        }
+    }
+}
+
+
+
 int main(int argc, char* argv[])
 {
     int status = SUCCESS;
-    CORBA::ORB_var orb;
 
     try	{
         // Initialize the ORB
@@ -335,6 +339,15 @@ int main(int argc, char* argv[])
 
         orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, 
                                                       orb_strategies);
+
+        struct sigaction action;
+        action.sa_handler=exit_handler;
+        sigemptyset(&action.sa_mask);
+        sigaction(SIGTERM, &action, NULL);
+        sigaction(SIGINT, &action, NULL);
+        sigaction(SIGQUIT, &action, NULL);
+        sigaction(SIGABRT, &action, NULL);
+                                                      
         //orb = CORBA::ORB_init(argc, argv);
         status = run(orb.in(), argc, argv);
     } catch(const CORBA::Exception& ex) {

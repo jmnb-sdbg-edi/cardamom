@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -30,6 +30,7 @@
 #include "Foundation/orbsupport/CORBA.hpp"
 #include "Foundation/orbsupport/CosNaming.skel.hpp"
 #include "namingandrepository/Exceptions.hpp"
+#include "Repository/idllib/CdmwNamingAndRepository.skel.hpp"
 
 #include <string>
 
@@ -55,8 +56,8 @@ namespace NamingAndRepository
 *
 *@see NamingContext_impl
 */
-class NameDomainContext_impl : virtual public POA_CosNaming::NamingContextExt,
-        virtual public PortableServer::RefCountServantBase
+class NameDomainContext_impl : virtual public POA_CdmwNamingAndRepository::ProxyFeatureNamingContextExt,
+    virtual public PortableServer::RefCountServantBase
 {
 
     friend class NameDomainContextActivator_impl;
@@ -89,6 +90,16 @@ public:
     * The suffix constant for the context containing name domain's factories
     */
     static const char* FACTORIES_SUFFIX;
+    
+    /**
+    * Purpose:
+    * <p>
+    * Implements the
+    * IDL:thales.com/CdmwNamingAndRepository/ProxyFeatureNamingContextExt/get_id:1.0
+    * operation
+    */
+    virtual char* get_id() throw (CORBA::SystemException);
+    
 
     /**
     * Purpose:
@@ -351,6 +362,22 @@ public:
     * @return true if the destruction has been correctly performed
     */
     static bool destroyContext(const std::string& nameDomainId);
+
+
+    /**
+    * Purpose:
+    * <p>
+    * Returns the NameDomainContext_impl servant instance corresponding
+    * to the specified identifier. This instance is initialised with
+    * the associated read/write naming context.
+    *
+    * @param id The full identifier of the name domain context.
+    * @return   The servant.
+    * @exception NotFoundException if the servant cannot be found 
+    */
+    static NameDomainContext_impl* findServantById(
+            const std::string& id)
+            throw (NotFoundException, OutOfResourcesException, InternalErrorException);
     
 
 protected:
@@ -416,22 +443,6 @@ private:
     * @param id The full identifier of the name domain context.
     */
     static std::string getActualFactoriesContextId(const std::string& id);
-
-
-    /**
-    * Purpose:
-    * <p>
-    * Returns the NameDomainContext_impl servant instance corresponding
-    * to the specified identifier. This instance is initialised with
-    * the associated read/write naming context.
-    *
-    * @param id The full identifier of the name domain context.
-    * @return   The servant.
-    * @exception NotFoundException if the servant cannot be found 
-    */
-    static NameDomainContext_impl* findServantById(
-            const std::string& id)
-            throw (NotFoundException, OutOfResourcesException, InternalErrorException);
 
 
       

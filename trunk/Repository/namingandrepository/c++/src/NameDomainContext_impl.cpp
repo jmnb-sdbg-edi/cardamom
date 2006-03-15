@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -27,7 +27,7 @@
 #include "namingandrepository/NameDomainContext_impl.hpp"
 #include "namingandrepository/NamingContext_impl.hpp"
 #include "namingandrepository/RONamingContext_impl.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 #include "namingandrepository/ORBFacility.hpp"
 
@@ -52,6 +52,29 @@ const char* NameDomainContext_impl::DISTRIBUTED_PREFIX = "D";
 
 const char* NameDomainContext_impl::FACTORIES_SUFFIX = "_FAC";
 const char* NameDomainContext_impl::FACTORIES_NAME = "Factories";
+
+
+
+
+char*
+NameDomainContext_impl::get_id() throw (CORBA::SystemException) 
+{
+    CdmwNamingAndRepository::ProxyFeatureNamingContextExt_var cdmwCtx 
+    = CdmwNamingAndRepository::ProxyFeatureNamingContextExt::_narrow(m_actualContext.in());
+    
+    if (CORBA::is_nil(cdmwCtx.in()))
+    {
+        throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+    }
+
+    CORBA::String_var s = cdmwCtx->get_id();
+
+    std::string temp_contextId(s.in());
+    temp_contextId.erase(0, NamingContext_impl::PREFIX_LENGTH);
+    std::string contextId = NameDomainContext_impl::LOCAL_PREFIX + temp_contextId;
+
+    return CORBA::string_dup(contextId.c_str());
+}
 
 
 void NameDomainContext_impl::bind(const CosNaming::Name& n,
@@ -255,20 +278,30 @@ bool NameDomainContext_impl::isNameDomain(CORBA::Object_ptr o)
 
     bool res = false;
 
-    try
+    CdmwNamingAndRepository::ProxyFeatureNamingContextExt_var cdmwCtx 
+    = CdmwNamingAndRepository::ProxyFeatureNamingContextExt::_narrow(o);
+    
+    if (!CORBA::is_nil(cdmwCtx.in()))
     {
-        PortableServer::ObjectId_var temp = M_POA->reference_to_id(o);
-        res = true;
-    }
-    catch(const PortableServer::POA::WrongAdapter &)
-    {
-        // Not a name domain managed by the repository
-    }
-    catch(const std::bad_alloc &)
-    {
-        CDMW_THROW(OutOfMemoryException);
-    }
+        try
+        {
+            PortableServer::ObjectId_var temp = M_POA->reference_to_id(o);
+            CORBA::String_var id = cdmwCtx->get_id();
 
+            res = (strncmp(id.in(),
+                           NameDomainContext_impl::LOCAL_PREFIX,
+                           NameDomainContext_impl::PREFIX_LENGTH) == 0);
+        }
+        catch(const PortableServer::POA::WrongAdapter &)
+        {
+            // Not a name domain managed by the repository
+        }
+        catch(const std::bad_alloc &)
+        {
+            CDMW_THROW(OutOfMemoryException);
+        }
+    }
+    
     return res;
 
 }
@@ -379,7 +412,7 @@ NameDomainContext_impl::createContext(
         CosNaming::NamingContextExt_var roFactoriesContext =
             RONamingContext_impl::createContext(factoriesContextId, temp_actualFactoriesContext);
 
-        CosNaming::Name_var name = Cdmw::NamingAndRepository::
+        CosNaming::Name_var name = Cdmw::CommonSvcs::Naming::
             NamingInterface::to_name(NameDomainContext_impl::FACTORIES_NAME);
 
         // bind the factories' context within the actual context
@@ -408,7 +441,7 @@ NameDomainContext_impl::createContext(
         cleanUp(temp_actualContext.in(), temp_actualFactoriesContext.in());
         CDMW_THROW(OutOfResourcesException);
     }
-    catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+    catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
     {
         // may be thrown by the NamingInterface::to_name() method
         // (should never happened)
@@ -455,7 +488,7 @@ bool NameDomainContext_impl::cleanUp(
         try
         {
             CosNaming::Name_var name = 
-                Cdmw::NamingAndRepository::NamingInterface::to_name(NameDomainContext_impl::FACTORIES_NAME);
+                Cdmw::CommonSvcs::Naming::NamingInterface::to_name(NameDomainContext_impl::FACTORIES_NAME);
 
             // unbind to allow the destruction
             actualContext->unbind(name.in());
@@ -503,6 +536,7 @@ bool NameDomainContext_impl::destroyContext(const std::string& nameDomainId)
     CosNaming::NamingContextExt_var actualContext;
     CosNaming::NamingContextExt_var actualFactoriesContext;
 
+    // FIXME slow, ugly code, inefficient
     try
     {
         actualContext = findActualContext(nameDomainId);

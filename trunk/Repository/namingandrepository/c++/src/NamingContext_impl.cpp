@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -32,8 +32,9 @@
 
 #include "TraceAndPerf/tracelibrary/CdmwTrace.hpp"
 
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
+#include <iostream>
 
 namespace Cdmw
 {
@@ -114,7 +115,6 @@ public:
         CosNaming::NamingContext::NotFound excep(reason, n);
 
         throw excep;
-
     }
 };
 
@@ -134,7 +134,7 @@ public:
             const CosNaming::Name& n,
             CosNaming::NamingContext_ptr nc)
     {
-        namingContext->rebind_context(n, nc);
+	    namingContext->rebind_context(n, nc);	    
     }
 
     static void throw_exception(const CosNaming::Name& n)
@@ -182,21 +182,21 @@ public:
             if (len > 1)
             {
                 // the name is a compound name
-
+                
                 // resolve the first name component
                 CosNaming::NamingContext_var namingContext =
-                    thisContext->resolveNamingContext(n);
-
+                thisContext->resolveNamingContext(n);
+                
                 // propagate the operation
                 CosNaming::Name_var endPart = NamingUtilities::nameEndPart(n);
-
+                
                 Helper<T>::call_bind(namingContext.in(), endPart.in(), obj);
-
+                
             }
             else
             {
                 // the name is a simple name
-
+                
                 // get the string form of the name
                 std::string str_name = NamingUtilities::simple_name_to_string(n);
                 
@@ -205,18 +205,63 @@ public:
                     // the name is already bound !!
                     throw CosNaming::NamingContext::AlreadyBound();
                 }
-
-
-                // get the stringified reference of the object
-                std::string str_object = ORBFacility::object_to_string(obj);
-
-                Binding binding(str_object, type);
                 
-                // add the binding
-                thisContext->m_persistentPeer->addBinding(str_name, binding);
-
+                if (type==NamingContextBinding) {
+                    try {
+                        // FIXME OPTME, causes network traffic
+                        CdmwNamingAndRepository::ProxyFeatureNamingContextExt_var cdmwCtx =
+                        CdmwNamingAndRepository::ProxyFeatureNamingContextExt::_narrow(obj); // throws exception
+                        if ( ! CORBA::is_nil(cdmwCtx.in())) {
+                            std::string str_object = cdmwCtx->get_id();
+                            Binding binding(str_object, type);
+                            
+                            thisContext->m_persistentPeer->addBinding(str_name, binding);
+                        }
+                        else {
+                            // get the stringified reference of the object
+                            std::string str_object = ORBFacility::object_to_string(obj);
+                            
+                            Binding binding(str_object, type);
+                            
+                            // add the binding
+                            thisContext->m_persistentPeer->addBinding(str_name, binding);
+                        }
+                    }
+                    catch (const CORBA::Exception& ex)
+                    {
+                        // get the stringified reference of the object
+                        std::string str_object = ORBFacility::object_to_string(obj);
+                        
+                        Binding binding(str_object, type);
+                        
+                        // add the binding
+                        thisContext->m_persistentPeer->addBinding(str_name, binding);                        
+                    }
+                    catch (...)
+                    {
+                        // get the stringified reference of the object
+                        std::string str_object = ORBFacility::object_to_string(obj);
+                        
+                        Binding binding(str_object, type);
+                        
+                        // add the binding
+                        thisContext->m_persistentPeer->addBinding(str_name, binding);
+                    }
+                } else {
+                    // get the stringified reference of the object
+                    std::string str_object = ORBFacility::object_to_string(obj);
+                    
+                    Binding binding(str_object, type);
+                    
+                    // add the binding
+                    if ( ! thisContext->m_persistentPeer->addBinding(str_name, binding)) 
+                    {
+                        // the name is already bound !!
+                        throw CosNaming::NamingContext::AlreadyBound();
+                    }
+                }
             }
-
+            
         }
         catch(const std::bad_alloc &)
         {
@@ -234,11 +279,11 @@ public:
         {
             throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
         }
-
+        
     }
-
+    
     /*
-    * The actual implementation of rebind and rebind_context operations
+     * The actual implementation of rebind and rebind_context operations
     */
     template <class T> static void actual_rebind(const CosNaming::Name& n, T obj,
         BindingType type, NamingContext_impl* thisContext)
@@ -275,10 +320,10 @@ public:
 
                 // get the string form of the name
                 std::string str_name = NamingUtilities::simple_name_to_string(n);
-
+		
                 BindingType current_type;
 
-                if (thisContext->m_persistentPeer->existsBinding(str_name, current_type))
+               if (thisContext->m_persistentPeer->existsBinding(str_name, current_type))
                 {
                     if (current_type != type)
                     {
@@ -286,17 +331,53 @@ public:
                         // of a different type
 
                         Helper<T>::throw_exception(n);
-
-                    }
-                }
-
-                // get the stringified reference of the object
-                std::string str_object = ORBFacility::object_to_string(obj);
-
-                // update the binding
-                thisContext->m_persistentPeer->updateBinding(str_name, str_object, type);
-
-            }
+			
+		      }
+		  }
+		
+		if (type==NamingContextBinding) {
+		  try {
+		    // FIXME OPTME, causes network traffic
+		    CdmwNamingAndRepository::ProxyFeatureNamingContextExt_var cdmwCtx =
+		      CdmwNamingAndRepository::ProxyFeatureNamingContextExt::_narrow(obj); // throws exception
+		    if ( ! CORBA::is_nil(cdmwCtx.in())) {
+		      std::string str_object = cdmwCtx->get_id();
+		      
+		      thisContext->m_persistentPeer->updateBinding(str_name, 
+								   str_object,
+								   type);
+		    }
+		    else {
+		      // get the stringified reference of the object
+		      std::string str_object = ORBFacility::object_to_string(obj);
+		      
+		      // add the binding
+		      thisContext->m_persistentPeer->updateBinding(str_name,
+								   str_object,
+								   type);
+		    }
+		  } catch (...) {
+		    // get the stringified reference of the object
+		    std::string str_object = ORBFacility::object_to_string(obj);
+		    
+		    // add the binding
+		    thisContext->m_persistentPeer->updateBinding(str_name,
+								 str_object,
+								 type);
+		  }
+		} 
+		else {
+		  // get the stringified reference of the object
+		  std::string str_object = ORBFacility::object_to_string(obj);
+		  
+		  // update the binding
+		  if ( ! thisContext->m_persistentPeer->updateBinding(str_name, str_object, type))
+		    {
+		      Helper<T>::throw_exception(n);
+		    }
+		  
+		}
+	    }
 
         }
         catch(const std::bad_alloc &)
@@ -325,6 +406,21 @@ public:
 /*
 * The implementation of NamingContext_impl
 */
+
+
+char*
+NamingContext_impl::get_id() throw (CORBA::SystemException) 
+{
+    if (m_persistentPeer)
+    {
+       return CORBA::string_dup(m_persistentPeer->id().c_str());
+    }
+    else
+    {
+       return CORBA::string_dup(m_id.c_str());
+    }
+}
+
 
 void NamingContext_impl::bind(const CosNaming::Name& n,
                   CORBA::Object_ptr obj)
@@ -512,7 +608,6 @@ CORBA::Object_ptr NamingContext_impl::resolve(const CosNaming::Name& n)
     }
     catch(const CORBA::Exception& e)
     {
-
         CDMW_TRACE_EXCEPTION(CDMW_NREP, m_id, "NamingContext_impl", "resolve", WRN, e._name());
 
         throw;
@@ -619,7 +714,6 @@ void NamingContext_impl::unbind(const CosNaming::Name& n)
 CosNaming::NamingContext_ptr NamingContext_impl::new_context()
     throw(CORBA::SystemException)
 {
-
     CDMW_TRACE_ENTRY(CDMW_NREP, m_id, "NamingContext_impl", "new_context");
 
     try
@@ -627,7 +721,7 @@ CosNaming::NamingContext_ptr NamingContext_impl::new_context()
 
         try
         {    
-            std::string generatedId;
+	    std::string generatedId;
             CosNaming::NamingContextExt_ptr namingContext;
 
             // -- creates the naming context with the persistent peer --
@@ -680,7 +774,7 @@ CosNaming::NamingContext_ptr NamingContext_impl::bind_new_context(const CosNamin
 
         // -- creates the naming context --
         CosNaming::NamingContext_var namingContext = new_context();
-
+	
         try
         {
             bind_context(n, namingContext.in());
@@ -897,9 +991,9 @@ CosNaming::NamingContextExt::StringName NamingContext_impl::to_string(
 
             try
             {
-                str = Cdmw::NamingAndRepository::NamingInterface::to_string(n);
+                str = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(n);
             }
-            catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+            catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
             {
                 throw CosNaming::NamingContext::InvalidName();
             }
@@ -948,9 +1042,9 @@ CosNaming::Name* NamingContext_impl::to_name(const char* sn)
 
             try
             {
-                name_temp = Cdmw::NamingAndRepository::NamingInterface::to_name(str);
+                name_temp = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(str);
             }
-            catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+            catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
             {
                 throw CosNaming::NamingContext::InvalidName();
             }
@@ -979,6 +1073,64 @@ CosNaming::Name* NamingContext_impl::to_name(const char* sn)
 }
 
 
+int NamingContext_impl::to_url_is_alnum_or_punctuation (char c)
+{
+  if (isalnum (c))
+    return 1;
+
+  // NON US-ASCII charcters excluding those in this array are the
+  // characters that need to be escaped
+  static char non_escaped_punctuation[] =
+    { ';', '/', ':', '?', '@', '=', '+', '$', ',', '-',
+      '_', '.', '!', '~', '*', '\'', '(', ')' };
+  const size_t non_escaped_punctuation_count =
+    sizeof(non_escaped_punctuation)/sizeof(non_escaped_punctuation[0]);
+  for (const char *j = non_escaped_punctuation;
+       j != non_escaped_punctuation + non_escaped_punctuation_count;
+       ++j)
+    {
+      // But if the character is one of the 18 non US-ASCII characters
+      // and hence need not be escaped, then don't increment the
+      // count.
+      if (*j == c)
+        return 1;
+    }
+  return 0;
+}
+
+
+
+size_t NamingContext_impl::to_url_validate_and_compute_size (const char *addr, const char *sn)
+      throw(CosNaming::NamingContextExt::InvalidAddress,
+          CosNaming::NamingContext::InvalidName)
+{
+  size_t addr_len = strlen (addr);
+
+  // Check for invalid address
+  if (addr_len == 0)
+    throw CosNaming::NamingContextExt::InvalidAddress();
+
+  // Make a pass through the in string name to count the number of
+  // characters and if the character is to be escaped, increment the number of characters by 3.
+  size_t sn_len = 0;
+  for (const char *i = sn; *i != '\0'; ++i)
+    {
+      ++sn_len;
+
+      if (NamingContext_impl::to_url_is_alnum_or_punctuation (*i))
+        continue;
+      sn_len += 3;
+    }
+
+  if (sn_len == 0)
+    throw CosNaming::NamingContext::InvalidName();
+
+  return addr_len + sn_len;
+}
+
+
+// The development of the following to_url method is based on TAO
+
 CosNaming::NamingContextExt::URLString NamingContext_impl::to_url(
         const char* addr, const char* sn)
     throw(CosNaming::NamingContextExt::InvalidAddress,
@@ -991,25 +1143,93 @@ CosNaming::NamingContextExt::URLString NamingContext_impl::to_url(
     try
     {
 
-        CosNaming::NamingContextExt::URLString_var url;
+        CosNaming::NamingContextExt::URLString_var str_url;
 
         // TODO : NamingInterface will provide the to_url method
-        throw CORBA::NO_IMPLEMENT(OrbSupport::NO_IMPLEMENTNotYetImplemented, CORBA::COMPLETED_NO);
+	// throw CORBA::NO_IMPLEMENT(OrbSupport::NO_IMPLEMENTNotYetImplemented, CORBA::COMPLETED_NO);
 
 
-        CDMW_TRACE_EXIT(CDMW_NREP, m_id, "NamingContext_impl", "to_url");
+        //CDMW_TRACE_EXIT(CDMW_NREP, m_id, "NamingContext_impl", "to_url");
 
-        return url._retn();
-
+	  /// Compute how many characters will be required for the URL
+	size_t no_char = NamingContext_impl::to_url_validate_and_compute_size (addr, sn);
+	
+	// The 'corbaname:' tag is to be prepended at the starting of the return parameter.
+	char prefix []= "corbaname:";
+	
+	// Allocate dynamic memory
+	//str_url = CORBA::string_alloc (ACE_static_cast (CORBA::ULong, no_char + sizeof (prefix)));
+	str_url = CORBA::string_alloc ( no_char + sizeof (prefix) );
+	
+	// Copy 'prefix' to the return parameter.
+	char *dest = strcpy (str_url , prefix);
+	
+	/// move to end of dest string
+	dest += strlen(dest);
+	
+	// Concatenate the address
+	dest = strcat (dest, addr);
+	
+	/// Concatenate the seperator between the addr and Name
+	dest += strlen(dest);
+	dest = strcat (dest, "#");
+	
+	/// move to end of dest string
+	dest += strlen(dest);
+	
+	// Now append the stringified object name to the return variable.
+	// The percent '%' character is used as an escape. If a character
+	// that requires escaping is present in a name component it is
+	// encoded as two hexadecimal digits following a '%' character to
+	// represent the octet. The first hexadecimal character represents
+	// the low-order nibble of the octet and the second hexadecimal
+	// character represents the low order nibble.
+	
+	for (const char *i = sn; *i != '\0'; ++i)
+	  {
+	    if (NamingContext_impl::to_url_is_alnum_or_punctuation (*i))
+	      {
+		// If the character is a US-ASCII Alphanumeric value...
+		*dest = *i; ++dest;
+		continue;
+	      }
+	    // this must be an escaped character
+	    *dest = '%'; ++dest;
+	    
+	    // Append the hexadecimal representation of the character.
+	    // We should replace the invocation of ACE::nibble2hex using our own method we need to develop.
+	    *dest = ACE::nibble2hex ((*i) >> 4); ++dest;
+	    *dest = ACE::nibble2hex (*i); ++dest;
+	  }
+	
+	// Terminate the string
+	*dest = '\0';
+	
+	//  ACE_OS::strcat (str_url, dest);
+	//	return str_url;
+	
+        return str_url._retn();
+	
     }
-    catch(const CORBA::Exception& e)
+
+    catch(const CosNaming::NamingContextExt::InvalidAddress& ia)
     {
 
-        CDMW_TRACE_EXCEPTION(CDMW_NREP, m_id, "NamingContext_impl", "to_url", WRN, e._name());
+        CDMW_TRACE_EXCEPTION(CDMW_NREP, m_id, "NamingContext_impl", "to_url", WRN, ia._name());
 
         throw;
 
     }
+    catch(const CosNaming::NamingContext::InvalidName& in)
+    {
+
+        CDMW_TRACE_EXCEPTION(CDMW_NREP, m_id, "NamingContext_impl", "to_url", WRN, in._name());
+
+        throw;
+
+    }
+
+
 
 }
 
@@ -1084,8 +1304,9 @@ CORBA::Object_ptr NamingContext_impl::resolveObject(
 
         // get the string form of the name
         std::string str_name = NamingUtilities::simple_name_to_string(n);
+	bool isContext = false;;
 
-        std::string strObjectRef = m_persistentPeer->findObject(str_name);
+        std::string strObjectRef = m_persistentPeer->findObject(str_name, isContext);
 
         if (strObjectRef.empty())
         {
@@ -1097,11 +1318,40 @@ CORBA::Object_ptr NamingContext_impl::resolveObject(
             CosNaming::NamingContext::NotFound excep(reason, n);
 
             throw excep;
-        
         }
+	CORBA::Object_ptr obj;
+	if (!isContext) {
+	    // get the CORBA object from the stringified reference
+	    obj = ORBFacility::string_to_object(strObjectRef);
+	} else {
+	    // It is a context. Is it local?
 
-        // get the CORBA object from the stringified reference
-        CORBA::Object_ptr obj = ORBFacility::string_to_object(strObjectRef);
+	    if ('I'==strObjectRef[0] &&
+		'O'==strObjectRef[1] &&
+		'R'==strObjectRef[2] &&
+		':'==strObjectRef[3]) {
+		// get the CORBA object from the stringified reference
+		obj = ORBFacility::string_to_object(strObjectRef);
+	    } else {
+		//             obj = NamingContext_impl::createWithSystemId(generatedId);
+		// Get a local object reference for the existing Naming Context
+		// strObjectRef is the ObjectId in the naming contexts POA
+		PortableServer::POA_var my_poa = this->_default_POA();
+		// Is the context already active?
+		PortableServer::ObjectId_var oid = 
+		    PortableServer::string_to_ObjectId(strObjectRef.c_str());
+		try {
+		    obj = my_poa  -> id_to_reference (oid.in());
+		    
+		} catch (...) {
+		    // FIXME: It should be a valid Oid so we assume the object is not active yet!
+		    // This may fail if there is concurrent creation of the same ref?
+		    obj = my_poa -> create_reference_with_id(oid.in(),
+							     "IDL:thalesgroup.com/CdmwNamingAndRepository/ProxyFeatureNamingContextExt:1.0");
+		    
+		}
+	    }
+	}
 
         return obj;
 
@@ -1110,6 +1360,7 @@ CORBA::Object_ptr NamingContext_impl::resolveObject(
     {
         CDMW_THROW(OutOfResourcesException);
     }
+    // FIXME catch NotFoundException:1:0
     catch(const AssertionFailedException &)
     {
         CDMW_THROW(InternalErrorException);
@@ -1131,65 +1382,100 @@ CosNaming::NamingContext_ptr NamingContext_impl::resolveNamingContext(
         // get the string form of the first name component
         CosNaming::Name_var n_firstPart = NamingUtilities::nameFirstPart(n);
         std::string str_name = NamingUtilities::simple_name_to_string(n_firstPart.in());
-
+        
         bool isContext;
         std::string strObjectRef = m_persistentPeer->findNamingContext(str_name, isContext);
-
+        
         if (strObjectRef.empty())
         {
             // The first part of the name cannot be found within this naming context 
             // => not found due to missing node
-
-            CosNaming::NamingContext::NotFoundReason reason = 
-                    CosNaming::NamingContext::missing_node;
-
+            
+            CosNaming::NamingContext::NotFoundReason reason = CosNaming::NamingContext::missing_node;
+            
             CosNaming::NamingContext::NotFound excep(reason, n);
 
             throw excep;
-        
+            
         }
         else if (!isContext)
         {
             // The first part doesn't correspond to a naming context 
             // not found due to not context
-
+            
             CosNaming::NamingContext::NotFoundReason reason = 
-                    CosNaming::NamingContext::not_context;
-
+            CosNaming::NamingContext::not_context;
+            
             CosNaming::NamingContext::NotFound excep(reason, n);
-
+            
             throw excep;
         }
+        
+        CORBA::Object_var obj = CORBA::Object::_nil();
+        
+        if ('I'==strObjectRef[0] &&
+            'O'==strObjectRef[1] &&
+            'R'==strObjectRef[2] &&
+            ':'==strObjectRef[3]) {
+            // get the CORBA object from the stringified reference
+            obj = ORBFacility::string_to_object(strObjectRef);
+        } else {
+            //             obj = NamingContext_impl::createWithSystemId(generatedId);
+            // Get a local object reference for the existing Naming Context
+            // strObjectRef is the ObjectId in the naming contexts POA
+            PortableServer::POA_var my_poa = this->_default_POA();
+            // Is the context already active?
+            PortableServer::ObjectId_var oid = 
+            PortableServer::string_to_ObjectId(strObjectRef.c_str());
+            try {
+                obj = my_poa  -> id_to_reference (oid.in());
+		
+            } catch (...) {
+                // FIXME: It should be a valid Oid so we assume the object is not active yet!
+                // This may fail if there is concurrent creation of the same ref?
+                obj = my_poa -> create_reference_with_id(oid.in(),
+                                                         "IDL:thalesgroup.com/CdmwNamingAndRepository/ProxyFeatureNamingContextExt:1.0");
 
-        // get the CORBA object from the stringified reference
-        CORBA::Object_var obj = ORBFacility::string_to_object(strObjectRef);
+            }
+        }
 
         // narrowing
         try
-	  {
-	    CosNaming::NamingContext_ptr namingContext =
-	      CosNaming::NamingContext::_narrow(obj.in());
+        {
+            CosNaming::NamingContext_ptr namingContext =
+            CosNaming::NamingContext::_narrow(obj.in());
         
-	    if (CORBA::is_nil(namingContext))
-	      CDMW_THROW(InternalErrorException);
+            if (CORBA::is_nil(namingContext))
+            {
+                CDMW_THROW(InternalErrorException);
+            }
 
-	    return namingContext;
-	  }
+            return namingContext;
+        }
         catch(const CORBA::OBJECT_NOT_EXIST &)
-	  {
+        {
             // Typically this will be raised if the context corresponding to strObjectRef
             // has been destroyed but has not been unbound in this parent
             CosNaming::NamingContext::CannotProceed excep(_this(), n);
 
-	    throw excep;
-	  }
+            throw excep;
+        }
+        catch(const CORBA::SystemException & ex)
+        {
+            // Typically this will be raised if the context corresponding to strObjectRef
+            // has been destroyed but has not been unbound in this parent
+            CosNaming::NamingContext::CannotProceed excep(_this(), n);
+
+            throw excep;
+        }
     }
     catch(const std::bad_alloc &)
     {
         CDMW_THROW(OutOfResourcesException);
     }
-    catch(const AssertionFailedException &)
+    catch(const AssertionFailedException & ex)
     {
+        std::cerr<<ex<<std::endl;
         CDMW_THROW(InternalErrorException);
     }
 
@@ -1346,6 +1632,12 @@ NamingContext_impl* NamingContext_impl::findServantById(const std::string& id)
         CDMW_THROW(OutOfResourcesException);
     }
 
+}
+
+Strings NamingContext_impl::findWithPrefix(const std::string& prefix)
+    throw (OutOfResourcesException, InternalErrorException)
+{
+    return PersistentNamingContext::findWithPrefix(prefix);
 }
 
 

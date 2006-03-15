@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,7 +29,7 @@
 #include "namingandrepository/NameDomainContext_impl.hpp"
 #include "namingandrepository/ORBFacility.hpp"
 #include "namingandrepository/NamingUtilities.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 #include "TraceAndPerf/tracelibrary/CdmwTrace.hpp"
 
@@ -92,7 +92,7 @@ public:
             throw CdmwNamingAndRepository::NameDomain::InvalidRegistration();
 
         // activate the registration
-        bool activated;
+        bool activated=false;
 
         if (!thisNameDomain->m_persistentPeer->activateRegistration(
             str_regId, reg, activated))
@@ -195,7 +195,7 @@ public:
         T object, NameDomain_impl* thisNameDomain)
     {
 
-        CosNaming::Name_var name = Cdmw::NamingAndRepository::NamingInterface::to_name(str_name);
+        CosNaming::Name_var name = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(str_name);
 
         bool ret = bind(name.in(), object, thisNameDomain);
 
@@ -207,7 +207,6 @@ public:
             thisNameDomain->m_persistentPeer->removeRegistration(str_name, activated, type);
 
             throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
-
         }
 
     }
@@ -224,7 +223,7 @@ public:
         std::string str_regId = NameDomain_impl::registrationId_to_string(reg_id);
         std::string str_name = thisNameDomain->m_persistentPeer->findName(str_regId);
 
-        CosNaming::Name_var name = Cdmw::NamingAndRepository::NamingInterface::to_name(str_name);
+        CosNaming::Name_var name = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(str_name);
 
         bool ret = bind(name.in(), object, thisNameDomain);
 
@@ -293,11 +292,15 @@ CdmwNamingAndRepository::NameDomain::RegistrationId* NameDomain_impl::new_name(c
             std::string str_regId;
             std::string str_name(name);
 
+	    // FIXME - check in NamingContext for name
+	    // FIXME m_persistentPeer->addRegistration returns allready any object
             if (!m_persistentPeer->addRegistration(str_name, str_regId))
             {
                 throw CdmwNamingAndRepository::NameDomain::AlreadyExists();
             }
-
+	    // FIXME m_persistentPeer->addRegistration returns
+	    // allready any object, no need to convert any to any
+	    // object
             CdmwNamingAndRepository::NameDomain::RegistrationId_var regId =
                 string_to_registrationId(str_regId);
 
@@ -327,6 +330,11 @@ CdmwNamingAndRepository::NameDomain::RegistrationId* NameDomain_impl::new_name(c
 
 }
 
+char*
+NameDomain_impl::get_id() throw() 
+{
+    return CORBA::string_dup(m_persistentPeer->id().c_str());
+}
 
 void NameDomain_impl::register_object(const CdmwNamingAndRepository::NameDomain::RegistrationId& reg_id,
                              CORBA::Object_ptr the_object)
@@ -512,7 +520,7 @@ void NameDomain_impl::register_new_factory(const char* factory_name,
 
 
 
-CdmwNamingAndRepository::NameDomain_ptr NameDomain_impl::resolve_name_domain(const char* domain_name)
+CdmwNamingAndRepository::NameDomain_ptr NameDomain_impl::resolve_sub_domain(const char* domain_name)
     throw(CdmwNamingAndRepository::NoNameDomain,
           CdmwNamingAndRepository::InvalidName,
           CORBA::SystemException)
@@ -531,9 +539,9 @@ CdmwNamingAndRepository::NameDomain_ptr NameDomain_impl::resolve_name_domain(con
 
             try
             {
-                name = Cdmw::NamingAndRepository::NamingInterface::to_name(domain_name);
+                name = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(domain_name);
             }
-            catch(const Cdmw::NamingAndRepository::InvalidNameException &e)
+            catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &e)
             {
                 // invalid name
                 CdmwNamingAndRepository::InvalidName excep;
@@ -541,10 +549,10 @@ CdmwNamingAndRepository::NameDomain_ptr NameDomain_impl::resolve_name_domain(con
 
                 throw excep;
             }
+	    // FIXME raise exception for name.length()==0 
 
             // get the name domain corresponding to the first name component
             std::string firstPartStr = NamingUtilities::stringifiedNameFirstPart(name.in());
-
             std::string firstNameDomainRef = m_persistentPeer->findNameDomain(firstPartStr);
 
             if (firstNameDomainRef.empty())
@@ -562,7 +570,7 @@ CdmwNamingAndRepository::NameDomain_ptr NameDomain_impl::resolve_name_domain(con
                 // propagates the resolution
                 std::string endPartStr = NamingUtilities::stringifiedNameEndPart(name.in());
 
-                nameDomain = firstNameDomain->resolve_name_domain(endPartStr.c_str());
+                nameDomain = firstNameDomain->resolve_sub_domain(endPartStr.c_str());
             }
             else
             {
@@ -742,7 +750,7 @@ void NameDomain_impl::release_name(const char* name)
                 throw CORBA::NO_PERMISSION(OrbSupport::NO_PERMISSION, CORBA::COMPLETED_NO);
 
             // remove the registration    
-            bool activated;
+            bool activated = true;
             RegistrationType type;
             std::string str_name(name);
 
@@ -752,7 +760,7 @@ void NameDomain_impl::release_name(const char* name)
             if (activated)
             {
                 // remove the binding(s)
-                CosNaming::Name_var temp_name = Cdmw::NamingAndRepository::NamingInterface::to_name(str_name);
+                CosNaming::Name_var temp_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(str_name);
 
                 try
                 {
@@ -1014,10 +1022,10 @@ NameDomain_impl* NameDomain_impl::createNameDomain(
 
         try
         {
-            name = Cdmw::NamingAndRepository::
+            name = Cdmw::CommonSvcs::Naming::
                 NamingInterface::to_name(domainName);
         }
-        catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+        catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
         {
             CDMW_THROW2(BadParameterException, "domainName", "invalid");
         }
@@ -1178,7 +1186,10 @@ bool NameDomain_impl::destroyNameDomain()
     try
     {
         // destroy the persistent peer
+	if (NULL != m_persistentPeer) {
 	    PersistentNameDomain::destroy(m_persistentPeer);
+	    m_persistentPeer = NULL;
+	}
         // destroy the associated contexts
         NameDomainContext_impl::destroyContext(m_id);
 
@@ -1191,7 +1202,7 @@ bool NameDomain_impl::destroyNameDomain()
 	{
 	    result = false;
 	}
-	
+    // FIXME memleak of m_persistentPeer, NameDomainContext_impl and 
     return result;
 
 }
@@ -1256,14 +1267,17 @@ NameDomain_impl::NameDomain_impl(const std::string& id)
     : m_id(id)
 {
 
-    m_persistentPeer = NULL;
+    m_persistentPeer = NULL; // FIXME initialised with NULL, but never tested for NULL anywhere in code, could be seen as bug .)
 
 }
 
 
 NameDomain_impl::~NameDomain_impl()
 {
+    // FIXME leaks, can be freed here if copy contructor of persistentNameDomain changed
 
+//     if (NULL != m_persistentPeer) 
+// 	delete m_persistentPeer;  // CHECKME, free memory, but keep state in datastore
 
 }
 

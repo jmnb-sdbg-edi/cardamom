@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -36,13 +36,17 @@
 #include "Foundation/orbsupport/ExceptionMinorCodes.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 
+#include "namingandrepository/Repository_impl.hpp"
+// namingandrepository/RepositoryExt_impl.hpp"
 #include "namingandrepository/StandardRepository_impl.hpp"
 
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "TraceAndPerf/tracelibrary/CdmwTrace.hpp"
 #include "Foundation/common/Locations.hpp"
 
 #include "TraceAndPerf/idllib/CdmwTraceTraceProducer.stub.hpp"
+
+#include <TraceAndPerf/idllib/CdmwTraceCommon.stub.hpp>
 
 #include "namingandrepository/Configurator.hpp"
 
@@ -110,7 +114,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
 	* operation
 	*/
     virtual CORBA::Object_ptr get_service() throw(CORBA::SystemException)
@@ -123,11 +127,11 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
 	* operation
 	*/
     virtual void initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
-        throw(CdmwPlatformMngt::Process::BadOrder, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::BadOrder, CORBA::SystemException)
     {
 
         std::string configFileErrorHeader("In file '");
@@ -157,7 +161,9 @@ public:
 								m_processName,
                                 5000,    // We flush each 5 seconds
                                 10,      // 10 FlushArea
-                                512000   // Each FlushArea has 0.5 Mo
+                                512000,  // Each FlushArea has 0.5 Mo
+                                Cdmw::Trace::FlushAreaMngr::DEFAULT_AREA_NB_MESSAGE,
+                                100     // threshold for repetitive messages
                                 );
 
         if (CORBA::is_nil(traceProducer.in()))
@@ -231,6 +237,27 @@ public:
 
             notifyFatalError("CDMW_NAMREP", message.c_str());
         }
+        catch(...)
+        {
+            notifyFatalError("CDMW_NAMREP", "Something caught!!");
+        }
+
+        // Register the FactoryFinder
+        try
+        {
+            CosNaming::NamingContext_var rootCtx = 
+            m_repository_impl->resolve_root_context(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT);
+            
+            CosNaming::Name_var name =
+            Cdmw::CommonSvcs::Naming::NamingInterface::to_name(CdmwNamingAndRepository::FACTORY_FINDER);
+            
+            rootCtx->rebind(name.in(), m_repository_impl->get_factory_finder());
+        } 
+        catch (...)
+        {
+            notifyFatalError("CDMW_NAMREP", 
+                             "Failed to rebind factory finder reference");
+        }
 
 #ifndef CDMW_DEACTIVATE_TRACE
 
@@ -242,8 +269,12 @@ public:
             CDMW_TRACE_ACTIVE_FLUSHING();
 
             // activate INF and WRN levels
-            traceProducer->activate_level(Cdmw::CDMW_NREP, Cdmw::INF );
-            traceProducer->activate_level(Cdmw::CDMW_NREP, Cdmw::WRN );
+            traceProducer->activate_level(CdmwTrace::ALL_COMPONENT_NAMES, // ECR-0123
+                                          Cdmw::CDMW_NREP,
+                                          Cdmw::INF);
+            traceProducer->activate_level(CdmwTrace::ALL_COMPONENT_NAMES, // ECR-0123
+                                          Cdmw::CDMW_NREP,
+                                          Cdmw::WRN);
             COUT2("INF and WRN trace levels activated");
 
             // bind the trace producer within the admin root context
@@ -267,12 +298,12 @@ public:
 				trace_producer_pathname += "/TRACE/TraceProducer";
 
                 // create naming interface on admin root context
-				Cdmw::NamingAndRepository::NamingInterface ni (adminRootContext.in());
+				Cdmw::CommonSvcs::Naming::NamingInterface ni (adminRootContext.in());
 				           
 				// If object already registered, force its registration
 				ni.bind (trace_producer_pathname,traceProducer.in(),true);
             }
-            catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+            catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
             {
                 std::string message("'");
                 message += m_traceProducerName;
@@ -314,7 +345,6 @@ public:
                                                                 NAME_SERVICE_ID,
                                                                 default_root_ctxt.in());
         COUT2(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT << "'s corbaloc name : " << NAME_SERVICE_ID);
-          
 
     }
 
@@ -323,12 +353,12 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
 	* operation
 	*/
     virtual void run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun,
-              CdmwPlatformMngt::Process::AlreadyDone,
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
+              CdmwPlatformMngt::ProcessDelegate::AlreadyDone,
               CORBA::SystemException)
     {
         COUT2("Run requested");
@@ -338,7 +368,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
 	* operation
 	*/
     virtual void stop() throw(CORBA::SystemException)
@@ -370,7 +400,7 @@ private:
 
         if (m_platformManaged)
         {
-            PlatformInterface::notifyFatalError(issuer, message);
+            PlatformInterface::Notify_fatal_error(issuer, message);
         }
         else
         {

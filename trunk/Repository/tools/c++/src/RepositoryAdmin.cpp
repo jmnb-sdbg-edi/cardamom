@@ -1,31 +1,31 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 #include "Repository/tools/RepositoryAdmin.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
-#include "Repository/naminginterface/NamingUtil.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingUtil.hpp"
 #include "Foundation/common/Assert.hpp"
 #include <string>
 #include <cctype>
@@ -84,7 +84,7 @@ namespace
                 std::string tab = tab_string(level);
                 
                 os << tab 
-                   << Cdmw::NamingAndRepository::NamingInterface::to_string(bl[i].binding_name);
+                   << Cdmw::CommonSvcs::Naming::NamingInterface::to_string(bl[i].binding_name);
                 
                 if (bl[i].binding_type == CosNaming::ncontext) {
                     os << "/" << std::endl; // for contexts
@@ -98,7 +98,7 @@ namespace
             } catch (const CORBA::Exception & ) {
                 // keep silent (ignore)
                 done = false;
-            } catch (const Cdmw::NamingAndRepository::InvalidNameException &) {
+            } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException &) {
                 // This is impossible ! keep silent (ignore)
                 done = false;
             }
@@ -335,9 +335,9 @@ CORBA::Long RepositoryAdmin::list(const std::string & arg, std::ostream & os) th
                 = m_repository->resolve_name_domain (arg.c_str());
             // It is a name domain, so we should be able to get its naming 
             // context.
-            Cdmw::NamingAndRepository::NamingInterface ni(nc_root_context.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc_root_context.in());
 
-            typedef Cdmw::NamingAndRepository::NamingUtil<CosNaming::NamingContext> Util;
+            typedef Cdmw::CommonSvcs::Naming::NamingUtil<CosNaming::NamingContext> Util;
             nc = Util::resolve_name(ni,arg);
         }
         result = show_context(nc.in(), os,0);
@@ -368,9 +368,9 @@ CORBA::Long RepositoryAdmin::factory(const std::string & arg, std::ostream & os)
         if (arg == "") {
             os << "Factory name needed." << std::endl;
         } else {        
-            Cdmw::NamingAndRepository::NamingInterface ni(nc.in());
+            Cdmw::CommonSvcs::Naming::NamingInterface ni(nc.in());
 
-            typedef Cdmw::NamingAndRepository::NamingUtil<CdmwLifeCycle::FactoryBase> Util;
+            typedef Cdmw::CommonSvcs::Naming::NamingUtil<CdmwLifeCycle::FactoryBase> Util;
             
             CdmwLifeCycle::FactoryBase_var factory
                 = Util::resolve_name(ni,arg);
@@ -404,8 +404,8 @@ CORBA::Long RepositoryAdmin::release_name(const std::string & arg, std::ostream 
     CORBA::Long result = OP_FAILURE;    
 
     try {
-        std::string dirname  = Cdmw::NamingAndRepository::NamingInterface::dirname(arg);
-        std::string basename = Cdmw::NamingAndRepository::NamingInterface::basename(arg);
+        std::string dirname  = Cdmw::CommonSvcs::Naming::NamingInterface::dirname(arg);
+        std::string basename = Cdmw::CommonSvcs::Naming::NamingInterface::basename(arg);
         
         using namespace CdmwNamingAndRepository;
         if (dirname != "") {
@@ -427,7 +427,7 @@ CORBA::Long RepositoryAdmin::release_name(const std::string & arg, std::ostream 
         } else {
             os << "NameDomain needed!" << std::endl;
         }
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException & e) {
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException & e) {
         os << "Invalid Name : <" << e.what() << ">" << std::endl;
     } catch (const CORBA::SystemException & e) {
         os << "CORBA System Exception : \n" << e << std::endl;
@@ -476,8 +476,8 @@ CORBA::Long RepositoryAdmin::register_object(const std::string & arg, std::ostre
     try {
         CORBA::Object_var obj = m_orb->string_to_object(ior.c_str());
 
-        std::string dirname  = Cdmw::NamingAndRepository::NamingInterface::dirname(name);
-        std::string basename = Cdmw::NamingAndRepository::NamingInterface::basename(name);
+        std::string dirname  = Cdmw::CommonSvcs::Naming::NamingInterface::dirname(name);
+        std::string basename = Cdmw::CommonSvcs::Naming::NamingInterface::basename(name);
         
         using namespace CdmwNamingAndRepository;
         if (dirname != "") {
@@ -500,7 +500,7 @@ CORBA::Long RepositoryAdmin::register_object(const std::string & arg, std::ostre
         } else {
             os << "NameDomain needed!" << std::endl;
         }
-    } catch (const Cdmw::NamingAndRepository::InvalidNameException & e) {
+    } catch (const Cdmw::CommonSvcs::Naming::InvalidNameException & e) {
         os << "Invalid Name : <" << e.what() << ">" << std::endl;
     } catch (const CORBA::SystemException & e) {
         os << "CORBA System Exception : \n" << e << std::endl;

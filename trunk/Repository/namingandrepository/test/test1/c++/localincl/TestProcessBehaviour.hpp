@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -31,6 +31,8 @@
 
 #include "TraceAndPerf/tracelibrary/CdmwTrace.hpp"
 #include "TraceAndPerf/idllib/CdmwTraceTraceProducer.stub.hpp"
+
+#include <TraceAndPerf/idllib/CdmwTraceCommon.stub.hpp>
 
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
 #include "SystemMngt/platforminterface/ProcessBehaviour.hpp"
@@ -98,11 +100,11 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
 	* operation
 	*/
     virtual void initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
-        throw(CdmwPlatformMngt::Process::BadOrder, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::BadOrder, CORBA::SystemException)
     {
         std::cout <<"Init requested" << std::endl;
 
@@ -129,7 +131,7 @@ public:
                 m_idRepository = OS::create_process("cdmw_naming_and_repository",
                     "--CdmwLocalisationService=4997 --id=GlobalRepository --conf=CdmwDefaultNamingAndRepository.xml");
 
-                OS::sleep(timescale*10000);
+                OS::sleep(timescale*10000*2);
             }
 
         }
@@ -143,7 +145,7 @@ public:
         if (m_platformManaged)
         {
             std::cout << "Getting repository from the Platform Management" << std::endl;
-            repository_temp = PlatformInterface::getService(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
+            repository_temp = PlatformInterface::Get_service(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
         }
         else
         {
@@ -171,12 +173,12 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
 	* operation
 	*/
     virtual void run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun,
-              CdmwPlatformMngt::Process::AlreadyDone,
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
+              CdmwPlatformMngt::ProcessDelegate::AlreadyDone,
               CORBA::SystemException)
     {
         std::cout <<"Run requested" << std::endl;
@@ -206,8 +208,12 @@ public:
                 notifyFatalError("TEST_NAMREP", "Trace producer not found");
             }
 
-            traceProducer->deactivate_level("CDMW_NREP", 0 );
-            traceProducer->deactivate_level("CDMW_NREP", 1 );
+            traceProducer->deactivate_level(CdmwTrace::ALL_COMPONENT_NAMES, // ECR-0123
+                                            "CDMW_NREP",
+                                            0);
+            traceProducer->deactivate_level(CdmwTrace::ALL_COMPONENT_NAMES, // ECR-0123
+                                            "CDMW_NREP",
+                                            1);
 
         }
 
@@ -218,7 +224,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
 	* operation
 	*/
     virtual void stop() throw(CORBA::SystemException)
@@ -250,7 +256,7 @@ private:
 
         if (m_platformManaged)
         {
-            PlatformInterface::notifyFatalError(issuer, message);
+            PlatformInterface::Notify_fatal_error(issuer, message);
         }
         else
         {

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,6 +29,8 @@
 #include "Foundation/osthreads/Mutex.hpp"
 #include "Foundation/osthreads/ReaderWriterLock.hpp"
 #include "namingandrepository/Exceptions.hpp"
+#include "namingandrepository/Strings.hpp"
+
 #include <string>
 #include <map>
 #include <set>
@@ -87,7 +89,7 @@ public:
     * 
     */ 
     Binding(const std::string& object, BindingType type);
-
+ 
     /**
     * Purpose:
     * <p>
@@ -185,6 +187,12 @@ public:
 
 };
 
+inline bool 
+operator == (const BindingInfo &b, const BindingInfo &c) {
+    return 
+	(b.m_bindingName     == c.m_bindingName) &&
+	(b.m_bindingType     == c.m_bindingType);
+}
 
 
 /**
@@ -257,12 +265,19 @@ public:
     * atomic swap.
     * 
     */ 
-    void swap(DetailedBindingInfo& rhs);
+    void swap(DetailedBindingInfo& rhs); // FIXME - declare as private
 
 
 };
 
 
+inline bool 
+operator == (const DetailedBindingInfo &b, const DetailedBindingInfo &c) {
+    return 
+	(b.m_bindingName     == c.m_bindingName) &&
+	(b.m_bindingType     == c.m_bindingType) &&
+	(b.m_objectRefString == c.m_objectRefString);
+}
 
 /**
 *Purpose:
@@ -303,7 +318,7 @@ private:
 *of the PersistentNamingContext class is not yet achieved.
 *<p>
 */
-typedef std::map<std::string, Binding> Bindings;
+    typedef std::map<std::string, Binding> Bindings; 
 
 //class PersistentNamingContext;
 
@@ -411,7 +426,7 @@ public:
     * @param  name The name specifying the binding
     * @return The stringified object or the empty string if not found
     */ 
-    std::string findObject(const std::string& name)
+    std::string findObject(const std::string& name, bool &isContext)
         throw (OutOfResourcesException);
 
     /**
@@ -447,7 +462,8 @@ public:
     * @param name    The name specifying the binding
     * @param object  The stringified object reference
     * @param type    The type of the binding
-    * @return        True if a new binding has been added.
+
+    * @return True if a new binding has been added or updated, otherwise False
     */ 
     bool updateBinding(const std::string& name, const std::string& object,
         BindingType type) throw (OutOfResourcesException);
@@ -540,6 +556,9 @@ public:
         throw (OutOfResourcesException);
 
 
+    static Strings findWithPrefix(const std::string& prefix)
+        throw (OutOfResourcesException, InternalErrorException); 
+
 protected:
     /**
     * Purpose:
@@ -560,12 +579,12 @@ private:
     * The reader/writer lock used to manage concurrent thread safe access to
     * m_bindings.
     */
-    Cdmw::OsSupport::ReaderWriterLock m_rwLock;
+   Cdmw::OsSupport::ReaderWriterLock m_rwLock;
     
-    /**
-    * The bindings contained in this naming context
-    */
-    Bindings m_bindings;
+//     /**
+//     * The bindings contained in this naming context
+//     */
+//     Bindings m_bindings;
 
 
 private:

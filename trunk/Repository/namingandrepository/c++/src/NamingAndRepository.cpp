@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -27,6 +27,7 @@
 #include "namingandrepository/NamingAndRepositoryBehaviour.hpp"
 
 #include "namingandrepository/TestNamingContext_impl.hpp"
+#include "namingandrepository/FTDatastoreHelper.hpp"
 
 #include "Foundation/ossupport/OS.hpp"
 #include "Foundation/orbsupport/OrbSupport.hpp"
@@ -144,7 +145,7 @@ void notifyPreInitialisationError(bool platformManaged, const char* message)
 
     if (platformManaged)
     {
-        PlatformInterface::notifyFatalError("CDMW_NAMREP", message);
+        PlatformInterface::Notify_fatal_error("CDMW_NAMREP", message);
     }
     else
     {
@@ -156,12 +157,19 @@ void notifyPreInitialisationError(bool platformManaged, const char* message)
 }
 
 
-enum ExitType
-{
-    ORB_DESTROY,                // the ORB will be destroyed
-    ORB_SHUTDOWN_AND_DESTROY    // the ORB will be shutdown and destroyed
-};
 
+CORBA::ORB_var orb = CORBA::ORB::_nil();
+
+void exit_handler(int sig) {
+    if (!CORBA::is_nil(orb.in())) {
+        try {
+            orb->shutdown(false);
+        } catch (const CORBA::SystemException& e) {
+            std::cerr << "Error while shuting ORB down in exit_handler:\n"
+                      << e << " - minor code: " << e.minor() << std::endl;
+        }
+    }
+}
 
 
 int main(int argc, char* argv[])
@@ -223,10 +231,8 @@ int main(int argc, char* argv[])
     StrategyList orbStrategies;
     orbStrategies.add_OrbThreaded();
     orbStrategies.add_PoaThreadPool(POA_THREAD_POOL_SIZE);
+    orbStrategies.add_multicast();
 
-
-    CORBA::ORB_var orb;
-    ExitType exitType = ORB_SHUTDOWN_AND_DESTROY;
 
     try
     {
@@ -240,12 +246,12 @@ int main(int argc, char* argv[])
         poaMgr->activate();
 
         bool platformManaged =
-            PlatformInterface::isLaunchedByPlatformManagement(argc, argv);
+            PlatformInterface::Is_launched_by_PlatformManagement(argc, argv);
 
         if (platformManaged)
         {
             // initialise the platform interface
-            PlatformInterface::setup(orb.in(), argc, argv);
+            PlatformInterface::Setup(orb.in(), argc, argv);
         }
 
         // preinitialisation : command line check up
@@ -291,6 +297,12 @@ int main(int argc, char* argv[])
             notifyPreInitialisationError(platformManaged, message.c_str());
         }
 
+	Cdmw::NamingAndRepository::DefaultDataStoreFactory::Create_data_store
+	    (Cdmw::NamingAndRepository::NAME_DOMAIN_DATASTORE_ID); 
+
+	Cdmw::NamingAndRepository::DefaultDataStoreFactory::Create_data_store
+	    (Cdmw::NamingAndRepository::NAMING_CONTEXT_DATASTORE_ID); 
+
         // creates the process behaviour
         std::auto_ptr<NamingAndRepositoryBehaviour> pProcessBehaviour(
             new NamingAndRepositoryBehaviour(orb.in(), platformManaged,
@@ -303,14 +315,14 @@ int main(int argc, char* argv[])
 
 
             // acknowledge the creation of the process
-            PlatformInterface::acknowledgeCreation(pProcessBehaviour.get());
+            PlatformInterface::Acknowledge_creation(pProcessBehaviour.get());
             pProcessBehaviour.release();
 
             orb->run();
             COUT("The ORB has exited its main loop");
 
-            //orb->shutdown() is done by the ProcessBehaviour
-            exitType = ORB_DESTROY;
+            // cleanup the platform interface
+            PlatformInterface::Cleanup();
         }
         else
         {
@@ -342,10 +354,16 @@ int main(int argc, char* argv[])
 
             (pProcessBehaviour.get())->run();
 
+            struct sigaction action;
+            action.sa_handler=exit_handler;
+            sigemptyset(&action.sa_mask);
+            sigaction(SIGTERM, &action, NULL);
+            sigaction(SIGINT, &action, NULL);
+            sigaction(SIGQUIT, &action, NULL);
+            sigaction(SIGABRT, &action, NULL);
+
             orb->run();
             // the repository can only be killed
-
-            exitType = ORB_DESTROY;
 
         }
     }
@@ -372,10 +390,8 @@ int main(int argc, char* argv[])
 
     if (!CORBA::is_nil(orb.in()))
     {
-        if (exitType == ORB_SHUTDOWN_AND_DESTROY)
-		  orb->shutdown(false);
-	Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
-	orb->destroy();
+        Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+        orb->destroy();
     }
 
     return ret_code;

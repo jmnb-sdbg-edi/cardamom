@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,9 +26,15 @@
 #ifndef INCL_NAMINGANDREPOSITORY_PERSISTENTNAMEDOMAIN_HPP
 #define INCL_NAMINGANDREPOSITORY_PERSISTENTNAMEDOMAIN_HPP
 
+
+
+
 #include "Foundation/osthreads/Mutex.hpp"
 #include "Foundation/osthreads/ReaderWriterLock.hpp"
 #include "namingandrepository/Exceptions.hpp"
+
+#include "namingandrepository/FTDatastoreHelper.hpp"
+
 #include <string>
 #include <map>
 #include <set>
@@ -44,7 +50,9 @@ namespace NamingAndRepository
 /**
 * The different types of registration
 */
-enum RegistrationType { ObjectRegistration, FactoryRegistration, NameDomainRegistration };
+enum RegistrationType { ObjectRegistration, 
+			FactoryRegistration, 
+			NameDomainRegistration };
 
 
 
@@ -263,7 +271,15 @@ class PersistentNameDomain
 {
 
 public:
-
+	
+/**
+*Purpose:
+*<p>
+* Defines the time between registration and activation; assumes host
+* in network are synchronising system-clock, eg with NTP.
+*<p>
+*/
+    const TimeBase::TimeT REGISTRATION_TIMEOUT; // 1000*1000*10;
 /**
 *Purpose:
 *<p>
@@ -273,6 +289,7 @@ public:
 typedef std::string RegistrationId;
 
 
+    
 public:
 
     /**
@@ -282,7 +299,7 @@ public:
     */ 
     PersistentNameDomain();
 
-
+// FIXME - following constructor should be private
     /**
     * Purpose:
     * <p>
@@ -561,17 +578,12 @@ private:
     * The reader/writer lock used to manage concurrent thread safe access to
     * m_registrations and m_current_gen_id.
     */
-    Cdmw::OsSupport::ReaderWriterLock m_rwLock;
+   Cdmw::OsSupport::ReaderWriterLock m_rwLock;
     
-    /**
-    * The registrations contained in this name domain.
-    */
-    Registrations m_registrations;
-
     /**
     * The counter used for generated registration identifier.
     */
-    size_t m_current_gen_id;
+//     size_t m_current_gen_id;
 
 
 private:
@@ -580,13 +592,12 @@ private:
     * The mutex used to manage concurrent thread safe access to
     * M_existingNameDomains.
     */
-    static Cdmw::OsSupport::Mutex M_existingNameDomains_mutex;
+//     static Cdmw::OsSupport::Mutex M_existingNameDomains_mutex;
 
     /**
     * The existing name domains
     */
-    static NameDomains M_existingNameDomains;
-
+//     static NameDomains M_existingNameDomains;
 
 private:
     
@@ -600,7 +611,7 @@ private:
     *
     * @return The generated identifier.
     */ 
-    RegistrationId generateRegistrationId()
+    RegistrationId generateRegistrationId(const std::string& name)
         throw (OutOfResourcesException);
 
  
@@ -633,7 +644,23 @@ private:
     static bool existsId(const std::string& id)
         throw (OutOfResourcesException);
 
-
+    /**
+    * Purpose:
+    * <p>
+    * The mutex used to manage concurrent thread safe access to
+    * M_current_gen_id.
+    *
+    */ 
+    static Cdmw::OsSupport::Mutex M_current_gen_id_mutex;
+    
+    /**
+    * Purpose:
+    * <p>
+    * Used to create unique identifier for registration-id, counter 
+    * being incremented, needs to be protected in some form;
+    *
+    */ 
+    static unsigned long long M_current_gen_id; // OPTME thread safe datatype
 };
 
 

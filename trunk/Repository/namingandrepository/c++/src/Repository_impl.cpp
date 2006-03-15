@@ -1,37 +1,38 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
 
 #include "Foundation/orbsupport/ExceptionMinorCodes.hpp"
 #include "Foundation/common/Assert.hpp"
+#include "Foundation/common/Locations.hpp"
 #include "namingandrepository/Repository_impl.hpp"
 #include "namingandrepository/RootNamingContext_impl.hpp"
 #include "namingandrepository/NameDomain_impl.hpp"
 #include "namingandrepository/FactoryFinder_impl.hpp"
 #include "namingandrepository/ORBFacility.hpp"
 #include "namingandrepository/NamingUtilities.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 #include "TraceAndPerf/tracelibrary/CdmwTrace.hpp"
 
@@ -112,7 +113,7 @@ CdmwNamingAndRepository::NameDomain_ptr Repository_impl::resolve_name_domain(con
         {
             CdmwNamingAndRepository::NameDomain_var nameDomain;
 
-            CosNaming::Name_var name = Cdmw::NamingAndRepository::NamingInterface::to_name(domain_name);
+            CosNaming::Name_var name = Cdmw::CommonSvcs::Naming::NamingInterface::to_name(domain_name);
 
             // get the root name domain corresponding to the first name component
             std::string firstPartStr = NamingUtilities::stringifiedNameFirstPart(name.in());
@@ -125,7 +126,7 @@ CdmwNamingAndRepository::NameDomain_ptr Repository_impl::resolve_name_domain(con
                 // propagates the resolution
                 std::string endPartStr = NamingUtilities::stringifiedNameEndPart(name.in());
 
-                nameDomain = rootNameDomain->resolve_name_domain(endPartStr.c_str());
+                nameDomain = rootNameDomain->resolve_sub_domain(endPartStr.c_str());
             }
             else
             {
@@ -137,7 +138,7 @@ CdmwNamingAndRepository::NameDomain_ptr Repository_impl::resolve_name_domain(con
             return nameDomain._retn();
 
         }
-        catch(const Cdmw::NamingAndRepository::InvalidNameException &)
+        catch(const Cdmw::CommonSvcs::Naming::InvalidNameException &)
         {
             // invalid name
             throw CdmwNamingAndRepository::InvalidName();
@@ -175,7 +176,8 @@ CdmwNamingAndRepository::NameDomain_ptr Repository_impl::resolve_name_domain(con
 bool Repository_impl::start(CORBA::ORB_ptr orb)
 {
 
-    bool result = false;
+    bool result  = false;
+    bool primary = false;
 
     CDMW_ASSERT(!CORBA::is_nil(orb));
 
@@ -195,7 +197,7 @@ bool Repository_impl::start(CORBA::ORB_ptr orb)
         m_defaultRootContext = CosNaming::NamingContextExt::_narrow(root_ctx.in());
 
         result = true;
-
+	primary = true;
     }
     catch(const CdmwNamingAndRepository::Repository::NoRootContext &)
     {
@@ -205,54 +207,85 @@ bool Repository_impl::start(CORBA::ORB_ptr orb)
             // Create the default root context
             m_defaultRootContext = 
                 RootNamingContext_impl::createContext(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT);
-            result = true;
-
+            result  = true;
+	    primary = true;
         }
+	catch(const AlreadyExistsException &) {
+	    // handle raise-condition: On startup, id concurrently
+	    // stored by other process in process-group, try to
+	    // retrieve the id again
+	    CosNaming::NamingContext_var root_ctx 
+		= resolve_root_context(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT);
+	    m_defaultRootContext = CosNaming::NamingContextExt::_narrow(root_ctx.in());
+	    result  = true;
+	    primary = false;
+	} 
         catch(...)
         {
-    
+	    
         }
-    
     }
     catch(const CORBA::Exception &)
     {
         // Error
 
     }
+    
+    if (result && primary) {
+	result = false;
 
-    if (result)
-    {
-        result = false;
-
-        try
-        {
-
-            FactoryFinder_impl *facFinder_i = new FactoryFinder_impl(m_defaultRootContext.in());
-
-            PortableServer::ObjectId_var oid = rootPOA->activate_object(facFinder_i);
-            facFinder_i->_remove_ref(); // drop ref count due to previous call
-
-            CdmwLifeCycle::FactoryFinder_var facFinder = facFinder_i->_this();
-
-            CosNaming::Name_var name = Cdmw::NamingAndRepository::NamingInterface::to_name(
-                CdmwNamingAndRepository::FACTORY_FINDER);
-
-            m_defaultRootContext->rebind(name.in(), facFinder.in());
-
-            result = true;
-
-        }
-        catch(...)
-        {
-
-        }
-
+	try
+	    {
+		// Retrieve the admin root context 
+		CosNaming::NamingContext_var admin_ctx = 
+		    resolve_root_context(Cdmw::Common::Locations::ADMIN_ROOT_CONTEXT_ID);
+		
+		result = true;		
+	    }
+	catch(const CdmwNamingAndRepository::Repository::NoRootContext &)
+	    {
+		// the admin root context doesn't exist
+		try
+		    {
+			// Create the admin root context
+			CosNaming::NamingContext_var admin_ctx =
+			    RootNamingContext_impl::createContext(Cdmw::Common::Locations::ADMIN_ROOT_CONTEXT_ID);
+			result  = true;
+		    }
+		catch(const AlreadyExistsException &) {
+		    // handle raise-condition: On startup, id concurrently
+		    // stored by other process in process-group, try to
+		    // retrieve the id again
+		    CosNaming::NamingContext_var admin_ctx 
+			= resolve_root_context(Cdmw::Common::Locations::ADMIN_ROOT_CONTEXT_ID);
+		    result  = true;
+		} 
+		catch(...)
+		    {
+			
+		    }
+		
+	    }
+	catch(const CORBA::Exception &)
+	    {
+		// Error
+		
+	    }
     }
+
+    FactoryFinder_impl *facFinder_i = new FactoryFinder_impl(m_defaultRootContext.in());
+
+    m_factoryFinder = facFinder_i->_this();
+    facFinder_i->_remove_ref(); // drop ref count due to previous call
     
     return result;
 
 }
 
+CdmwLifeCycle::FactoryFinder_ptr Repository_impl::get_factory_finder()
+{
+    return CdmwLifeCycle::FactoryFinder::_duplicate(m_factoryFinder.in());
+}
 
 } // End of namespace NamingAndRepository
 } // End of namespace Cdmw
