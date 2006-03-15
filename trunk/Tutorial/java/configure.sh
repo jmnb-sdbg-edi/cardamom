@@ -235,16 +235,16 @@ build_available_tutorial_list_file()
 			   # C++ interface => turorial c++ available
 				for pkg in `echo $PACKAGE_LIST`; do
 				  case $pkg in
-				    ALL_SERVICES)
-					    TUTORIAL_LIST="$TUTORIAL_LIST hello supervision supervisionMngt1 supervisionMngt2 event polynome_lifeCycle3 printerBW_lifeCycle2 printerColor_lifeCycle2 printerColor_lifeCycle3 lifeCycleEntity lifeCycleEntity_property lifeCycleService lifeCycleSession lifeCycleUnmanagedEntity lifeCycleUserFac thread trace init_generationCode namingAndRepository naming_domLink naming_objectBase naming_write naming_writeExt"
+				    DEFAULT_CONFIGURATION)
+					    TUTORIAL_LIST="$TUTORIAL_LIST hello supervision supervisionMngt1 supervisionMngt2 event lifeCycleService thread trace init_generationCode namingAndRepository"
 					   ;;
 						
-					ALL_SERVICES_CCM)
-					   TUTORIAL_LIST="$TUTORIAL_LIST ccm010 ccm020 ccm030 ccm040 ccm050 ccm060 ccm070 ccm080 ccm110 ccm120 ccm130 ccm140 ccm210 ccm220 ccm230 ccm240 ccm_philosophers"
+					DEFAULT_CONFIGURATION_CCM)
+					   TUTORIAL_LIST="$TUTORIAL_LIST ccm010 ccm020 ccm030 ccm040 ccm050 ccm060 ccm070 ccm080 ccm110 ccm120 ccm130 ccm140 ccm220 ccm230"
 						;;
 
 					SYST_MNGT)
-					   TUTORIAL_LIST="$TUTORIAL_LIST supervisionMngt0"
+					   TUTORIAL_LIST="$TUTORIAL_LIST"
 						;;
 
 					ORB_SUPPORT)
@@ -252,11 +252,11 @@ build_available_tutorial_list_file()
 						;;
 
 					LIFECYCLE)
-					   TUTORIAL_LIST="$TUTORIAL_LIST polynome_lifeCycle3 printerBW_lifeCycle2 printerColor_lifeCycle2 printerColor_lifeCycle3 lifeCycleEntity lifeCycleEntity_property lifeCycleService lifeCycleSession lifeCycleUnmanagedEntity lifeCycleUserFac"
+					   TUTORIAL_LIST="$TUTORIAL_LIST lifeCycleService"
 						;;
 
 					NAMING_ITF)
-					   TUTORIAL_LIST="$TUTORIAL_LIST namingAndRepository naming_domLink naming_objectBase naming_write naming_writeExt"
+					   TUTORIAL_LIST="$TUTORIAL_LIST namingAndRepository"
 						;;
 
 					CODE_GENERATION)

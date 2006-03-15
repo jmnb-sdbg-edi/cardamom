@@ -46,6 +46,8 @@ XML_CONF_FILES:=xml/CodeGen.xml
 #	xml/CodeGenGroupCreator.xml
 
 XML_DATA_FILES:=data/CdmwFaultToleranceManager_ccmft_conf.xml \
+	data/CdmwFTSystemMngtGroupCreator_conf.xml \
+	data/CdmwPlatformMngtSystemStart.xml \
 	data/cdmw_nar_valid_ccm_ft.xml \
 	data/client.xml \
 	data/server1.xml \

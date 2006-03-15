@@ -116,7 +116,7 @@ public class HelloClient {
             // ======================================================
             // Get Naming Interface of TUTORIAL name domain
             // ======================================================
-            cdmw.namingandrepository.NamingInterface ni =
+            cdmw.commonsvcs.naming.NamingInterface ni =
                 cdmw.namingandrepository.RepositoryInterface.getDomainNamingInterface("TUTORIAL");
                  
 

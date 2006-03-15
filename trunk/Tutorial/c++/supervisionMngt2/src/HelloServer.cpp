@@ -45,7 +45,7 @@
 
 
 #include "HelloServerProcessControl.hpp"
-
+#include <Foundation/logging/LogManager.hpp>
 
 namespace 
 {
@@ -173,17 +173,17 @@ int main(int argc, char* argv[])
 
         PortableServer::ServantBase_var process_impl_servant = process_impl;
 
-        CdmwPlatformMngt::Process_var process = process_impl->_this();
+	CdmwPlatformMngt::ProcessDelegate_var process = process_impl->_this();
         
         // Call init platform interface
-        Cdmw::CdmwInit::InitUtils::init_platform_interface (
-                                  orb.in(), argc, argv, process.in());
+        Cdmw::CdmwInit::InitUtils::init_platform_interface (orb.in(), argc, argv, process.in());
+	//      orb.in(), argc, argv, process.in());
                                   
  
          // sample usage of the platform interface                    
-        applicationName = Cdmw::PlatformMngt::PlatformInterface::getApplicationName();
+        applicationName = Cdmw::PlatformMngt::PlatformInterface::Get_application_name();
 
-        processName = Cdmw::PlatformMngt::PlatformInterface::getProcessName();   
+        processName = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();   
 
          
         // ===================================================
@@ -208,6 +208,7 @@ int main(int argc, char* argv[])
         // Initialise the trace service
         // ===================================================
         {
+	    Cdmw::Logging::LogManager::Init(argc, argv);
             // create the collector name list with the input
             // collector name 
             std::vector<std::string> collectorNameList;
@@ -230,7 +231,7 @@ int main(int argc, char* argv[])
             Cdmw::Trace::InitUtils::init_trace_library (CDMW_rootPOA.in(),
                                           applicationName,
                                           processName,
-                                          5000,2,50*1024,
+                                          100,5000,2,50*1024,
                                           collectorNameList);
             
             
@@ -256,7 +257,7 @@ int main(int argc, char* argv[])
         //
         // example of using the PlatformInterface for notifying a message
         //
-        Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+        Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                          processName.c_str(), "Launching .....");
 
           

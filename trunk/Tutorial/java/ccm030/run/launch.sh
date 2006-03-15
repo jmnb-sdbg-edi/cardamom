@@ -52,7 +52,6 @@ do
     CP=$CP$jar:
 done
 
-
 JACORB_JAR_PATH="`cat $SITE_CONFIG | grep JACORB_JAR_PATH |cut -d= -f2`"
 for jar in `ls $JACORB_JAR_PATH/*.jar`
 do
@@ -83,5 +82,4 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CDMW_HOME/lib/c++
 LIBPATH=$LIBPATH:$CDMW_HOME/lib/c++
 
 
-java -Xbootclasspath/p:$CP $*
-
+java -Xbootclasspath/p:$CP -Djacorb.implname=myname $*

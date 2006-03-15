@@ -38,7 +38,7 @@
 #include <TraceAndPerf/tracelibrary/Trace.hpp>
 
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Event/eventinterface/EventChannel.hpp>
 
 
@@ -75,7 +75,7 @@ HelloClientThread::HelloClientThread(CORBA::ORB_ptr orb,
     // =======================================================
     // Get NamingInterface object from RepositoryInterface
     // =======================================================
-    Cdmw::NamingAndRepository::NamingInterface ni = 
+    Cdmw::CommonSvcs::Naming::NamingInterface ni = 
                     Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface (
                                  Cdmw::Common::Locations::CDMW_SERVICES_NAME_DOMAIN);
                                  

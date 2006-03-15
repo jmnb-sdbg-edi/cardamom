@@ -41,6 +41,9 @@ include ../rules.mk
 
 XML_DATA_FILES:=data/HelloSystemDefinition.xml \
                 data/CdmwPlatformMngtDaemon_conf.xml \
+		data/CdmwFaultToleranceManager_conf.xml \
+		data/CdmwFTSystemMngtGroupCreator_conf.xml \
+		data/CdmwPlatformMngtSystemStart.xml \
                 data/Cdmw_nar.xml
 
 

@@ -63,10 +63,10 @@ DEPEND_LIB=$(CSC_DEPEND_LIB)
 include ../../config.mk
 
 #Append to CPPFLAGS and IDLFLAGS
-override CPPFLAGS := -I. -I../include -I../generated \
+override CPPFLAGS := -I. -I../include -I../generated  \
 	$(foreach d, $(shell find $(CDMW_HOME)/include/c++ -type d), -I$(d)) \
-	$(CPPFLAGS)
-override IDLFLAGS += -I../idl -I../generated
+	$(CPPFLAGS) -I$(ORB_IDL_PATH)
+override IDLFLAGS += -I../idl -I../generated -I$(ORB_IDL_PATH) 
 
 ALL_LIBS=$(LIBS) $(LDFLAGS_CSC)
 

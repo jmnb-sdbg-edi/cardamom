@@ -17,6 +17,8 @@
 #* Public License along with CARDAMOM; see the file COPYING. If not, write to
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
+#===============================================================================
+
 
 if test "`echo -e xxx`" = "xxx"
 then
@@ -60,10 +62,6 @@ echo "==========================================================="
 
 # 1) Start HelloServer
 $echo Starting the Clock Demo...
-clocksvcs&
-CLOCK_SERVER_PID=$!
-sleep 2
-./clock.sh  -ORBInitRef ClockService=corbaloc::localhost:4883/ClockService -ORBInitRef LocalClock=corbaloc::localhost:4883/LocalClock
-kill -9 $CLOCK_SERVER_PID
+./clock.sh --CdmwFederatedCtrlClock=off 
 $echo "done."
 

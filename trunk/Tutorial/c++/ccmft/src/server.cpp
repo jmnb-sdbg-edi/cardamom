@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     try {
         std::cout << "--------------- Initialise FT service ---------------" << std::endl;
         // Initialise FT service
-        Cdmw::FT::FTServiceInit::init( argc, argv, false );
+        Cdmw::FT::FTServiceInit::Init( argc, argv, false );
 
         // Initialize the ORB
         Cdmw::OrbSupport::StrategyList orb_strategies;

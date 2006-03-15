@@ -24,6 +24,7 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 
 #include "HelloPushConsumer_impl.hpp"
+#include <iostream>
 
 
 namespace Cdmw 

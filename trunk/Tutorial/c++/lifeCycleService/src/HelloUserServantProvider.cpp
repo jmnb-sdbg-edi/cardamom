@@ -22,6 +22,7 @@
 
 
 #include <sstream>
+#include <iostream>
 
 #include <Foundation/ossupport/OS.hpp>
 #include <Foundation/osthreads/MutexGuard.hpp>

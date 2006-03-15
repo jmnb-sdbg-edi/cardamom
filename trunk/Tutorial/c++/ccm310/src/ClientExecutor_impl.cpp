@@ -21,7 +21,7 @@
  * =========================================================================== */
 
 
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 
 #include "ClientExecutor_impl.hpp"
 #include "StatusInfo_impl.hpp"
@@ -107,7 +107,7 @@ void ClientExecutor_impl::ccm_activate()
         // ======================================================                      
         // create a naming interface on root context
         // ====================================================== 
-        Cdmw::NamingAndRepository::NamingInterface ni_root (nc_root.in());
+        Cdmw::CommonSvcs::Naming::NamingInterface ni_root (nc_root.in());
 
    
         // ========================================================

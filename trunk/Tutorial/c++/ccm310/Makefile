@@ -46,14 +46,17 @@ XML_CONF_FILES:=xml/CodeGenerationDefn.xml
 
 XML_DATA_FILES:=data/SystemDefinition.xml \
                 data/CdmwPlatformMngtDaemon_conf.xml \
+		data/CdmwFTSystemMngtGroupCreator_conf.xml \
+                data/CdmwFaultToleranceManager_conf.xml \
+                data/CdmwPlatformMngtSystemStart.xml \
                 data/Cdmw_nar.xml \
-					 data/EventChannelConf.xml \
-					 data/EventChannelManager.xml \
+		data/EventChannelConf.xml \
+		data/EventChannelManager.xml \
                 run/ccm_integration_commands.txt \
                 data/Hello.cad \
                 data/ComponentServer1.xml \
                 data/ComponentServer2.xml
-	            
+
 
 all :: conf data gencode exe
 

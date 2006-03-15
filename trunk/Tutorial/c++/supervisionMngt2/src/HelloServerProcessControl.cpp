@@ -56,13 +56,13 @@ void HelloServerProcessControl::on_initialise (
     // ==============================================================
     // get application and process names   
     // ==============================================================                 
-    m_applicationName = Cdmw::PlatformMngt::PlatformInterface::getApplicationName();
-    m_processName = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+    m_applicationName = Cdmw::PlatformMngt::PlatformInterface::Get_application_name();
+    m_processName = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
     
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Initialisation requested by supervision");
                 
@@ -72,13 +72,13 @@ void HelloServerProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void HelloServerProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Run requested by supervision");
                 
@@ -93,7 +93,7 @@ void HelloServerProcessControl::on_stop()
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Stop requested by supervision");
                 

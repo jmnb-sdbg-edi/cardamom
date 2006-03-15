@@ -1,22 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
  * =========================================================================== *
- * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI. All rights reserved.
- * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
- * License for more details.
- * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * THALES (R) - CARDAMOM
+ *
+ * Copyright (c) THALES 2000-2004 All rights reserved
+ * This file and the information  it contains  are   property  of  THALES  and
+ * confidential.   They  shall  not be reproduced nor disclosed  to any person
+ * except to those having  a need  to know them without  prior written consent
+ * of THALES.
  * =========================================================================== *
 -->
 
@@ -47,14 +38,12 @@
 	<Host
         Name="@host_name@"
         App-exec-path="cdmw_platform_application"
-        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-        Probe-exec-path="./cdmw_host_probe"/>
+        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
 
 	<Host
         Name="@host_name2@"
         App-exec-path="cdmw_platform_application"
-        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-        Probe-exec-path="./cdmw_host_probe"/>
+        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -125,24 +114,13 @@
             <Init-step Name="step0"/>
 		</Managed-process>
 
-        <Managed-process
-            Name="FTClock3"
-            Host-name="@host_name@"
-            Type="MANAGED-PROCESS"
-            Autoended="FALSE"
-            Exec-path="@cdmw_home@/bin/ftclocksvcs"
-            Args="--CdmwXMLFile=@prefix@/data/FTClock.xml --validateXML --PointToPoint"
-            Port="-1">
-            <Init-step Name="step0"/>
-		</Managed-process>
-
 		<Managed-process
             Name="group_creator"
             Host-name="@host_name@"
             Type="MANAGED-PROCESS"
             Autoended="TRUE"
             Exec-path="@cdmw_home@/bin/ftclockcommon"
-            Args="--host1=@host_name2@ --host2=@host_name@ --host3=@host_name3@ --CdmwXMLFile=@prefix@/data/GroupCreator.xml --validateXML --PointToPoint "
+            Args="--host1=@host_name2@ --host2=@host_name@ --host3= --proc1=FTClock1 --proc2=FTClock2 --proc3= --CdmwXMLFile=@prefix@/data/GroupCreator.xml --validateXML --PointToPoint "
             Port="-1">
             <Init-step Name="step0"/>
 		</Managed-process>
@@ -163,7 +141,6 @@
 			<Graph-element Name="group_creator">
 			    <Graph-element-successor Name="FTClock1"/>
 			    <Graph-element-successor Name="FTClock2"/>
-			    <Graph-element-successor Name="FTClock3"/>
             </Graph-element>
 
    		    <Graph-element Name="FTClock1">
@@ -171,10 +148,6 @@
             </Graph-element>
 
    		    <Graph-element Name="FTClock2">
-			    <Graph-element-successor Name="client"/>
-            </Graph-element>
-
-   		    <Graph-element Name="FTClock3">
 			    <Graph-element-successor Name="client"/>
             </Graph-element>
 
@@ -203,4 +176,3 @@
 <!-- End of system definition -->
 <!-- ************************ -->
 </System>
-

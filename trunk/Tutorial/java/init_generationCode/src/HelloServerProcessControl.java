@@ -79,7 +79,7 @@ class HelloServerProcessControl extends cdmw.cdmwinit.ProcessControl
       
     // process to run called by platformmngt    
     public void onRun() 
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun
     {
         try {
             // ==============================================================        

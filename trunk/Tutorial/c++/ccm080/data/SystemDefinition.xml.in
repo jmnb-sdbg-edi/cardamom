@@ -36,7 +36,7 @@
 <!--                   -->
 <!-- ***************** -->
 
-<System Name="system_deployment" Port="21869">
+<System Name="system_deployment" Port="@SystemMngt_port@">
 
     <!-- Default timeouts for processes of the entire system -->
 	<Timeout Init="200000" Run="200000" Stop="200000"/>
@@ -58,17 +58,16 @@
              Process-name="XML"/>
 
     <!-- Hosts of the system -->
-	<Host Name="localhost"
+	<Host Name="@hostname@"
           App-exec-path="./cdmw_platform_application"
-          Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-          Probe-exec-path="./cdmw_host_probe"/>
+          Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->
     <!--                        -->
     <!-- ********************** -->
 	<Application Name="CardamomServices"
-                 Host-name="localhost"
+                 Host-name="@hostname@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -85,7 +84,7 @@
         <!--                     -->
         <!-- ******************* -->
 		<Managed-process Name="Repository"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="SERVICE-PROVIDER"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_naming_and_repository" 
@@ -97,7 +96,7 @@
 		</Managed-process>
 
 		<Managed-process Name="XML"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="SERVICE-PROVIDER"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_xml_server.sh"
@@ -110,20 +109,18 @@
 		
 
 		<Unmanaged-process Name="InterfaceRepository"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
 		                 Autoended="FALSE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_service.sh"
 		                 Port="-1"
-                         Args="--ifr-port 22789">
-		</Unmanaged-process>
+                         Args="--ifr-port 22789"/>
 		
 		<Unmanaged-process Name="IfrFeed"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
 		                 Autoended="TRUE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_feed.sh"
 		                 Port="-1"
-                         Args="@prefix@/idl/Hello.idl">
-		</Unmanaged-process>
+                         Args="@prefix@/idl/Hello.idl"/>
 
 
 		<Init-graph>
@@ -161,7 +158,7 @@
 
 
 	<Application Name="CardamomCcmTools"
-                 Host-name="localhost"
+                 Host-name="@hostname@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -172,7 +169,7 @@
     	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
 
         <Managed-process Name="PackageManager"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="MANAGED-PROCESS"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_package_manager.sh"
@@ -186,7 +183,7 @@
 		</Managed-process>
                           
         <Managed-process Name="ServerActivator"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_server_activator.sh"
@@ -198,7 +195,7 @@
 		</Managed-process>
 
         <Managed-process Name="ComponentInstallation"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_component_installation.sh"
@@ -211,13 +208,13 @@
 		</Managed-process>
                           
         <Managed-process Name="AssemblyFactory"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_assembly_factory.sh"
                           Port="24040"
-                          Args="-ORBInitRef InterfaceRepository=corbaloc::localhost:22789/DefaultRepository
-                                -ORBInitRef NameService=corbaloc::localhost:22456/NameService">
+                          Args="-ORBInitRef InterfaceRepository=corbaloc::@hostname@:22789/DefaultRepository
+                                -ORBInitRef NameService=corbaloc::@hostname@:22456/NameService">
 			<Init-step Name="initialisation" Timeout="100000"/>
 		    <!--	<Run-timeout Timeout="1000"/>
 			        <Stop-timeout Timeout="2000"/> -->
@@ -262,7 +259,7 @@
 	</Application>
 
 	<Application Name="HelloApplication"
-                 Host-name="localhost"
+                 Host-name="@hostname@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -273,7 +270,7 @@
     	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
 
         <Managed-process Name="ServerProcess"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="MANAGED-PROCESS"
                          Autoended="FALSE"
                          Exec-path="./startServer.sh"
@@ -285,7 +282,7 @@
 		</Managed-process>
                           
         <Managed-process Name="ClientProcess"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="./startClient.sh"

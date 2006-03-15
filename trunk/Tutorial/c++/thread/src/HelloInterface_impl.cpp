@@ -23,7 +23,7 @@
 #include <string>
 
 #include "HelloInterface_impl.hpp"
-
+#include <iostream>
 
 namespace Cdmw
 {

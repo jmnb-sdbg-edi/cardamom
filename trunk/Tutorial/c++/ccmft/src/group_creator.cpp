@@ -101,7 +101,7 @@ int main( int argc, char* argv[] )
         
         
         // Initialise FT service
-        Cdmw::FT::FTServiceInit::init( argc, argv, true );
+        Cdmw::FT::FTServiceInit::Init( argc, argv, true );
 
         // Initialises the ORB
         Cdmw::OrbSupport::StrategyList strategyList;

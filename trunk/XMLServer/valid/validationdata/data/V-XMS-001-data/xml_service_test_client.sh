@@ -1,24 +1,24 @@
 #!/bin/sh
 # =====================================================================
-# This file is part of CARDAMOM (R) which is jointly developed by THALES 
-# and SELEX-SI. 
+# This file is part of CARDAMOM (R) which is jointly developed by THALES
+# and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+# 2000-2003. All rights reserved.
 # 
-# It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
-# All rights reserved.
+# Copyright (C) THALES 2004-2005. All rights reserved
 # 
-# CARDAMOM is free software; you can redistribute it and/or modify it under 
-# the terms of the GNU Library General Public License as published by the
-# Free Software Foundation; either version 2 of the License, or (at your 
-# option) any later version. 
+# CARDAMOM is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Library General Public License as published
+# by the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 # 
-# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
-# License for more details. 
+# CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+# License for more details.
 # 
-# You should have received a copy of the GNU Library General 
-# Public License along with CARDAMOM; see the file COPYING. If not, write to 
-# the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# You should have received a copy of the GNU Library General Public
+# License along with CARDAMOM; see the file COPYING. If not, write to the
+# Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 # =====================================================================
 
 
@@ -29,8 +29,8 @@ echo "*******************************"
 
 # Copy V-XMS-001-file.xml to /home/ftp.
 # It would be deleted by TestClient.
-cp V-XMS-001-data/V-XMS-001-file.xml @config.FtpJAVA.ftp.dir@
-chmod a+w @config.FtpJAVA.ftp.dir@/V-XMS-001-file.xml
+cp V-XMS-001-data/V-XMS-001-file.xml @config.Ftp.homedir@
+chmod a+w @config.Ftp.homedir@/V-XMS-001-file.xml
 
 
 case @config.XMLServer.java.orb@ in
@@ -49,7 +49,7 @@ case @config.XMLServer.java.orb@ in
     ;;
 esac
 
-__TOOLS_CLASSPATH__=$__ORB_CLASSPATH__:@config.XercesJAVA.classpath@:@config.XercesJAVA.classpath@:@config.FtpJAVA.classpath@
+__TOOLS_CLASSPATH__=$__ORB_CLASSPATH__:@config.XercesJAVA.classpath@
 
 
 __CLASSPATH__=""
@@ -67,5 +67,5 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:@config.install.dir@/lib/c++
 LIBPATH=$LIBPATH:@config.install.dir@/lib/c++
 
 
-exec java -Xbootclasspath/p:$__CLASSPATH__ cdmw.xmlutils.test.TestClient @hostname1val@ @config.FtpJAVA.ftp.dir@ $*
+exec java -Xbootclasspath/p:$__CLASSPATH__ cdmw.xmlutils.test.TestClient @hostname1val@ @config.Ftp.homedir@ $*
 

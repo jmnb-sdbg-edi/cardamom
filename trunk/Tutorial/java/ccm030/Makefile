@@ -40,6 +40,9 @@ XML_CONF_FILES:=xml/CodeGenerationDefn.xml
 
 XML_DATA_FILES:=data/SystemDefinition.xml \
 	data/CdmwPlatformMngtDaemon_conf.xml \
+	data/CdmwFaultToleranceManager_conf.xml \
+	data/CdmwFTSystemMngtGroupCreator_conf.xml\
+	data/CdmwPlatformMngtSystemStart.xml  \
 	data/Cdmw_nar.xml \
 	run/ccm_integration_commands.txt \
 	data/Hello.cad \
@@ -82,7 +85,7 @@ gencode::
 	$(CDMW_HOME)/bin/cdmw_code_generator.sh --xml=$(PWD)/$(XML_CONF_FILES) --dir=$(PWD)/generated --lang=java --validate
 	@echo "#################### Code Generation completed"
 
-    
+
 clean::
 	@if [ -d $(PWD)/$(BUILD_TARGET) ]; then \
 		$(MAKE) -C $(PWD)/$(BUILD_TARGET) --no-print-directory  $@ ; \

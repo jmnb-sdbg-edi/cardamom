@@ -173,7 +173,7 @@ public class HelloServer {
                 cdmw.trace.InitUtils.initTraceLibrary(rootPOA,
                                                        applicationName,
                                                        processName,
-                                                       5000,
+                                                       100, 5000,
                                                        2,
                                                        50*1024,
                                                        collectorNameList);

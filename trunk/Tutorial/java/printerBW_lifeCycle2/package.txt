@@ -1,4 +1,0 @@
-CosLifeCycle:org.omg.CosLifeCycle
-CdmwLifeCycle:com.thalesgroup.CdmwLifeCycle
-PrinterModule:com.thalesgroup.PrinterModule
-PrinterFactories:com.thalesgroup.PrinterFactories

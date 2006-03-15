@@ -65,20 +65,20 @@ void HelloClientProcessControl::on_initialise (
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), ">>> Initialisation requested by supervision");
                 
 }
   
 // process to run called by platformmngt    
 void HelloClientProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), ">>> Run requested by supervision");
                 
 }
@@ -91,7 +91,7 @@ void HelloClientProcessControl::on_stop()
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), ">>> Stop requested by supervision");
                                      
 }

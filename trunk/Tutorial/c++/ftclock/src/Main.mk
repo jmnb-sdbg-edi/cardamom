@@ -1,22 +1,15 @@
 #* =========================================================================== *
-#* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI. All rights reserved.
+#* THALES (R) - CARDAMOM
 #*
-#* CARDAMOM is free software; you can redistribute it and/or modify it under
-#* the terms of the GNU Library General Public License as published by the
-#* Free Software Foundation; either version 2 of the License, or (at your
-#* option) any later version.
+#* Copyright (c) THALES 2000-2004 All rights reserved.
+#* Software commonly developed by THALES and AMS.
 #*
-#* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
-#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
-#* License for more details.
-#*
-#* You should have received a copy of the GNU Library General
-#* Public License along with CARDAMOM; see the file COPYING. If not, write to
-#* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#* This file and the information  it contains  are   property  of  THALES  and
+#* confidential.   They  shall  not be reproduced nor disclosed  to any person
+#* except to those having  a need  to know them without  prior written consent
+#* of THALES.
 #* =========================================================================== *
-                                                                                                 
+
 SHELL = /bin/sh
 
 include ../../site.mk
@@ -52,18 +45,27 @@ include ../../site.mk
 include ../../config.mk
 
 #Append to CPPFLAGS and IDLFLAGS
-override CPPFLAGS += -I. -I../include -I../generated -I$(TAO_ROOT)/tao \
+override CPPFLAGS += -I. -I../include -I../generated -I$(XERCES_INC_PATH)/include -I$(TAO_ROOT)/tao \
         $(foreach d, $(shell find $(CDMW_HOME)/include/c++ -type d), -I$(d))
 override IDLFLAGS += -I../idl -I../generated
 
 #ALL_LIBS=$(LIBS)
 ALL_LIBS=$(LIBS) $(LDFLAGS_CSC) -rdynamic -g -O2 -fPIC -L/tools/exec/cppunit-1.10.2/lib -lpthread\
        -lcdmwclockservice -ldl -lACE -lTAO -lTAO_PortableServer\
-         -lTAO_CosNaming -lTAO_Messaging -lTAO_RTCORBA -lcdmwcommon -lcdmworbsupport\
-         -lcdmwcommonsvcs -lcdmwcommonidl -lTAO_CosProperty -lTAO_IORTable -luuid\
+         -lTAO_CosNaming -lTAO_Messaging -lTAO_RTCORBA -lcdmwcommon -lcdmworbsupport -lcdmwossupport\
+         -lcdmwcommonsvcsdatastore -lcdmwcommonsvcsfederation -lcdmwcommonsvcsnaming \
+         -lcdmwcommonidl -lTAO_CosProperty -lTAO_IORTable -luuid\
          -lcppunit -lxerces-c1_3 -lcdmwossupport \
          -lcdmwftclockservice -lcdmwmonitoringidl\
-         -lcdmwftcommon -lcdmwftstatemanager -lcdmwftinit -lcdmwftlocationmanager -lcdmwfaulttoleranceidl
+         -lcdmwftcommon -lcdmwftstatemanager -lcdmwftinit -lcdmwftlocationmanager -lcdmwfaulttoleranceidl \
+         -lTAO_PortableGroup -lTAO_DynamicAny -lTAO_FaultTolerance -lTAO_CosNotification -lTAO_DynamicInterface
+         
+#/tools/exec/TAO-OpenFusion-050826/src/ace/libTAO_PortableGroup.so.1.4.1@
+#/tools/exec/TAO-OpenFusion-050826/src/ace/libTAO_PortableServer.so@
+#/tools/exec/TAO-OpenFusion-050826/src/ace/libTAO_PortableServer.so.1.4.1@
+#/tools/exec/TAO-OpenFusion-050826/src/ace/libTAO_RTPortableServer.so@
+#/tools/exec/TAO-OpenFusion-050826/src/ace/libTAO_RTPortableServer.so.1.4.1@
+
 
 
 # Exported variables

@@ -47,12 +47,12 @@ SRCS_IDL_CLT=
 
 
 # List of CSCs which the current CSC depends on.
-CSC_DEPEND_LIB=tracelibrary eventinterface cdmwinit repositoryinterface naminginterface lifecycle idl platforminterface orbsupport ossupport common repositoryidl eventidl lifecycleidl platformidl systemmngtidl
+CSC_DEPEND_LIB= commonsvcsnaming tracelibrary  cdmwinit repositoryinterface naminginterface lifecycle platforminterface orbsupport ossupport common repositoryidl lifecycleidl platformidl systemmngtidl eventinterface eventidl
+
 
 
 # Defines the main xml for the code generation.
 CODEGEN_MAIN_XML= 
-
 
 # List of files to install into 
 # <installation_dir>/share by make install.

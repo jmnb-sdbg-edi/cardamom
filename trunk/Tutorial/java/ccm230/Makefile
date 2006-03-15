@@ -46,8 +46,11 @@ XML_DATA_FILES:=data/SystemDefinition.xml \
 	data/EventChannelConf.xml \
 	data/EventChannelManager.xml \
 	data/Hello.cad \
+        data/CdmwFaultToleranceManager_conf.xml \
+        data/CdmwFTSystemMngtGroupCreator_conf.xml\
+        data/CdmwPlatformMngtSystemStart.xml  \
 	run/ccm_integration_commands.txt
-    
+
 
 .SUFFIXES:
 .SUFFIXES: .xml  .xml.in

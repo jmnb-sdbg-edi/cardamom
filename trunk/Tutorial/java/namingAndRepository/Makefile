@@ -77,6 +77,5 @@ clean::
 
 cleanall: clean
 	@$(RM) $(XML_DATA_FILES)
-	@$(RM) -r $(PWD)/generated
 	@$(RM) -r $(PWD)/prod
 	@$(RM) -r $(PWD)/$(BUILD_TARGET)

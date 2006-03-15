@@ -57,6 +57,8 @@ for jar in `ls $JACORB_JAR_PATH/*.jar`
 do
     CP=$CP$jar:
 done
+CP=$PWD/libcdmwccmcomponentserver.jar:$CP
+echo $CP
 
 JACORB_SRC="`cat $SITE_CONFIG | grep JACORB_SRC |cut -d= -f2`"
 CP=$CP$JACORB_SRC:
@@ -84,3 +86,4 @@ LIBPATH=$LIBPATH:$CDMW_HOME/lib/c++
 
 java -Xbootclasspath/p:$CP $*
 
+sleep 10000

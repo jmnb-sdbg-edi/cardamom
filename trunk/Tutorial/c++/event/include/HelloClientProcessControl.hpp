@@ -69,7 +69,7 @@ class HelloClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      */
     virtual 
     void on_run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
 	          CORBA::SystemException);
     
     /**

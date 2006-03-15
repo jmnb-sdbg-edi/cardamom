@@ -187,6 +187,40 @@ ask_cdmw_install()
 }
 
 # ----------------------------------------------------------------
+# Set hosts
+#
+# ----------------------------------------------------------------
+set_hosts()
+{
+    ret_status=$ret_ok
+
+    #..............................................
+    echo
+    echo "Now set host names"
+    echo "This is usefull for a set of usage examples (demo_lb, ccm_lb, ft_clock..)"
+    echo "Warning: this will work only if you type '. ./configure.sh'"
+    prompt_for   HOSTNAME1 \
+                 "$HOSTNAME1" \
+                 HOSTNAME1 \
+                 '\nEnter the HOSTNAME1'
+                 export HOSTNAME1=$func_return
+
+    prompt_for   HOSTNAME2 \
+                 "$HOSTNAME2" \
+                 HOSTNAME2 \
+                 '\nEnter the HOSTNAME2'
+                 export HOSTNAME2=$func_return
+
+    prompt_for   HOSTNAME3 \
+                 "$HOSTNAME3" \
+                 HOSTNAME3 \
+                 '\nEnter the HOSTNAME3'
+                 export HOSTNAME3=$func_return
+
+    return $ret_status;
+}
+
+# ----------------------------------------------------------------
 # Copy the site configuration file from the information 
 #   previously collected
 #
@@ -235,16 +269,38 @@ build_available_tutorial_list_file()
 			   # C++ interface => turorial c++ available
 				for pkg in `echo $PACKAGE_LIST`; do
 				  case $pkg in
-				    ALL_SERVICES)
-					    TUTORIAL_LIST="$TUTORIAL_LIST hello supervision supervisionMngt1 supervisionMngt2 supervisionMngt2Dbug supervisionMngt3 supervisionMngt4 event polynome_lifeCycle3 printerBW_lifeCycle2 printerColor_lifeCycle2 printerColor_lifeCycle3 lifeCycleEntity lifeCycleEntity_property lifeCycleService lifeCycleSession lifeCycleUnmanagedEntity lifeCycleUserFac thread trace init_generationCode namingAndRepository naming_domLink naming_objectBase naming_write naming_writeExt"
+				    DEFAULT_CONFIGURATION)
+					    TUTORIAL_LIST="$TUTORIAL_LIST hello supervision supervisionMngt1 supervisionMngt2 event lifeCycleService thread trace init_generationCode namingAndRepository"
 					   ;;
 						
-					ALL_SERVICES_CCM)
-					   TUTORIAL_LIST="$TUTORIAL_LIST ccm010 ccm020 ccm030 ccm040 ccm050 ccm060 ccm070 ccm080 ccm110 ccm120 ccm130 ccm140 ccm210 ccm220 ccm230 ccm240 ccm310 ccm320 ccm_philosophers"
+					DEFAULT_CONFIGURATION_CCM)
+					   TUTORIAL_LIST="$TUTORIAL_LIST ccm010 ccm020 ccm030 ccm040 ccm050 ccm060 ccm070 ccm080 ccm110 ccm120 ccm130 ccm140 ccm220 ccm230 ccm310"
+                       TEST_FT=`echo $PACKAGE_LIST | grep DEFAULT_CONFIGURATION_FT`
+                       if ! [ "X$TEST_FT" = "X" ]
+                       then
+                           TUTORIAL_LIST="$TUTORIAL_LIST ccmft"
+                       fi
+                       TEST_LB=`echo $PACKAGE_LIST | grep LOAD_BALANCING`
+                       if ! [ "X$TEST_LB" = "X" ]
+                       then
+                           TUTORIAL_LIST="$TUTORIAL_LIST ccmlb"
+                       fi
 						;;
 
+				        LOAD_BALANCING)
+					   TUTORIAL_LIST="$TUTORIAL_LIST lb_initialization demo_lb"
+					       ;;
+
+				        TIME)
+					   TUTORIAL_LIST="$TUTORIAL_LIST clock controlled_clock"
+					       ;;
+
+				        TIME_FT)
+					   TUTORIAL_LIST="$TUTORIAL_LIST ftclock"
+					       ;;
+
 					SYST_MNGT)
-					   TUTORIAL_LIST="$TUTORIAL_LIST supervisionMngt0 supervisionMngt3 supervisionMngt4"
+					   TUTORIAL_LIST="$TUTORIAL_LIST"
 						;;
 
 					ORB_SUPPORT)
@@ -252,11 +308,11 @@ build_available_tutorial_list_file()
 						;;
 
 					LIFECYCLE)
-					   TUTORIAL_LIST="$TUTORIAL_LIST polynome_lifeCycle3 printerBW_lifeCycle2 printerColor_lifeCycle2 printerColor_lifeCycle3 lifeCycleEntity lifeCycleEntity_property lifeCycleService lifeCycleSession lifeCycleUnmanagedEntity lifeCycleUserFac"
+					   TUTORIAL_LIST="$TUTORIAL_LIST lifeCycleService"
 						;;
 
 					NAMING_ITF)
-					   TUTORIAL_LIST="$TUTORIAL_LIST namingAndRepository naming_domLink naming_objectBase naming_write naming_writeExt"
+					   TUTORIAL_LIST="$TUTORIAL_LIST namingAndRepository"
 						;;
 
 					CODE_GENERATION)
@@ -428,6 +484,7 @@ print_welcome
 
 ask_cdmw_install
 determine_host
+set_hosts
 
 # We build the file containing all folder and tool required to build Cardamom
 build_site_config_file

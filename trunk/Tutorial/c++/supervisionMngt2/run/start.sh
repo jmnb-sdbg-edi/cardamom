@@ -72,9 +72,8 @@ fi
 INIT_TIMEOUT=8
 EXEC_TIMEOUT=15
 CLEANUP_TIMEOUT=10
+FT_MANAGER_TIMEOUT=30
 
-
-FT_MANAGER_TIMEOUT=20
 
 $echo "========================================================="
 $echo "=                  Cdmw.Tutorial.                      ="
@@ -86,45 +85,42 @@ echo "==========================================================="
 # 1) Start daemon 
 $echo Starting the Platform Management Daemon...
 DAEMON_COMMAND="$CDMW_HOME/bin/cdmw_platform_daemon.sh --CdmwXMLFile=$DAEMON_CONF_FILE"
-$TERM -ls -sb -sl 500 -e $DAEMON_COMMAND &
+#$TERM -ls -sb -sl 1000 -e 
+$DAEMON_COMMAND &
 
 trap '$DAEMON_COMMAND stop; exit' 2
 
 sleep $INIT_TIMEOUT
 
-
-# 2) Start Platform Management Supervision
+# 1a) Start FT Manager
 if test -x "$CDMW_HOME/bin/cdmw_ft_manager"
 then
     $echo Starting the FT Manager...
-    $TERM -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/share/CdmwFaultToleranceManager_conf.xml &
+    $TERM -ls -sb -sl 1000 -e $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=../data/CdmwFaultToleranceManager_conf.xml --groupConf=../data/CdmwFTSystemMngtGroupCreator_conf.xml &
     FT_MANAGER_PID=$!
     sleep $FT_MANAGER_TIMEOUT
-    $echo Starting the Platform Management Supervision with FT...
-    $TERM -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21871 --FaultManagerRegistration=corbaloc::localhost:4555/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000&
-    SUPERVISION_PID=$!
-else
-    $echo Starting the Platform Management Supervision...
-    $TERM -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21871 --creation-timeout=20000 --event-timeout=6000 &
-    SUPERVISION_PID=$!
 fi
+
+# 2) Start Platform Management Supervision
+$CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=../data/CdmwPlatformMngtSystemStart.xml --validate
 sleep $INIT_TIMEOUT
+
 
 # 3) Start Platform Management Supervision Observer
 $echo Starting the Platform Management Supervision Observer...
-$TERM -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_platform_supervision_observer --register --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --observer-name=observer &
+$TERM -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_platform_supervision_observer --register --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --observer-name=observer &
 SUPERVISION_OBSERV_PID=$!
 sleep $INIT_TIMEOUT
 
 
 # 4) Define system
 $echo Defining the System with '$SCENARIO_FILE'
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
 sleep $INIT_TIMEOUT
 
 # 5) Start_system
 $echo Starting the System
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-start
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-start
 if [ $? -eq "0" ];
 then
     $echo "Waiting a while for the execution of the scenario...\c"
@@ -134,7 +130,7 @@ fi
 
 # 6) Get a snapshot of the system
 $echo Get a snapshot of the System
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-snapshot
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-snapshot
 
 $echo "=============================================================="
 $echo "Hit a key when ready to stop the System.                      "
@@ -144,7 +140,7 @@ $echo "=============================================================="
 
 # 7) stop_system
 $echo Stopping the System
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-stop
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-stop
 sleep $CLEANUP_TIMEOUT
 
 $echo "=============================================================="
@@ -153,7 +149,6 @@ read FOO
 $echo "=============================================================="
 
 $DAEMON_COMMAND stop
-kill -9 $SUPERVISION_OBSERV_PID $SUPERVISION_PID
 kill -9 $SUPERVISION_OBSERV_PID $SUPERVISION_PID
 if test -x "$CDMW_HOME/bin/cdmw_ft_manager"
 then

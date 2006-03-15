@@ -40,6 +40,9 @@ XML_CONF_FILES:=xml/CodeGenerationDefn.xml
 
 XML_DATA_FILES:=data/SystemDefinition.xml \
 	data/CdmwPlatformMngtDaemon_conf.xml \
+        data/CdmwFaultToleranceManager_conf.xml \
+        data/CdmwFTSystemMngtGroupCreator_conf.xml\
+        data/CdmwPlatformMngtSystemStart.xml  \
 	data/Cdmw_nar.xml \
 	data/ComponentServer1.xml \
 	data/ComponentServer2.xml \
@@ -47,7 +50,7 @@ XML_DATA_FILES:=data/SystemDefinition.xml \
 	data/EventChannelManager.xml \
 	data/Hello.cad \
 	run/ccm_integration_commands.txt
-    
+
 
 .SUFFIXES:
 .SUFFIXES: .xml  .xml.in

@@ -30,6 +30,8 @@
 
 #include "Hello_cif.skel.hpp"
 
+#include "UserHello.skel.hpp"
+
 
 namespace Hello
 {
@@ -37,7 +39,7 @@ namespace Hello
 //
 // IDL:thalesgroup.com/Hello/CCM_Display:1.0
 //
-class DisplayFacetExecutor_impl : virtual public CCM_Display,
+class DisplayFacetExecutor_impl : virtual public CCM_Display, virtual public User_Server, 
                                   virtual public Cdmw::OrbSupport::RefCountLocalObject
 {
        

@@ -71,8 +71,8 @@ CDMW_GEN_SERVER_SRC=ServerCdmwInterface.cpp
 
 # User Supplied Code
 CLIENT_SRCS=$(CDMW_GEN_CLIENT_SRC) \
-	CCM_Client_SessionContext_impl.cpp SessionClientHome_impl.cpp \
-	SessionClient_impl.cpp \
+	CCM_Client_SessionContext_impl.cpp FTSessionClientHome_impl.cpp SessionClientHome_impl.cpp \
+	FTSessionClient_impl.cpp SessionClient_impl.cpp \
 	HostnameResultConsumer_impl.cpp \
 	HostInfo_impl.cpp \
 	client.cpp 
@@ -80,10 +80,10 @@ CLIENT_SRCS=$(CDMW_GEN_CLIENT_SRC) \
 SERVER_SRCS=$(CDMW_GEN_SERVER_SRC) \
 	CCM_ServerWithEvents_SessionContext_impl.cpp \
 	CCM_ServerWithFacet_SessionContext_impl.cpp \
-	SessionServerWithEventsHome_impl.cpp \
-	SessionServerWithFacetHome_impl.cpp \
-	SessionServerWithFacet_impl.cpp \
-	SessionServerWithEvents_impl.cpp \
+	FTSessionServerWithEventsHome_impl.cpp SessionServerWithEventsHome_impl.cpp \
+	FTSessionServerWithFacetHome_impl.cpp SessionServerWithFacetHome_impl.cpp \
+	FTSessionServerWithFacet_impl.cpp SessionServerWithFacet_impl.cpp \
+	FTSessionServerWithEvents_impl.cpp SessionServerWithEvents_impl.cpp \
 	HostInfo_impl.cpp \
 	CommandConsumer_impl.cpp \
         server.cpp

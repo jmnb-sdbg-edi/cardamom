@@ -20,6 +20,7 @@
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
+
 Welcome to the CARDAMOM TUTORIAL Version 2.0
 ============================================
 
@@ -98,15 +99,9 @@ ccm120              : facet deconnection/connection
 ccm130              : event connection 
                       (repository interface and naming service usage)
 ccm140              : component creation and connection (naming service usage)
-ccm210              : several receptacles on one facet
 ccm220              : several consumers
 ccm230              : client calls server facet which sends event to client
-ccm240              : client calls server facet which sends event to client with thread
 ccm310              : example of a manual asssembly with facet deconnection/connection
                       and event connection.
-ccm320              : example of use of TAO Load Balancing with manually asssembled
-                      components.
-ccm_philosophers    : philosophers test
-
 ccmft               : illustrates how to build fault tolerant component with Cardamom
-
+ccmlb               : load balanced components

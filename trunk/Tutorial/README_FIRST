@@ -20,12 +20,11 @@
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
-Welcome to the CARDAMOM TUTORIAL Version 2.0
-============================================
+Welcome to the CARDAMOM TUTORIAL
+================================
 
-The purpose of CARDAMOM Tutorial, designed to be used with Version 1.1 patch level 03 or 
-greater of Cardamom, is to provide comprehensive examples for writing software based on 
-CARDAMOM runtime middleware. 
+The purpose of CARDAMOM Tutorial, designed to be used with Version 2.1 or greater of Cardamom, 
+is to provide comprehensive examples for writing software based on CARDAMOM runtime middleware. 
 Provided Makefiles may be reused to write more sofisticated ones that suit needs of CARDAMOM users.
 
 Organization
@@ -44,37 +43,34 @@ Within each type of examples (c++ and java) two Readme files are provided:
 
 Release Note
 ============
-- Existing examples have been modified to take into account the integration of the fault tolerance
-- Examples illustrating the following services have been added:
-  - Fault Tolerance
-  - Load Balancing
-  - Time and Management Service
-- Java examples have been updated to use JacOrb OpenFusion
+- Issues 1) and 3) known in the version associated with Cardamom 1.1 have been resolved
+- All the examples that are not covered in the Tutorial document have been suppressed:
+it is: 
+ccm210 ccm240 ccm320 ccm_philosophers
+lifeCycleEntity lifeCycleEntity_property lifeCycleSession lifeCycleUnmanagedEntity lifeCycleUserFac
+supervisionMngt0 supervisionMngt2Dbug supervisionMngt3 supervisionMngt4
+naming_domLink naming_objectBase naming_write naming_writeExt      
+eventTyped
+polynome_lifeCycle3 printerBW_lifeCycle2 printerColor_lifeCycle2 printerColor_lifeCycle3
+- clock controlled_clock ftclock lb_initialization demo_lb have been added
+- evolution in supervision example to show process monitoring
+- event & thread are now covered in the Tutorial document
 
-
-Known Issues
-============
-1) Due an interoperability issue (marshalling) when using the event service the following
-examples, under the java directory, have not been updated for Jacorb then cannot run correctly.
-- ccm050 
-- ccm060 
-- ccm070 
-- ccm130 
-- ccm140
-- ccm220
-- ccm230
-- ccm240
-- ccm_philosophers
-Problem related to PCR-0049
-
-2) Some examples described in the Tutorial document are still under the demos/ directory of the
-Cardamom installation. They will be moved under the Tutorial directory in the next version. 
+Remarks
+=======
+1) Some examples described in the Tutorial document are under the demos/ directory of the
+Cardamom installation. It can be decided in a future version to move them in Tutorial directory.
 This issue concerns the following examples:
 - demo_ft 
 - demo_state_transfer
 - demo_ft_dcps
-Problem related to ECR-0098
+Evolution related to ECR-0098
 
-3) The demo_ft_dcps compile but does not run correclty. The last version of SPLICE more compliant
-to the OMG DDS specification is used. The resolution of this issue is in progress.
-Problem related to PCR-0359
+Known Issues
+============
+1) ccm140 is not working in Java (COMM_FAILURE raised on build_assembly)
+comes in Hello.ClientExecutorImpl.ccm_activate(ClientExecutorImpl.java:92)
+(Get the server home reference...)
+THe orb thinks the objref1 is local whereas it is not: he should not call pre_invoke.
+It occurs when 2 java processes have persistant POA with same identifiant and the object is on this POA.
+PCR 602 on Jacorb for this subject

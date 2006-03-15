@@ -33,5 +33,5 @@ SITE_CONFIG="$DIRECTORY/../../site.mk"
 CDMW_HOME="`cat $SITE_CONFIG | grep CDMW_HOME |cut -d= -f2`"
 
 
-. $CDMW_HOME/bin/cdmw_deployment_tool.sh --repositoryURL=corbaloc::padmee:22456/CdmwRepository
+. $CDMW_HOME/bin/cdmw_deployment_tool.sh --repositoryURL=corbaloc::$HOSTNAME2:22456/CdmwRepository
 #  < /home/Perco/NotSaved/saheb/1/install/demos/ccm_ft_datastore/c++/run/ccm_integration_commands.txt

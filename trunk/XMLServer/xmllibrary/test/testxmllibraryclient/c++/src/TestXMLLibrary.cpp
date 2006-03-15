@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -62,10 +62,12 @@ namespace XMLUtils
 */
 
 
-TestXMLLibrary::TestXMLLibrary(CdmwXML::XMLParser_ptr parser)
+TestXMLLibrary::TestXMLLibrary(CdmwXML::XMLParser_ptr parser,
+                               CORBA::ORB_ptr orb)
     throw()
     :Testable("Cdmw::XMLUtils::XMLLibrary"),
-    m_parser(CdmwXML::XMLParser::_duplicate(parser))
+    m_parser(CdmwXML::XMLParser::_duplicate(parser)),
+    m_orb(CORBA::ORB::_duplicate(orb))
 
 {
     // does nothing
@@ -82,7 +84,8 @@ TestXMLLibrary::~TestXMLLibrary()
 TestXMLLibrary::TestXMLLibrary(const TestXMLLibrary& rhs)
     throw()
     :Testable("Cdmw::XMLUtils::XMLLibrary"),
-    m_parser(CdmwXML::XMLParser::_duplicate(rhs.m_parser.in()))
+    m_parser(CdmwXML::XMLParser::_duplicate(rhs.m_parser.in())),
+    m_orb(CORBA::ORB::_duplicate(rhs.m_orb.in()))
 {
     // does nothing
 }
@@ -100,7 +103,7 @@ TestXMLLibrary::operator=(const TestXMLLibrary& rhs)
 void TestXMLLibrary::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (22);
+    set_nbOfRequestedTestOK (36);
     
     // This tests EntityCleanupNotifier class
     //-------------------------------------------------
@@ -110,6 +113,133 @@ void TestXMLLibrary::do_tests()
 
     try {
 
+		{
+            CORBA::ValueFactoryBase_var factory;
+            CORBA::ValueBase_var copy_value;
+            
+            TEST_INFO("Testing DocumentDescription valuetype...");
+            factory = m_orb->lookup_value_factory(
+                "IDL:thalesgroup.com/CdmwXML/DocumentDescription:1.0");
+            if (factory.in() == 0) {
+                TEST_FAILED();
+                TEST_INFO("ValuetypeFactory for DocumentDescription not found !");
+            } else {
+                CdmwXML::DocumentDescription_init* docFactory = 
+                    dynamic_cast< CdmwXML::DocumentDescription_init* > (factory.in());
+                CdmwXML::DocumentDescription_var doc =
+                    docFactory->create(CdmwXML::Document::_nil(), 
+                                       XMLHelper::to_DOM_string("testDoc"));
+                copy_value = doc->_copy_value();
+                CdmwXML::DocumentDescription* doc_copy = 
+                    CdmwXML::DocumentDescription::_downcast(copy_value.in());
+                TEST_CHECK(doc_copy->type() == CdmwXML::DOCUMENT_NODE);
+                char* doctype = XMLHelper::to_char_array(doc_copy->doctype());
+                TEST_CHECK(strcmp("testDoc", doctype) == 0);
+                delete[] doctype;
+            }
+                
+            TEST_INFO("Testing ElementDescription valuetype...");
+            factory = m_orb->lookup_value_factory(
+                "IDL:thalesgroup.com/CdmwXML/ElementDescription:1.0");
+            if (factory.in() == 0) {
+                TEST_FAILED();
+                TEST_INFO("ValuetypeFactory for ElementDescription not found !");
+            } else {
+                CdmwXML::ElementDescription_init* eltFactory = 
+                    dynamic_cast< CdmwXML::ElementDescription_init* > (factory.in());
+                CdmwXML::ElementDescription_var elt =
+                    eltFactory->create(CdmwXML::Element::_nil(), 
+                                       XMLHelper::to_DOM_string("testElt"));
+                copy_value = elt->_copy_value();
+                CdmwXML::ElementDescription* elt_copy = 
+                    CdmwXML::ElementDescription::_downcast(copy_value.in());
+                TEST_CHECK(elt_copy->type() == CdmwXML::ELEMENT_NODE);
+                char* name = XMLHelper::to_char_array(elt_copy->name());
+                TEST_CHECK(strcmp("testElt", name) == 0);
+                delete[] name;
+            }
+                
+            TEST_INFO("Testing AttrDescription valuetype...");
+            factory = m_orb->lookup_value_factory(
+                "IDL:thalesgroup.com/CdmwXML/AttrDescription:1.0");
+            if (factory.in() == 0) {
+                TEST_FAILED();
+                TEST_INFO("ValuetypeFactory for AttrDescription not found !");
+            } else {
+                CdmwXML::AttrDescription_init* attFactory = 
+                    dynamic_cast< CdmwXML::AttrDescription_init* > (factory.in());
+                CdmwXML::AttrDescription_var att =
+                    attFactory->create(CdmwXML::Attr::_nil(), 
+                                       XMLHelper::to_DOM_string("testAttr"),
+                                       XMLHelper::to_DOM_string("testVal"));
+                copy_value = att->_copy_value();
+                CdmwXML::AttrDescription* att_copy = 
+                    CdmwXML::AttrDescription::_downcast(copy_value.in());
+                TEST_CHECK(att_copy->type() == CdmwXML::ATTRIBUTE_NODE);
+                char* name = XMLHelper::to_char_array(att_copy->name());
+                TEST_CHECK(strcmp("testAttr", name) == 0);
+                delete[] name;
+                char* value = XMLHelper::to_char_array(att_copy->value());
+                TEST_CHECK(strcmp("testVal", value) == 0);
+                delete[] value;
+                att_copy->value(XMLHelper::to_DOM_string("testVal2"));
+                char* value2 = XMLHelper::to_char_array(att_copy->value());
+                TEST_CHECK(strcmp("testVal2", value2) == 0);
+                delete[] value2;
+            }
+                
+            TEST_INFO("Testing TextDescription valuetype...");
+            factory = m_orb->lookup_value_factory(
+                "IDL:thalesgroup.com/CdmwXML/TextDescription:1.0");
+            if (factory.in() == 0) {
+                TEST_FAILED();
+                TEST_INFO("ValuetypeFactory for TextDescription not found !");
+            } else {
+                CdmwXML::TextDescription_init* txtFactory = 
+                    dynamic_cast< CdmwXML::TextDescription_init* > (factory.in());
+                CdmwXML::TextDescription_var txt =
+                    txtFactory->create(CdmwXML::Text::_nil(), 
+                                       XMLHelper::to_DOM_string("testTxt"));
+                copy_value = txt->_copy_value();
+                CdmwXML::TextDescription* txt_copy = 
+                    CdmwXML::TextDescription::_downcast(copy_value.in());
+                TEST_CHECK(txt_copy->type() == CdmwXML::TEXT_NODE);
+                char* data = XMLHelper::to_char_array(txt_copy->data());
+                TEST_CHECK(strcmp("testTxt", data) == 0);
+                delete[] data;
+                txt_copy->data(XMLHelper::to_DOM_string("testTxt2"));
+                char* data2 = XMLHelper::to_char_array(txt_copy->data());
+                TEST_CHECK(strcmp("testTxt2", data2) == 0);
+                delete[] data2;
+            }
+                
+            TEST_INFO("Testing CDATASectionDescription valuetype...");
+            factory = m_orb->lookup_value_factory(
+                "IDL:thalesgroup.com/CdmwXML/CDATASectionDescription:1.0");
+            if (factory.in() == 0) {
+                TEST_FAILED();
+                TEST_INFO("ValuetypeFactory for CDATASectionDescription not found !");
+            } else {
+                CdmwXML::CDATASectionDescription_init* cdataFactory = 
+                    dynamic_cast< CdmwXML::CDATASectionDescription_init* > (factory.in());
+                CdmwXML::CDATASectionDescription_var cdata =
+                    cdataFactory->create(CdmwXML::CDATASection::_nil(), 
+                                         XMLHelper::to_DOM_string("testCDATA"));
+                copy_value = cdata->_copy_value();
+                CdmwXML::CDATASectionDescription* cdata_copy = 
+                    CdmwXML::CDATASectionDescription::_downcast(copy_value.in());
+                TEST_CHECK(cdata_copy->type() == CdmwXML::CDATA_SECTION_NODE);
+                char* data = XMLHelper::to_char_array(cdata_copy->data());
+                TEST_CHECK(strcmp("testCDATA", data) == 0);
+                delete[] data;
+                cdata_copy->data(XMLHelper::to_DOM_string("testCDATA2"));
+                char* data2 = XMLHelper::to_char_array(cdata_copy->data());
+                TEST_CHECK(strcmp("testCDATA2", data2) == 0);
+                delete[] data2;
+            }
+                
+        }
+        
 		TEST_INFO("Parsing file " << FILENAME << "...");
 		time_t start = time(0);
 		CdmwXML::DocumentDescription* docDesc = m_parser -> parse(FILENAME.c_str());
@@ -264,6 +394,7 @@ void TestXMLLibrary::do_tests()
 		CdmwXML::Document_var testDoc
 			= CdmwXML::Document::_narrow(testDocDesc -> reference());
 		testDoc -> create_element(XMLHelper::to_DOM_string("testElement"));
+
 		TEST_INFO("Saving it...");
 		testDoc -> save();
 		testDoc -> close();

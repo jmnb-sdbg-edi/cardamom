@@ -103,7 +103,7 @@ public class HelloServer {
             // ========================================================
     
             // Get NamingInterface object from RepositoryInterface
-            cdmw.namingandrepository.NamingInterface ni =
+            cdmw.commonsvcs.naming.NamingInterface ni =
                 cdmw.namingandrepository.RepositoryInterface.getDomainNamingInterface(
                     cdmw.common.Locations.CDMW_SERVICES_NAME_DOMAIN);
     

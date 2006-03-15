@@ -47,7 +47,7 @@ SRCS_IDL_CLT=
 
 
 # List of CSCs which the current CSC depends on.
-CSC_DEPEND_LIB= tracelibrary  cdmwinit repositoryinterface naminginterface lifecycle repositoryidl lifecycleidl platformidl systemmngtidl platforminterface orbsupport ossupport common
+CSC_DEPEND_LIB= commonsvcsnaming tracelibrary  cdmwinit repositoryinterface naminginterface lifecycle platforminterface orbsupport ossupport common repositoryidl lifecycleidl platformidl systemmngtidl
 
 
 

@@ -46,7 +46,7 @@ SRCS_IDL_CLT=
 
 
 # List of CSCs which the current CSC depends on.
-CSC_DEPEND_LIB=ccmcomponentserver ccmcontainer ccmcif ccmcommon tracelibrary eventinterface cdmwinit repositoryinterface naminginterface lifecycle platforminterface orbsupport ossupport common repositoryidl eventidl lifecycleidl platformidl systemmngtidl ccmcontaineridl
+CSC_DEPEND_LIB=ccmcomponentserver ccmcontainer ccmcif ccmcommon tracelibrary eventinterface cdmwinit repositoryinterface naminginterface lifecycle platforminterface orbsupport ossupport common repositoryidl eventidl lifecycleidl platformidl systemmngtidl ccmcontaineridl commonsvcsnaming
 
 
 # Defines the main xml for the code generation.

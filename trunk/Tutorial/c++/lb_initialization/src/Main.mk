@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -55,7 +52,7 @@ include ../../site.mk
 include ../config.mk
 
 #Append to CPPFLAGS and IDLFLAGS
-override CPPFLAGS += -I. -I../include -I../generated \
+override CPPFLAGS += -I. -I../include -I../generated -I$(TAO_ROOT)/orbsvcs/orbsvcs \
         $(foreach d, $(shell find $(CDMW_HOME)/include/c++ -type d), -I$(d))
 override IDLFLAGS += -I../idl -I../generated
 
@@ -79,7 +76,6 @@ vpath %.hpp ../include:../generated
 
 CLIENT_NAME=helloClient
 SERVER_NAME=helloServer
-GRP_MANAGER_NAME=groupManager
 GRP_CREATOR_NAME=groupCreator
 
 # User Supplied Code
@@ -89,8 +85,6 @@ SERVER_SRCS=TestHello_impl.cpp HelloServer.cpp
 
 GRP_CREATOR_SRCS=mainGroupCreator.cpp TestUtils.cpp 
 
-GRP_MANAGER_SRCS=mainGroupManager.cpp TestUtils.cpp
-
 .SUFFIXES:
 .SUFFIXES: .idl .cpp .skel.cpp .stub.cpp .o .stub.hpp .skel.hpp .hpp .h
 
@@ -98,7 +92,6 @@ GRP_MANAGER_SRCS=mainGroupManager.cpp TestUtils.cpp
 SERVER_OBJ = $(SERVER_SRCS:.cpp=.o) $(CORBA_SRV_ALL_OBJS)
 CLIENT_OBJ = $(CLIENT_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
 GRP_CREATOR_OBJ = $(GRP_CREATOR_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
-GRP_MANAGER_OBJ = $(GRP_MANAGER_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
 
 # Rules to build the dependency of each source file
 %.d: %.cpp
@@ -108,20 +101,19 @@ GRP_MANAGER_OBJ = $(GRP_MANAGER_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
 	[ -s $@ ] || rm -f $@
 
 
-SRCS=$(CLIENT_SRCS) $(SERVER_SRCS) $(GRP_MANAGER_SRCS) $(GRP_CREATOR_SRCS) $(CORBA_SRV_ALL_SRC)
+SRCS=$(CLIENT_SRCS) $(SERVER_SRCS) $(GRP_CREATOR_SRCS) $(CORBA_SRV_ALL_SRC)
 DEPENDS=$(SRCS:.cpp=.d)
 
 
 
 .PHONY: all
-all: depend $(SERVER_NAME) $(CLIENT_NAME) $(GRP_CREATOR_NAME) $(GRP_MANAGER_NAME)
+all: depend $(SERVER_NAME) $(CLIENT_NAME) $(GRP_CREATOR_NAME)
 
 .PHONY: depend
 depend: $(DEPENDS)
 
 .PHONY: $(SERVER_NAME)
 .PHONY: $(CLIENT_NAME)
-.PHONY: $(GRP_MANAGER_NAME)
 .PHONY: $(GRP_CREATOR_NAME)
 
 
@@ -139,11 +131,6 @@ $(CLIENT_NAME): $(CLIENT_OBJ)
 $(GRP_CREATOR_NAME): $(GRP_CREATOR_OBJ)
 	$(PURIFY) $(CXXLD) $(CXXFLAGS) $(LDFLAGS) -o $@ \
 	$(GRP_CREATOR_OBJ)  $(ALL_LIBS)
-
-$(GRP_MANAGER_NAME): $(GRP_MANAGER_OBJ)
-	$(PURIFY) $(CXXLD) $(CXXFLAGS) $(LDFLAGS) -o $@ \
-	$(GRP_MANAGER_OBJ)  $(ALL_LIBS)
-
 
 
 -include $(DEPENDS)
@@ -163,7 +150,7 @@ clean::
 	-$(RM) $(DEPENDS)
 
 cleanall: clean
-	-$(RM) $(SERVER_NAME) $(CLIENT_NAME) $(GRP_CREATOR_NAME) $(GRP_MANAGER_NAME)
+	-$(RM) $(SERVER_NAME) $(CLIENT_NAME) $(GRP_CREATOR_NAME)
 
 # -----------------------------------------------
 
