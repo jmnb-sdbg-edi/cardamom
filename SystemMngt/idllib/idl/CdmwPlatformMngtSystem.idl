@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -30,11 +30,12 @@
 
 
 #include <CdmwPlatformMngtCommon.idl>
+//#include <CdmwPlatformMngtCommonBase.idl>
+#include <CdmwPlatformMngtManagedElement.idl>
 #include <CdmwPlatformMngtObservable.idl>
 #include <CdmwPlatformMngtEntityContainer.idl>
 #include <CdmwPlatformMngtServiceContainer.idl>
-#include <CdmwPlatformMngtPropertyContainer.idl>
-#include <CdmwPlatformMngtHostProxy.idl>
+#include <CdmwPlatformMngtHost.idl>
 #include <CdmwPlatformMngtApplication.idl>
 
 #pragma prefix "thalesgroup.com"
@@ -48,21 +49,48 @@ module CdmwPlatformMngt
     /**
      * The system.
      */
-    interface System : Observable,
-        CdmwPlatformMngtEntity::RWEntityContainer,
-        CdmwPlatformMngtService::RWServiceDefContainer,
-        RWPropertyContainer, HostContainer
+    interface System : ManagedElement, Observable, HostContainer,
+        RWEntityContainer,
+        CdmwPlatformMngtService::RWServiceDefContainer       
     {
-
-        /**
-        * The name identifying the system.
-        */
-        readonly attribute SystemName name;
-
         /**
         * Returns the status of the system with its additional information.
         */
         SystemStatus get_status(out string status_info);
+
+        /**
+	* new added on 14-7-2005 
+	* Returns the system_mission
+	*/
+	string get_system_mission() ;
+
+	/**
+	* new added on 14-7-2005 
+	* to set the system_mission attribute
+	**/
+	void set_system_mission(in string system_mission);
+
+	/**
+	* new added on 22-7-2005 
+	* for getting system_name attribute
+	* rem.: ElementName is a typdef of a tring
+	**/
+	ElementName get_system_name();
+
+
+	/**
+	* new added on 22-7-2005 
+	* to set system_name attribute
+	* rem.: ElementName is a typdef of a tring
+	**/
+	void set_system_name(in ElementName system_name);
+
+	/**
+	* to get the master_host attribute
+	* new added on 22-7-2005 
+	* 
+	**/
+	string get_master_host();
 
         /**
         * Returns the mode of the system with its additional information.
@@ -73,7 +101,7 @@ module CdmwPlatformMngt
         * Returns a snapshot of the whole application.
         */
         SystemSnapshot get_snapshot();
-
+        
         /**
         * Returns the applications of the system.
         * The first how_many applications will be returned at most and the
@@ -84,7 +112,7 @@ module CdmwPlatformMngt
         * @return At most the number of applications requested
         */
         Applications get_applications(in unsigned long how_many,
-            out ApplicationsIterator applications_iterator );
+            out ApplicationsIterator applications_iterator);
 
         /**
         * Returns the specified application.
@@ -94,8 +122,17 @@ module CdmwPlatformMngt
         * @exception ApplicationNotFound if application_name doesn't denote
         * an existing application.
         */
-        Application get_application(in ApplicationName application_name)
+        Application get_application(in ElementName application_name)
             raises(ApplicationNotFound);
+            
+        /**
+	* Added on 2-11-2005
+        * It returns the number of applications
+        *
+        * @return the number of applications
+        * 
+        */
+        unsigned long get_number_of_applications();
 
         /**
         * Defines the initial configuration of the system.
@@ -104,18 +141,24 @@ module CdmwPlatformMngt
         *
         * @exception DuplicateEntity if there is a duplicate entity name among
         * the system's entities
+        * @exception CosPropertyService::MultipleExceptions if there is a bad property
         * @exception DuplicateService if there is a duplicate service name among
         * the system's service definitions
         * @exception DuplicateHost if there is a duplicate host name among
         * the system's host definitions
+        * @exception DuplicateHostEntity if there is a duplicate entity name
+        * among the entities of one of the hosts
+        * @exception HostPropertyExceptions if there is a bad host property
         * @exception AlreadyDone if the initial configuration has already been
         * defined.
         * @exception IncompatibleStatus if the system is not in the INITIAL
         * status.
         */
         void define(in SystemDef system_def)
-            raises(DuplicateEntity, DuplicateService, DuplicateHost,
-            AlreadyDone, IncompatibleStatus);
+            raises(DuplicateEntity, CosPropertyService::MultipleExceptions,
+                   DuplicateService, DuplicateHost, 
+                   DuplicateHostEntity, HostPropertyExceptions,
+                   AlreadyDone, IncompatibleStatus);
 
         /**
         * Sets the graph of application initialisation.
@@ -186,15 +229,19 @@ module CdmwPlatformMngt
         *
         * @param host_def the definition of the host to add.
         *
-        * @return the proxy to the added host
+        * @return the added host element
         *
         * @exception HostAlreadyExists if the host name is already used
         * within the system.
+        * @exception DuplicateEntity if there is a duplicate entity name among
+        * the host's entities
+        * @exception CosPropertyService::MultipleExceptions if there is a bad property
         * @exception IncompatibleStatus if the status of the system doesn't
         * allow the operation.
         */
-        HostProxy add_host(in HostDef host_def)
-            raises(HostAlreadyExists, IncompatibleStatus);
+        Host add_host(in HostDef host_def)
+            raises(HostAlreadyExists, DuplicateEntity, 
+                   CosPropertyService::MultipleExceptions, IncompatibleStatus);
 
         /**
         * Removes a host from the system.
@@ -206,7 +253,7 @@ module CdmwPlatformMngt
         * @exception IncompatibleStatus if the status of the system doesn't
         * allow the operation.
         */
-        void remove_host(in HostName host_name)
+        void remove_host(in ElementName host_name)
             raises(HostNotFound, IncompatibleStatus);
 
         /**
@@ -224,6 +271,8 @@ module CdmwPlatformMngt
         * is unknown.
         * @exception DuplicateEntity if there is a duplicate entity name among
         * the application's entities
+        * @exception CosPropertyService::MultipleExceptions if there is a bad property among
+        * the application's properties
         * @exception DuplicateService if there is a duplicate service name among
         * the application's service definitions
         * @exception DuplicateProcess if there is a duplicate process name among
@@ -232,12 +281,20 @@ module CdmwPlatformMngt
         * the application's processes
         * @exception DuplicateProcessEntity if there is a duplicate entity name
         * among the entities of one of the application processes
+        * @exception ProcessPropertyExceptions if there is a bad property among
+        * the properties of one of the application processes
         * @exception DuplicateProcessService if there is a duplicate service
         * name among the services of one of the application processes
         * @exception DuplicateProcessStep if there is a duplicate step label
         * among the steps of one of the application processes
-        * @exception DuplicateProcessActivityPoint if there is a duplicate
-        * name among the activity points of one of the application processes
+        * @exception DuplicateProcessCommand if there is a duplicate command name
+        * among the commands of one of the application processes        
+        * @exception DuplicateProcessCommandArg if there is a duplicate command arg name
+        * among the commands of one of the application processes
+        * @exception DuplicateEntityCommand if there is a duplicate command name
+        * among the commands of one of the entities of the application processes
+        * @exception DuplicateEntityCommandArg if there is a duplicate command arg name
+        * among the commands of one of the entities of the application processes
         * @exception IncompatibleStatus if the status of the system doesn't
         * allow the operation.
         */
@@ -245,10 +302,12 @@ module CdmwPlatformMngt
                 in PlatformApplicationDef platform_application_def,
                 in ApplicationDef application_def)
             raises(ApplicationAlreadyExists, HostNotFound,
-            DuplicateEntity, DuplicateService,
-            DuplicateProcess, ProcessHostNotFound,
-            DuplicateProcessEntity, DuplicateProcessService,
-            DuplicateProcessStep, DuplicateProcessActivityPoint,
+            DuplicateEntity, CosPropertyService::MultipleExceptions, 
+            DuplicateService, DuplicateProcess, ProcessHostNotFound,
+            DuplicateProcessEntity, ProcessPropertyExceptions,
+            DuplicateProcessService, DuplicateProcessStep,
+            DuplicateProcessCommand, DuplicateProcessCommandArg,
+            DuplicateEntityCommand, DuplicateEntityCommandArg,
             IncompatibleStatus);
 
         /**
@@ -263,7 +322,7 @@ module CdmwPlatformMngt
         * @exception IncompatibleStatus if the status of the system doesn't
         * allow the operation.
         */
-        void remove_application(in ApplicationName application_name)
+        void remove_application(in ElementName application_name)
             raises(ApplicationNotFound, ApplicationStillActive, IncompatibleStatus);
 
         /**
@@ -310,6 +369,38 @@ module CdmwPlatformMngt
         * is also transmitted to these applications.
         */
         void stop(in boolean emergency);
+        
+        
+        /**
+        * Stop and make a Cold Start of the system.
+        * The initialisation order of the applications will follow the graph
+        * of application initialisation. The automatic startup of applications
+        * are defined by the runsets.
+        * All user properties of element retrieve their initial values
+        *
+        * @param startup_kind the startup kind of the whole system.
+        *
+        * @exception IncompatibleStatus if the status of the system doesn't
+        * allow the operation.
+        */
+        void cold_restart(in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(IncompatibleStatus);
+            
+        
+        /**
+        * Stop and make a Hot Start of the system.
+        * The initialisation order of the applications will follow the graph
+        * of application initialisation. The automatic startup of applications
+        * are defined by the runsets.
+        * All user properties of element keep their current values
+        *
+        * @param startup_kind the startup kind of the whole system.
+        *
+        * @exception IncompatibleStatus if the status of the system doesn't
+        * allow the operation.
+        */
+        void hot_restart(in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(IncompatibleStatus);
 
     };
 
@@ -328,7 +419,7 @@ module CdmwPlatformMngt
         * @exception ApplicationNotFound if application_name doesn't denote
         * an existing application.
         */
-        void notify_initialisation(in ApplicationName application_name)
+        void notify_initialisation(in ElementName application_name)
             raises(ApplicationNotFound);
 
         /**
@@ -339,7 +430,7 @@ module CdmwPlatformMngt
         * @exception ApplicationNotFound if application_name doesn't denote
         * an existing application.
         */
-        void notify_degradation(in ApplicationName application_name)
+        void notify_degradation(in ElementName application_name)
             raises(ApplicationNotFound);
 
     }; // End interface ApplicationObserver

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -39,6 +39,7 @@
 using namespace CdmwPlatformMngtService;
 using namespace Cdmw::PlatformMngt;
 
+CPPUNIT_TEST_SUITE_REGISTRATION( TestServiceDef );
 
 void displayService (const char* s)
 {
@@ -71,6 +72,7 @@ void displayService (const CdmwPlatformMngtService::ServiceProviderID& sp)
 
 
 
+/*
 TestServiceDef::TestServiceDef(const std::string& name, PortableServer::POA_ptr poa)
     : Testable(name)
 {
@@ -81,12 +83,14 @@ TestServiceDef::TestServiceDef(const std::string& name, PortableServer::POA_ptr 
 TestServiceDef::~TestServiceDef()
 {
 }
+*/
 
 
 void TestServiceDef::do_tests()
 {
+    m_POA = PortableServer::POA::_duplicate(Cdmw::TestUtils::CORBATestManager::instance()->get_POA());
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (16);
+// //     set_nbOfRequestedTestOK (16);
     
     
 	ServiceDefContainer_impl::ServiceDefContainer *pSystemContainer = NULL;
@@ -106,12 +110,12 @@ void TestServiceDef::do_tests()
         pApplicationContainer = 
                 ServiceDefContainer_impl::ServiceDefContainer::createApplicationContainer ("application_1");
                 
-        TEST_SUCCEED();  
+        CPPUNIT_ASSERT(true);  
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     } 
     
@@ -191,13 +195,13 @@ void TestServiceDef::do_tests()
 	    // activate object and get its reference
 	    pRWServiceContainerServantApp->activate();
         rwServiceContainerApp = pRWServiceContainerServantApp->_this();  
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
     
@@ -217,17 +221,17 @@ void TestServiceDef::do_tests()
             CdmwPlatformMngtService::ServiceProviderID_var serviceId = 
                             rwServiceContainerSys->get_service_def ("s1");
             
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_SUCCEED();
+        	CPPUNIT_ASSERT(true);
         }
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
 
@@ -265,7 +269,7 @@ void TestServiceDef::do_tests()
         service_def->service_provider.process_name = CORBA::string_dup ("process 4");
         rwServiceContainerSys->add_service_def (service_def.in());
         
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
         
         TEST_INFO("Check adding duplicate service in system ServiceDefContainer");
         try
@@ -273,11 +277,11 @@ void TestServiceDef::do_tests()
             // Add service with duplicate name : exception must be thrown
             rwServiceContainerSys->add_service_def (service_def.in());
             
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         catch (ServiceAlreadyExists& ex)
         {
-        	TEST_SUCCEED();
+        	CPPUNIT_ASSERT(true);
         }
         
         
@@ -287,16 +291,16 @@ void TestServiceDef::do_tests()
             // Remove service with undefined name : exception must be thrown
             rwServiceContainerSys->remove_service_def ("s5");
             
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_SUCCEED();
+        	CPPUNIT_ASSERT(true);
         }
         
         TEST_INFO("Check removing service in system ServiceDefContainer");
         rwServiceContainerSys->remove_service_def ("s4");
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
         
         
         TEST_INFO("Check adding services in application ServiceDefContainer");
@@ -310,12 +314,12 @@ void TestServiceDef::do_tests()
         service_def->service_provider.application_name = CORBA::string_dup ("application 5");
         service_def->service_provider.process_name = CORBA::string_dup ("process 5");
         rwServiceContainerApp->add_service_def (service_def.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
     
@@ -338,11 +342,11 @@ void TestServiceDef::do_tests()
             std::cout << "service name :" << service.c_str() << std::endl;  
             displayService (serviceId.in());     
              
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_FAILED();
+        	CPPUNIT_ASSERT(false);
         }
   
         try
@@ -354,11 +358,11 @@ void TestServiceDef::do_tests()
             std::cout << "service name :" << service.c_str() << std::endl;
             displayService (serviceId.in());     
              
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_FAILED();
+        	CPPUNIT_ASSERT(false);
         }
   
        
@@ -369,11 +373,11 @@ void TestServiceDef::do_tests()
             CdmwPlatformMngtService::ServiceProviderID_var serviceId = 
                         serviceContainerSys->get_service_def (service.c_str());
                
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_SUCCEED();
+        	CPPUNIT_ASSERT(true);
         }
        
    
@@ -389,11 +393,11 @@ void TestServiceDef::do_tests()
             std::cout << "service name :" << service.c_str() << std::endl;  
             displayService (serviceId.in());     
              
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_FAILED();
+        	CPPUNIT_ASSERT(false);
         }
         
         
@@ -408,11 +412,11 @@ void TestServiceDef::do_tests()
             std::cout << "service name :" << service.c_str() << std::endl;  
             displayService (serviceId.in());     
              
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_FAILED();
+        	CPPUNIT_ASSERT(false);
         }
         
         
@@ -423,11 +427,11 @@ void TestServiceDef::do_tests()
         	std::string service("s6"); 
             serviceContainerApp->get_service_def (service.c_str());
                
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         catch (ServiceNotFound& ex)
         {
-        	TEST_SUCCEED();
+        	CPPUNIT_ASSERT(true);
         }
         
         
@@ -439,28 +443,28 @@ void TestServiceDef::do_tests()
         bool ret = ServiceDefContainer_impl::ServiceDefContainer::destroy (pSystemContainer);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {        
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         ret = ServiceDefContainer_impl::ServiceDefContainer::destroy (pApplicationContainer);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {        
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
 

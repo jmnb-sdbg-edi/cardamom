@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,93 +26,38 @@
 #ifndef CDMW_PLATFORM_MNGT_COMMON_IDL_
 #define CDMW_PLATFORM_MNGT_COMMON_IDL_
 
+#include <CosPropertyService.idl>
 
 #include <CdmwPlatformMngtBase.idl>
-#include <CdmwPlatformMngtEntity.idl>
-#include <CdmwPlatformMngtEntityObserver.idl>
+#include <CdmwPlatformMngtCommonBase.idl>
 #include <CdmwPlatformMngtService.idl>
-#include <CdmwPlatformMngtServiceContainer.idl>
+
 
 
 #pragma prefix "thalesgroup.com"
+
 
 /**
  * Module defining the CDMW Platform Management service.
  */
 module CdmwPlatformMngt
 {
-
+    /////////////////////////
     // forward declarations
-
-    interface SupervisionObserver;
-    interface MonitorableProcessObserver;
-    interface ApplicationObserver;
+    /////////////////////////
+    
+    interface Process;
     interface ProcessObserver;
+        
+    ////////////////////
+    // type definition
+    ////////////////////
+    
 
-    interface HostContainer;
-
-    interface Monitorable;
-
-
-    // typedefs
-
-    /**
-     * The name identifying a CDMW system.
-     */
-    typedef string SystemName;
-
-    /**
-     * The name identifying a host.
-     */
-    typedef string HostName;
-
-    /**
-     * The name identifying an application within a CDMW system.
-     */
-    typedef string ApplicationName;
-
-    /**
-     * The name identifying a process within an application.
-     */
-    typedef string ProcessName;
-
-    /**
-     * The name identifying a run set.
-     */
-    typedef string RunSetName;
-
-    /**
-     * The name identifying an activity point of a process.
-     */
-    typedef string ActivityPointName;
-
-    /**
-    * Definition of a Port.
-    * A default port may be specified by a negative value.
-    */
-    typedef long Port;
-
-    /**
-    * The default port of a system.
-    */
-    const Port DEFAULT_SYSTEM_PORT = 21869;
-
-    /**
-    * The name used by a platform management daemon for publishing its corbaloc.
-    */
-    const string DAEMON_NAME = "CdmwPlatformMngtDaemon";
-
-    /**
-    * The default port of the platform management supervision.
-    */
-    const Port DEFAULT_SUPERVISION_PORT = 21871;
-
-    /**
-    * The name used by the platform management supervision for
-    * publishing its corbaloc.
-    */
-    const string SUPERVISION_NAME = "CdmwPlatformMngtSupervision";
-
+    ///////////////
+    // structures
+    //////////////
+    
     /**
      * The identifier of a Process.
      */
@@ -121,14 +66,25 @@ module CdmwPlatformMngt
         /**
          * The name of the application owning the process.
          */
-        ApplicationName application_name;
+        ElementName application_name;
 
         /**
          * The name of the process.
          */
-        ProcessName process_name;
+        ElementName process_name;
+        
+        /**
+         * The name of the host.
+         */
+        ElementName host_name;
     };
 
+
+
+    /////////////////
+    // enumerations
+    /////////////////
+    
     /**
     * The different modes of the system and its applications.
     */
@@ -146,17 +102,29 @@ module CdmwPlatformMngt
     };
 
 
-    /**
-    * The timeout in ms.
-    */
-    typedef unsigned long Timeout;
+    //enum. for the process_mode attribute of Process
+    /* The process mode denotes whether the process is:
+       Primary, First Backup, Backup (group a fault-tolerant processes); 
+       Single (if it does not belong to any group of fault-tolerant processes).*/
 
-
+ 
+    enum ProcessMode
+    {
+    PRIMARY,
+    FIRST_BACKUP,
+    BACKUP,
+    SINGLE
+    };
+    
+    ///////////////
+    // Exceptions
+    ///////////////
+    
     /**
-     * Exception raised when an operation invocation
-     * is not allowed due to actual type of the callee interface.
+     * Exception raised when an attribute name is not found 
+     * during the use of facade to set (or to get) an attribute
      */
-    exception IncompatibleType {};
+    exception AttributeNotFound{};
 
     /**
      * Exception raised when an operation invocation
@@ -169,116 +137,10 @@ module CdmwPlatformMngt
      */
     exception AlreadyDone {};
 
-    /**
-    * The specified runset has not been found.
-    */
-    exception RunSetNotFound {};
-
-    /**
-    * The specified host has not been found.
-    */
-    exception HostNotFound {};
-
-    /**
-    * The host probe has not been found.
-    */
-    exception HostProbeNotFound {};
-
-    /**
-    * The specified application has not been found.
-    */
-    exception ApplicationNotFound {};
-
-    /**
-    * The specified application agent has not been found.
-    */
-    exception ApplicationAgentNotFound {};
-
-    /**
-    * The specified process has not been found.
-    */
-    exception ProcessNotFound {};
-
-    /**
-    * The host where a process must run has not been found.
-    */
-    exception ProcessHostNotFound
-    {
-        ProcessName process_name;
-        HostName host_name;
-    };
-
-    /**
-    * The specified observer has not been found.
-    */
-    exception ObserverNotFound {};
-
-
-    /**
-    * The specified activity point has not been found.
-    */
-    exception ActivityPointNotFound {};
-
-    /**
-    * The specified host already exists.
-    */
-    exception HostAlreadyExists {};
-
-    /**
-    * The probe for the specified host already exists.
-    */
-    exception HostProbeAlreadyExists {};
-
-    /**
-    * The specified application already exists.
-    */
-    exception ApplicationAlreadyExists {};
-
-    /**
-    * The specified application agent already exists.
-    */
-    exception ApplicationAgentAlreadyExists {};
-
-    /**
-    * The specified process already exists.
-    */
-    exception ProcessAlreadyExists {};
-
-
-
-    /**
-    * There's a duplicate host among a list of hosts.
-    */
-    exception DuplicateHost
-    {
-        HostName host_name;
-    };
-
-    /**
-    * There's a duplicate process among a list of processes.
-    */
-    exception DuplicateProcess
-    {
-        ProcessName process_name;
-    };
-
-    /**
-    * There's a duplicate entity among a list of entities.
-    */
-    exception DuplicateEntity
-    {
-        CdmwPlatformMngtEntity::EntityName entity_name;
-    };
-
-    /**
-    * There's a duplicate entity among the entities of the process.
-    */
-    exception DuplicateProcessEntity
-    {
-        ProcessName process_name;
-        CdmwPlatformMngtEntity::EntityName entity_name;
-    };
-
+    
+    
+    // service
+    
     /**
     * There's a duplicate service among a list of services.
     */
@@ -292,16 +154,178 @@ module CdmwPlatformMngt
     */
     exception DuplicateProcessService
     {
-        ProcessName process_name;
+        ElementName process_name;
+        ElementName host_name;
         CdmwPlatformMngtService::ServiceName service_name;
     };
 
+    
+    
+    
+    
+    
+    // property
+    
     /**
-    * The element already exists in the runset or among existing runsets.
+    * The property defined in the list cannot be found.
     */
-    exception DuplicateRunSetElement
+    exception PropertyInListNotFound
     {
-        string element;
+        CosPropertyService::PropertyName property_name;
+    };
+    
+    /**
+    * The specified observer has not been found for the properties.
+    */
+    exception PropertyObserverNotFound 
+    {
+        CosPropertyService::PropertyNames property_names;
+    };
+        
+    /**
+    * Property exception in specified host
+    */
+    exception HostPropertyExceptions
+    {
+        ElementName host_name;
+        CosPropertyService::PropertyExceptions exceptions;
+    };
+    
+    /**
+    * Property exception in specified process
+    */
+    exception ProcessPropertyExceptions
+    {
+        ElementName process_name;
+        ElementName host_name;
+        CosPropertyService::PropertyExceptions exceptions;
+    };
+    
+    
+  
+
+
+    // command
+        
+    /**
+    * There's a duplicate command.
+    */
+    exception DuplicateCommand
+    {
+        string command_name;
+    };
+
+    /**
+    * There's a duplicate command among the processes.
+    */
+    exception DuplicateProcessCommand
+    {
+        ElementName process_name;
+        ElementName host_name;
+        string command_name;
+    };
+    
+    /**
+    * There's a duplicate command among the entities.
+    */
+    exception DuplicateEntityCommand
+    {
+        ElementName entity_name;
+        string command_name;
+    };
+    
+    /**
+    * There's a duplicate command.
+    */
+    exception DuplicateCommandArg
+    {
+        string command_name;
+        string parameter_name;
+    };
+
+    /**
+    * There's a duplicate command among the processes.
+    */
+    exception DuplicateProcessCommandArg
+    {
+        ElementName process_name;
+        ElementName host_name;
+        string command_name;
+        string parameter_name;
+    };
+    
+    /**
+    * There's a duplicate command among the entities.
+    */
+    exception DuplicateEntityCommandArg
+    {
+        ElementName entity_name;
+        string command_name;
+        string parameter_name;
+    };
+    
+    
+    
+    // entity
+    
+    /**
+    * There's a duplicate entity among a list of entities.
+    */
+    exception DuplicateEntity
+    {
+        ElementName entity_name;
+    };
+
+    /**
+    * There's a duplicate entity among the entities of the host.
+    */
+    exception DuplicateHostEntity
+    {
+        ElementName host_name;
+        ElementName entity_name;
+    };
+    
+    /**
+    * There's a duplicate entity among the entities of the process.
+    */
+    exception DuplicateProcessEntity
+    {
+        ElementName process_name;
+        ElementName host_name;
+        ElementName entity_name;
+    };
+    
+    
+    
+    
+    
+    
+    // host
+    
+    /**
+    * The specified host already exists.
+    */
+    exception HostAlreadyExists {};
+
+    /**
+    * There's a duplicate host among a list of hosts.
+    */
+    exception DuplicateHost
+    {
+        ElementName host_name;
+    };
+
+
+    
+    // process
+    
+    /**
+    * There's a duplicate process among a list of processes.
+    */
+    exception DuplicateProcess
+    {
+        ElementName process_name;
+        ElementName host_name;
     };
 
     /**
@@ -317,40 +341,39 @@ module CdmwPlatformMngt
     */
     exception DuplicateProcessStep
     {
-        ProcessName process_name;
+        ElementName process_name;
+        ElementName host_name;
         string step_label;
     };
-
-    /**
-    * There's a duplicate name among the activity points.
-    */
-    exception DuplicateActivityPoint
-    {
-        ActivityPointName point_name;
-    };
-
-    /**
-    * There's a duplicate name among the activity points of the process.
-    */
-    exception DuplicateProcessActivityPoint
-    {
-        ProcessName process_name;
-        ActivityPointName point_name;
-    };
-
-
+        
     /**
     * There's actually no other step to perform.
     */
     exception InvalidStep {};
-
 
     /**
     * The process is not ready to run.
     */
     exception NotReadyToRun {};
 
-
+    /**
+    * The process is still active.
+    * See ProcessStatus.
+    */
+    exception ProcessStillActive {};
+    
+    
+    /**
+    * The host where a process must run has not been found.
+    */
+    exception ProcessHostNotFound
+    {
+        ElementName process_name;
+        ElementName host_name;
+    };
+    
+    // application
+    
     /**
     * The application is still active.
     * See ApplicationStatus.
@@ -358,35 +381,48 @@ module CdmwPlatformMngt
     exception ApplicationStillActive {};
 
     /**
-    * The process is still active.
-    * See ProcessStatus.
+    * Exception indicating that the managed process is either 
+    * already monitored when trying to start the monitoring of it
+    * or is not monitored when trying to stop the monitoring of it.
     */
-    exception ProcessStillActive {};
+    exception IncompatibleMonitoringCommand {};
+
+    /**
+    * Exception indicating that the monitoring interval is incompatible with the monitoring timeout.
+    */
+    exception IncompatibleMonitoringValue {};
+
+
+    // runset
+    
+    /**
+    * The specified runset has not been found.
+    */
+    exception RunSetNotFound {};
+    
+    /**
+    * The element already exists in the runset or among existing runsets.
+    */
+    exception DuplicateRunSetElement
+    {
+        string element;
+    };
+
+
 
 
 
     
-
-    /**
-    * The identifier of an application entity
-    */
-    struct ApplicationEntityID
-    {
-        ApplicationName application_name;
-        CdmwPlatformMngtEntity::EntityName entity_name;
-    };
-
-    /**
-    * The identifier of a process entity
-    */
-    struct ProcessEntityID
-    {
-        ProcessID process_id;
-        CdmwPlatformMngtEntity::EntityName entity_name;
-    };
+    // system
+    
+    
 
 
 
+    ///////////////////
+    // graph elements
+    ///////////////////
+    
     /**
      * The graph element.
      * A graph element is used to represent a process or an application.
@@ -463,6 +499,16 @@ module CdmwPlatformMngt
     };
 
 
+    ///////////
+    // runset
+    ///////////
+        
+    /**
+     * The name identifying a run set.
+     */
+    typedef string RunSetName;
+
+  
     /**
      * The elements composing a runset.
      */
@@ -484,233 +530,180 @@ module CdmwPlatformMngt
          */
         RunSet run_set;
     };
+    
+    
 
-
+    //////////////
+    // property
+    //////////////
+    
+    
     /**
-    * The different models of monitoring.
+     * The different types of property mode.
+     */
+    enum PropertyModeType
+    {
+        /**
+        * read write property
+        */
+        RW_MODE,
+	
+	                                                                                                   
+ 	/**
+        * read only property
+        */
+        RO_MODE
+	  
+    };
+    
+    
+    /**
+     * The different types of property value.
+     */
+    enum PropertyValueType
+    {
+        INT_PROPERTY,
+        FLOAT_PROPERTY,
+        STRING_PROPERTY,
+        INT_LIST_PROPERTY,
+        FLOAT_LIST_PROPERTY,
+        STRING_LIST_PROPERTY
+    };
+    
+    /**
+     * The definition of a property.
+     */
+    struct PropertyDef
+    {
+        /**
+         * The name of the property.
+         */
+        CosPropertyService::PropertyName property_name;
+        
+        /**
+         * The mode of the property.
+         */
+        PropertyModeType mode_type;
+        
+        /**
+         * The type of the property value.
+         */
+        PropertyValueType value_type;
+        
+        /**
+         * The initial value of the property.
+         */
+        any initial_value;
+    };
+
+    
+    typedef sequence<PropertyDef> PropertyDefs;
+    typedef sequence<any> Anys; 
+    
+    
+
+    ////////////
+    // command
+    ////////////
+    
+    
+    
+    /**
+     * The different types of command arguments.
+     */
+    enum CmdParameterType
+    {
+        INTEGER_CMD_ARG,
+        FLOAT_CMD_ARG,
+        STRING_CMD_ARG
+    };
+    
+    /**
+    * The Command parameter descriptor.
     */
-    enum MonitoringModel
+    struct CmdParameterDescriptor
     {
         /**
-        * No monitoring at all.
-        */
-        NO_MONITORING,
+         * The name of the parameter
+         */
+        string parameter_name;
 
         /**
-        * Pull monitoring model.
-        */
-        PULL_MONITORING_MODEL,
-
-        /**
-        * Push monitoring model.
-        */
-        PUSH_MONITORING_MODEL,
-
-        /**
-        * Both PULL and PUSH model
-        */
-        FULL_MONITORING_MODEL
+         * The type of the parameter.
+         */
+        CmdParameterType parameter_type;
     };
 
-
+    typedef sequence<CmdParameterDescriptor> CmdParameterDescriptors;
+    
+    
+    
     /**
-     * Raised when a process doesn't support the requested monitoring model.
+     * The definition of a command.
      */
-    exception UnsupportedMonitoringModel
+    struct CommandDef
     {
         /**
-         * The model actually supported.
+         * The name of the command.
          */
-        MonitoringModel supported_model;
+        string command_name;
+        
+        /**
+         * The timeout of the command.
+         */
+        Timeout command_timeout;
+        
+        /**
+         * The parameters of the command.
+         */
+        CmdParameterDescriptors command_parameters;
     };
 
+    
+    typedef sequence<CommandDef> CommandDefs;
+    
+    
 
+    ////////////
+    // entity
+    ////////////    
+    
     /**
-     * The complete monitoring information.
+     * The definition of an entity.
      */
-    struct CompleteMonitoringInfo
+    struct EntityDef
     {
         /**
-         * The model of monitoring.
+         * The name of the entity.
          */
-        MonitoringModel monitoring_model;
-
+        string entity_name;
+        
         /**
-         * The periodicity in ms for checking the liveliness of the
-         * pull monitorable object.
+         * The available status values.
          */
-        unsigned long pull_monitoring_interval;
-
+        EntityStatusValues status_values;
+        
         /**
-         * The timeout allowed for the pull monitorable object to reply. 
-         */
-        Timeout pull_monitoring_timeout;
-
+        * The properties of the entity.
+        */
+        PropertyDefs properties;
+        
         /**
-         * The periodicity in ms of signals from the push monitorable object.
-         */
-        unsigned long push_monitoring_interval;
-
-        /**
-         * The timeout allowed before or after each theoretical signal that must
-         * be sent by the push monitorable object. 
-         */
-        Timeout push_monitoring_timeout;
-
+        * The commands of the entity.
+        */
+        CommandDefs commands;
     };
 
-    /**
-     * The monitoring information.
-     */
-    struct MonitoringInfo
-    {
+    
+    typedef sequence<EntityDef> EntityDefs;
+    
+    
 
-        /**
-         * The monitoring periodicity in ms.
-         */
-        unsigned long monitoring_interval;
-
-        /**
-         * The monitoring timeout.
-         */
-        Timeout monitoring_timeout;
-
-    };
-
-
-    typedef sequence<MonitoringInfo> MonitoringInfos;
-
-    /**
-     * Raised when the requested number of activity points exceeds the actual
-     * number of activity points.
-     */
-    exception OutOfActivityPoints
-    {
-        /**
-         * The actual number of activity points.
-         */
-        unsigned long nb_activity_points;
-    };
-
-    /**
-     * The status of an activity point.
-     */
-    enum ActivityPointStatus
-    {
-
-        /**
-        * The activity point is responding
-        */
-        POINT_RESPONDING,
-
-        /**
-        * The activity point is not responding
-        */
-        POINT_NOT_RESPONDING,
-
-        /**
-        * Unknown activity point
-        */
-        POINT_UNKNOWN
-
-    };
-
-    typedef sequence<ActivityPointName> ActivityPointNames;
-
-    /**
-     * The activity point.
-     */
-    struct ActivityPoint
-    {
-        /**
-         * The name of the activity point.
-         */
-        ActivityPointName point_name;
-
-        /**
-         * The status of the activity point.
-         */
-        ActivityPointStatus point_status;
-    };
-
-    typedef sequence<ActivityPoint> ActivityPoints;
-
-
-    /**
-     * The activity point definition.
-     */
-    struct ActivityPointDef
-    {
-        /**
-         * The name of the activity point.
-         */
-        ActivityPointName point_name;
-
-        /**
-         * The monitoring information for the activity point.
-         */
-        MonitoringInfo monitoring_info;
-    };
-
-    typedef sequence<ActivityPointDef> ActivityPointDefs;
-
-
-
-
-    /**
-     * The light information for creating an Operating System Process.
-     */
-    struct ProcessLightInfo
-    {
-
-        /**
-        * The main port that will be used by the process.
-        */
-        Port process_port;
-
-        /**
-        * The working directory of the process.
-        */
-        string working_directory;
-
-        /**
-        * The arguments to be passed to the process.
-        */
-        string process_args;
-
-    };
-
-
-    /**
-     * The information for creating an Operating System Process.
-     * Comparing to ProcessLightInfo, contains the additional
-     * process_exe member.
-     */
-    struct ProcessInfo
-    {
-        /**
-        * The full path to the process executable.
-        */
-        string process_exe;
-
-        /**
-        * The main port that will be used by the process.
-        */
-        Port process_port;
-
-        /**
-        * The working directory of the process.
-        */
-        string working_directory;
-
-        /**
-        * The arguments to be passed to the process.
-        */
-        string process_args;
-
-    };
-
-
+    /////////
+    // host
+    /////////
+    
+    
     /**
      * The different status of a host.
      */
@@ -724,8 +717,9 @@ module CdmwPlatformMngt
         /**
         * The host is not responding
         */
-        HOST_NOT_RESPONDING
+        HOST_UNREACHABLE
     };
+
 
 
     /**
@@ -737,7 +731,7 @@ module CdmwPlatformMngt
         /**
          * The name of the host.
          */
-        HostName host_name;
+        ElementName host_name;
 
         /**
         * The full path to the platform application executable of this host.
@@ -750,20 +744,45 @@ module CdmwPlatformMngt
         string application_agent_exe;
 
         /**
-         * The information about the probe process of this host.
-         */
-        ProcessInfo probe_process_info;
-
-        /**
          * The monitoring information about the daemon running on the host.
          */
         MonitoringInfo daemon_monitoring_info;
+        
+	//complete monitoring info .
+        CompleteMonitoringInfo monitoring_parameters;
 
+        /**
+        * The entities of the host.
+        */
+        EntityDefs entities;
+        
+        /**
+        * The properties of the host.
+        */
+        PropertyDefs properties;
+
+        /**
+        * global supervision indicator
+        */
+
+        boolean global_supervision_indicator;
     };
 
-    typedef sequence<HostName> HostNames;
+    
     typedef sequence<HostDef> HostDefs;
 
+
+    ////////////
+    // process
+    ////////////
+    
+    /**
+    * The sequence of Process.
+    */
+    typedef sequence<Process> Processes;
+
+
+    
 
     /**
      * The different types of process.
@@ -932,6 +951,94 @@ module CdmwPlatformMngt
         LONG_REQUEST_ABORTED
     };
 
+    /**
+     * The process restart types.
+     */
+    enum RestartType
+    {
+        /**
+        * COLD RESTART.
+        */
+        COLD_RESTART,
+        
+        /**
+        * HOT RESTART.
+        */
+        HOT_RESTART
+    };
+    
+    
+
+    /**
+     * The different results for the process commands.
+     */
+    enum ProcessCommandResult
+    {
+        /**
+        * The command has succeeded
+        */
+        PROCESS_CMD_SUCCEED,
+        
+        /**
+        * The command has thrown an exception
+        */
+        PROCESS_CMD_EXCEPTION,
+
+        /**
+        * The timeout allowed has expired
+        */
+        PROCESS_CMD_TIMEOUT,
+
+        /**
+        * Error reported by process during its creation
+        */
+        PROCESS_CREATION_ERR,
+        
+        /**
+        * The process already exist
+        */
+        PROCESS_ALREADY_EXIST,
+        
+        /**
+        * The process info are invalid
+        */
+        PROCESS_INVALID_INFO,
+        
+        /**
+        * Bad Order in command processing
+        */
+        PROCESS_CMD_BAD_ORDER,
+        
+        /**
+        * Step invalid in processing
+        */
+        PROCESS_CMD_INVALID_STEP,
+        
+        /**
+         * Init already done
+         */
+        PROCESS_INIT_ALREADY_DONE,
+
+        /**
+         * Step already done
+         */
+        PROCESS_STEP_ALREADY_DONE,
+
+        /**
+        * Process not ready to run
+        */
+        PROCESS_NOT_READY_TO_RUN,
+        
+        /**
+        * Process run already done
+        */
+        PROCESS_RUN_ALREADY_DONE,
+        
+        /**
+         * Stop already done
+         */ 
+        PROCESS_STOP_ALREADY_DONE
+    };
 
     /**
      * A process step.
@@ -972,9 +1079,16 @@ module CdmwPlatformMngt
          * The timeout allowed for the stop of the process.
          */
         Timeout stop_timeout;
+        
+        /**
+         * The flag indicate the process is started automatically at system startup.
+         */
+        boolean auto_start;
 
     };
 
+
+    
 
     /**
      * The definition of a process.
@@ -985,32 +1099,62 @@ module CdmwPlatformMngt
         /**
         * The name identifying the process.
         */
-        public ProcessName name;
+        public ElementName name;
+        
+        /**
+        * The name of the host where the process should run.
+        */
+        public ElementName host_name;
 
         /**
         * The type of the process.
         */
         public ProcessType type;
 
+       /**
+        * The properties of the process.
+        */
+        public PropertyDefs properties;
+
+        /**
+        * Indicates if the process is started manually.
+        */
+        public boolean manual_starting;
+
+        /**
+        * Indicates if the process mode
+        */
+        public ProcessMode process_mode;
+        
         /**
         * Indicates whether the process ends itself.
         */
-        public boolean     autoending;
-
-        /**
-        * The name of the host where the process should run.
-        */
-        public HostName    host_name;
+        public boolean auto_ending;
 
         /**
         * The information for creating the associated Operating System Process.
         */
         public ProcessInfo process_info;
+        
+        /**
+        * The information about the exit/autorestart of process.
+        */
+        public ExitAutoRestartInfo exit_autorestart_info;
+
+        /*
+	* indicator denoting whether the process must be memory resident
+	*/
+        public boolean memory_resident;
+
+        /*
+	* core dump size
+	*/
+	public long core_dump_size;
 
         /**
         * The factory method.
         */
-        factory create(in ProcessName name);
+        factory create(in ElementName name);
     };
 
     /**
@@ -1021,34 +1165,48 @@ module CdmwPlatformMngt
         /**
         * The entities of the process.
         */
-        public CdmwPlatformMngtEntity::EntityNames entities;
+        public EntityDefs entities;
+        
+        /**
+        * The commands of the process.
+        */
+        public CommandDefs commands;
 
         /**
         * The service definitions of the process.
         */
         public CdmwPlatformMngtService::ServiceDefs service_definitions;
+        
         /**
         * The lifecycle of the process.
         */
         public LifeCycleDef life_cycle;
+
+	/**
+        * The properties of the process.
+        */
+        //public PropertyDefs properties;
+
 
         /**
         * The monitoring information for the process.
         */
         public CompleteMonitoringInfo monitoring_info;
 
-        /**
-        * The activity points of the process.
-        */
-        public ActivityPointDefs activity_points;
 
-        factory create(in ProcessName name, in ProcessType type);
+        factory create(in ElementName name, in ProcessType type);
     };
 
 
     typedef sequence<ProcessDef> ProcessDefs;
+    
+    
+    
 
-
+    ////////////////
+    // Application
+    ////////////////
+    
     /**
      * The different status of an application.
      * The actual status of an application is the combination
@@ -1122,12 +1280,12 @@ module CdmwPlatformMngt
         /**
         * The name identifying the application.
         */
-        ApplicationName application_name;
+        ElementName application_name;
 
         /**
         * The name of the host where the platform application should run.
         */
-        HostName host_name;
+        ElementName host_name;
 
         /**
         * The light information about the platform application.
@@ -1146,11 +1304,38 @@ module CdmwPlatformMngt
 
     };
 
+
+    /**
+     * The definition of the application autorestart info.
+     */
+    struct ApplicationAutoRestartInfo
+    {
+        /**
+         * Indicate if the application must be restarted.
+         */
+        boolean  auto_restart;
+         
+        /**
+         * The maximum number of restart attempt.
+         */
+        long max_nbr_of_restart_attempt;        
+    };
+
     /**
      * The definition of an application.
      */
     struct ApplicationDef
     {
+        /**
+        * Indicates if the application is started manually.
+        */
+        boolean manual_starting;
+        
+        /**
+        * The information about the autorestart of application.
+        */
+        ApplicationAutoRestartInfo autorestart_info;
+        
         /**
         * The processes of the application.
         */
@@ -1159,7 +1344,12 @@ module CdmwPlatformMngt
         /**
         * The entities of the application.
         */
-        CdmwPlatformMngtEntity::EntityNames   entities;
+        EntityDefs entities;
+        
+        /**
+        * The properties of the application.
+        */
+        PropertyDefs properties;
 
         /**
         * The service definitions of the application.
@@ -1169,6 +1359,11 @@ module CdmwPlatformMngt
     };
 
 
+    ////////////
+    // System
+    ////////////
+    
+    
     /**
      * The different status of a system.
      * The actual status of the system is the combination
@@ -1218,7 +1413,24 @@ module CdmwPlatformMngt
         /**
         * The name identifying the system.
         */
-        SystemName system_name;
+        ElementName system_name;
+
+
+	/** 
+	* a user-defined value which, for example, allows to define
+	* whether the system is 
+	* running as operational, simulation, training, test, etc…
+	*/
+
+        string system_mission;
+
+	/** 
+	* host on which the master supervision service is running
+	* added on 22-7-2055 
+	* 
+	*/
+
+        string master_host;
 
         /**
         * The port used by the whole system for contacting hosts' daemon.
@@ -1228,7 +1440,12 @@ module CdmwPlatformMngt
         /**
         * The entities of the system.
         */
-        CdmwPlatformMngtEntity::EntityNames   entities;
+        EntityDefs entities;
+        
+        /**
+        * The properties of the system.
+        */
+        PropertyDefs properties;
 
         /**
         * The service definitions of the system.
@@ -1288,14 +1505,14 @@ module CdmwPlatformMngt
         PROCESS_STATUS_CHANGE,
 
         /**
-         * A status change of an activity point of a process.
-         */
-        ACTIVITY_POINT_STATUS_CHANGE,
-
-        /**
          * A status change of an entity of the system.
          */
         SYSTEM_ENTITY_STATUS_CHANGE,
+        
+        /**
+         * A status change of an entity of a host.
+         */
+        HOST_ENTITY_STATUS_CHANGE,
 
         /**
          * A status change of an entity of an application.
@@ -1315,22 +1532,68 @@ module CdmwPlatformMngt
         /**
          * A user event of a process.
          */
-        USER_EVENT
+        USER_EVENT,
+        
+        /**
+         * A property change.
+         */
+        PROPERTY_CHANGE
     };
 
 
+    /////////////
+    // snapshot
+    /////////////
+   
+	/*
+	*	Property Snapshot 	
+	*/
+     struct PropertySnapshot 
+	{
+		string 	property_name;
+		any  property_value;
+		string	property_type;
+		string 	property_mode;
+	};	
+    typedef sequence<PropertySnapshot> PropertiesSnapshot; 
+	
+ 
     /*
      * Snapshots are used for reporting the configuration and the state
      * of the whole system or of a part of the system.
      */
 
     /**
+     * The snapshot of an entity.
+     */
+    struct EntitySnapshot
+    {
+        ElementName entity_name;
+        EntityStatus entity_status;
+        string entity_info;
+	PropertiesSnapshot entity_properties;
+    };
+    
+    typedef sequence<EntitySnapshot> EntitiesSnapshot;
+    
+    
+    /**
      * The snapshot of a host.
      */
     struct HostSnapshot
     {
-        HostName host_name;
+        ElementName host_name;
         HostStatus host_status;
+	string host_status_info;
+        
+        EntitiesSnapshot host_entities;
+	CompleteMonitoringInfo monitoring_parameters;
+        /**
+        * global supervision indicator
+        */
+
+        boolean global_supervision_indicator;
+	PropertiesSnapshot host_properties;
     };
 
     typedef sequence<HostSnapshot> HostsSnapshot;
@@ -1340,12 +1603,19 @@ module CdmwPlatformMngt
      */
     struct ProcessSnapshot
     {
-        ProcessName process_name;
+        ElementName process_name;
+        ElementName host_name;
+	ProcessMode process_mode;
         ProcessStatus process_status;
-        string process_status_info;
+        /*
+	* indicator denoting whether the process must be memory resident
+	*/
+        boolean memory_resident;
 
-        CdmwPlatformMngtEntity::Entities process_entities;
-        ActivityPoints activity_points;
+        string process_status_info;
+	long core_dump_size;
+        EntitiesSnapshot process_entities;
+	PropertiesSnapshot process_properties;
     };
 
     typedef sequence<ProcessSnapshot> ProcessesSnapshot;
@@ -1355,7 +1625,7 @@ module CdmwPlatformMngt
      */
     struct ApplicationSnapshot
     {
-        ApplicationName application_name;
+        ElementName application_name;
 
         ApplicationStatus application_status;
         string status_info;
@@ -1364,7 +1634,8 @@ module CdmwPlatformMngt
         string mode_info;
 
         ProcessesSnapshot application_processes;
-        CdmwPlatformMngtEntity::Entities application_entities;
+        EntitiesSnapshot application_entities;
+	PropertiesSnapshot application_properties;
     };
 
     typedef sequence<ApplicationSnapshot> ApplicationsSnapshot;
@@ -1374,6 +1645,17 @@ module CdmwPlatformMngt
      */
     struct SystemSnapshot
     {
+        ElementName system_name;
+
+        /** 
+        * host on which the master supervision service is running
+        * added on 22-7-2005
+        * 
+        */
+
+        string master_host;
+
+        
         SystemStatus system_status;
         string status_info;
 
@@ -1382,313 +1664,11 @@ module CdmwPlatformMngt
 
         HostsSnapshot system_hosts;
         ApplicationsSnapshot system_applications;
-        CdmwPlatformMngtEntity::Entities system_entities;
+        EntitiesSnapshot system_entities;
+	PropertiesSnapshot system_properties;
     };
 
-
-    /**
-    * The allowed timeout for the creation has expired.
-    */
-    exception CreationTimeout {};
-
-
-    /**
-    * An error has been reported during the creation.
-    */
-    exception CreationError
-    {
-        string error_info;
-    };
-
-    /**
-    * An error has been reported during the creation.
-    */
-    exception CreationErrorExt
-    {
-        CdmwPlatformMngtBase::EventIssuer issuer;
-        string error_info;
-    };
-
-
-    /**
-    * The acknowlegement of an application creation from the
-    * daemon. This acknowlegement contains information needed by the
-    * application.
-    */
-    struct ApplicationAck
-    {
-
-        /**
-        * The name of the system owning the application.
-        */
-        SystemName system_name;
-
-        /**
-        * The port of the system owning the application.
-        */
-        Port system_port;
-
-        /**
-        * The name of the application.
-        */
-        ApplicationName application_name;
-
-        /**
-        * The light information about the application's agent processes.
-        */
-        ProcessLightInfo application_agent_process_info;
-
-        /**
-        * The monitoring info for the application's agent processes.
-        */
-        MonitoringInfo application_agent_monitoring_info;
-
-        /**
-        * The hosts known by the system.
-        */
-        HostContainer host_container;
-
-        /**
-        * The observer of supervision events generated by the application.
-        */
-        SupervisionObserver supervision_observer;
-
-        /**
-        * The observer of applications.
-        */
-        ApplicationObserver application_observer;
-
-        /**
-        * The observer of system entities.
-        */
-        CdmwPlatformMngtEntity::SystemEntityObserver system_entity_observer;
-
-        /**
-        * The service binding.
-        */
-        CdmwPlatformMngtService::ServiceBinding service_binding;
-
-        /**
-        * The container for system service definitions.
-        */
-        CdmwPlatformMngtService::ServiceDefContainer system_service_def_container;
-
-    };
-
-    /**
-    * The information needed by a daemon for creating a platform application
-    * and for setting up the embedded application.
-    */
-    struct ApplicationInfo {
-
-        /**
-        * The information about the application.
-        * Transmitted to the application as an acknowledgement.
-        */
-        ApplicationAck application_ack;
-
-        /**
-        * The full path to the platform application executable.
-        */
-        string application_exe;
-
-        /**
-        * The main port that will be used by the platform application.
-        */
-        Port application_port;
-
-        /**
-        * The working directory of the platform application.
-        */
-        string application_working_directory;
-
-        /**
-        * Argument to be transmitted to the platform application on the
-        * command line.
-        */
-        string application_args;
-
-        /**
-        * The monitoring info for the platform application.
-        */
-        MonitoringInfo application_monitoring_info;
-
-        /**
-        * The observer of the platform application.
-        */
-        MonitorableProcessObserver application_observer;
-        
-    };
-
-
-    /**
-    * The acknowlegement of an application agent creation from the
-    * daemon. This acknowlegement contains information needed by the
-    * application agent.
-    */
-    struct ApplicationAgentAck
-    {
-
-        /**
-        * The name of the application
-        */
-        ApplicationName application_name;
-
-        /**
-        * The observer used by the application agent to notify
-        * important status changes of processes.
-        */
-        ProcessObserver process_observer;
-
-#ifdef CDMW_USE_FAULTTOLERANCE
-        /**
-		 * The Replication Manager IOGR
-		 */
-	    string replication_manager_iogr;
-#endif
-
-    };
-
-    /**
-    * The information needed by a daemon for creating an application agent
-    * process and for setting up the application agent.
-    */
-    struct ApplicationAgentInfo {
-
-        /**
-        * The information about the application agent.
-        * Transmitted to the application agent as an acknowledgement.
-        */
-        ApplicationAgentAck application_agent_ack;
-
-        /**
-        * The full path to the application agent executable.
-        */
-        string application_agent_exe;
-
-        /**
-        * The main port that will be used by the application agent.
-        */
-        Port application_agent_port;
-
-        /**
-        * The working directory of the application agent.
-        */
-        string application_agent_working_directory;
-
-        /**
-        * Argument to be transmitted to the application agent on the
-        * command line.
-        */
-        string application_agent_args;
-
-        /**
-        * The monitoring info for the application agent.
-        */
-        MonitoringInfo application_agent_monitoring_info;
-
-        /**
-        * The observer of the application agent.
-        */
-        MonitorableProcessObserver application_agent_observer;
-        
-    };
-
-    /**
-    * The information needed by a daemon for creating a host probe.
-    */
-    struct HostProbeInfo {
-
-        /**
-         * The information about the probe process.
-         */
-        ProcessInfo probe_process_info;
-
-        /**
-        * The monitoring info for the probe process.
-        */
-        MonitoringInfo probe_process_monitoring_info;
-
-        /**
-        * The observer of the probe process.
-        */
-        MonitorableProcessObserver probe_process_observer;
-        
-    };
-
-
-    /**
-    * The status of the Operation System Process.
-    */
-    enum OSProcessStatus {
-
-        /**
-        * The Process has been started.
-        */
-        STARTED,
-
-        /**
-        * The process has terminated.
-        */
-        ENDED
-    };
-
-
-    /**
-    * The information in invalid.
-    */
-    exception InvalidInfo {
-
-        string reason;
-    };
-
-
-
-    /**
-    * The host is not reachable.
-    */
-    exception HostNotReachable {
-    
-        string host;
-    };
-
-    /**
-    * The corbaloc was ill-formed, and has not been resolved to 
-    * a CORBA reference.
-    */
-    exception InvalidCorbaloc {
-
-        string corbaloc;
-    };
-
-
-    /**
-    * The plaform information (OS level event).
-    */
-    struct PlatformInfo {
-
-        /**
-        * The name of the host where the event has occurred.
-        */
-        HostName host_name;
-
-        /**
-        * The name of the process.
-        */
-        ProcessName process_name;
-
-        /**
-        * the status of the process related with the event.
-        */
-        OSProcessStatus process_status;
-
-    };
-
-    /**
-    * The snapshot of the current platform information.
-    */
-    typedef sequence<PlatformInfo> PlatformSnapshot;
-
+  
 
 }; // End Module CdmwPlatformMngt
 

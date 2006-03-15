@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -36,6 +36,8 @@
 
 using namespace Cdmw::PlatformMngt;
 
+
+CPPUNIT_TEST_SUITE_REGISTRATION( TestContainer );
 
 // ElementTest implementation
 
@@ -166,8 +168,8 @@ void displayXElement (const TestContainer::XElementList& el)
     std::cout << std::endl;
 }
 
+/*
 TestContainer::TestContainer(const std::string& name, PortableServer::POA_ptr poa)
-    : Testable(name)
 {
     m_POA = PortableServer::POA::_duplicate(poa);
 }
@@ -176,12 +178,13 @@ TestContainer::TestContainer(const std::string& name, PortableServer::POA_ptr po
 TestContainer::~TestContainer()
 {
 }
+*/
 
 
 void TestContainer::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (50);
+// //     set_nbOfRequestedTestOK (50);
     
     
 	XContainer *pSystemContainer = NULL;
@@ -203,9 +206,9 @@ void TestContainer::do_tests()
                 
         TEST_INFO("Creates a Process Container");
         pProcessContainer = 
-                XContainer::createProcessContainer ("application_1", "process_1");
+                XContainer::createProcessContainer ("application_1", "process_1", "host_1");
  
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
  
         // try to recreate same element container : exception must be thrown
         TEST_INFO("Recreates a System Container");
@@ -213,11 +216,11 @@ void TestContainer::do_tests()
         {
             XContainer::createSystemContainer ();
    
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         catch (AlreadyExistsException& ex)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
   
   
@@ -225,22 +228,22 @@ void TestContainer::do_tests()
         try
         {
             XContainer::createApplicationContainer ("application_1");
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         catch (AlreadyExistsException& ex)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
                 
         TEST_INFO("Recreates a Process Container");
         try
         {
-            XContainer::createProcessContainer ("application_1", "process_1");
-            TEST_FAILED();
+            XContainer::createProcessContainer ("application_1", "process_1", "host_1");
+            CPPUNIT_ASSERT(false);
         }
         catch (AlreadyExistsException& ex)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
     
     
@@ -252,22 +255,22 @@ void TestContainer::do_tests()
         bool ret = XContainer::existsContainerId(containerId);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         XContainer* pContainer =
              XContainer::findContainerById(containerId);
         if (pContainer != NULL)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
   
         containerId = 
@@ -275,45 +278,45 @@ void TestContainer::do_tests()
         ret = XContainer::existsContainerId(containerId);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         pContainer =
              XContainer::findContainerById(containerId);
         if (pContainer != NULL)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         containerId = 
-            XContainer::processContainerNameToId ("application_1", "process_1");
+            XContainer::processContainerNameToId ("application_1", "process_1", "host_1");
         ret = XContainer::existsContainerId(containerId);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         pContainer =
              XContainer::findContainerById(containerId);
         if (pContainer != NULL)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
  
          
@@ -322,25 +325,25 @@ void TestContainer::do_tests()
         ret = XContainer::existsContainerId("xxxx");
         if (ret)
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         else
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }   
         
         pContainer =
              XContainer::findContainerById("xxxx");
         if (pContainer == NULL)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         } 
         
-        TEST_SUCCEED(); 
+        CPPUNIT_ASSERT(true); 
          
         // Check container identification
         TEST_INFO("Check container identification"); 
@@ -356,12 +359,12 @@ void TestContainer::do_tests()
         containerIdentStr += pProcessContainer->id();
         containerIdentStr += "\"";
         TEST_INFO(containerIdentStr.c_str());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     } 
     
@@ -378,22 +381,22 @@ void TestContainer::do_tests()
         
         if (nbrOfElements == 0)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         bool containerEmpty = pSystemContainer->isEmpty();
         
         if (containerEmpty == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         // Get all element names : must be empty
@@ -412,31 +415,31 @@ void TestContainer::do_tests()
         
         if (elementNameReqList.size() == 0)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         if (elementNameRestList.size() == 0)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         pSystemContainer->listName (elementNameReqList);
         
         if (elementNameReqList.size() == 0)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         
@@ -453,20 +456,20 @@ void TestContainer::do_tests()
 
         if (elementReqList.size() == 0)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         if (elementRestList.size() == 0)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
   
@@ -474,11 +477,11 @@ void TestContainer::do_tests()
 
         if (elementReqList.size() == 0)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
   
@@ -488,28 +491,28 @@ void TestContainer::do_tests()
         bool exist = pSystemContainer->existsElement("e1");
         if (exist == false)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         ElementTest data;
         exist = pSystemContainer->findElement("e1", data);
         if (exist == false)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
 
@@ -536,61 +539,61 @@ void TestContainer::do_tests()
         added = pSystemContainer->addElement ("e1",  data1);
         if (added == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         added = pSystemContainer->addElement ("e2",  data2);
         if (added == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         added = pSystemContainer->addElement ("e3",  data3);
         if (added == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         added = pSystemContainer->addElement ("e4",  data4);
         if (added == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         added = pSystemContainer->addElement ("e5",  data5);
         if (added == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         added = pSystemContainer->addElement ("e11", data11);
         if (added == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
 
         
@@ -598,11 +601,11 @@ void TestContainer::do_tests()
         added = pSystemContainer->addElement ("e11", data11);
         if (added == true)
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         else
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
  
  
@@ -625,22 +628,22 @@ void TestContainer::do_tests()
         updated = pSystemContainer->updateElement ("e1",  data1a);
         if (updated)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
 
         
         updated = pSystemContainer->updateElement ("e6",  data6);
         if (!updated)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
 
              
@@ -650,28 +653,28 @@ void TestContainer::do_tests()
         bool removed = pSystemContainer->removeElement ("e12");
         if (removed == true)
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         else
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         
         TEST_INFO("Check removing element in Container");
         removed = pSystemContainer->removeElement ("e11");
         if (removed == true)
         {
-        	TEST_SUCCEED();          
+        	CPPUNIT_ASSERT(true);          
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }
     
@@ -689,22 +692,22 @@ void TestContainer::do_tests()
         
         if (nbrOfElements == 5)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         bool containerEmpty = pSystemContainer->isEmpty();
         
         if (containerEmpty == false)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         // Get all element names
@@ -729,11 +732,11 @@ void TestContainer::do_tests()
         	displayXElement (elementNameReqList);
   
             TEST_INFO("");
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
 
@@ -745,11 +748,11 @@ void TestContainer::do_tests()
         	displayXElement (elementNameRestList);
             
             TEST_INFO("");
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
  
  
@@ -768,11 +771,11 @@ void TestContainer::do_tests()
         	displayXElement (elementNameAllList);
             
             TEST_INFO("");
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         
@@ -796,11 +799,11 @@ void TestContainer::do_tests()
         	displayXElement (elementReqList);
             
             TEST_INFO("");
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
 
@@ -812,11 +815,11 @@ void TestContainer::do_tests()
         	displayXElement (elementRestList);
             
             TEST_INFO("");
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
   
@@ -831,11 +834,11 @@ void TestContainer::do_tests()
         	displayXElement (elementAllList);
             
             TEST_INFO("");
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
   
@@ -845,22 +848,22 @@ void TestContainer::do_tests()
         bool exist = pSystemContainer->existsElement("e11");
         if (exist == false)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         ElementTest data;
         exist = pSystemContainer->findElement("e11", data);
         if (exist == false)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         
@@ -870,11 +873,11 @@ void TestContainer::do_tests()
         exist = pSystemContainer->existsElement(elem_name);
         if (exist == true)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         
@@ -884,17 +887,17 @@ void TestContainer::do_tests()
         {
         	XElement element (elem_name, data);
         	displayXElement (element);
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     }    
 
@@ -908,37 +911,37 @@ void TestContainer::do_tests()
         bool ret = XContainer::destroy (pSystemContainer);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {        
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         ret = XContainer::destroy (pApplicationContainer);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {        
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         
         ret = XContainer::destroy (pProcessContainer);
         if (ret)
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
         else
         {        
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
     }
     catch(...)
     {
         std::cout << "FAILURE : Unexpected exception" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         return;
     } 
 }

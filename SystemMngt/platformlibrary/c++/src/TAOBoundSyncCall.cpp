@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -92,7 +92,7 @@ TAOBoundSyncCallFactory::~TAOBoundSyncCallFactory()
 
 ProcessInitCall*
 TAOBoundSyncCallFactory::createProcessInitCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     const CdmwPlatformMngtBase::StartupKind& startupKind,
     unsigned long timeout )
 throw( OutOfMemoryException )
@@ -114,7 +114,7 @@ throw( OutOfMemoryException )
 
 ProcessStepCall*
 TAOBoundSyncCallFactory::createProcessStepCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
@@ -134,7 +134,7 @@ throw( OutOfMemoryException )
 
 ProcessRunCall*
 TAOBoundSyncCallFactory::createProcessRunCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
@@ -154,7 +154,7 @@ throw( OutOfMemoryException )
 
 ProcessStopCall*
 TAOBoundSyncCallFactory::createProcessStopCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
@@ -215,41 +215,18 @@ throw( OutOfMemoryException )
     return pullMonitorableCall;
 }
 
-PlatformInfoNotificationCall*
-TAOBoundSyncCallFactory::createPlatformInfoNotificationCall(
-    CdmwPlatformMngt::PlatformObserver_ptr observer,
-    const CdmwPlatformMngt::PlatformInfo& platformInfo,
-    unsigned long timeout )
-throw( OutOfMemoryException )
-{
-    PlatformInfoNotificationCall* platformInfoNotificationCall = NULL;
-
-    try
-    {
-        platformInfoNotificationCall
-            = new TAOPlatformInfoNotificationCall(
-                m_orb.in(), observer, platformInfo, timeout );
-    }
-    catch( const std::bad_alloc& )
-    {
-        CDMW_THROW( OutOfMemoryException );
-    }
-
-    return platformInfoNotificationCall;
-}
-
 // ----------------------------------------------------------------------
 // TAOProcessInitCall class.
 // ----------------------------------------------------------------------
 TAOProcessInitCall::TAOProcessInitCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     const CdmwPlatformMngtBase::StartupKind& startupKind,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
 
     try
     {
@@ -280,8 +257,8 @@ throw()
             m_orb.in(), m_process.in(), m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process
-            = CdmwPlatformMngt::Process::_narrow( capsule.in() );
+        CdmwPlatformMngt::ProcessDelegate_var process
+            = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule.in() );
         if( CORBA::is_nil( process.in() ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->initialise( m_startupKind.in() );
@@ -304,11 +281,11 @@ throw()
 // ----------------------------------------------------------------------
 TAOProcessStepCall::TAOProcessStepCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
     m_timeout = timeout;
 }
 
@@ -329,8 +306,8 @@ throw()
             m_orb.in(), m_process.in(), m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process
-            = CdmwPlatformMngt::Process::_narrow( capsule.in() );
+        CdmwPlatformMngt::ProcessDelegate_var process
+            = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule.in() );
         if( CORBA::is_nil( process.in() ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->next_step();
@@ -353,11 +330,11 @@ throw()
 // ----------------------------------------------------------------------
 TAOProcessRunCall::TAOProcessRunCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
     m_timeout = timeout;
 }
 
@@ -378,8 +355,8 @@ throw()
             m_orb.in(), m_process.in(), m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process
-            = CdmwPlatformMngt::Process::_narrow( capsule.in() );
+        CdmwPlatformMngt::ProcessDelegate_var process
+            = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule.in() );
         if( CORBA::is_nil( process.in() ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->run();
@@ -402,11 +379,11 @@ throw()
 // ----------------------------------------------------------------------
 TAOProcessStopCall::TAOProcessStopCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
     m_timeout = timeout;
 }
 
@@ -427,8 +404,8 @@ throw()
             m_orb.in(), m_process.in(), m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process
-            = CdmwPlatformMngt::Process::_narrow( capsule.in() );
+        CdmwPlatformMngt::ProcessDelegate_var process
+            = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule.in() );
         if( CORBA::is_nil( process.in() ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->stop();
@@ -549,66 +526,7 @@ throw()
     return result;
 }
 
-// ----------------------------------------------------------------------
-// TAOPlatformInfoNotificationCall class.
-// ----------------------------------------------------------------------
-TAOPlatformInfoNotificationCall::TAOPlatformInfoNotificationCall(
-    CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::PlatformObserver_ptr observer,
-    const CdmwPlatformMngt::PlatformInfo& platformInfo,
-    unsigned long timeout )
-throw( OutOfMemoryException )
-{
-    m_orb = CORBA::ORB::_duplicate( orb );
-    m_observer = CdmwPlatformMngt::PlatformObserver::_duplicate( observer );
 
-    try
-    {
-        m_platformInfo = new CdmwPlatformMngt::PlatformInfo( platformInfo );
-    }
-    catch( const std::bad_alloc& )
-    {
-        CDMW_THROW( OutOfMemoryException );
-    }
-
-    m_timeout = timeout;
-}
-
-TAOPlatformInfoNotificationCall::~TAOPlatformInfoNotificationCall()
-{
-}
-
-BoundSyncCallReturn
-TAOPlatformInfoNotificationCall::execute()
-throw()
-{
-    BoundSyncCallReturn result = SUCCEED;
-    
-    try
-    {
-        // Set the timeout policy
-        CORBA::Object_var capsule = SetTimeoutPolicy(
-            m_orb.in(), m_observer.in(), m_timeout );
-
-        // Perform the platform observer's action
-        CdmwPlatformMngt::PlatformObserver_var observer
-            = CdmwPlatformMngt::PlatformObserver::_narrow( capsule.in() );
-        if( CORBA::is_nil( observer.in() ) )
-            throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
-        observer->notify( m_platformInfo.in() );
-    }
-    catch( const CORBA::TIMEOUT& )
-    {
-        result = TIMEOUT;
-    }
-    catch( const CORBA::Exception& e )
-    {
-        result = EXCEPTION;
-        setExceptionInfo( e );
-    }
-    
-    return result;
-}
 
 } // End namespace PlatformMngt
 } // End namespace Cdmw

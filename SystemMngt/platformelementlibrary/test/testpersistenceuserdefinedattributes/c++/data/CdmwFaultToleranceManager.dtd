@@ -1,0 +1,97 @@
+<!-- ===================================================================== -->
+<!--
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+-->
+<!-- ===================================================================== -->
+
+<!--DTD specifying parameters for the CDMW fault manager-->
+<!--Port identifying the system-->
+<!ELEMENT SystemPort (#PCDATA)>
+
+<!--The request duration time -->
+<!ELEMENT RequestDurationTime (#PCDATA)>
+
+<!--The fault tolerance domain ID -->
+<!ELEMENT FaultToleranceDomainID (#PCDATA)>
+
+<!--The SIMPLE_PULL_CORBALOC - only used with fault tolerance and for the simple monitoring-->
+<!ELEMENT SimplePullCorbaloc (#PCDATA)>
+
+<!--The SIMPLE_PUSH_CORBALOC - only used with fault tolerance and for the simple monitoring-->
+<!ELEMENT SimplePushCorbaloc (#PCDATA)>
+
+<!--The MUTUAL_PULL_CORBALOC - only used with fault tolerance and for the mutual monitoring-->
+<!ELEMENT MutualPullCorbaloc (#PCDATA)>
+
+<!--The MUTUAL_PUSH_CORBALOC - only used with fault tolerance and for the mutual monitoring-->
+<!ELEMENT MutualPushCorbaloc (#PCDATA)>
+
+<!--The Localisation service address -->
+<!ELEMENT LocalisationServiceAddress (#PCDATA)>
+
+<!--The MASTER_INTERROGATION time - only used for the mutual monitoring-->
+<!ELEMENT MasterInterrogationTime (#PCDATA)>
+
+<!--The SLAVE_ACKNOWLEDGEMENT time - only used for the mutual monitoring-->
+<!ELEMENT SlaveAcknowledgementTime (#PCDATA)>
+
+<!--The MASTER_CONFIRMATION time - only used for the mutual monitoring-->
+<!ELEMENT MasterConfirmationTime (#PCDATA)>
+
+<!--The MASTER_ELECTION time - only used for the mutual monitoring-->
+<!ELEMENT MasterElectionTime (#PCDATA)>
+
+<!--The DAEMON_ACKNOWLEDGEMENT time - only used for the simple monitoring-->
+<!ELEMENT DaemonAcknowledgementTime (#PCDATA)>
+
+<!-- the domain for the multicast address for the state transfert-->
+<!ELEMENT StateTransfertDomain (#PCDATA)>
+
+<!-- the IP address for the multicast address for the state transfert-->
+<!ELEMENT StateTransfertIPAddress (#PCDATA)>
+
+<!-- the cohort timeout for the transaction (in ms) -->
+<!ELEMENT CohortTimeOut (#PCDATA)>
+
+<!-- the coordinator timeout for the transaction (in ms) -->
+<!ELEMENT CoordinatorTimeOut (#PCDATA)>
+
+<!-- the max number of transaction in progress -->
+<!ELEMENT MaxTransactionInProgress (#PCDATA)>
+
+<!-- the max number of transaction done -->
+<!ELEMENT MaxTransactionDone (#PCDATA)>
+
+<!-- the replication manager security level -->
+<!ELEMENT SecurityLevel (#PCDATA)>
+
+<!-- the replication manager replication level -->
+<!ELEMENT ReplicationLevel (#PCDATA)>
+
+
+<!ELEMENT SupportedInterface (BaseInterfaces+)>
+<!ATTLIST SupportedInterface typename CDATA #REQUIRED>
+
+<!ELEMENT BaseInterfaces (#PCDATA)>
+
+
+<!ELEMENT CdmwFaultToleranceManager (SystemPort, RequestDurationTime, FaultToleranceDomainID, SimplePullCorbaloc, SimplePushCorbaloc, MutualPullCorbaloc, MutualPushCorbaloc, LocalisationServiceAddress, MasterInterrogationTime, MasterElectionTime, MasterConfirmationTime, SlaveAcknowledgementTime, DaemonAcknowledgementTime, StateTransfertDomain?, StateTransfertIPAddress?, CohortTimeOut?, CoordinatorTimeOut?, MaxTransactionInProgress?, MaxTransactionDone?, SecurityLevel?, ReplicationLevel?, SupportedInterface*)>
+

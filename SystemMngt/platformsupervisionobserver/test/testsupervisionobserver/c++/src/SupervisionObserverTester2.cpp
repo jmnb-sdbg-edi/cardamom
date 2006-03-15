@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -44,29 +44,33 @@ using namespace std;
 
 using namespace CdmwPlatformMngtBase;
 
-using namespace CdmwPlatformMngtEntity;
-
 using namespace CdmwPlatformMngt;
 
 using namespace Cdmw::PlatformMngt;
 
+CPPUNIT_TEST_SUITE_REGISTRATION( SupervisionObserverTester ) ;
+
+/*
 SupervisionObserverTester::SupervisionObserverTester(
     CORBA::ORB_ptr orb,
     const string& name,
     CdmwPlatformMngt::SupervisionObserver_ptr observer )
-        : Testable( name )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
     m_observer = SupervisionObserver::_duplicate( observer );
 }
+*/
 
+/*
 SupervisionObserverTester::~SupervisionObserverTester()
 {}
+*/
 
 void SupervisionObserverTester::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (13);
+// //     set_nbOfRequestedTestOK (13);
+
 
     try
     {
@@ -98,7 +102,7 @@ void SupervisionObserverTester::do_tests()
 #endif
 
         m_observer->notify(systemModeEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
         TEST_INFO( "Notity a system status change with the INF level" );
 
@@ -127,7 +131,7 @@ void SupervisionObserverTester::do_tests()
 #endif
 
         m_observer->notify(systemEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
         TEST_INFO( "Notity a system status change with level 14" );
 
@@ -144,7 +148,7 @@ void SupervisionObserverTester::do_tests()
 #endif
 
         m_observer->notify(systemEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
         TEST_INFO( "Notity a host status change with the WRN level" );
@@ -166,15 +170,15 @@ void SupervisionObserverTester::do_tests()
 #if CDMW_ORB_VDR == tao
 
         HostStatusChange_var hostEvent = hostStatusChangeFactory.create(
-                                             header, "System1", "amidala", HOST_NOT_RESPONDING);
+                                             header, "System1", "amidala", HOST_UNREACHABLE);
 #else
 
         HostStatusChange_var hostEvent = hostStatusChangeFactory->create(
-                                             header, "System1", "amidala", HOST_NOT_RESPONDING);
+                                             header, "System1", "amidala", HOST_UNREACHABLE);
 #endif
 
         m_observer->notify(hostEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
         // Create an application agent crash supervision event
         TEST_INFO( "Notity an application agent has crashed" );
@@ -223,7 +227,7 @@ void SupervisionObserverTester::do_tests()
 #endif
 
         m_observer->notify(applicationModeEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
         TEST_INFO( "Notity an application status change with the ERR level" );
@@ -254,7 +258,7 @@ void SupervisionObserverTester::do_tests()
 #endif
 
         m_observer->notify(applicationEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
         TEST_INFO( "Notity a process message" );
@@ -276,21 +280,22 @@ void SupervisionObserverTester::do_tests()
         ProcessID pId;
         pId.application_name = CORBA::string_dup("App1");
         pId.process_name = CORBA::string_dup("Process1");
+        pId.host_name = CORBA::string_dup("Host1");
 
         std::string issuer("LIFE");
 
 #if CDMW_ORB_VDR == tao
 
         ProcessMessage_var messageEvent = processMessageFactory.create(
-                                              header, "System1", pId, "amidala", issuer.c_str(), "message");
+                                              header, "System1", pId, issuer.c_str(), "message");
 #else
 
         ProcessMessage_var messageEvent = processMessageFactory->create(
-                                              header, "System1", pId, "amidala", issuer.c_str(), "message");
+                                              header, "System1", pId, issuer.c_str(), "message");
 #endif
 
         m_observer->notify(messageEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
         TEST_INFO( "Notity a process status change with the FTL level" );
@@ -313,17 +318,17 @@ void SupervisionObserverTester::do_tests()
 #if CDMW_ORB_VDR == tao
 
         ProcessStatusChange_var processEvent = processStatusChangeFactory.create(
-                                                   header, "System1", pId, "amidala", issuer.c_str(), PROCESS_STOPPED,
+                                                   header, "System1", pId, issuer.c_str(), PROCESS_STOPPED,
                                                    0, "", "configuration file not found");
 #else
 
         ProcessStatusChange_var processEvent = processStatusChangeFactory->create(
-                                                   header, "System1", pId, "amidala", issuer.c_str(), PROCESS_STOPPED,
+                                                   header, "System1", pId, issuer.c_str(), PROCESS_STOPPED,
                                                    0, "", "configuration file not found");
 #endif
 
         m_observer->notify(processEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
         TEST_INFO( "Notity a process initialisation" );
 
@@ -332,34 +337,34 @@ void SupervisionObserverTester::do_tests()
 #if CDMW_ORB_VDR == tao
 
         processEvent = processStatusChangeFactory.create(
-                           header, "System1", pId, "amidala", issuer.c_str(), PROCESS_INITIALISING,
+                           header, "System1", pId, issuer.c_str(), PROCESS_INITIALISING,
                            1, "creation step", "");
 #else
 
         processEvent = processStatusChangeFactory->create(
-                           header, "System1", pId, "amidala", issuer.c_str(), PROCESS_INITIALISING,
+                           header, "System1", pId, issuer.c_str(), PROCESS_INITIALISING,
                            1, "creation step", "");
 #endif
 
         m_observer->notify(processEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
         header = Cdmw::PlatformMngt::EventHeaderFactory::createHeader(INF);
 
 #if CDMW_ORB_VDR == tao
 
         processEvent = processStatusChangeFactory.create(
-                           header, "System1", pId, "amidala", issuer.c_str(), PROCESS_STEP_PERFORMED,
+                           header, "System1", pId, issuer.c_str(), PROCESS_STEP_PERFORMED,
                            1, "creation step", "");
 #else
 
         processEvent = processStatusChangeFactory->create(
-                           header, "System1", pId, "amidala", issuer.c_str(), PROCESS_STEP_PERFORMED,
+                           header, "System1", pId, issuer.c_str(), PROCESS_STEP_PERFORMED,
                            1, "creation step", "");
 #endif
 
         m_observer->notify(processEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
         TEST_INFO( "Notity a system entity status change" );
@@ -381,15 +386,15 @@ void SupervisionObserverTester::do_tests()
 #if CDMW_ORB_VDR == tao
 
         SystemEntityStatusChange_var systemEntityEvent = systemEntityStatusChangeFactory.create(
-                    header, "System1", "Entity1", ENTITY_FUNCTIONING, "negative user level test");
+                    header, "System1", "Entity1", "ENTITY_FUNCTIONING", "negative user level test");
 #else
 
         SystemEntityStatusChange_var systemEntityEvent = systemEntityStatusChangeFactory->create(
-                    header, "System1", "Entity1", ENTITY_FUNCTIONING, "negative user level test");
+                    header, "System1", "Entity1", "ENTITY_FUNCTIONING", "negative user level test");
 #endif
 
         m_observer->notify(systemEntityEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
         TEST_INFO( "Notity an application entity status change" );
@@ -411,15 +416,15 @@ void SupervisionObserverTester::do_tests()
 #if CDMW_ORB_VDR == tao
 
         ApplicationEntityStatusChange_var applicationEntityEvent = applicationEntityStatusChangeFactory.create(
-                    header, "System1", "App1", "Entity1", ENTITY_FUNCTIONING, "big negative user level test");
+                    header, "System1", "App1", "Entity1", "ENTITY_FUNCTIONING", "big negative user level test");
 #else
 
         ApplicationEntityStatusChange_var applicationEntityEvent = applicationEntityStatusChangeFactory->create(
-                    header, "System1", "App1", "Entity1", ENTITY_FUNCTIONING, "big negative user level test");
+                    header, "System1", "App1", "Entity1", "ENTITY_FUNCTIONING", "big negative user level test");
 #endif
 
         m_observer->notify(applicationEntityEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
         TEST_INFO( "Notity a process entity status change" );
@@ -441,27 +446,27 @@ void SupervisionObserverTester::do_tests()
 #if CDMW_ORB_VDR == tao
 
         ProcessEntityStatusChange_var processEntityEvent = processEntityStatusChangeFactory.create(
-                    header, "System1", "App1", "Process1", "amidala", "Entity1", ENTITY_FUNCTIONING, "big user level test");
+                    header, "System1", "App1", "Process1", "Host1", "Entity1", "ENTITY_FUNCTIONING", "big user level test");
 #else
 
         ProcessEntityStatusChange_var processEntityEvent = processEntityStatusChangeFactory->create(
-                    header, "System1", "App1", "Process1", "amidala", "Entity1", ENTITY_FUNCTIONING, "big user level test");
+                    header, "System1", "App1", "Process1", "Host1", "Entity1", "ENTITY_FUNCTIONING", "big user level test");
 #endif
 
         m_observer->notify(processEntityEvent.in());
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
 
 
     }
     catch ( CORBA::Exception& e )
     {
         cerr << e._name();
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch ( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 }

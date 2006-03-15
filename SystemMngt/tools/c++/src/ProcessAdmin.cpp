@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -50,25 +50,6 @@ namespace
     { return !isspace(c);}
 
 
-    //----------------------------------------------------------------------------
-    void print_activity_point(const CdmwPlatformMngt::Process::ActivityPointInfo & ai,
-                              std::ostream& os,
-                              CORBA::ORB_ptr orb)
-        throw()
-    {
-        using namespace CdmwPlatformMngt;
-        // Print activity info
-        if (ai.monitoring_model ==  Process::PULL_MONITORING_MODEL)
-            os << "\t Support of Pull Monitoring Model\n";
-        else
-            os << "\t Support of Push Monitoring Model\n";
-        
-        CORBA::String_var s = orb->object_to_string(ai.activity_point);
-        os << "\tpoint:" << s.in() << std::endl;
-    }
-
-    //----------------------------------------------------------------------------
-    
 }; // End anonymous namespace
 
 namespace Cdmw
@@ -78,10 +59,10 @@ namespace Tools
 
 //----------------------------------------------------------------------------
 ProcessAdmin::ProcessAdmin(CORBA::ORB_ptr orb, 
-                                 CdmwPlatformMngt::Process_ptr proc)
+                           CdmwPlatformMngt::ProcessDelegate_ptr proc)
     throw (CORBA::SystemException)
     : m_orb(CORBA::ORB::_duplicate(orb)),
-      m_process(CdmwPlatformMngt::Process::_duplicate(proc)),
+      m_process_delegate(CdmwPlatformMngt::ProcessDelegate::_duplicate(proc)),
       m_verbose(false)
 {
     CDMW_ASSERT(!CORBA::is_nil(orb));
@@ -100,7 +81,6 @@ const CORBA::ULong ProcessAdmin::nb_commands = 16;
 const ProcessAdmin::command_def ProcessAdmin::commands[] = 
 { 
     { "exit"               , &ProcessAdmin::exit                   },
-    { "get_activity_point" , &ProcessAdmin::get_activity_point     },
     { "get_pull"           , &ProcessAdmin::get_pull_monitorable   },
     { "get_push"           , &ProcessAdmin::get_push_monitorable   },
     { "get_service"        , &ProcessAdmin::get_service            },
@@ -108,7 +88,6 @@ const ProcessAdmin::command_def ProcessAdmin::commands[] =
     { "help"               , &ProcessAdmin::print_help             },
     { "init"               , &ProcessAdmin::initialise             },    
     { "load"               , &ProcessAdmin::load_file              },
-    { "nb_activity_points" , &ProcessAdmin::get_nb_activity_points },
     { "nb_steps"           , &ProcessAdmin::get_nb_steps           },
     { "next"               , &ProcessAdmin::next_step              },
     { "run"                , &ProcessAdmin::run_order              },
@@ -225,9 +204,6 @@ CORBA::Long ProcessAdmin::print_help(const std::string & arg, std::ostream & os)
        << " +====================+============================================+" << "\n"
        << " | x | exit           | exit ADMIN mode                            |" << "\n"
        << " +--------------------+--------------------------------------------+" << "\n"        
-       << " | get_activity_point [index] | print index'th activity point .    |" << "\n"                
-       << " |                          ] | default is all.                    |" << "\n"                
-       << " +--------------------+--------------------------------------------+" << "\n"
        << " | get_pull [check]   | Returns the pull monitorable interface.    |" << "\n"
        << " |                    | check: Checks if the process is alive.     |" << "\n" 
        << " +--------------------+--------------------------------------------+" << "\n"
@@ -245,9 +221,6 @@ CORBA::Long ProcessAdmin::print_help(const std::string & arg, std::ostream & os)
        << " +--------------------+--------------------------------------------+" << "\n"
        << " | load filename      | Load 'filename' batch file                 |" << "\n"
        << " +--------------------+--------------------------------------------+" << "\n"        
-       << " | nb_activity_points | Returns the number of activity points of   |" << "\n"
-       << " |                    | the managed process.                       |" << "\n"
-       << " +--------------------+--------------------------------------------+" << "\n"
        << " | nb_steps           | Returns the number of initialisation steps |" << "\n"
        << " |                    | of the managed process.                    |" << "\n"        
        << " +--------------------+--------------------------------------------+" << "\n"
@@ -276,7 +249,7 @@ CORBA::Long ProcessAdmin::load_file(const std::string & arg, std::ostream & os) 
         if (!in)
             os << "Could not open file \"" << arg << "\"." << std::endl;
         else {
-            ProcessAdmin admin(m_orb.in(),m_process.in());
+            ProcessAdmin admin(m_orb.in(),m_process_delegate.in());
             admin.run(in,os);
             ECHO_CMD << "Batch file \"" << arg << "\" done." << std::endl;
             result = OP_SUCCESS;
@@ -293,24 +266,8 @@ CORBA::Long ProcessAdmin::get_nb_steps(const std::string & arg, std::ostream & o
     CORBA::Long result = OP_FAILURE;    
 
     try {        
-        CORBA::ULong nb = m_process->nb_steps();
+        CORBA::ULong nb = m_process_delegate->nb_steps();
         os << "Number of initialisation steps :" << nb << std::endl;
-        result = OP_SUCCESS;
-    } catch (const CORBA::SystemException & e) {
-        os << "CORBA System Exception : \n" << e << std::endl;
-    }
-
-    return result;
-}
-//----------------------------------------------------------------------------
-CORBA::Long ProcessAdmin::get_nb_activity_points(const std::string & arg, std::ostream & os)
-    throw()
-{	
-    CORBA::Long result = OP_FAILURE;    
-
-    try {        
-        CORBA::ULong nb = m_process->nb_activity_points();
-        os << "Number of activity points :" << nb << std::endl;
         result = OP_SUCCESS;
     } catch (const CORBA::SystemException & e) {
         os << "CORBA System Exception : \n" << e << std::endl;
@@ -325,7 +282,7 @@ CORBA::Long ProcessAdmin::get_service(const std::string & arg, std::ostream & os
     CORBA::Long result = OP_FAILURE;    
 
     try {
-        CORBA::Object_var service = m_process->get_service();
+        CORBA::Object_var service = m_process_delegate->get_service();
         if (CORBA::is_nil(service.in()))
             os << "No embedded service." << std::endl;
         else {
@@ -346,7 +303,7 @@ CORBA::Long ProcessAdmin::get_pull_monitorable(const std::string & arg, std::ost
     CORBA::Long result = OP_FAILURE;    
 
     try {
-        CdmwPlatformMngt::PullMonitorable_var pull = m_process->get_pull_monitorable();
+        FT::PullMonitorable_var pull = m_process_delegate->get_pull_monitorable();
         if (CORBA::is_nil(pull.in()))
             os << "Pull monitoring not supported." << std::endl;
         else {
@@ -377,7 +334,7 @@ CORBA::Long ProcessAdmin::get_push_monitorable(const std::string & arg, std::ost
     CORBA::Long result = OP_FAILURE;    
 
     try {
-        CdmwPlatformMngt::PushMonitorable_var push = m_process->get_push_monitorable();
+        CdmwPlatformMngt::PushMonitorable_var push = m_process_delegate->get_push_monitorable();
         if (CORBA::is_nil(push.in()))
             os << "Push monitoring not supported." << std::endl;
         else {
@@ -391,41 +348,6 @@ CORBA::Long ProcessAdmin::get_push_monitorable(const std::string & arg, std::ost
 
     return result;
 }
-//----------------------------------------------------------------------------
-CORBA::Long ProcessAdmin::get_activity_point(const std::string & arg, std::ostream & os)
-    throw()
-{	
-    CORBA::Long result = OP_FAILURE;    
-
-    try {
-        using namespace CdmwPlatformMngt;
-        if (arg != "") {      
-            CORBA::ULong point_index = 0L;      
-            point_index = atol (arg.c_str());
-            Process::ActivityPointInfo* ai  = m_process->get_activity_point(point_index);
-            os << "ActivityPoint[" << point_index << "]\n";
-            print_activity_point(*ai,os,m_orb.in());
-        } else {
-            Process::ActivityPointInfos_var ais = m_process->get_all_activity_points();
-            
-            for (CORBA::ULong i = 0;i<ais->length();++i)
-            {
-                os << "ActivityPoint[" << i << "]\n";
-                print_activity_point(ais[i],os,m_orb.in());
-            }
-        }
-        
-        result = OP_SUCCESS;
-    } catch (const CdmwPlatformMngt::Process::OutOfRange & e) {
-        os << "Index out of range!" << std::endl;
-    } catch (const CORBA::SystemException & e) {
-        os << "CORBA System Exception : \n" << e << std::endl;
-    }
-
-    return result;
-}
-//----------------------------------------------------------------------------
-
 
 // init state_retrieval startup_mode state_id)
 // state_retrieval = LAST|RECOVER|SPECIFIED
@@ -501,7 +423,7 @@ CORBA::Long ProcessAdmin::initialise(const std::string & arg, std::ostream & os)
         }
     
         os << "Sending <initialise> order...";
-        m_process->initialise(startup_kind);
+        m_process_delegate->initialise(startup_kind);
         os << "done." << std::endl;
         
         result = OP_SUCCESS;
@@ -520,7 +442,7 @@ CORBA::Long ProcessAdmin::next_step(const std::string & arg, std::ostream & os)
 
     try {
         os << "Sending <next_step> order...";
-        m_process->next_step();
+        m_process_delegate->next_step();
         os << "done." << std::endl;
         
         result = OP_SUCCESS;
@@ -539,7 +461,7 @@ CORBA::Long ProcessAdmin::run_order(const std::string & arg, std::ostream & os)
 
     try {
         os << "Sending <run> order...";
-        m_process->run();
+        m_process_delegate->run();
         os << "done." << std::endl;
         
         result = OP_SUCCESS;
@@ -559,7 +481,7 @@ CORBA::Long ProcessAdmin::stop_order(const std::string & arg, std::ostream & os)
 
     try {
         os << "Sending <stop> order...";
-        m_process->stop();
+        m_process_delegate->stop();
         
         result = OP_SUCCESS;
     } catch (const CORBA::SystemException & e) {

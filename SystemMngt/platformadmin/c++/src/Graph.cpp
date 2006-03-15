@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,6 +29,7 @@
 #include "platformadmin/ApplicationParser.hpp"
 #include "platformadmin/SystemParser.hpp"
 #include "SystemMngt/platformvaluetypes/GraphElement_impl.hpp"
+#include "SystemMngt/platformlibrary/ManagedElementKey.hpp"
 
 #include <sstream>
 
@@ -40,16 +41,29 @@ namespace PlatformAdmin { // Begin namespace PlatformAdmin
 // ----------------------------------------------------------------------
 CdmwPlatformMngt::GraphElement* Graph::get_graph_element(
     std::string name,
+    std::string host,
     unsigned short step )
 {
     try
     {
         CdmwPlatformMngt::GraphElement_var graphElement;
+        
+        // build the process key if host is defined
+        std::string name_key;
+        
+        if (host == "")
+        {
+            name_key = name;
+        }
+        else
+        {            
+            name_key = PlatformMngt::ManagedElementKey::Get_process_rel_key (host, name);
+        }
 
         // Search the specified graph element
         std::ostringstream key;
 
-        key << name << "-" << step << std::ends;
+        key << name_key << "-" << step << std::ends;
         PlatformMngt::GraphElementMap::iterator iterator
             = m_graphElementMap.find( key.str() );
 
@@ -64,14 +78,14 @@ CdmwPlatformMngt::GraphElement* Graph::get_graph_element(
             #if CDMW_ORB_VDR == tao
             Cdmw::PlatformMngt::GraphElementFactory graphElementFactory;
 
-            graphElement = graphElementFactory.create( name.c_str(), step );
+            graphElement = graphElementFactory.create( name_key.c_str(), step );
             #else
             CORBA::ValueFactoryBase_var graphElementFactory
                 = new Cdmw::PlatformMngt::GraphElementFactory();
 
             graphElement
                 = dynamic_cast< Cdmw::PlatformMngt::GraphElementFactory* >
-                    ( graphElementFactory.in() )->create( name.c_str(), step );
+                    ( graphElementFactory.in() )->create( name_key.c_str(), step );
             #endif
 
             // Add it to the map of graph element references
@@ -107,6 +121,7 @@ Graph::Graph(
             CdmwPlatformMngt::GraphElement_var graphElement
                 = get_graph_element(
                     nodeParser.name(),
+                    nodeParser.host(),
                     nodeParser.step() );
 
             // Assign the successors's reference
@@ -121,6 +136,7 @@ Graph::Graph(
                 CdmwPlatformMngt::GraphElement_var successorGraphElement
                     = get_graph_element(
                         nodeParser.get_successor_node_name( successorIndex ),
+                        nodeParser.get_successor_node_host( successorIndex ),
                         nodeParser.get_successor_node_step( successorIndex ) );
 
                 graphElement->successors()[ successorIndex ]
@@ -141,6 +157,7 @@ Graph::Graph(
             CdmwPlatformMngt::GraphElement_var root
                 = get_graph_element(
                     graphParser.get_root_node_name( rootNodeIndex ),
+                    graphParser.get_root_node_host( rootNodeIndex ),
                     graphParser.get_root_node_step( rootNodeIndex ) );
 
             // Store it into the internal list

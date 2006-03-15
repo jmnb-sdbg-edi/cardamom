@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -36,8 +36,9 @@ using namespace std;
 using namespace CdmwPlatformMngt;
 using namespace Cdmw::PlatformMngt;
 
-TestGraphChecker ::TestGraphChecker ( const string& name )
-: Testable( name )
+CPPUNIT_TEST_SUITE_REGISTRATION( TestGraphChecker );
+
+TestGraphChecker ::TestGraphChecker ()
 {
 }
 
@@ -48,7 +49,7 @@ TestGraphChecker ::~TestGraphChecker ()
 void TestGraphChecker ::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (8);
+// //     set_nbOfRequestedTestOK (8);
     
     
     ExistingElementMap existingElementMap;
@@ -141,17 +142,17 @@ void TestGraphChecker ::do_tests()
         roots[2] = c0;
 
         GraphChecker processGraph( roots, NULL, false );
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     TEST_INFO( "Check the following graph is valid" );
@@ -199,17 +200,17 @@ void TestGraphChecker ::do_tests()
         roots[2] = c0;
 
         GraphChecker processGraph( roots, NULL, false );
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     TEST_INFO( "Check the following graph contains a step jump" );
@@ -257,7 +258,7 @@ void TestGraphChecker ::do_tests()
         roots[3] = d1;
 
         GraphChecker processGraph( roots, NULL, false );
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( CdmwPlatformMngt::StepJump& e )
     {
@@ -265,17 +266,17 @@ void TestGraphChecker ::do_tests()
         cerr << "The element '" << e.name.in()
              << "' jumps from the step " << e.origin_step
              << " to the step " << e.target_step << endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     TEST_INFO( "Check the following graph contains a step jump" );
@@ -320,7 +321,7 @@ void TestGraphChecker ::do_tests()
         roots[2] = c0;
 
         GraphChecker processGraph( roots, NULL, false );
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( CdmwPlatformMngt::StepJump& e )
     {
@@ -328,17 +329,17 @@ void TestGraphChecker ::do_tests()
         cerr << "The element '" << e.name.in()
              << "' jumps from the step " << e.origin_step
              << " to the step " << e.target_step << endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     TEST_INFO( "Check the following graph is cyclic" );
@@ -384,24 +385,24 @@ void TestGraphChecker ::do_tests()
         roots[2] = c0;
 
         GraphChecker processGraph( roots, NULL, false );
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( CdmwPlatformMngt::CircularReference& e )
     {
         cerr << e._name() << endl;
         cerr << "The graph contains a circular reference: '"
              << e.name.in() << e.step << "'" << endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     
     TEST_INFO( "Check the following graph is cyclic" );
@@ -450,24 +451,24 @@ void TestGraphChecker ::do_tests()
         roots[3] = e0;
 
         GraphChecker processGraph( roots, NULL, false );
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( CdmwPlatformMngt::CircularReference& e )
     {
         cerr << e._name() << endl;
         cerr << "The graph contains a circular reference: '"
              << e.name.in() << e.step << "'" << endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     TEST_INFO( "Check the step range of all the graph element" );
@@ -512,7 +513,7 @@ void TestGraphChecker ::do_tests()
         roots[2] = c0;
 
         GraphChecker processGraph( roots, &existingElementMap, false );
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( CdmwPlatformMngt::StepOutOfBound& e )
     {
@@ -521,17 +522,17 @@ void TestGraphChecker ::do_tests()
              << " of the element '" << e.name.in()
              << "' is out of bound." << endl;
 
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
     TEST_INFO( "Check the existence of all the steps of the following graph" );
@@ -576,24 +577,24 @@ void TestGraphChecker ::do_tests()
         roots[2] = c0;
 
         GraphChecker processGraph( roots, &existingElementMap, false );
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( CdmwPlatformMngt::ReferenceNotFound& e )
     {
         cerr << e._name() << endl;
         cerr << "The element '" << e.name.in()
              << "' doesn't refer to an existing element." << endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         cerr << e._name() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch( const Cdmw::Exception& e )
     {
         cerr << e.what() << endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 }
 

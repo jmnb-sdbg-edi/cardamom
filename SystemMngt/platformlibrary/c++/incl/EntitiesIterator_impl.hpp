@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -40,7 +40,7 @@ namespace PlatformMngt
 /**
 *Purpose:
 *<p>
-*Implementation of IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntitiesIterator:1.0 interface.
+*Implementation of IDL:thalesgroup.com/CdmwPlatformMngt/EntitiesIterator:1.0 interface.
 *<p>
 *Features:
 *<p>
@@ -48,8 +48,8 @@ namespace PlatformMngt
 *
 *@see Iterator.
 */
-class EntitiesIterator_impl : virtual public POA_CdmwPlatformMngtEntity::EntitiesIterator,
-        virtual public PortableServer::RefCountServantBase
+class EntitiesIterator_impl : virtual public POA_CdmwPlatformMngt::EntitiesIterator,
+                              virtual public PortableServer::RefCountServantBase
 {
 
 public:
@@ -58,7 +58,7 @@ public:
     * Purpose:
     * <p>
     * implements the
-    * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntitiesIterator/reset:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/EntitiesIterator/reset:1.0
     * operation
     */
     virtual void reset()
@@ -72,13 +72,13 @@ public:
     * Purpose:
     * <p>
     * implements the
-    * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntitiesIterator/next_one:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/EntitiesIterator/next_one:1.0
     * operation
     */
-    virtual CORBA::Boolean next_one(CdmwPlatformMngtEntity::Entity_out entity_name)
+    virtual CORBA::Boolean next_one(CdmwPlatformMngt::Entity_out entity)
         throw(CORBA::SystemException)
     {
-        return m_delegate.next_one(entity_name);
+        return m_delegate.next_one(entity);
     }
 
 
@@ -86,14 +86,14 @@ public:
     * Purpose:
     * <p>
     * implements the
-    * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntitiesIterator/next_n:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/EntitiesIterator/next_n:1.0
     * operation
     */
     virtual CORBA::Boolean next_n(CORBA::ULong how_many,
-                                  CdmwPlatformMngtEntity::Entities_out entity_names)
+                                  CdmwPlatformMngt::Entities_out entities)
         throw(CORBA::SystemException)
     {
-        return m_delegate.next_n(how_many, entity_names);
+        return m_delegate.next_n(how_many, entities);
     }
 
 
@@ -101,7 +101,7 @@ public:
     * Purpose:
     * <p>
     * implements the
-    * IDL:thalesgroup.com/CdmwPlatformMngtEntity/EntitiesIterator/destroy:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/EntitiesIterator/destroy:1.0
     * operation
     */
     virtual void destroy()
@@ -128,8 +128,8 @@ public:
     * @param elementList The list of elements referenced by the created iterator.
     * @return   The reference to the CORBA object
     */
-    static CdmwPlatformMngtEntity::EntitiesIterator_ptr create(
-        const std::list<CdmwPlatformMngtEntity::Entity_var> elementList)
+    static CdmwPlatformMngt::EntitiesIterator_ptr create(
+        const std::list<CdmwPlatformMngt::Entity_var> elementList)
         throw (OutOfMemoryException, InternalErrorException)
     {
 
@@ -142,7 +142,7 @@ public:
             CORBA::Object_var object =
                 IteratorManager::createIterator(servant.in(), &(servant_impl->m_delegate));
 
-            return CdmwPlatformMngtEntity::EntitiesIterator::_narrow(object.in());
+            return CdmwPlatformMngt::EntitiesIterator::_narrow(object.in());
 
         }
         catch(const std::bad_alloc &)
@@ -162,15 +162,15 @@ private:
     /**
     * The actual implementation of the iterator.
     */
-    Iterator<CdmwPlatformMngtEntity::Entity,
-        CdmwPlatformMngtEntity::Entity_var,
-        CdmwPlatformMngtEntity::Entity_out,
-        CdmwPlatformMngtEntity::Entities,
-        CdmwPlatformMngtEntity::Entities_var,
-        CdmwPlatformMngtEntity::Entities_out,
-        StructElementAllocator<CdmwPlatformMngtEntity::Entity,
-            CdmwPlatformMngtEntity::Entity_out>
-        > m_delegate;
+    Iterator<CdmwPlatformMngt::Entity,
+        CdmwPlatformMngt::Entity_var,
+        CdmwPlatformMngt::Entity_out,
+        CdmwPlatformMngt::Entities,
+        CdmwPlatformMngt::Entities_var,
+        CdmwPlatformMngt::Entities_out,
+        InterfaceElementAllocator<CdmwPlatformMngt::Entity,
+                                  CdmwPlatformMngt::Entity_out>
+                                 > m_delegate;
 
 private:
 
@@ -179,7 +179,7 @@ private:
     * <p>
     * Constructor.
     */
-    EntitiesIterator_impl(const std::list<CdmwPlatformMngtEntity::Entity_var> elementList)
+    EntitiesIterator_impl(const std::list<CdmwPlatformMngt::Entity_var> elementList)
         : m_delegate(elementList)
     {
     }

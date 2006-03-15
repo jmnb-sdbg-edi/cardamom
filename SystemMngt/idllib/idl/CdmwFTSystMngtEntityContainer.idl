@@ -1,0 +1,127 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef CDMW_FTSYST_MNGT_ENTITY_CONTAINER_IDL_
+#define CDMW_FTSYST_MNGT_ENTITY_CONTAINER_IDL_
+
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwPlatformMngtElementBase.idl>
+
+
+#pragma prefix "thalesgroup.com"
+
+module CdmwFTSystMngt
+{
+    /**
+    * The CDMW entity container accessor.
+    */
+    interface EntityContainerAccessor
+    {
+
+        unsigned long get_number_of_entities(
+              in CdmwPlatformMngt::ElementPath target_element_path)
+            raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        void get_all_entity_names(
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in unsigned long how_many,
+            out CdmwPlatformMngt::ElementNames entity_names,
+            out CdmwPlatformMngt::ElementNamesIterator rest)
+           raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        CdmwPlatformMngt::ElementPath get_entity(
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in CdmwPlatformMngt::ElementName entity_name)
+           raises(CdmwPlatformMngt::ManagedElementNotFound,
+                  CdmwPlatformMngt::EntityNotFound);
+                  
+        boolean get_entities(
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in CdmwPlatformMngt::ElementNames entity_names,
+            out CdmwPlatformMngt::ElementPaths entities)
+            raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+        void get_all_entities(
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in unsigned long how_many,
+            out CdmwPlatformMngt::ElementPaths entities,
+            out CdmwPlatformMngt::ElementPathsIterator rest)
+           raises(CdmwPlatformMngt::ManagedElementNotFound);
+
+    }; // End interface EntityContainerAccessor
+
+
+    /**
+     * The writable EntityContainerAccessor.
+     */
+    interface RWEntityContainerAccessor : EntityContainerAccessor
+    {  
+        /**
+        * Adds an entity.
+        *
+        * @param target_element_path path of target element to access
+        * @param entity_def the definition of the entity to add.
+        * @return the entity element path
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception EntityAlreadyExists if the entity name already exists.
+        * @exception CosPropertyService::MultipleExceptions if bad properties in entity
+        * @exception DuplicateCommand if there is a duplicate command name
+        * among the commands of the process
+        * @exception DuplicateCommandArg if there is a duplicate command arg name
+        * among the commands of the process
+        */
+        CdmwPlatformMngt::ElementPath add_entity(
+            in CdmwPlatformMngt::ElementPath target_element_path,
+            in CdmwPlatformMngt::EntityDef entity_def)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::EntityAlreadyExists, 
+                   CosPropertyService::MultipleExceptions,
+                   CdmwPlatformMngt::DuplicateCommand, 
+                   CdmwPlatformMngt::DuplicateCommandArg);
+
+        /**
+        * Removes an entity.
+        *
+        * @param target_element_path path of target element to access
+        * @param entity_name the name identifying the entity to remove.
+        *
+        * @exception ManagedElementNotFound if element not found
+        * @exception EntityNotFound if entity name doesn't denote
+        * an existing entity.
+        */
+        void remove_entity(
+                   in CdmwPlatformMngt::ElementPath target_element_path,
+                   in CdmwPlatformMngt::ElementName entity_name)
+            raises(CdmwPlatformMngt::ManagedElementNotFound,
+                   CdmwPlatformMngt::EntityNotFound);
+
+    }; // End interface RWEntityContainerAccessor
+
+
+}; // End Module CdmwFTSystMngt
+
+#endif // CDMW_FTSYST_MNGT_ENTITY_CONTAINER_IDL_
+

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -27,8 +27,12 @@
 #define INCL_PLATFORMMNGT_SUPERVISION_EVENTNOTIFIER_HPP 
 
 #include "SystemMngt/platformlibrary/EventNotifier.hpp"
+#include "SystemMngt/platformlibrary/DataStoreBaseDefinition.hpp"
+
 #include "SystemMngt/idllib/CdmwPlatformMngtSupervisionObserver.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtEvent.stub.hpp"
+
+
 
 
 namespace Cdmw
@@ -116,6 +120,24 @@ class SupervisionEventNotifier : virtual public EventNotifier<
             CdmwPlatformMngt::SupervisionObserver_ptr observer,
             CdmwPlatformMngt::Event* event)
             throw(OutOfMemoryException);
+            
+        /**
+         *Purpose:
+         *<p> Insert the event in DataStore.
+         *
+         *@param event The event to be placed in the data store.
+         *
+         */
+        virtual void insertEventInDataStore (CdmwPlatformMngt::Event* event);
+    
+        /**
+         *Purpose:
+         *<p> remove the event from DataStore.
+         *
+         *@param event_key The key of event to remove from the data store.
+         *
+         */
+        virtual void removeEventInDataStore (CdmwPlatformMngtBase::EventKey event_key);
 
 
     private:
@@ -146,6 +168,14 @@ class SupervisionEventNotifier : virtual public EventNotifier<
         * The factory of bound synchronous calls.
         */
         BoundSyncCallFactory* m_boundSyncCallFactory;
+        
+    private:
+          
+        /**
+        * Event report datastore
+        */
+        EventNotifierDataStore* m_event_notif_ds;
+
 
 
 }; // End class SupervisionEventNotifier 

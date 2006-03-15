@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -39,7 +39,7 @@
 #include "SystemMngt/platformvaluetypes/GraphElement_impl.hpp"
 #include "SystemMngt/platformapplicationlibrary/Application_impl.hpp"
 #include "SystemMngt/platformapplicationlibrary/ApplicationLogMessageId.hpp"
-#include "platformapplicationlibrary/ProcessProxy_impl.hpp"
+#include "platformapplicationlibrary/Process_impl.hpp"
 #include "platformapplicationlibrary/ProcessInit.hpp"
 #include "platformapplicationlibrary/ProcessRun.hpp"
 #include "platformapplicationlibrary/ProcessStop.hpp"
@@ -72,8 +72,8 @@ throw(CdmwPlatformMngt::DuplicateEntity,
       CdmwPlatformMngt::DuplicateProcessEntity,
       CdmwPlatformMngt::DuplicateProcessService,
       CdmwPlatformMngt::DuplicateProcessStep,
-      CdmwPlatformMngt::DuplicateProcessActivityPoint,
       CdmwPlatformMngt::AlreadyDone,
+      CosPropertyService::MultipleExceptions,
       CdmwPlatformMngt::IncompatibleStatus,
       CORBA::SystemException )
 {
@@ -84,7 +84,7 @@ throw(CdmwPlatformMngt::DuplicateEntity,
     // TODO: Trace to the log manager
 }
 
-CdmwPlatformMngt::ProcessProxy_ptr ApplicationInitial::add_process(
+CdmwPlatformMngt::Process_ptr ApplicationInitial::add_process(
     ApplicationStateMachine* stateMachine,
     CdmwPlatformMngt::ProcessDef* process_def )
 throw( CdmwPlatformMngt::ProcessAlreadyExists,
@@ -92,18 +92,18 @@ throw( CdmwPlatformMngt::ProcessAlreadyExists,
        CdmwPlatformMngt::DuplicateEntity,
        CdmwPlatformMngt::DuplicateService,
        CdmwPlatformMngt::DuplicateStep,
-       CdmwPlatformMngt::DuplicateActivityPoint,
        CdmwPlatformMngt::IncompatibleStatus,
+       CosPropertyService::MultipleExceptions,
        CORBA::SystemException )
 {
-    CdmwPlatformMngt::ProcessProxy_ptr processProxy
+    CdmwPlatformMngt::Process_ptr process
         = stateMachine->getContext()->addProcess( process_def );
 
     // TODO: Notify the configuration change
 
     // TODO: Trace to the log manager
 
-    return processProxy;
+    return process;
 }
 
 void ApplicationInitial::remove_process(
@@ -215,7 +215,7 @@ void ApplicationInitialising::doActivity(
                 = InitProcessTaskFactory::createFactory(
                     application,
                     application->m_startup_kind.in(),
-                    application->m_initProcessGraph.in() );
+                    application->m_processInitGraph.in() );
 
             application->m_initSequencer = new Sequencer(
                 application->m_initSyncTaskFactory );
@@ -228,7 +228,7 @@ void ApplicationInitialising::doActivity(
             LogMngr::logMessage(
                 INF,
                 MSG_ID_APPLICATION_START_INIT_SEQUENCER,
-                application->m_applicationAck->application_name.in() );
+                application->get_element_name());
 
             application->m_initSequencer->start();
         }
@@ -238,7 +238,7 @@ void ApplicationInitialising::doActivity(
             LogMngr::logMessage(
                 INF,
                 MSG_ID_APPLICATION_RESUME_INIT_SEQUENCER,
-                application->m_applicationAck->application_name.in() );
+                application->get_element_name());
 
             application->m_initSequencer->resume();
         }
@@ -354,8 +354,7 @@ throw( OutOfMemoryException,
     application->destroyInitSequencer();
 
     // Set the init process graph
-    application->setInitGraph( process_graph );
-    application->m_newInitGraph = true;
+    application->setInitGraph (process_graph);
 }
 
 void ApplicationInitialisationSuspended::set_stop_graph(
@@ -369,7 +368,7 @@ throw( OutOfMemoryException,
        CdmwPlatformMngt::IncompatibleStatus,
        CORBA::SystemException )
 {
-    stateMachine->getContext()->setStopGraph( process_graph );
+    stateMachine->getContext()->setStopGraph (process_graph);
 }
 
 void ApplicationInitialisationSuspended::resume(
@@ -476,8 +475,10 @@ void ApplicationInitialised::entryAction(
     {
 
         // Notify the initialisation event to the application observers
-        application->m_applicationAck->application_observer->notify_initialisation(
-            application->m_applicationAck->application_name.in() );
+        CdmwPlatformMngt::ApplicationObserver_var app_observer =  
+              application->get_application_observer();
+              
+        app_observer->notify_initialisation (application->get_element_name());
     }
     catch( const CORBA::Exception& e )
     {
@@ -495,7 +496,7 @@ ApplicationInitialised::status()
     return CdmwPlatformMngt::APPLICATION_INITIALISED;
 }
 
-CdmwPlatformMngt::ProcessProxy_ptr ApplicationInitialised::add_process(
+CdmwPlatformMngt::Process_ptr ApplicationInitialised::add_process(
     ApplicationStateMachine* stateMachine,
     CdmwPlatformMngt::ProcessDef* process_def )
 throw( CdmwPlatformMngt::ProcessAlreadyExists,
@@ -503,18 +504,18 @@ throw( CdmwPlatformMngt::ProcessAlreadyExists,
        CdmwPlatformMngt::DuplicateEntity,
        CdmwPlatformMngt::DuplicateService,
        CdmwPlatformMngt::DuplicateStep,
-       CdmwPlatformMngt::DuplicateActivityPoint,
        CdmwPlatformMngt::IncompatibleStatus,
+       CosPropertyService::MultipleExceptions,
        CORBA::SystemException )
 {
-    CdmwPlatformMngt::ProcessProxy_ptr processProxy
+    CdmwPlatformMngt::Process_ptr process
         = stateMachine->getContext()->addProcess( process_def );
 
     // TODO: Notify the configuration change
 
     // TODO: Trace to the log manager
 
-    return processProxy;
+    return process;
 }
 
 void ApplicationInitialised::remove_process(
@@ -614,24 +615,30 @@ void ApplicationRunRequest::doActivity(
             completionCallback.release() );
 
         // Get the list of task to be run concurently
-        std::list< std::string > taskList;
-        Cdmw::PlatformMngt::Application_impl::ProcessProxies::iterator processIt;
-        for( processIt = application->m_processProxies.begin();
-             processIt != application->m_processProxies.end();
-             processIt++ )
+        std::list <std::string> taskList;
+        Application_impl::ProcessServants::iterator processIt;
+        for (processIt = application->m_process_servants.begin();
+             processIt != application->m_process_servants.end();
+             processIt++)
         {
-            ProcessProxy_impl* process = processIt->second;
-            const char* p_processName = process->get_processName();
+            Process_impl* process = processIt->second;
+            const char* p_processKey = process->get_process_key();
+            
+            /***
             CORBA::String_var statusInfo;
             CdmwPlatformMngt::ProcessStatus status
-                = process->get_status( statusInfo.out() );
+                = process->get_status (statusInfo.out());
+            ***/
+            
+            CdmwPlatformMngt::ProcessStatus status
+                = process->get_internal_status ();
 
-            if( status == CdmwPlatformMngt::PROCESS_INITIALISED )
-                taskList.push_back( p_processName );
+            if (status == CdmwPlatformMngt::PROCESS_INITIALISED)
+                taskList.push_back (p_processKey);
         }
         
         
-        application->m_starter->addTasksToStart( taskList );
+        application->m_starter->addTasksToStart (taskList);
         
         // Start the run starter
         application->m_starter->start();
@@ -731,7 +738,7 @@ ApplicationRunning::status()
     return CdmwPlatformMngt::APPLICATION_RUNNING;
 }
 
-CdmwPlatformMngt::ProcessProxy_ptr ApplicationRunning::add_process(
+CdmwPlatformMngt::Process_ptr ApplicationRunning::add_process(
     ApplicationStateMachine* stateMachine,
     CdmwPlatformMngt::ProcessDef* process_def )
 throw( CdmwPlatformMngt::ProcessAlreadyExists,
@@ -739,18 +746,18 @@ throw( CdmwPlatformMngt::ProcessAlreadyExists,
        CdmwPlatformMngt::DuplicateEntity,
        CdmwPlatformMngt::DuplicateService,
        CdmwPlatformMngt::DuplicateStep,
-       CdmwPlatformMngt::DuplicateActivityPoint,
        CdmwPlatformMngt::IncompatibleStatus,
+       CosPropertyService::MultipleExceptions,
        CORBA::SystemException )
 {
-    CdmwPlatformMngt::ProcessProxy_ptr processProxy
+    CdmwPlatformMngt::Process_ptr process
         = stateMachine->getContext()->addProcess( process_def );
 
     // TODO: Notify the configuration change
 
     // TODO: Trace to the log manager
 
-    return processProxy;
+    return process;
 }
 
 void ApplicationRunning::remove_process(
@@ -840,38 +847,50 @@ void ApplicationStopping::doActivity(
         // If regular stop, consider the process stop graph
         if( !application->m_emergency )
         {
-            stopProcessGraph = application->m_stopProcessGraph;
+            stopProcessGraph = application->m_processStopGraph;
         }
 
         // Get the list of all element of the stop graph
-        ElementNames elementNames
+        GraphElementNames elementNames
             = GraphUtility::getElementNames( stopProcessGraph.in() );
 
-        // Add all the active process proxies as roots of the stop graph
+        // Add all the active process as roots of the stop graph
         // If not present in the stop graph.
-        Application_impl::ProcessProxies::iterator processIt;
+        Application_impl::ProcessServants::iterator processIt;
 
-        for( processIt =  application->m_processProxies.begin();
-             processIt != application->m_processProxies.end();
+        for( processIt =  application->m_process_servants.begin();
+             processIt != application->m_process_servants.end();
              processIt++ )
         {
-            ProcessProxy_impl* process = processIt->second;
-            const char* p_processName = process->get_processName();
-            CORBA::String_var statusInfo;
+            Process_impl* process = processIt->second;
+            
+            const char* p_processKey = process->get_process_key();
+            const char* p_processName = process->get_element_name();
+            
+            /***
+            CORBA::String_var statusInfo;            
             CdmwPlatformMngt::ProcessStatus status
-                = process->get_status( statusInfo.out() );
+                = process->get_status (statusInfo.out());
+            ***/
+                
+            CdmwPlatformMngt::ProcessStatus status
+                = process->get_internal_status ();
 
-            if( ( elementNames.find( p_processName ) == elementNames.end() ) &&
-                ( ( status == CdmwPlatformMngt::PROCESS_INITIALISING ) ||
-                  ( status == CdmwPlatformMngt::PROCESS_STEP_PERFORMED ) ||
-                  ( status == CdmwPlatformMngt::PROCESS_INITIALISED ) ||
-                  ( status == CdmwPlatformMngt::PROCESS_RUN_REQUEST ) ||
-                  ( status == CdmwPlatformMngt::PROCESS_RUNNING ) ||
-                  ( status == CdmwPlatformMngt::PROCESS_STOPPING ) ) )
+            // if process not found in graph and if it is active stop it
+            // (if process is ended, request to call stop for cleaning the agent)
+            if ((elementNames.find (p_processKey) == elementNames.end() &&
+                 elementNames.find (p_processName) == elementNames.end()) &&
+                 ((status == CdmwPlatformMngt::PROCESS_INITIALISING) ||
+                  (status == CdmwPlatformMngt::PROCESS_STEP_PERFORMED) ||
+                  (status == CdmwPlatformMngt::PROCESS_INITIALISED) ||
+                  (status == CdmwPlatformMngt::PROCESS_RUN_REQUEST) ||
+                  (status == CdmwPlatformMngt::PROCESS_RUNNING) ||
+                  (status == CdmwPlatformMngt::PROCESS_STOPPING) ||
+                  (status == CdmwPlatformMngt::PROCESS_ENDED)))
             {
                 CdmwPlatformMngt::GraphElement_var element
                     = application->m_graphElementFactory->create(
-                        p_processName,
+                        p_processKey,
                         0 );
 
                 // insert new element in graph
@@ -900,7 +919,7 @@ void ApplicationStopping::doActivity(
         LogMngr::logMessage(
             INF,
             MSG_ID_APPLICATION_START_STOP_SEQUENCER,
-            application->m_applicationAck->application_name.in() );
+            application->get_element_name());
 
         application->m_stopSequencer->start();
     }
@@ -951,7 +970,7 @@ void ApplicationStopping::completion_event(
     LogMngr::logMessage(
             INF,
             MSG_ID_APPLICATION_START_KILL_AGENTS,
-            application->m_applicationAck->application_name.in() );            
+            application->get_element_name());            
     
     application->killAllAgents();
     
@@ -984,7 +1003,7 @@ CdmwPlatformMngt::ApplicationStatus ApplicationStopped::status()
     return CdmwPlatformMngt::APPLICATION_STOPPED;
 }
 
-CdmwPlatformMngt::ProcessProxy_ptr ApplicationStopped::add_process(
+CdmwPlatformMngt::Process_ptr ApplicationStopped::add_process(
     ApplicationStateMachine* stateMachine,
     CdmwPlatformMngt::ProcessDef* process_def )
 throw( CdmwPlatformMngt::ProcessAlreadyExists,
@@ -992,18 +1011,18 @@ throw( CdmwPlatformMngt::ProcessAlreadyExists,
        CdmwPlatformMngt::DuplicateEntity,
        CdmwPlatformMngt::DuplicateService,
        CdmwPlatformMngt::DuplicateStep,
-       CdmwPlatformMngt::DuplicateActivityPoint,
        CdmwPlatformMngt::IncompatibleStatus,
+       CosPropertyService::MultipleExceptions,	
        CORBA::SystemException )
 {
-    CdmwPlatformMngt::ProcessProxy_ptr processProxy
+    CdmwPlatformMngt::Process_ptr process
         = stateMachine->getContext()->addProcess( process_def );
 
     // TODO: Notify the configuration change
 
     // TODO: Trace to the log manager
 
-    return processProxy;
+    return process;
 }
 
 void ApplicationStopped::remove_process(

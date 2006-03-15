@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -29,16 +29,22 @@
 #include "Foundation/common/Options.hpp"
 #include "Foundation/common/String.hpp"
 
-#include "platformsystem/SystemLogMngr.hpp"
+
 #include "SystemMngt/platformlibrary/Configuration.hpp"
 #include "SystemMngt/platformlibrary/SupervisionEventNotifier.hpp"
 #include "SystemMngt/platformlibrary/BoundSyncCall.hpp"
 #include "SystemMngt/platformlibrary/Iterator.hpp"
-#include "platformsystem/SystemLogMessageId.hpp"
+#include "SystemMngt/platformlibrary/RWElementRepository_impl.hpp"
 
-#include "platformsystem/CentralisedSupervisionSystem_impl.hpp"
-#include "platformsystem/DistributedSupervisionSystem_impl.hpp"
 #include "SystemMngt/platformapplicationlibrary/Application_impl.hpp"
+
+#include "platformsystemlibrary/SystemLogMngr.hpp"
+#include "platformsystemlibrary/SystemLogMessageId.hpp"
+#include "platformsystemlibrary/CentralisedSupervisionSystem_impl.hpp"
+#include "platformsystemlibrary/DistributedSupervisionSystem_impl.hpp"
+
+#include "platformsystem/CdmwInterface.hpp"
+
 
 #include "SystemMngt/platformvaluetypes/SystemStatusChange_impl.hpp"
 #include "SystemMngt/platformvaluetypes/SystemModeChange_impl.hpp"
@@ -57,13 +63,6 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
-#include <signal.h>
-
-#ifdef CDMW_USE_FAULTTOLERANCE
-#include "SystemMngt/platformlibrary/ClientIDGenerator.hpp"
-#include "FaultTolerance/ftinit/FTServiceInit.hpp"
-#include <tao/ORB_Core.h>
-#endif 
 
 namespace
 {
@@ -71,9 +70,7 @@ namespace
     const std::string DISTRIBUTED_OPTION = "--distributed";
     const std::string EVENT_TIMEOUT_OPTION = "--event-timeout";
     const std::string CREATION_TIMEOUT_OPTION = "--creation-timeout";
-#ifdef CDMW_USE_FAULTTOLERANCE
-    const std::string FAULT_MANAGER_CORBALOC = "--FaultManagerRegistration";
-#endif    
+    
 }; // End anonymous namespace
 
 
@@ -98,10 +95,6 @@ void print_syntax(char* program_name)
     std::cout << " [" << CENTRALISED_OPTION << " | " << DISTRIBUTED_OPTION << "]";
     std::cout << " [" << EVENT_TIMEOUT_OPTION << "=time_out]";
     std::cout << " [" << CREATION_TIMEOUT_OPTION << "=time_out]";
-#ifdef CDMW_USE_FAULTTOLERANCE
-    std::cout << " [" << FAULT_MANAGER_CORBALOC << "=fault_manager_corbaloc]";
-    std::cout << " [" << Cdmw::Common::Options::REQUEST_DURATION_TIME << "=time]"; 
-#endif
     std::cout << " [" << Cdmw::Common::Options::LOG_FILE_OPTION << "=full_path_to_log_file]";
     std::cout << std::endl;
 }
@@ -112,6 +105,8 @@ void exceptionHandler(void)
     std::cout << "Platform Supervision : UNEXPECTED EXCEPTION HANDLER" << std::endl;
 }
 
+
+/****
 #ifdef WIN32
 void __cdecl sighandler (int sig)
 #else
@@ -135,6 +130,7 @@ void sighandler (int sig)
 	}
 	
 }
+****/
 
 
 
@@ -159,16 +155,14 @@ int main(int argc, char* argv[])
     std::string logFile;
     unsigned long eventTimeout;
     unsigned long creationTimeout;
-#ifdef CDMW_USE_FAULTTOLERANCE
-    size_t duration_time=20000000;
-#endif
-
+    
 #   ifndef _MSC_VER    
 
     std::set_unexpected(&exceptionHandler);
 
     // VC++ contrary to the clause 18.6 of the C++ standard, 
  	//  set_unexpected, is not inside the std:: namespace
+ 	
 #   else
 
     set_unexpected(&exceptionHandler);
@@ -195,11 +189,8 @@ int main(int argc, char* argv[])
     }
 
     // checks the number of options
-#ifdef CDMW_USE_FAULTTOLERANCE
-    if (argc > 8)
-#else
+    
     if (argc > 6)
-#endif
     {
         LogMngr::logMessage(FTL, MSG_ID_SUPERVISION_INVALID_OPTIONS);
         print_syntax(argv[0]);
@@ -287,7 +278,7 @@ int main(int argc, char* argv[])
         eventTimeout = 5000;
     }
 
-    // checks the application, agent, process creation timeout option
+    // checks the application, process creation timeout option
     std::string creation_timeout_option =
         OS::get_option_value(argc, argv, CREATION_TIMEOUT_OPTION);
 
@@ -337,56 +328,6 @@ int main(int argc, char* argv[])
     }
 
     
-#ifdef CDMW_USE_FAULTTOLERANCE
-    // checks the FaultManager corbaloc
-    std::string FaultManCorbaloc_option =
-        OS::get_option_value( argc, argv, FAULT_MANAGER_CORBALOC);
-    
-    std::string FaultManCorbaloc;
-    
-    if ( FaultManCorbaloc_option!= "no")
-    {
-        if (FaultManCorbaloc_option != "yes")
-        {
-            FaultManCorbaloc = FaultManCorbaloc_option;           
-        }
-        else
-        {
-            LogMngr::logMessage (FTL, "Fault manager corbaloc not specified");
-            print_syntax(argv[0]);
-            ::exit(EXIT_FAILURE);
-        }
-    }
-    else
-    {
-        LogMngr::logMessage (FTL, "Fault manager corbaloc not specified");
-        print_syntax(argv[0]);
-        ::exit(EXIT_FAILURE);
-    }   
-
-
-    //check the request duration time option
-    std::string request_duration_time_value =
-        OS::get_option_value(argc, argv, Cdmw::Common::Options::REQUEST_DURATION_TIME);
-    if ( request_duration_time_value != "no" )
-    {
-        if ( request_duration_time_value == "yes")
-        {
-            LogMngr::logMessage(FTL, "the request duration time option is used without any value ");
-            ::exit(EXIT_FAILURE); 
-        } else {
-            duration_time = atoi(request_duration_time_value.c_str());
-        }        
-    } else {
-        LogMngr::logMessage(INF, "the request duration time is the default value");      
-    }
-
-    
-    // Initialise FT service
-    Cdmw::FT::FTServiceInit::init( argc, argv, true );
-
-#endif    
-
     try
     {
 	    // If a log file has been specified, use it
@@ -434,36 +375,15 @@ int main(int argc, char* argv[])
         
         
         // get root poa
-        CORBA::Object_var poaObj = orb -> resolve_initial_references("RootPOA");
+        CORBA::Object_var poaObj = orb->resolve_initial_references("RootPOA");
         PortableServer::POA_var rootPOA = PortableServer::POA::_narrow(poaObj.in());
 	    
         // activate the POA manager
         PortableServer::POAManager_var manager = rootPOA->the_POAManager();
         manager->activate();
 
-#ifdef CDMW_USE_FAULTTOLERANCE
-        TAO_ORB_Core::set_endpoint_selector_factory ("FT_Endpoint_Selector_Factory");
-        
-        orb->_tao_ft_client_id(Cdmw::PlatformMngt::ClientIDGenerator::generate_supervision_client_id(OS::get_hostname()).c_str());
-        
-        CORBA::Object_var obj;
-        obj = orb->resolve_initial_references("ORBPolicyManager");
-
-        CORBA::PolicyManager_var policy_manager 
-            = CORBA::PolicyManager::_narrow(obj.in());
-        
-        // Create and apply an ORB-wide Routed policy
-        CORBA::Any any;
-        TimeBase::TimeT duration = duration_time;        
-        
-        any <<= duration;
-        CORBA::PolicyList policies(1);
-        policies.length(1);
-        policies[0] =
-            orb->create_policy(::FT::REQUEST_DURATION_POLICY, any);
-        
-        policy_manager->set_policy_overrides(policies, CORBA::SET_OVERRIDE);
-#endif
+        // init Cdmw
+        Cdmw::PlatformMngt::CDMW_init(orb.in(), argc, argv);
 
         // init iterator manager with root poa
         IteratorManager::initialize(rootPOA.in());
@@ -518,6 +438,11 @@ int main(int argc, char* argv[])
         old_factory = orb->register_value_factory(
             "IDL:thalesgroup.com/CdmwPlatformMngt/SystemEntityStatusChange:1.0",
             factory.in() );
+            
+        factory = new HostEntityStatusChangeFactory;
+        old_factory = orb->register_value_factory(
+            "IDL:thalesgroup.com/CdmwPlatformMngt/HostEntityStatusChange:1.0",
+            factory.in() );
 
         factory = new ApplicationEntityStatusChangeFactory;
         old_factory = orb->register_value_factory(
@@ -556,6 +481,19 @@ int main(int argc, char* argv[])
         // and start it
         eventNotifier.get()->start();
         
+        // create element repository servant
+        PortableServer::ServantBase_var elementRepositoryServant;
+        CdmwPlatformMngt::RWElementRepository_var elementRepositoryObject;
+        
+        RWElementRepository_impl* p_elementRepository =
+               new RWElementRepository_impl();
+               
+        // create an object var to take pointer ownership
+        elementRepositoryServant = p_elementRepository;
+        
+        // activate object
+        elementRepositoryObject = p_elementRepository->_this();
+        
         // create system states
         System_impl::createStates();
             
@@ -567,13 +505,13 @@ int main(int argc, char* argv[])
         {
             // create application states
             Application_impl::createStates();
+            
             // create the centralised system servant
             CentralisedSupervisionSystem_impl* p_centralisedSystem = 
-#ifdef CDMW_USE_FAULTTOLERANCE            
-                new CentralisedSupervisionSystem_impl (eventNotifier.get(), orb.in(), rootPOA.in(), FaultManCorbaloc);
-#else
-                new CentralisedSupervisionSystem_impl (eventNotifier.get(), orb.in(), rootPOA.in());            
-#endif
+                new CentralisedSupervisionSystem_impl (eventNotifier.get(), 
+                                                       orb.in(), rootPOA.in(),
+                                                       elementRepositoryObject.in());            
+
             // create an object var to take pointer ownership
             systemServant = p_centralisedSystem;
                   
@@ -584,11 +522,10 @@ int main(int argc, char* argv[])
         {
             // create the distributed system servant
             DistributedSupervisionSystem_impl* p_distributedSystem = 
-#ifdef CDMW_USE_FAULTTOLERANCE
-                new DistributedSupervisionSystem_impl (eventNotifier.get(), orb.in(), rootPOA.in(), FaultManCorbaloc);
-#else
-            new DistributedSupervisionSystem_impl (eventNotifier.get(), orb.in(), rootPOA.in());            
-#endif
+                new DistributedSupervisionSystem_impl (eventNotifier.get(), 
+                                                       orb.in(), rootPOA.in(),
+                                                       elementRepositoryObject.in());            
+
             // create an object var to take pointer ownership
             systemServant = p_distributedSystem;
                   
@@ -602,8 +539,8 @@ int main(int argc, char* argv[])
     
 
         // init configuration static members
-        Configuration::M_orb = orb.in();
-        Configuration::M_timeout = creationTimeout;
+        Configuration::Set_orb(orb.in());
+        Configuration::Set_timeout(creationTimeout);
 
 
         // logs the startup info

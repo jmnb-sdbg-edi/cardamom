@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -32,8 +32,10 @@ import cdmw.common.BadOrderException;
 import cdmw.common.BadParameterException;
 
 import cdmw.ossupport.OS;
+import java.util.GregorianCalendar;
+import java.util.Calendar;
+import java.util.Date;
 
-import com.thalesgroup.CdmwPlatformMngtEntity.EntityStatus;
 
 /**
  * The interface to the Platform Management service.
@@ -84,18 +86,6 @@ public class PlatformInterface {
      */
     private static com.thalesgroup.CdmwPlatformMngt.ProcessMessageBroker
         processMessageBroker;
-
-    /**
-     * The service broker that retrieves the defined services for the process.
-     */
-    private static com.thalesgroup.CdmwPlatformMngtService.ServiceBroker
-        serviceBroker;
-
-    /**
-     * The entity observer that forwards the status changes of entities.
-     */
-    private static com.thalesgroup.CdmwPlatformMngtEntity.EntityObserver
-        entityObserver;
 
     /**
      * The initialised ORB
@@ -200,7 +190,7 @@ public class PlatformInterface {
      * @exception BadParameterException if process is NIL.
      */
     public static synchronized void acknowledgeCreation(
-        com.thalesgroup.CdmwPlatformMngt.Process process)
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process)
         throws BadOrderException, BadParameterException {
 
         checkStatus(SETUP_PERFORMED);
@@ -209,7 +199,7 @@ public class PlatformInterface {
             throw new BadParameterException("process","null");
         }
 
-        com.thalesgroup.CdmwPlatformMngt.ProcessCallbackPackage.ProcessAck ackData =
+        com.thalesgroup.CdmwPlatformMngt.ProcessCallbackPackage.ProcessStartingData ackData =
             processCallback.set_ready(process);
 
         applicationName = ackData.application_name;
@@ -218,12 +208,6 @@ public class PlatformInterface {
 
         Assert.check(ackData.process_message_broker!=null);
         processMessageBroker = ackData.process_message_broker;
-
-        Assert.check(ackData.service_broker!=null);
-        serviceBroker = ackData.service_broker;
-
-        Assert.check(ackData.entity_observer!=null);
-        entityObserver = ackData.entity_observer;
 
         status = ACKNOWLEDGEMENT_PERFORMED;
 
@@ -250,11 +234,11 @@ public class PlatformInterface {
         }
 
         // creates the default managed process servant
-        ProcessImpl processImpl = new ProcessImpl(behaviour);
+        ProcessDelegateImpl processDelegateImpl = new ProcessDelegateImpl(initialisedOrb, behaviour);
 
         // activates the servant and creates the CORBA object
-        com.thalesgroup.CdmwPlatformMngt.Process process
-            = processImpl._this(initialisedOrb);
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process
+            = processDelegateImpl._this(initialisedOrb);
 
         acknowledgeCreation(process);
 
@@ -309,7 +293,6 @@ public class PlatformInterface {
             createHeader(level);
 
         processMessageBroker.notify_message(header, issuer, message);
-
     }
 
     /**
@@ -396,7 +379,31 @@ public class PlatformInterface {
         if (serviceName == null) {
             throw new BadParameterException("serviceName","null");
         }
-        return serviceBroker.get_service(serviceName);
+        return processMessageBroker.get_service(serviceName);
+    }
+
+
+    /**
+     * Checks whether the entity name is valid and whether the
+     * acknowledgement has been performed.
+     *
+     * @param entityName the name of the entity.
+     * @exception BadOrderException if the acknowledgement has not been performed.
+     * @exception BadParameterException if entityName, entityStatus or entityInfo is NULL.
+     */
+    private static void checkEntityName(
+        String entityName)
+        throws BadOrderException, BadParameterException {
+
+        checkStatus(ACKNOWLEDGEMENT_PERFORMED);
+
+        if (entityName == null) {
+            throw new BadParameterException("entityName","null");
+        }
+        
+        if (entityName.equals("")) {
+            throw new BadParameterException("entityName","empty");
+        }
     }
 
     /**
@@ -404,11 +411,14 @@ public class PlatformInterface {
      * acknowledgement has been performed.
      *
      * @param entityName the name of the entity.
+     * @param entityStatus the status of the entity.
      * @param entityInfo the additional information.
      * @exception BadOrderException if the acknowledgement has not been performed.
-     * @exception BadParameterException if entityName or entityInfo is NULL.
+     * @exception BadParameterException if entityName, entityStatus or entityInfo is NULL.
      */
-    private static void checkEntityStatusParameters(String entityName,
+    private static void checkEntityStatusParameters(
+        String entityName,
+        String entityStatus,
         String entityInfo)
         throws BadOrderException, BadParameterException {
 
@@ -417,11 +427,40 @@ public class PlatformInterface {
         if (entityName == null) {
             throw new BadParameterException("entityName","null");
         }
+        
+        if (entityName.equals("")) {
+            throw new BadParameterException("entityName","empty");
+        }
+        
+        if (entityStatus == null) {
+            throw new BadParameterException("entityStatus","null");
+        }
 
         if (entityInfo == null) {
             throw new BadParameterException("entityInfo","null");
         }
+    }
+    
+    /**
+     * Gets the status of the specified system entity.
+     *
+     * @param entityName the name of the entity.
+     * @param entityInfo the returned additional information.
+     * @return the status of the entity.
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement
+     * has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static String getSystemEntityStatus(String entityName,
+                                               org.omg.CORBA.StringHolder entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
 
+        checkEntityName(entityName);
+        return processMessageBroker.get_system_entity_status(
+                    entityName, entityInfo);
     }
 
     /**
@@ -430,22 +469,107 @@ public class PlatformInterface {
      * @param entityName the name of the entity.
      * @param entityStatus the new status of the entity.
      * @param entityInfo the additional information.
-     * @exception com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
      * if entityName doesn't denote an existing entity.
      * @exception BadOrderException if the acknowledgement
      * has not been performed.
      * @exception BadParameterException if entityName or entityInfo is NULL.
      */
     public static void setSystemEntityStatus(String entityName,
-        EntityStatus entityStatus, String entityInfo)
-        throws com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound,
+        String entityStatus, String entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
                BadOrderException, BadParameterException {
 
-        checkEntityStatusParameters(entityName, entityInfo);
-        entityObserver.set_system_entity_status(
+        checkEntityStatusParameters(entityName, entityStatus, entityInfo);
+        processMessageBroker.set_system_entity_status(
             entityName, entityStatus, entityInfo);
     }
+    
+    /**
+     * Gets the status of the specified host entity.
+     *
+     * @param entityName the name of the entity.
+     * @param entityInfo the returned additional information.
+     * @return the status of the entity.
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement
+     * has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static String getHostEntityStatus(String entityName,
+                                             org.omg.CORBA.StringHolder entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
 
+        checkEntityName(entityName);
+        
+        try
+        {
+            return processMessageBroker.get_host_entity_status(
+                    "", entityName, entityInfo);
+        } catch(com.thalesgroup.CdmwPlatformMngt.HostNotFound ex) {
+                System.err.println("getHostEntityStatus : HostNotFound Exception");
+                throw new com.thalesgroup.CdmwPlatformMngt.EntityNotFound();
+        }
+    }
+
+    /**
+     * Sets the status of the specified host entity.
+     *
+     * @param entityName the name of the entity.
+     * @param entityStatus the new status of the entity.
+     * @param entityInfo the additional information.
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static void setHostEntityStatus(String entityName,
+        String entityStatus, String entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityStatusParameters(entityName, entityStatus, entityInfo);
+
+        try
+        {
+            processMessageBroker.set_host_entity_status(
+                "", entityName, entityStatus, entityInfo);
+        } catch(com.thalesgroup.CdmwPlatformMngt.HostNotFound ex) {
+                System.err.println("setHostEntityStatus : HostNotFound Exception");
+                throw new com.thalesgroup.CdmwPlatformMngt.EntityNotFound();
+        }
+    }
+
+    /**
+     * Gets the status of the specified application entity.
+     *
+     * @param entityName the name of the entity.
+     * @param entityInfo the returned additional information.
+     * @return the status of the entity.
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement
+     * has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static String getApplicationEntityStatus(String entityName,
+                                                    org.omg.CORBA.StringHolder entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityName(entityName);
+        
+        try
+        {
+            return processMessageBroker.get_application_entity_status(
+                    "", entityName, entityInfo);
+        } catch(com.thalesgroup.CdmwPlatformMngt.ApplicationNotFound ex) {
+                System.err.println("getApplicationEntityStatus : ApplicationNotFound Exception");
+                throw new com.thalesgroup.CdmwPlatformMngt.EntityNotFound();
+        }
+    }
 
     /**
      * Sets the status of the specified application entity.
@@ -453,23 +577,57 @@ public class PlatformInterface {
      * @param entityName the name of the entity.
      * @param entityStatus the new status of the entity.
      * @param entityInfo the additional information.
-     * @exception com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
      * if entityName doesn't denote an existing entity.
      * @exception BadOrderException if the acknowledgement has not been performed.
      * @exception BadParameterException if entityName or entityInfo is NULL.
      */
     public static void setApplicationEntityStatus(String entityName,
-        EntityStatus entityStatus, String entityInfo)
-        throws com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound,
+        String entityStatus, String entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
                BadOrderException, BadParameterException {
 
-        checkEntityStatusParameters(entityName, entityInfo);
-
-        entityObserver.set_application_entity_status(
-            entityName, entityStatus, entityInfo);
+        checkEntityStatusParameters(entityName, entityStatus, entityInfo);
+ 
+        try
+        {
+            processMessageBroker.set_application_entity_status(
+                "", entityName, entityStatus, entityInfo);
+        } catch(com.thalesgroup.CdmwPlatformMngt.ApplicationNotFound ex) {
+                System.err.println("setApplicationEntityStatus : ApplicationNotFound Exception");
+                throw new com.thalesgroup.CdmwPlatformMngt.EntityNotFound();
+        }
 
     }
 
+    /**
+     * Gets the status of the specified process entity.
+     *
+     * @param entityName the name of the entity.
+     * @param entityInfo the returned additional information.
+     * @return the status of the entity.
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement
+     * has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static String getProcessEntityStatus(String entityName,
+                                                org.omg.CORBA.StringHolder entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityName(entityName);
+        
+        try
+        {
+            return processMessageBroker.get_process_entity_status(
+                    "", "", "", entityName, entityInfo);
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessNotFound ex) {
+                System.err.println("getProcessEntityStatus : ProcessNotFound Exception");
+                throw new com.thalesgroup.CdmwPlatformMngt.EntityNotFound();
+        }
+    }
 
     /**
      * Sets the status of the specified process entity.
@@ -477,21 +635,192 @@ public class PlatformInterface {
      * @param entityName the name of the entity.
      * @param entityStatus the new status of the entity.
      * @param entityInfo the additional information.
-     * @exception com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
      * if entityName doesn't denote an existing entity.
      * @exception BadOrderException if the acknowledgement has not been performed.
      * @exception BadParameterException if entityName or entityInfo is NULL.
      */
     public static void setProcessEntityStatus(String entityName,
-        EntityStatus entityStatus, String entityInfo)
-        throws com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound,
+        String entityStatus, String entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
                BadOrderException, BadParameterException {
 
-        checkEntityStatusParameters(entityName, entityInfo);
+        checkEntityStatusParameters(entityName, entityStatus, entityInfo);
 
-        entityObserver.set_process_entity_status(
-            entityName, entityStatus, entityInfo);
+        try
+        {
+            processMessageBroker.set_process_entity_status(
+                "", "", "", entityName, entityStatus, entityInfo);
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessNotFound ex) {
+                System.err.println("setProcessEntityStatus : ProcessNotFound Exception");
+                throw new com.thalesgroup.CdmwPlatformMngt.EntityNotFound();
+        }
+    }
 
+
+    /**
+     * Gets the status of the specified host entity.
+     *
+     * @param hostName the name of the host.
+     * @param entityName the name of the entity.
+     * @param entityInfo the returned additional information.
+     * @return the status of the entity.
+     * @exception HostNotFound if host has not been found
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement
+     * has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static String getHostEntityStatus(String hostName, String entityName,
+                                             org.omg.CORBA.StringHolder entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.HostNotFound,
+               com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityName(entityName);
+        
+        return processMessageBroker.get_host_entity_status(
+                    hostName, entityName, entityInfo);
+    }
+
+    /**
+     * Sets the status of the specified host entity.
+     *
+     * @param hostName the name of the host.
+     * @param entityName the name of the entity.
+     * @param entityStatus the new status of the entity.
+     * @param entityInfo the additional information.
+     * @exception HostNotFound if host has not been found
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static void setHostEntityStatus(String hostName, String entityName,
+        String entityStatus, String entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.HostNotFound,
+               com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityStatusParameters(entityName, entityStatus, entityInfo);
+
+        processMessageBroker.set_host_entity_status(
+                hostName, entityName, entityStatus, entityInfo);
+    }
+
+    /**
+     * Gets the status of the specified application entity.
+     *
+     * @param applicationName the name of the application.
+     * @param entityName the name of the entity.
+     * @param entityInfo the returned additional information.
+     * @return the status of the entity.
+     * @exception ApplicationNotFound if application has not been found
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement
+     * has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static String getApplicationEntityStatus(String applicationName, String entityName,
+                                                    org.omg.CORBA.StringHolder entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.ApplicationNotFound,
+               com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityName(entityName);
+        
+        return processMessageBroker.get_application_entity_status(
+                    applicationName, entityName, entityInfo);
+    }
+
+    /**
+     * Sets the status of the specified application entity.
+     *
+     * @param applicationName the name of the application.
+     * @param entityName the name of the entity.
+     * @param entityStatus the new status of the entity.
+     * @param entityInfo the additional information.
+     * @exception ApplicationNotFound if application has not been found
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static void setApplicationEntityStatus(String applicationName, String entityName,
+        String entityStatus, String entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.ApplicationNotFound,
+               com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityStatusParameters(entityName, entityStatus, entityInfo);
+ 
+        processMessageBroker.set_application_entity_status(
+                applicationName, entityName, entityStatus, entityInfo);
+    }
+
+    /**
+     * Gets the status of the specified process entity.
+     *
+     * @param applicationName the name of the application.
+     * @param processName the name of the process.
+     * @param hostName the name of the host.
+     * @param entityName the name of the entity.
+     * @param entityInfo the returned additional information.
+     * @return the status of the entity.
+     * @exception ProcessNotFound if process has not been found
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement
+     * has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static String getProcessEntityStatus(String applicationName,
+                                                String processName,
+                                                String hostName,
+                                                String entityName,
+                                                org.omg.CORBA.StringHolder entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessNotFound,
+               com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityName(entityName);
+        
+        return processMessageBroker.get_process_entity_status(
+                    applicationName, processName, hostName, 
+                    entityName, entityInfo);
+    }
+
+    /**
+     * Sets the status of the specified process entity.
+     *
+     * @param applicationName the name of the application.
+     * @param processName the name of the process.
+     * @param hostName the name of the host.
+     * @param entityName the name of the entity.
+     * @param entityStatus the new status of the entity.
+     * @param entityInfo the additional information.
+     * @exception ProcessNotFound if process has not been found
+     * @exception com.thalesgroup.CdmwPlatformMngt.EntityNotFound
+     * if entityName doesn't denote an existing entity.
+     * @exception BadOrderException if the acknowledgement has not been performed.
+     * @exception BadParameterException if entityName or entityInfo is NULL.
+     */
+    public static void setProcessEntityStatus(String applicationName,
+                                              String processName,
+                                              String hostName,
+                                              String entityName,
+                                              String entityStatus, String entityInfo)
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessNotFound,
+               com.thalesgroup.CdmwPlatformMngt.EntityNotFound,
+               BadOrderException, BadParameterException {
+
+        checkEntityStatusParameters(entityName, entityStatus, entityInfo);
+
+        processMessageBroker.set_process_entity_status(
+                applicationName, processName, hostName, entityName, 
+                entityStatus, entityInfo);
     }
 
     /**
@@ -506,6 +835,14 @@ public class PlatformInterface {
 
         com.thalesgroup.CdmwPlatformMngtBase.EventHeader eventHeader
             = new com.thalesgroup.CdmwPlatformMngtBase.EventHeader();
+
+        eventHeader.event_key =
+            new com.thalesgroup.CdmwPlatformMngtBase.EventKey();
+
+        eventHeader.event_key.seconds = 0;
+        eventHeader.event_key.microseconds = 0;
+        eventHeader.event_key.counter_inx = 0;
+        eventHeader.event_key.primary_key = 0;
 
         eventHeader.time_stamp = createTimeStamp();
         eventHeader.level = level;
@@ -527,16 +864,22 @@ public class PlatformInterface {
 
         java.util.Calendar now = java.util.Calendar.getInstance();
 
-        timeStamp.year =  (short) now.get(java.util.Calendar.YEAR);
+        cdmw.ossupport.Timeval timeval = cdmw.ossupport.OS.getTime();
+        Date date = timeval.toDate();
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+
+        timeStamp.year =  (short) now.get(now.YEAR);
         // month value starts oddly from 0 for january
-        timeStamp.month = (short) (now.get(java.util.Calendar.MONTH)+1);
-        timeStamp.day =   (short) now.get(java.util.Calendar.DAY_OF_MONTH);
-
-        timeStamp.hour = (short) now.get(java.util.Calendar.HOUR_OF_DAY);
-        timeStamp.minute = (short) now.get(java.util.Calendar.MINUTE);
-        timeStamp.second = (short) now.get(java.util.Calendar.SECOND);
-
-        return timeStamp;
+        timeStamp.month = (short) (now.get(now.MONTH)+1);
+        timeStamp.day =   (short) now.get(now.DAY_OF_MONTH);
+        
+        timeStamp.hour = (short) now.get(now.HOUR_OF_DAY);
+        timeStamp.minute = (short) now.get(now.MINUTE);
+        timeStamp.second = (short) now.get(now.SECOND);
+        timeStamp.millisecond = (short) now.get(now.MILLISECOND);
+        timeStamp.microsecond = (short) (timeval.getMicroseconds()% 1000);
+        return timeStamp; 
 
     }
 

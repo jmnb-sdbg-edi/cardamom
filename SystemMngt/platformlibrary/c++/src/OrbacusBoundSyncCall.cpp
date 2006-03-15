@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -74,7 +74,7 @@ ORBACUSBoundSyncCallFactory::~ORBACUSBoundSyncCallFactory()
 
 ProcessInitCall*
 ORBACUSBoundSyncCallFactory::createProcessInitCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     const CdmwPlatformMngtBase::StartupKind& startupKind,
     unsigned long timeout )
 throw( OutOfMemoryException )
@@ -95,7 +95,7 @@ throw( OutOfMemoryException )
 
 ProcessStepCall*
 ORBACUSBoundSyncCallFactory::createProcessStepCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
@@ -115,7 +115,7 @@ throw( OutOfMemoryException )
 
 ProcessRunCall*
 ORBACUSBoundSyncCallFactory::createProcessRunCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
@@ -135,7 +135,7 @@ throw( OutOfMemoryException )
 
 ProcessStopCall*
 ORBACUSBoundSyncCallFactory::createProcessStopCall(
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
@@ -194,39 +194,20 @@ throw( OutOfMemoryException )
     return pullMonitorableCall;
 }
 
-PlatformInfoNotificationCall*
-ORBACUSBoundSyncCallFactory::createPlatformInfoNotificationCall(
-    CdmwPlatformMngt::PlatformObserver_ptr observer,
-    const CdmwPlatformMngt::PlatformInfo& platformInfo,
-    unsigned long timeout )
-throw( OutOfMemoryException )
-{
-    PlatformInfoNotificationCall* platformInfoNotificationCall = NULL;
 
-    try
-    {
-        platformInfoNotificationCall = new ORBACUSPlatformInfoNotificationCall( m_orb, observer, platformInfo, timeout );
-    }
-    catch( const std::bad_alloc& )
-    {
-        CDMW_THROW( OutOfMemoryException );
-    }
-
-    return platformInfoNotificationCall;
-}
 
 // ----------------------------------------------------------------------
 // ORBACUSProcessInitCall class.
 // ----------------------------------------------------------------------
 ORBACUSProcessInitCall::ORBACUSProcessInitCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     const CdmwPlatformMngtBase::StartupKind& startupKind,
     unsigned long timeout )
 throw( OutOfMemoryException )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
 
     try
     {
@@ -256,7 +237,7 @@ throw()
         CORBA::Object_var capsule = SetTimeoutPolicy( m_orb, m_process, m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process = CdmwPlatformMngt::Process::_narrow( capsule );
+        CdmwPlatformMngt::ProcessDelegate_var process = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule );
         if( CORBA::is_nil( process ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->initialise( m_startupKind );
@@ -279,11 +260,11 @@ throw()
 // ----------------------------------------------------------------------
 ORBACUSProcessStepCall::ORBACUSProcessStepCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
     m_timeout = timeout;
 }
 
@@ -303,7 +284,7 @@ throw()
         CORBA::Object_var capsule = SetTimeoutPolicy( m_orb, m_process, m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process = CdmwPlatformMngt::Process::_narrow( capsule );
+        CdmwPlatformMngt::ProcessDelegate_var process = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule );
         if( CORBA::is_nil( process ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->next_step();
@@ -326,11 +307,11 @@ throw()
 // ----------------------------------------------------------------------
 ORBACUSProcessRunCall::ORBACUSProcessRunCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
     m_timeout = timeout;
 }
 
@@ -350,7 +331,7 @@ throw()
         CORBA::Object_var capsule = SetTimeoutPolicy( m_orb, m_process, m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process = CdmwPlatformMngt::Process::_narrow( capsule );
+        CdmwPlatformMngt::ProcessDelegate_var process = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule );
         if( CORBA::is_nil( process ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->run();
@@ -373,11 +354,11 @@ throw()
 // ----------------------------------------------------------------------
 ORBACUSProcessStopCall::ORBACUSProcessStopCall(
     CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::Process_ptr process,
+    CdmwPlatformMngt::ProcessDelegate_ptr process,
     unsigned long timeout )
 {
     m_orb = CORBA::ORB::_duplicate( orb );
-    m_process = CdmwPlatformMngt::Process::_duplicate( process );
+    m_process = CdmwPlatformMngt::ProcessDelegate::_duplicate( process );
     m_timeout = timeout;
 }
 
@@ -397,7 +378,7 @@ throw()
         CORBA::Object_var capsule = SetTimeoutPolicy( m_orb, m_process, m_timeout );
 
         // Perform the process's action
-        CdmwPlatformMngt::Process_var process = CdmwPlatformMngt::Process::_narrow( capsule );
+        CdmwPlatformMngt::ProcessDelegate_var process = CdmwPlatformMngt::ProcessDelegate::_narrow( capsule );
         if( CORBA::is_nil( process ) )
             throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
         process->stop();
@@ -511,64 +492,7 @@ throw()
     return result;
 }
 
-// ----------------------------------------------------------------------
-// ORBACUSPlatformInfoNotificationCall class.
-// ----------------------------------------------------------------------
-ORBACUSPlatformInfoNotificationCall::ORBACUSPlatformInfoNotificationCall(
-    CORBA::ORB_ptr orb,
-    CdmwPlatformMngt::PlatformObserver_ptr observer,
-    const CdmwPlatformMngt::PlatformInfo& platformInfo,
-    unsigned long timeout )
-throw( OutOfMemoryException )
-{
-    m_orb = CORBA::ORB::_duplicate( orb );
-    m_observer = CdmwPlatformMngt::PlatformObserver::_duplicate( observer );
 
-    try
-    {
-        m_platformInfo = new CdmwPlatformMngt::PlatformInfo( platformInfo );
-    }
-    catch( const std::bad_alloc& )
-    {
-        CDMW_THROW( OutOfMemoryException );
-    }
-
-    m_timeout = timeout;
-}
-
-ORBACUSPlatformInfoNotificationCall::~ORBACUSPlatformInfoNotificationCall()
-{
-}
-
-BoundSyncCallReturn
-ORBACUSPlatformInfoNotificationCall::execute()
-throw()
-{
-    BoundSyncCallReturn result = SUCCEED;
-    
-    try
-    {
-        // Set the timeout policy
-        CORBA::Object_var capsule = SetTimeoutPolicy( m_orb, m_observer, m_timeout );
-
-        // Perform the platform observer's action
-        CdmwPlatformMngt::PlatformObserver_var observer = CdmwPlatformMngt::PlatformObserver::_narrow( capsule );
-        if( CORBA::is_nil( observer ) )
-            throw CORBA::INTERNAL( OrbSupport::INTERNAL, CORBA::COMPLETED_NO );
-        observer->notify( m_platformInfo );
-    }
-    catch( const CORBA::NO_RESPONSE& )
-    {
-        result = TIMEOUT;
-    }
-    catch( const CORBA::Exception& e )
-    {
-        result = EXCEPTION;
-        setExceptionInfo( e );
-    }
-    
-    return result;
-}
 
 } // End namespace PlatformMngt
 } // End namespace Cdmw

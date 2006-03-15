@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -35,7 +35,10 @@
 #include "SystemMngt/platformlibrary/LogMngr.hpp"
 #include "SystemMngt/platformlibrary/CommonLogMessageId.hpp"
 
+#include "SystemMngt/idllib/CdmwPlatformMngtBase.stub.hpp"
+
 #include "Foundation/orbsupport/CORBA.hpp"
+#include "Foundation/ossupport/OS.hpp"
 
 #include <map>
 
@@ -95,18 +98,24 @@ template <class Event, class EventDeallocator,
          *<p> Adds an event for notification.
          * If successful, this method takes ownership of the event.
          *
-         *@param event The event to notify.
+         * @param event The event to notify.
          *
          * @exception BadParameterException if the event is NULL.
          * @exception EventNotifierStoppedException if the event notifier is stopped.
          */
-        void addEvent( Event* event )
+        void addEvent (Event* event)
             throw(BadParameterException, EventNotifierStoppedException,
             OutOfMemoryException)
         {
 
             if (event == NULL)
                 CDMW_THROW2(BadParameterException, "event", "NULL");
+                
+            // set the event time identification key
+            setEventKey (event);
+                
+            // insert event in datastore
+            insertEventInDataStore (event);
 
             try
             {
@@ -116,6 +125,111 @@ template <class Event, class EventDeallocator,
             {
                 CDMW_THROW(EventNotifierStoppedException);
             }
+        }
+        
+        /**
+         *Purpose:
+         *<p> Push an event for notification.
+         * The event to push in queue has been extracted from the datastore
+         * The event key is already set
+         * If successful, this method takes ownership of the event.
+         *
+         * @param event The event to notify.
+         *
+         * @exception BadParameterException if the event is NULL.
+         * @exception EventNotifierStoppedException if the event notifier is stopped.
+         */
+        void pushEvent (Event* event)
+            throw(BadParameterException, EventNotifierStoppedException,
+            OutOfMemoryException)
+        {
+
+            if (event == NULL)
+                CDMW_THROW2(BadParameterException, "event", "NULL");
+                
+            try
+            {
+                m_eventQueue.push(event);
+            }
+            catch(const MessageQueueDestroyedException&)
+            {
+                CDMW_THROW(EventNotifierStoppedException);
+            }
+        }
+        
+        /**
+         *Purpose:
+         *<p> Set the event key for identification.
+         *
+         *@param event The event to notify.
+         *
+         */
+        void setEventKey (Event* event)
+        {
+            CDMW_MUTEX_GUARD (m_event_key_mutex);
+               
+            // set the event key    
+            CdmwPlatformMngtBase::EventKey event_key;
+            
+            // set primary key
+            event_key.primary_key = m_evt_primary_key;
+    
+            // get time val
+            OsSupport::OS::Timeval time_val = OsSupport::OS::get_time();
+            
+            event_key.seconds = 
+                       static_cast <unsigned long> (time_val.seconds);
+            event_key.microseconds = 
+                       static_cast <unsigned long> (time_val.microseconds);
+    
+            bool evt_inx_incr = false;
+                      
+            if (event_key.seconds < m_evt_seconds)
+            {
+    	        event_key.seconds = m_evt_seconds;
+    	        event_key.microseconds = m_evt_microsec;
+    	        evt_inx_incr = true;
+            }
+    
+            else if (event_key.seconds == m_evt_seconds)
+            {
+    	        if (event_key.microseconds < m_evt_microsec)
+                {
+    	            event_key.microseconds = m_evt_microsec;
+    	            evt_inx_incr = true;
+                }
+                else if (event_key.microseconds == m_evt_microsec)
+                {
+        	        evt_inx_incr = true;
+                }  
+            }
+    
+            // if there is no difference between previous event time stamp
+            // inrement the evt index to build an unique event key
+            if (evt_inx_incr)
+            {
+    	        m_evt_index ++;    	        
+            }
+            else
+            {
+    	        // reset the index (time is different)
+    	        // counter index in header is already set to 0
+    	        m_evt_index = 0;
+            }
+            
+            event_key.counter_inx = m_evt_index;
+
+            // store event key
+            
+            // get header
+            CdmwPlatformMngtBase::EventHeader& event_header = event->header();
+            
+            // set event key in header
+            event_header.event_key = event_key;
+            
+            // save the current time used for index
+            m_evt_seconds = event_key.seconds;
+    	    m_evt_microsec = event_key.microseconds;
         }
 
 
@@ -132,7 +246,7 @@ template <class Event, class EventDeallocator,
          * @exception EventNotifierStoppedException if the event notifier is stopped.
          */
         PtrEventObserver registerObserver(const std::string& observerName, PtrEventObserver observer)
-            throw(BadParameterException, EventNotifierStoppedException, OutOfMemoryException )
+            throw (BadParameterException, EventNotifierStoppedException, OutOfMemoryException)
         {
 
             if (CORBA::is_nil(observer))
@@ -176,6 +290,33 @@ template <class Event, class EventDeallocator,
             return previousObserver;
 
         }
+    
+        /**
+         *Purpose:
+         *<p> Registers the observer with the specified name and host name it is running.
+         *
+         * @param observerName The name identifying the observer.
+         * @param hostName The name of the host where observer is running.
+         * @param observer The observer to register.
+         * @return the observer previously registered with observerName otherwise returns
+         * ClassEventObserver::_nil().
+         *
+         * @exception BadParameterException if the observer is NIL.
+         * @exception EventNotifierStoppedException if the event notifier is stopped.
+         */
+        PtrEventObserver registerObserver(const std::string& observerName,
+                                          const std::string& hostName,
+                                          PtrEventObserver observer)
+            throw (BadParameterException, EventNotifierStoppedException, OutOfMemoryException)
+        {
+        	// TODO implement
+        	
+        	// gets the observer previously registered with observerName
+            // if any
+            PtrEventObserver previousObserver = ClassEventObserver::_nil();
+            
+            return previousObserver;
+        }
 
 
         /**
@@ -189,7 +330,7 @@ template <class Event, class EventDeallocator,
          * @exception EventNotifierStoppedException if the event notifier is stopped.
          */
         PtrEventObserver unregisterObserver(const std::string& observerName)
-            throw( EventNotifierStoppedException )
+            throw (EventNotifierStoppedException)
         {
 
             CDMW_MUTEX_GUARD(m_mutex);
@@ -232,6 +373,11 @@ template <class Event, class EventDeallocator,
 
             this->join();
         }
+        
+        void setPrimaryKey (unsigned long primary_key)
+        {
+            m_evt_primary_key = primary_key;
+        }
 
 
     protected:
@@ -241,7 +387,11 @@ template <class Event, class EventDeallocator,
         * Purpose:
         * <p> Constructor.
         */ 
-        EventNotifier() : m_stopped(false)
+        EventNotifier() : m_stopped(false),
+                          m_evt_primary_key(0),
+                          m_evt_seconds(0),
+                          m_evt_microsec(0),
+                          m_evt_index(0)                          
         {
         }
 
@@ -270,6 +420,24 @@ template <class Event, class EventDeallocator,
             throw(OutOfMemoryException) = 0;
 
 
+        /**
+         *Purpose:
+         *<p> Insert the event in DataStore.
+         *
+         *@param event The event to be placed in the data store.
+         *
+         */
+        virtual void insertEventInDataStore (Event* event) = 0;
+    
+        /**
+         *Purpose:
+         *<p> remove the event from DataStore.
+         *
+         *@param event_key The key of event to remove from the data store.
+         *
+         */
+        virtual void removeEventInDataStore (CdmwPlatformMngtBase::EventKey event_key) = 0;
+
     private:
 
         /**
@@ -293,7 +461,7 @@ template <class Event, class EventDeallocator,
          *<p> The event notifier's activity.
          */
         void run()
-	  throw()
+	       throw()
         {
 
             bool stopped = false;
@@ -370,7 +538,7 @@ template <class Event, class EventDeallocator,
                             delete notifCall;
 
                         }
-                        catch( const OutOfMemoryException& )
+                        catch (const OutOfMemoryException&)
                         {
                             // due to the allocation of notifCall
                             // the event is lost for the observer
@@ -380,15 +548,23 @@ template <class Event, class EventDeallocator,
 
                     }
 
+                    // remove event from datastore
+                    
+                    // get header
+                    CdmwPlatformMngtBase::EventHeader event_header = event->header();
+                    
+                    // request removing
+                    removeEventInDataStore (event_header.event_key);
+            
                     // deallocates the event
                     EventDeallocator::deallocate(event);
 
                 }
-                catch( const MessageQueueDestroyedException& )
+                catch (const MessageQueueDestroyedException&)
                 {
                     stopped = true;
                 }
-                catch( const std::bad_alloc& )
+                catch (const std::bad_alloc&)
                 {
                     // due to the allocation of eventStr
                     // or the allocation of observers
@@ -396,7 +572,7 @@ template <class Event, class EventDeallocator,
                     LogMngr::logMessage(ERR, MSG_ID_EVENT_NOTIF_EVENT_LOST);
                     EventDeallocator::deallocate(event);
                 }
-                catch( ... )
+                catch ( ... )
                 {
                     // due to an unexpected exception
                     // => the event is lost for all observers
@@ -429,6 +605,28 @@ template <class Event, class EventDeallocator,
         * The event queue.
         */
         std::map<std::string, PtrEventObserver> m_observers;
+        
+        /**
+        * The mutex protecting event identification.
+        */
+        OsSupport::Mutex m_event_key_mutex;
+        
+        /**
+        * primary key for event
+        */
+        unsigned long m_evt_primary_key;
+    
+        /**
+        * current time (sec and microseconds) for the previous sent event
+        */
+        unsigned long m_evt_seconds;
+        unsigned long m_evt_microsec;
+        
+        /**
+        * index for event identification
+        * incremented if 2 events have the same timestamp
+        */
+        unsigned long m_evt_index;
 
 
 }; // End class EventNotifier 

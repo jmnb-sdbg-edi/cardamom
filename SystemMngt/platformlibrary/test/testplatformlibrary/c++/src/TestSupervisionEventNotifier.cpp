@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -33,7 +33,7 @@
 #include "Foundation/ossupport/OS.hpp"
 #include "Foundation/common/System.hpp"
 #include "Foundation/common/Options.hpp"
-#include "Foundation/testutils/Testable.hpp"
+#include "Foundation/testutils/CORBATestManager.hpp"
 
 #include "testplatformlibrary/TestSupervisionEventNotifier.hpp"
 #include "testplatformlibrary/TestLogMngr.hpp"
@@ -43,11 +43,13 @@
 #include <string>
 #include <memory>
 
+CPPUNIT_TEST_SUITE_REGISTRATION( TestSupervisionEventNotifier );
 
+/*
 TestSupervisionEventNotifier::TestSupervisionEventNotifier(
     const std::string& name, CORBA::ORB_ptr orb,
     const std::string& observerPortNumber)
-    : Testable(name), m_observerPortNumber(observerPortNumber)
+    :  m_observerPortNumber(observerPortNumber)
 {
     m_orb = CORBA::ORB::_duplicate(orb);
 }
@@ -56,13 +58,16 @@ TestSupervisionEventNotifier::TestSupervisionEventNotifier(
 TestSupervisionEventNotifier::~TestSupervisionEventNotifier()
 {
 }
+*/
 
 
 void TestSupervisionEventNotifier::do_tests()
 {
     // set number of requested successfull tests
-    set_nbOfRequestedTestOK (6);
+// //     set_nbOfRequestedTestOK (6);
     
+    m_observerPortNumber = Cdmw::TestUtils::CORBATestManager::instance()->get_aux_info();
+    m_orb =  CORBA::ORB::_duplicate( Cdmw::TestUtils::CORBATestManager::instance()->get_ORB());
 
     unsigned long delay = 5000;
 
@@ -77,7 +82,7 @@ void TestSupervisionEventNotifier::do_tests()
     Cdmw::OsSupport::OS::ProcessId idObserver =
         Cdmw::OsSupport::OS::create_process("cdmw_platform_supervision_observer", arguments);
 
-	int timescale = Cdmw::TestUtils::Testable::get_timescale();
+	int timescale = Cdmw::TestUtils::get_timescale();
     Cdmw::OsSupport::OS::sleep(timescale*2*delay);
 
     // Constructs the supervision observer's corbaloc
@@ -90,7 +95,7 @@ void TestSupervisionEventNotifier::do_tests()
     if (CORBA::is_nil(observer_obj.in()))
     {
         std::cout << "Cannot access to observer via corbaloc" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         Cdmw::OsSupport::OS::kill_process(idObserver);
         return;
     }
@@ -100,7 +105,7 @@ void TestSupervisionEventNotifier::do_tests()
     if (CORBA::is_nil(observer.in()))
     {
         std::cout << "Invalid observer reference" << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
         Cdmw::OsSupport::OS::kill_process(idObserver);
         return;
     }
@@ -127,17 +132,17 @@ void TestSupervisionEventNotifier::do_tests()
         CdmwPlatformMngt::SupervisionObserver_var prev_observer =
             eventNotifier.registerObserver("theObserver",
             CdmwPlatformMngt::SupervisionObserver::_nil());
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::BadParameterException& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -145,17 +150,17 @@ void TestSupervisionEventNotifier::do_tests()
     try
     {
         eventNotifier.addEvent(NULL);
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
     catch(const Cdmw::BadParameterException& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch(const Cdmw::Exception& e)
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -168,18 +173,18 @@ void TestSupervisionEventNotifier::do_tests()
         if (!CORBA::is_nil(prev_observer.in()))
         {
             std::cout << "NIL was expected for the previous observer" << std::endl;
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         else
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true); 
         }
 
     }
     catch( Cdmw::Exception& e )
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -199,18 +204,18 @@ void TestSupervisionEventNotifier::do_tests()
         {
             std::cout << "NIL was expected for the observer returned by the "
                 "registerObserver method" << std::endl;
-            TEST_FAILED();
+            CPPUNIT_ASSERT(false);
         }
         else
         {
-            TEST_SUCCEED();
+            CPPUNIT_ASSERT(true);
         }
 
     }
     catch( Cdmw::Exception& e )
     {
         std::cout << e.what() << std::endl;
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -257,12 +262,12 @@ void TestSupervisionEventNotifier::do_tests()
         eventNotifier.addEvent(systemEvent2.in());
         systemEvent2._retn();
 
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     }
     catch( CORBA::Exception& e )
     {
         std::cerr << e._name();
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     }
 
 
@@ -290,22 +295,22 @@ void TestSupervisionEventNotifier::do_tests()
 
     std::cout << msg1 << std::endl;
     if (msg1.find("Event notifier is running") != std::string::npos)
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     else
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
 
     /*
     std::cout << msg2 << std::endl;
     if (msg2.find("Successful notification") != std::string::npos)
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     else
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
 
     std::cout << msg3 << std::endl;
     if (msg3.find("Successful notification") != std::string::npos)
-        TEST_SUCCEED();
+        CPPUNIT_ASSERT(true);
     else
-        TEST_FAILED();
+        CPPUNIT_ASSERT(false);
     */
 
     Cdmw::PlatformMngt::BoundSyncCallFactory::destroy();

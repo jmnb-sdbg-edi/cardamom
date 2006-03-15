@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -78,12 +78,13 @@ public:
      *
      *@exception OutOfMemoryException Lack of memory.
      */
-    ProcessInitCall* createProcessInitCall(
-        CdmwPlatformMngt::Process_ptr process,
+    /*ProcessInitCall* createProcessInitCall(
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         const CdmwPlatformMngtBase::StartupKind& startupKind,
         unsigned long timeout )
     throw( OutOfMemoryException );
-
+    */
+     
     /**
      *Purpose:
      *<p> Concrete method for obtaining a bound synchronous method call. The returned
@@ -98,7 +99,7 @@ public:
      *@exception OutOfMemoryException Lack of memory.
      */
     ProcessStepCall* createProcessStepCall(
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout )
     throw( OutOfMemoryException );
 
@@ -116,7 +117,7 @@ public:
      *@exception OutOfMemoryException Lack of memory.
      */
     ProcessRunCall* createProcessRunCall(
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout )
     throw( OutOfMemoryException );
 
@@ -134,7 +135,7 @@ public:
      *@exception OutOfMemoryException Lack of memory.
      */
     ProcessStopCall* createProcessStopCall(
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout )
     throw( OutOfMemoryException );
 
@@ -176,25 +177,6 @@ public:
         unsigned long timeout )
     throw( OutOfMemoryException );
 
-    /**
-     *Purpose:
-     *<p> Concrete method for obtaining a bound synchronous method call. The returned
-     * object provides method for notifying (with the given timeout) the specified
-     * observer of the specified platform information.
-     *
-     *@param observer The recipient observer of the synchronous call with timeout.
-     *@param platformInfo The platform information to be notified.
-     *@param timeout The time expiration.
-     *
-     *@return a bound synchronous call with timeout object.
-     *
-     *@exception OutOfMemoryException Lack of memory.
-     */
-    PlatformInfoNotificationCall* createPlatformInfoNotificationCall(
-        CdmwPlatformMngt::PlatformObserver_ptr observer,
-        const CdmwPlatformMngt::PlatformInfo& platformInfo,
-        unsigned long timeout )
-    throw( OutOfMemoryException );
 };
 
 /**
@@ -223,7 +205,7 @@ public:
      */
     ORBACUSProcessInitCall(
         CORBA::ORB_ptr orb,
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         const CdmwPlatformMngtBase::StartupKind& startupKind,
         unsigned long timeout )
     throw( OutOfMemoryException );
@@ -268,7 +250,7 @@ public:
      */
     ORBACUSProcessStepCall(
         CORBA::ORB_ptr orb,
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout );
 
     /**
@@ -311,7 +293,7 @@ public:
      */
     ORBACUSProcessRunCall(
         CORBA::ORB_ptr orb,
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout );
 
     /**
@@ -354,7 +336,7 @@ public:
      */
     ORBACUSProcessStopCall(
         CORBA::ORB_ptr orb,
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout );
 
     /**
@@ -455,55 +437,6 @@ public:
     /**
      *Purpose:
      *<p> Notifies the supervision that the monitorable is still alive.
-     *
-     *@return This method returns the status of the invocation.
-     */
-    BoundSyncCallReturn execute()
-    throw();
-};
-
-/**
- *Purpose:
- *<p> Synchronous notification of platform information with timeout.
- *
- *Features:
- *<p> 
- */        
-class ORBACUSPlatformInfoNotificationCall : virtual public PlatformInfoNotificationCall
-{
-private:
-    CORBA::ORB_var m_orb;
-
-public:
-    /**
-     *Purpose:
-     *<p> Constructor
-     *
-     *@param orb An ORB ptr. The ORB to be used.
-     *@param observer The recipient observer of the synchronous call with timeout.
-     *@param platformInfo The platform information to be notified.
-     *@param timeout The time expiration.
-     *
-     *@exception OutOfMemoryException Lack of memory.
-     */
-    ORBACUSPlatformInfoNotificationCall(
-        CORBA::ORB_ptr orb,
-        CdmwPlatformMngt::PlatformObserver_ptr observer,
-        const CdmwPlatformMngt::PlatformInfo& platformInfo,
-        unsigned long timeout )
-    throw( OutOfMemoryException );
-
-    /**
-     *Purpose:
-     *<p> Default destructor.
-     */
-     virtual
-     ~ORBACUSPlatformInfoNotificationCall();
-     
-    /**
-     *Purpose:
-     *<p> Notifies the platform observer of the platform information
-     * in the given timeout.
      *
      *@return This method returns the status of the invocation.
      */

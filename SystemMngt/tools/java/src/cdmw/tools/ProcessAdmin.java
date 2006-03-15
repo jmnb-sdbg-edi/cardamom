@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -36,8 +36,7 @@ import cdmw.orbsupport.ExceptionMinorCodes;
 
 import com.thalesgroup.CdmwPlatformMngtBase.StartupKind;
 import com.thalesgroup.CdmwPlatformMngtBase.StateRetrieval;
-import com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointInfo;
-import com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointMonitoringModel;
+
 
 public class ProcessAdmin {
 
@@ -92,16 +91,16 @@ public class ProcessAdmin {
     };
     
     private org.omg.CORBA.ORB orb;
-    private com.thalesgroup.CdmwPlatformMngt.Process process;
+    private com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process_delegate;
     private boolean verbose;
     
     public ProcessAdmin(org.omg.CORBA.ORB orb, 
-        com.thalesgroup.CdmwPlatformMngt.Process process) {
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process_delegate) {
     
         Assert.check(orb!=null);
-        Assert.check(process!=null);        
+        Assert.check(process_delegate!=null);        
         this.orb = orb;
-        this.process = process;
+        this.process_delegate = process_delegate;
         this.verbose = false;
     
     }
@@ -123,9 +122,6 @@ public class ProcessAdmin {
             case EXIT:
                 return exit(arg,out);
 
-            case GET_ACTIVITY_POINT:
-                return getActivityPoint(arg,out);
-
             case GET_PULL:
                 return getPullMonitorable(arg,out);
 
@@ -146,9 +142,6 @@ public class ProcessAdmin {
 
             case LOAD:
                 return toggleVerbose(arg,out);
-
-            case NB_ACTIVITY_POINTS:
-                return getNbActivityPoints(arg,out);
 
             case NB_STEPS:
                 return getNbSteps(arg,out);
@@ -202,21 +195,6 @@ public class ProcessAdmin {
             ioe.printStackTrace(out);
         }
 
-    }
-
-    private void printActivityPoint(ActivityPointInfo ai,
-        PrintStream out, org.omg.CORBA.ORB orb) {
-            
-        // Print activity info
-        if ( ai.monitoring_model.equals(
-            ActivityPointMonitoringModel.PULL_MONITORING_MODEL) ) {
-            out.println("\t Support of Pull Monitoring Model\n");
-        } else {
-            out.println("\t Support of Push Monitoring Model\n");
-        }
-
-        String s = orb.object_to_string(ai.activity_point);
-        out.println("\tpoint:" + s);
     }
 
     // Available commands
@@ -275,22 +253,8 @@ public class ProcessAdmin {
         int result = OP_FAILURE;    
 
         try {        
-            int nb = process.nb_steps();
+            int nb = process_delegate.nb_steps();
             out.println("Number of initialisation steps :" + nb );
-            result = OP_SUCCESS;
-        } catch (org.omg.CORBA.SystemException se) {
-            out.println("CORBA System Exception : \n" + se.toString() );
-        }
-
-        return result;
-    }
-    
-    protected int getNbActivityPoints(String arg, PrintStream out) {
-        int result = OP_FAILURE;    
-        
-        try {        
-            int nb = process.nb_activity_points();
-            out.println("Number of activity points :" + nb );
             result = OP_SUCCESS;
         } catch (org.omg.CORBA.SystemException se) {
             out.println("CORBA System Exception : \n" + se.toString() );
@@ -303,7 +267,7 @@ public class ProcessAdmin {
         int result = OP_FAILURE;    
         
         try {
-            org.omg.CORBA.Object service = process.get_service();
+            org.omg.CORBA.Object service = process_delegate.get_service();
             if (service==null) {
                 out.println("No embedded service." );
             } else {
@@ -322,8 +286,8 @@ public class ProcessAdmin {
         int result = OP_FAILURE;    
 
         try {
-            com.thalesgroup.CdmwPlatformMngt.PullMonitorable pull 
-                = process.get_pull_monitorable();
+            org.omg.FT.PullMonitorable pull 
+                = process_delegate.get_pull_monitorable();
             if (pull==null) {
                 out.println("Pull monitoring not supported." );
             } else {
@@ -353,7 +317,7 @@ public class ProcessAdmin {
 
         try {
             com.thalesgroup.CdmwPlatformMngt.PushMonitorable push 
-                = process.get_push_monitorable();
+                = process_delegate.get_push_monitorable();
             if (push==null) {
                 out.println("Push monitoring not supported." );
             } else {
@@ -367,36 +331,6 @@ public class ProcessAdmin {
 
         return result;
     
-    }
-    
-    protected int getActivityPoint(String arg, PrintStream out) {
-        int result = OP_FAILURE;    
-    
-        try {
-            if ( !arg.equals("") ) {
-                int pointIndex = 0;      
-                try {
-                    pointIndex = Integer.valueOf(arg).intValue();
-                    ActivityPointInfo ai  = process.get_activity_point(pointIndex);
-                    out.println("ActivityPoint[" + pointIndex + "]\n");
-                    printActivityPoint(ai, out, orb);
-                } catch(NumberFormatException nfe) {}
-            } else {
-                ActivityPointInfo[] ais = process.get_all_activity_points();
-                for (int i = 0; i<ais.length; ++i) {
-                    out.println("ActivityPoint[" + i + "]\n");
-                    printActivityPoint(ais[i], out, orb);
-                }
-            }
-            
-            result = OP_SUCCESS;
-        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessPackage.OutOfRange oor) {
-            out.println("Index out of range!" );
-        } catch (org.omg.CORBA.SystemException se) {
-            out.println("CORBA System Exception : \n" + se.toString() );
-        }
-    
-        return result;
     }
     
     protected int initialise(String arg, PrintStream out) {
@@ -463,13 +397,13 @@ public class ProcessAdmin {
             }
         
             out.println("Sending <initialise> order...");
-            process.initialise(startupKind);
+            process_delegate.initialise(startupKind);
             out.println("done." );
             
             result = OP_SUCCESS;
         } catch (org.omg.CORBA.SystemException se) {
             out.println("CORBA System Exception : \n" + se.toString() );
-        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessPackage.BadOrder bo) {
+        } catch(com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.BadOrder bo) {
             out.println("BadOrder Exception : \n" + bo.toString());;
         }
     
@@ -481,15 +415,15 @@ public class ProcessAdmin {
         
         try {
             out.println("Sending <next_step> order...");
-            process.next_step();
+            process_delegate.next_step();
             out.println("done." );
 
             result = OP_SUCCESS;
         } catch (org.omg.CORBA.SystemException se) {
             out.println("CORBA System Exception : \n" + se.toString() );
-        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep is) {
+        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep is) {
             out.println("InvalidStep Exception : \n" + is.toString() );
-        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessPackage.BadOrder bo) {
+        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.BadOrder bo) {
             out.println("BadOrder Exception : \n" + bo.toString() );
         }
 
@@ -501,15 +435,15 @@ public class ProcessAdmin {
 
         try {
             out.println("Sending <run> order...");
-            process.run();
+            process_delegate.run();
             out.println("done." );
 
             result = OP_SUCCESS;
         } catch (org.omg.CORBA.SystemException se) {
             out.println("CORBA System Exception : \n" + se.toString() );
-        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun nrtr) {
+        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun nrtr) {
             out.println("NotReadyToRun Exception : \n" + nrtr.toString() );
-        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessPackage.AlreadyDone ad) {
+        } catch (com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.AlreadyDone ad) {
             out.println("AlreadyDone Exception : \n" + ad.toString());
         }
 
@@ -521,7 +455,7 @@ public class ProcessAdmin {
         
         try {
             out.println("Sending <stop> order...");
-            process.stop();
+            process_delegate.stop();
             out.println("done." );
 
             result = OP_SUCCESS;
@@ -545,7 +479,7 @@ public class ProcessAdmin {
             BufferedReader in 
                 = new BufferedReader(new java.io.FileReader(arg));
 
-            ProcessAdmin admin = new ProcessAdmin(orb,process);
+            ProcessAdmin admin = new ProcessAdmin(orb,process_delegate);
             admin.run(in,out);
             out.println("Batch file \"" + arg + "\" done.");
             result = OP_SUCCESS;
@@ -626,7 +560,7 @@ public class ProcessAdmin {
 
     public static void run(org.omg.CORBA.ORB orb, String url) {
         // Retrieve Process object reference
-        com.thalesgroup.CdmwPlatformMngt.Process proc 
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate proc 
             = getCdmwProcess(orb,url);
         ProcessAdmin adm = new ProcessAdmin (orb,proc);        
         adm.run(new BufferedReader(new java.io.InputStreamReader(System.in)),
@@ -642,7 +576,7 @@ public class ProcessAdmin {
             + "--url  IOR   URL of the CDMW Process object.\n");
     }
     
-    private static com.thalesgroup.CdmwPlatformMngt.Process 
+    private static com.thalesgroup.CdmwPlatformMngt.ProcessDelegate 
         getCdmwProcess(org.omg.CORBA.ORB orb, String url) 
         throws org.omg.CORBA.TRANSIENT {
         
@@ -667,9 +601,9 @@ public class ProcessAdmin {
         }
 
         // Get reference to the process interface
-        com.thalesgroup.CdmwPlatformMngt.Process proc = null;
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate proc = null;
         try {
-            proc = com.thalesgroup.CdmwPlatformMngt.ProcessHelper.narrow(obj);
+            proc = com.thalesgroup.CdmwPlatformMngt.ProcessDelegateHelper.narrow(obj);
             if (proc==null) {
                 System.out.println("Couldn't retrieve reference of the Process");
                 throw new org.omg.CORBA.TRANSIENT( ExceptionMinorCodes.TRANSIENT, 

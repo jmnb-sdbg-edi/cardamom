@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -359,7 +359,8 @@ template <class C, class S> class StateMachine : public AbstractStateMachine
 
             m_context = context;
             m_state = NULL;
-            m_running = false;
+            m_stateName = "";
+            m_running = false;            
         }
 
 
@@ -426,7 +427,6 @@ template <class C, class S> class StateMachine : public AbstractStateMachine
         */ 
         void setState(const std::string& stateName)
         {
-
             // finds the state specified by stateName
             AbstractState *state = NULL;
 
@@ -443,25 +443,55 @@ template <class C, class S> class StateMachine : public AbstractStateMachine
             }
 
             m_running = true;
+            
+            // process only a new state
+            if (m_stateName != stateName)
+            {
+                // store the state name to enter
+                m_stateName = stateName;
 
  
-            // Exits the current state if any
+                // Exits the current state if any
+                if (m_state != NULL)
+                {
+                    m_state->exitAction(this);
+                }
+
+
+                // Enters the new state
+                m_state = state;
+                m_state->entryAction(this);
+
+                // Performs the activity of the state
+                m_state->doActivity(this);
+
+                // Fires the completion transition if any
+                m_state->completionTransition(this);
+                
+            }
+        }
+        
+        /**
+        * Purpose:
+        * <p>
+        * restart the activity of the current state
+        * use only for backup to primary synchronisation
+        *
+        * @exception Any exception raises by doActivity,completionTransition 
+        */ 
+        void restartStateActivity ()
+        {
+            m_running = true;
+            
+            // if current state is defined
             if (m_state != NULL)
             {
-                m_state->exitAction(this);
+                // Performs the activity of the state
+                m_state->doActivity(this);
+
+                // Fires the completion transition if any
+                m_state->completionTransition(this);                
             }
-
-
-            // Enters the new state
-            m_state = state;
-            m_state->entryAction(this);
-
-            // Performs the activity of the state
-            m_state->doActivity(this);
-
-            // Fires the completion transition if any
-            m_state->completionTransition(this);
-
         }
 
 
@@ -476,6 +506,56 @@ template <class C, class S> class StateMachine : public AbstractStateMachine
         S* getState()
         {
             return dynamic_cast<S*>(m_state);
+        }
+        
+        /**
+        * Purpose:
+        * <p>
+        * Returns the current state name of the state machine.
+        *
+        * Thread safety : the state machine must have been locked for reading
+        * or writing.
+        */ 
+        const char* getStateName()
+        {
+            return m_stateName.c_str();
+        }
+        
+        /**
+        * Purpose:
+        * <p>
+        * Set the current state of the state machine.
+        *
+        *
+        * @param stateName The name identifying the state.
+        *
+        * @exception UnknownStateException if stateName doesn't refer to a known state.
+        *
+        * Thread safety : the state machine must have been locked for reading
+        * or writing.
+        */ 
+        void setStateName(const char* stateName)
+        {
+            // finds the state specified by stateName
+            AbstractState *state = NULL;
+
+            typename std::map<std::string, AbstractState*>::iterator it =
+                m_stateMap.find(stateName);
+
+            if (it != m_stateMap.end())
+            {
+                state = it->second;
+            }
+            else
+            {
+                CDMW_THROW2(UnknownStateException, m_name, stateName);
+            }
+
+            // store the state name to set
+            m_stateName = stateName;
+
+            // Set the state class
+            m_state = state;
         }
 
 
@@ -506,6 +586,11 @@ template <class C, class S> class StateMachine : public AbstractStateMachine
         * The current state of the state machine.
         */
         AbstractState* m_state;
+        
+        /**
+        * The current state name of the state machine.
+        */
+        std::string m_stateName;
 
 
 }; // End template StateMachine 

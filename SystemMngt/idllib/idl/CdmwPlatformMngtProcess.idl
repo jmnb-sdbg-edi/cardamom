@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -26,164 +26,360 @@
 #ifndef CDMW_PLATFORM_MNGT_PROCESS_IDL_
 #define CDMW_PLATFORM_MNGT_PROCESS_IDL_
 
-
-#include <CdmwPlatformMngtBase.idl>
-#include <CdmwPlatformMngtMonitoring.idl>
+#include <CdmwPlatformMngtCommon.idl>
+#include <CdmwPlatformMngtManagedElement.idl>
+#include <CdmwPlatformMngtCommandedElement.idl>
+#include <CdmwPlatformMngtEntityContainer.idl>
+#include <CdmwPlatformMngtServiceContainer.idl>
+#include <CdmwPlatformMngtHost.idl>
 
 #pragma prefix "thalesgroup.com"
 
 module CdmwPlatformMngt
 {
+    interface ProcessDelegateWrapper;
+    
     /**
-     * The managed process interface.
-     */
-    interface Process
+    * The process managed element.
+    */
+    interface Process : ManagedElement, CommandContainer,
+        RWEntityContainer,
+        CdmwPlatformMngtService::RWServiceDefContainer
     {
-
         /**
-        * The different models of monitoring of an activity point.
+        * The type of the process.
         */
-        enum ActivityPointMonitoringModel
-        {
-            /**
-            */
-            PULL_MONITORING_MODEL,
-
-            /**
-            */
-            PUSH_MONITORING_MODEL
-        };
+        readonly attribute ProcessType type;
 
         /**
-         * The information about an activity point.
-         */
-        struct ActivityPointInfo
-        {
-            /**
-             * The monitoring model supported by the activity point.
-             */
-            ActivityPointMonitoringModel monitoring_model;
-
-            /**
-             * The activity point.
-             */
-            Monitorable activity_point;
-
-        };
-
-        typedef sequence<ActivityPointInfo> ActivityPointInfos;
-
-
-        /**
-        * The requested activity point doesn't exist.
+        * The embedded service or NIL if the process
+        * is not a service provider.
         */
-        exception OutOfRange {};
-
-        /**
-        * The order of the requested operation is invalid.
-        */
-        exception BadOrder {};
-
-        /**
-        * There's actually no other step to perform.
-        */
-        exception InvalidStep {};
-
-        /**
-        * The process is not ready to run.
-        */
-        exception NotReadyToRun {};
-
-        /**
-        * The requested operation has already been done.
-        */
-        exception AlreadyDone {};
-
-        /**
-        * The number of initialisation steps of this managed process.
-        */
-        readonly attribute unsigned long nb_steps;
-
-        /**
-        * The number of activity points of this managed process.
-        */
-        readonly attribute unsigned long nb_activity_points;
-
-        /**
-        * Returns the service embedded in this managed process
-        * (which is in fact a service provider).
-        *
-        * @return NIL if no service is available.
-        */
-        Object get_service();
-
-        /**
-        * Returns the pull monitorable interface.
-        *
-        * @return NIL if the managed process doesn't support the pull model
-        * of monitoring.
-        */
-        PullMonitorable get_pull_monitorable();
-
-        /**
-        * Returns the push monitorable interface.
-        *
-        * @return NIL if the managed process doesn't support the push model
-        * of monitoring.
-        */
-        PushMonitorable get_push_monitorable();
-
-        /**
-        * Returns the specified activity point.
-        *
-        * @exception OutOfRange if point_index is out of range.
-        */
-        ActivityPointInfo get_activity_point(in unsigned long point_index)
-            raises(OutOfRange);
-
-        /**
-        * Returns all activity points.
-        */
-        ActivityPointInfos get_all_activity_points();
-
-        /**
-        * Requests the process to initialise or to perform its first step
-        * of initialisation.
-        *
-        * @param startup_kind the startup kind of the whole system.
-        *
-        * @exception BadOrder if the initialisation or the first step of
-        * initialisation has already been performed.
-        */
-        void initialise(in CdmwPlatformMngtBase::StartupKind startup_kind)
-            raises(BadOrder);
+        readonly attribute Object embedded_service;
         
         /**
-        * Requests the process to perform its next step of initialisation.
-        *
-        * @exception BadOrder if the first step of initialisation has not
-        * been performed yet.
-        * @exception InvalidStep if there is no other step to perform.
+        * The process pid.
         */
-        void next_step()
-            raises(BadOrder, InvalidStep);
+        readonly attribute ProcessPID pid;
+                
+        /**
+        * Flag indicate that process is created dynamically
+        * and not described in start graph of the application
+        */
+        readonly attribute boolean created_dynamically;
+        
+        /**
+        * Indicate the type of restart (Cold/Hot) currently applied to the process
+        */
+        readonly attribute RestartType restart_type;
+        
+        /**
+        * Indicate the current nbr of restart attempt
+        */
+        readonly attribute long restart_attempt;
+        
+        /**
+        * Indicate the time when process start
+        */
+        readonly attribute CdmwPlatformMngtBase::TimeStamp start_time;
+        
+        /**
+        * Indicate the time when process stop
+        */
+        readonly attribute CdmwPlatformMngtBase::TimeStamp stop_time;
+
+        
+        /**
+        * Indicates whether the process is started manually.
+        *   if flag is set the process (defined in init graph) is not started
+        *   during a cold start and is skipped from the starting sequence
+        *   defined by init graph.
+        *   During an hot restart the process is started following the init
+        *   graph if it is running during the stop command
+        */
+        boolean is_manual_starting();
+        
+        /**
+        * Sets the process to be started manually.
+        *
+        * @param manual_starting true if process is started manually
+        *
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_manual_starting(in boolean manual_starting)
+            raises(IncompatibleStatus);
+
 
         /**
-        * Requests the process to run.
+        * Returns the status of the process with its additional information.
+        */
+        ProcessStatus get_status(out string status_info);
+        
+        /**
+        * Indicates whether the process is authorised to end itself.
+        */
+        boolean is_auto_ending();
+        
+        /**
+        * Sets the process as ending itself.
         *
+        * @param autoending true if process is authorised to end itself
+        *
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_auto_ending(in boolean auto_ending)
+            raises(IncompatibleStatus);
+                    
+        /**
+        * Returns the host where the process runs.
+        */
+        Host get_host();
+
+        /**
+        * Returns the information needed for the process creation.
+        */
+        ProcessInfo get_process_info();
+
+        /**
+        * Changes the information needed for the process creation.
+        *
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_process_info(in ProcessInfo process_info)
+            raises(IncompatibleStatus);
+
+        /*
+	* get the process_mode attribute
+	*/
+        ProcessMode get_process_mode();
+
+        /*
+	* get the memory resident attribute
+	*/
+        boolean get_memory_resident();
+
+        /*
+	* set the memory resident attribute
+	*/
+        void set_memory_resident(in boolean memory_resident);
+
+        /*
+	* get the core dump size attribute
+	*/
+        long get_core_dump_size();
+
+
+
+
+        /**
+        * Returns the lifecycle of the process.
+        *
+        * @exception IncompatibleType if the process is not a managed process.
+        */
+        LifeCycleDef get_life_cycle()
+            raises(IncompatibleType);
+
+        /**
+        * Changes the lifecycle of the process.
+        *
+        * @exception DuplicateStep if the definition of the lifecycle
+        * has a duplicate step.
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_life_cycle(in LifeCycleDef life_cycle)
+            raises(DuplicateStep, IncompatibleType, IncompatibleStatus);
+
+        /**
+        * Returns the information about the monitoring of the process.
+        *
+        * @exception IncompatibleType if the process is not a managed process.
+        */
+        CompleteMonitoringInfo get_monitoring_info()
+            raises(IncompatibleType);
+
+        /**
+        * Changes the information about the monitoring of the process.
+        *
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_monitoring_info(in CompleteMonitoringInfo monitoring_info)
+            raises(IncompatibleType, IncompatibleStatus);
+
+          
+        /**
+        * Returns the information about the exit-autorestart info of the process.
+        *
+        */
+        ExitAutoRestartInfo get_exit_autorestart_info();
+
+        /**
+        * Changes the information about the exit-autorestart info of the process.
+        *
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        void set_exit_autorestart_info(in ExitAutoRestartInfo exit_autorestart_info)
+            raises(IncompatibleStatus);
+
+        /**
+        * Returns the information about the exit-autorestart info of the process.
+        *
+        */
+        boolean get_run_as_root();
+
+        /**
+        * Returns a snapshot of the process.
+        */
+        ProcessSnapshot get_snapshot();
+
+        /**
+        * Creates the actual process and starts its initialisation if it
+        * is a managed process.
+        *
+        * @param startup_kind the startup kind of the whole system.
+        * @return the status of the request.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        RequestStatus initialise(in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(IncompatibleStatus);
+        
+        /**
+        * Requests the managed process to perform its next step.
+        *
+        * @return the status of the request.
+        * @exception InvalidStep if there is no step to perform.
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        RequestStatus next_step()
+            raises(InvalidStep, IncompatibleType, IncompatibleStatus);
+
+        /**
+        * Requests the managed process to run.
+        *
+        * @return the status of the request.
         * @exception NotReadyToRun if the process has not been requested
         * to perform all its necessary initialisation steps.
-        * @exception AlreadyDone if the process is already running.
+        * @exception IncompatibleType if the process is not a managed process.
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
         */
-        void run()
-            raises(NotReadyToRun, AlreadyDone);
+        RequestStatus run()
+            raises(NotReadyToRun, IncompatibleType, IncompatibleStatus);
 
         /**
-        * Requests the process to stop properly.
+        * Requests the process to stop properly if it is a managed process
+        * or kills it if it is an unmanaged process.
+        *
+        * @param emergency if true, the managed process will be killed
+        * immediately without requested to stop properly. Irrelevant for
+        * an unmanaged process.
+        * @return the status of the request.
         */
-        void stop();
+        RequestStatus stop(in boolean emergency);
+        
+        
+        /**
+        * Stop and make a Cold Start of the process.
+        *
+        * All user properties of element retrieve their initial values
+        *
+        * @param startup_kind the startup kind of the whole system.
+        * @return the status of the request.
+        *
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        RequestStatus cold_restart(in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(IncompatibleStatus);
+            
+        /**
+        * Stop and make a Hot Start of the process.
+        *
+        * All user properties of element keep their current values
+        *
+        * @param startup_kind the startup kind of the whole system.
+        * @return the status of the request.
+        *
+        * @exception IncompatibleStatus if the status of the process doesn't
+        * allow the operation.
+        */
+        RequestStatus hot_restart(in CdmwPlatformMngtBase::StartupKind startup_kind)
+            raises(IncompatibleStatus);
+            
+            
+        /**
+        * Set the process creation command result.
+        *
+        * @param result the result of the command.
+        * @param error_info the error info about the command result
+        * @param error_issuer the error issuer about the command result
+        * @param proc_delegate_wrap the process delegate wrapper.
+        */    
+        void set_create_process_result (in ProcessCommandResult result, 
+                                        in string error_info,
+                                        in string error_issuer,
+                                        in ProcessDelegateWrapper process_delegate_wrap);
+                                
+        /**
+        * Set the process initialisation command result.
+        *
+        * @param result the result of the command.
+        */    
+        void set_initialisation_result (in ProcessCommandResult result);
+                                
+        /**
+        * Set the process next step command result.
+        *
+        * @param result the result of the command.
+        * @param step_nbr the step nbr realised
+        */    
+        void set_next_step_result (in ProcessCommandResult result,
+                                   in unsigned long step_nbr);
+                                
+        /**
+        * Set the process run command result.
+        *
+        * @param result the result of the command.
+        */    
+        void set_run_result (in ProcessCommandResult result)
+             raises(ProcessNotFound);
+                                
+                                
+        /**
+        * Set the process stop command result.
+        *
+        * @param result the result of the command.
+        */    
+        void set_stop_result (in ProcessCommandResult result)
+             raises(ProcessNotFound);
 
     }; // End interface Process
+
+
+    /**
+    * The iterator for Processes.
+    */
+    interface ProcessesIterator
+    {
+        void reset();
+
+        boolean next_one(out Process process);
+
+        boolean next_n(in unsigned long how_many,
+                   out Processes processes);
+
+        void destroy();
+    };
 
 
 }; // End Module CdmwPlatformMngt

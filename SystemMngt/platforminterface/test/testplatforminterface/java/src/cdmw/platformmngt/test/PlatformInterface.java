@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -32,10 +32,13 @@ import cdmw.common.BadOrderException;
 import cdmw.common.BadParameterException;
 
 import cdmw.ossupport.OS;
-import cdmw.platformmngt.ProcessImpl;
+import cdmw.platformmngt.ProcessDelegateImpl;
 import cdmw.platformmngt.ProcessBehaviour;
 
-import com.thalesgroup.CdmwPlatformMngtEntity.EntityStatus;
+import com.thalesgroup.CdmwPlatformMngt.Entity;
+import java.util.GregorianCalendar;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * This class is a copy of the platforminterface source code
@@ -88,17 +91,6 @@ public class PlatformInterface {
     private static com.thalesgroup.CdmwPlatformMngt.ProcessMessageBroker 
         processMessageBroker;
 
-    /**
-     * The service broker that retrieves the defined services for the process.
-     */
-    private static com.thalesgroup.CdmwPlatformMngtService.ServiceBroker 
-        serviceBroker;
-
-    /**
-     * The entity observer that forwards the status changes of entities.
-     */
-    private static com.thalesgroup.CdmwPlatformMngtEntity.EntityObserver 
-        entityObserver;
 
     /**
      * The initialised ORB
@@ -203,7 +195,7 @@ public class PlatformInterface {
      * @exception BadParameterException if process is NIL.
      */
     public static void acknowledgeCreation(
-        com.thalesgroup.CdmwPlatformMngt.Process process)
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process)
         throws BadOrderException, BadParameterException {
 
         checkStatus(SETUP_PERFORMED);
@@ -212,21 +204,15 @@ public class PlatformInterface {
             throw new BadParameterException("process","null");
         }
 
-        com.thalesgroup.CdmwPlatformMngt.ProcessCallbackPackage.ProcessAck ackData =
+        com.thalesgroup.CdmwPlatformMngt.ProcessCallbackPackage.ProcessStartingData startingData =
             processCallback.set_ready(process);
 
-        applicationName = ackData.application_name;
+        applicationName = startingData.application_name;
 
-        processName = ackData.process_name;
+        processName = startingData.process_name;
 
-        Assert.check(ackData.process_message_broker!=null);
-        processMessageBroker = ackData.process_message_broker;
-
-        Assert.check(ackData.service_broker!=null);
-        serviceBroker = ackData.service_broker;
-
-        Assert.check(ackData.entity_observer!=null);
-        entityObserver = ackData.entity_observer;
+        Assert.check(startingData.process_message_broker!=null);
+        processMessageBroker = startingData.process_message_broker;
 
         status = ACKNOWLEDGEMENT_PERFORMED;
 
@@ -253,11 +239,11 @@ public class PlatformInterface {
         }
 
         // creates the default managed process servant
-        ProcessImpl processImpl = new ProcessImpl(behaviour);
+        ProcessDelegateImpl processDelegateImpl = new ProcessDelegateImpl(initialisedOrb, behaviour);
 
         // activates the servant and creates the CORBA object
-        com.thalesgroup.CdmwPlatformMngt.Process process 
-            = processImpl._this(initialisedOrb);
+        com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process 
+            = processDelegateImpl._this(initialisedOrb);
 
         acknowledgeCreation(process);
 
@@ -398,103 +384,9 @@ public class PlatformInterface {
         if (serviceName == null) {
             throw new BadParameterException("serviceName","null");
         }
-        return serviceBroker.get_service(serviceName);
+        return processMessageBroker.get_service(serviceName);
     }
 
-    /**
-     * Checks whether the parameter are valids and whether the
-     * acknowledgement has been performed.
-     *
-     * @param entityName the name of the entity.
-     * @param entityInfo the additional information.
-     * @exception BadOrderException if the acknowledgement has not been performed.
-     * @exception BadParameterException if entityName or entityInfo is NULL.
-     */
-    private static void checkEntityStatusParameters(String entityName,
-        String entityInfo)
-        throws BadOrderException, BadParameterException {
-
-        checkStatus(ACKNOWLEDGEMENT_PERFORMED);
-
-        if (entityName == null) {
-            throw new BadParameterException("entityName","null");
-        }
-
-        if (entityInfo == null) {
-            throw new BadParameterException("entityInfo","null");
-        }
-
-    }
-
-    /**
-     * Sets the status of the specified system entity.
-     *
-     * @param entityName the name of the entity.
-     * @param entityStatus the new status of the entity.
-     * @param entityInfo the additional information.
-     * @exception com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound 
-     * if entityName doesn't denote an existing entity.
-     * @exception BadOrderException if the acknowledgement 
-     * has not been performed.
-     * @exception BadParameterException if entityName or entityInfo is NULL.
-     */
-    public static void setSystemEntityStatus(String entityName,
-        EntityStatus entityStatus, String entityInfo)
-        throws com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound,
-               BadOrderException, BadParameterException {
-
-        checkEntityStatusParameters(entityName, entityInfo);
-        entityObserver.set_system_entity_status(
-            entityName, entityStatus, entityInfo);
-    }
-
-
-    /**
-     * Sets the status of the specified application entity.
-     *
-     * @param entityName the name of the entity.
-     * @param entityStatus the new status of the entity.
-     * @param entityInfo the additional information.
-     * @exception com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound 
-     * if entityName doesn't denote an existing entity.
-     * @exception BadOrderException if the acknowledgement has not been performed.
-     * @exception BadParameterException if entityName or entityInfo is NULL.
-     */
-    public static void setApplicationEntityStatus(String entityName,
-        EntityStatus entityStatus, String entityInfo)
-        throws com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound,
-               BadOrderException, BadParameterException {
-
-        checkEntityStatusParameters(entityName, entityInfo);
-
-        entityObserver.set_application_entity_status(
-            entityName, entityStatus, entityInfo);
-
-    }
-
-
-    /**
-     * Sets the status of the specified process entity.
-     *
-     * @param entityName the name of the entity.
-     * @param entityStatus the new status of the entity.
-     * @param entityInfo the additional information.
-     * @exception com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound 
-     * if entityName doesn't denote an existing entity.
-     * @exception BadOrderException if the acknowledgement has not been performed.
-     * @exception BadParameterException if entityName or entityInfo is NULL.
-     */
-    public static void setProcessEntityStatus(String entityName,
-        EntityStatus entityStatus, String entityInfo)
-        throws com.thalesgroup.CdmwPlatformMngtEntity.EntityNotFound,
-               BadOrderException, BadParameterException {
-
-        checkEntityStatusParameters(entityName, entityInfo);
-
-        entityObserver.set_process_entity_status(
-            entityName, entityStatus, entityInfo);
-
-    }
 
     /**
      * Returns the header embedding the specified level and the timestamp
@@ -508,6 +400,14 @@ public class PlatformInterface {
 
         com.thalesgroup.CdmwPlatformMngtBase.EventHeader eventHeader
             = new com.thalesgroup.CdmwPlatformMngtBase.EventHeader();
+
+        eventHeader.event_key =
+            new com.thalesgroup.CdmwPlatformMngtBase.EventKey();
+
+        eventHeader.event_key.seconds = 0;
+        eventHeader.event_key.microseconds = 0;
+        eventHeader.event_key.counter_inx = 0;
+        eventHeader.event_key.primary_key = 0;
 
         eventHeader.time_stamp = createTimeStamp();
         eventHeader.level = level;
@@ -529,15 +429,21 @@ public class PlatformInterface {
 
         java.util.Calendar now = java.util.Calendar.getInstance();
 
+        cdmw.ossupport.Timeval timeval = cdmw.ossupport.OS.getTime();
+        Date date = timeval.toDate();
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+
         timeStamp.year =  (short) now.get(now.YEAR);
         // month value starts oddly from 0 for january
         timeStamp.month = (short) (now.get(now.MONTH)+1);
         timeStamp.day =   (short) now.get(now.DAY_OF_MONTH);
-
+        
         timeStamp.hour = (short) now.get(now.HOUR_OF_DAY);
         timeStamp.minute = (short) now.get(now.MINUTE);
         timeStamp.second = (short) now.get(now.SECOND);
-
+        timeStamp.millisecond = (short) now.get(now.MILLISECOND);
+        timeStamp.microsecond = (short) (timeval.getMicroseconds()% 1000);
         return timeStamp; 
 
     }

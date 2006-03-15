@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -31,9 +31,8 @@
 #include "SystemMngt/idllib/CdmwPlatformMngtCommon.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtEvent.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtMonitoring.stub.hpp"
-#include "SystemMngt/idllib/CdmwPlatformMngtProcess.stub.hpp"
+#include "SystemMngt/idllib/CdmwPlatformMngtProcessDelegate.stub.hpp"
 #include "SystemMngt/idllib/CdmwPlatformMngtSupervisionObserver.stub.hpp"
-#include "SystemMngt/idllib/CdmwPlatformMngtPlatformObserver.stub.hpp"
 
 namespace Cdmw
 {
@@ -133,7 +132,7 @@ public:
      */
     virtual
     ProcessInitCall* createProcessInitCall(
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         const CdmwPlatformMngtBase::StartupKind& startupKind,
         unsigned long timeout )
     throw( OutOfMemoryException ) = 0;
@@ -153,7 +152,7 @@ public:
      */
     virtual
     ProcessStepCall* createProcessStepCall(
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout )
     throw( OutOfMemoryException ) = 0;
 
@@ -172,7 +171,7 @@ public:
      */
     virtual
     ProcessRunCall* createProcessRunCall(
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout )
     throw( OutOfMemoryException ) = 0;
 
@@ -191,7 +190,7 @@ public:
      */
     virtual
     ProcessStopCall* createProcessStopCall(
-        CdmwPlatformMngt::Process_ptr process,
+        CdmwPlatformMngt::ProcessDelegate_ptr process,
         unsigned long timeout )
     throw( OutOfMemoryException ) = 0;
 
@@ -232,27 +231,6 @@ public:
     virtual
     PullMonitoringCall* createPullMonitoringCall(
         CdmwPlatformMngt::PullMonitorable_ptr monitorable,
-        unsigned long timeout )
-    throw( OutOfMemoryException ) = 0;
-
-    /**
-     *Purpose:
-     *<p> Abstract method for obtaining a bound synchronous method call. The returned
-     * object provides method for notifying (with the given timeout) the specified
-     * observer of the specified platform information.
-     *
-     *@param observer The recipient observer of the synchronous call with timeout.
-     *@param platformInfo The platform information to be notified.
-     *@param timeout The time expiration.
-     *
-     *@return a bound synchronous call with timeout object.
-     *
-     *@exception OutOfMemoryException Lack of memory.
-     */
-    virtual
-    PlatformInfoNotificationCall* createPlatformInfoNotificationCall(
-        CdmwPlatformMngt::PlatformObserver_ptr observer,
-        const CdmwPlatformMngt::PlatformInfo& platformInfo,
         unsigned long timeout )
     throw( OutOfMemoryException ) = 0;
 };
@@ -335,7 +313,7 @@ public:
     };
     
 protected:
-    CdmwPlatformMngt::Process_var m_process;
+    CdmwPlatformMngt::ProcessDelegate_var m_process;
     CdmwPlatformMngtBase::StartupKind_var m_startupKind;
 };
 
@@ -359,7 +337,7 @@ public:
     };
     
 protected:
-    CdmwPlatformMngt::Process_var m_process;
+    CdmwPlatformMngt::ProcessDelegate_var m_process;
 };
 
 /**
@@ -382,7 +360,7 @@ public:
     };
     
 protected:
-    CdmwPlatformMngt::Process_var m_process;
+    CdmwPlatformMngt::ProcessDelegate_var m_process;
 };
 
 /**
@@ -405,7 +383,7 @@ public:
     };
     
 protected:
-    CdmwPlatformMngt::Process_var m_process;
+    CdmwPlatformMngt::ProcessDelegate_var m_process;
 };
 
 
@@ -454,30 +432,6 @@ public:
     
 protected:
     CdmwPlatformMngt::PullMonitorable_var m_monitorable;
-};
-
-/**
- *Purpose:
- *<p> Abstract synchronous notification of platform information with timeout.
- *
- *Features:
- *<p> 
- */        
-class PlatformInfoNotificationCall : virtual public BoundSyncCall
-{
-public:
-    /**
-     *Purpose:
-     *<p> Default destructor.
-     */
-    virtual
-    ~PlatformInfoNotificationCall()
-    {
-    };
-    
-protected:
-    CdmwPlatformMngt::PlatformObserver_var m_observer;
-    CdmwPlatformMngt::PlatformInfo_var m_platformInfo;
 };
 
 } // End namespace PlatformMngt

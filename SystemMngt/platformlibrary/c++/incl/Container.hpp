@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -452,7 +452,18 @@ template <class ELEMENT_DATA> class Container
 
         return result;
     }
+    
+    /**
+    * Purpose:
+    * <p> Removes all elements.
+    * 
+    */ 
+    void removeAllElements()
+    {
+        CDMW_WRITER_LOCK_GUARD(m_rwLock);
 
+        m_elements.clear();
+    }
 
     /**
     * Purpose:
@@ -729,18 +740,22 @@ template <class ELEMENT_DATA> class Container
     * 
     *@param applicationName name of application
     *@param processName     name of process
+    *@param hostName        name of host
     *
     *@return process container ident
     *
     */ 
     static std::string processContainerNameToId (const std::string& applicationName,
-                                                 const std::string& processName)
+                                                 const std::string& processName,
+                                                 const std::string& hostName)
     {
         // set process container ident
         std::string ident = "P/";
         ident += applicationName;
         ident += "/";
         ident += processName;
+        ident += "/";
+        ident += hostName;
       
         return ident;
     }
@@ -801,6 +816,7 @@ template <class ELEMENT_DATA> class Container
     * 
     *@param applicationName name of application
     *@param processName     name of process
+    *@param hostName        name of host
     *
     *@return The created instance
     *        Note : the container keeps the ownership of created instance
@@ -811,13 +827,15 @@ template <class ELEMENT_DATA> class Container
     *@exception Cdmw::OutOfResourcesException
     */ 
     static Container* createProcessContainer(const std::string& applicationName,
-                                             const std::string& processName)
+                                             const std::string& processName,
+                                             const std::string& hostName)
             throw (AlreadyExistsException, 
                    OutOfResourcesException)
     {
         // create container
         Container* p_container = create (processContainerNameToId(applicationName,
-                                                                  processName));
+                                                                  processName,
+                                                                  hostName));
       
         return p_container;
     }
