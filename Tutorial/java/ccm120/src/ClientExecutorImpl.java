@@ -80,8 +80,8 @@ class ClientExecutorImpl
             // ======================================================                      
             // create a naming interface on root context
             // ====================================================== 
-            cdmw.namingandrepository.NamingInterface niRoot =
-                new cdmw.namingandrepository.NamingInterface(ncRoot);
+            cdmw.commonsvcs.naming.NamingInterface niRoot =
+                new cdmw.commonsvcs.naming.NamingInterface(ncRoot);
             
             
             

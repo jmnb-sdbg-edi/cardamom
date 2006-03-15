@@ -40,8 +40,11 @@ XML_CONF_FILES:=xml/CodeGenerationDefn.xml
 XML_DATA_FILES:=data/HelloSystemDefinition.xml \
     data/CdmwPlatformMngtDaemon_conf.xml \
     data/Cdmw_nar.xml \
+    data/CdmwFaultToleranceManager_conf.xml \
+    data/CdmwFTSystemMngtGroupCreator_conf.xml \
+    data/CdmwPlatformMngtSystemStart.xml \
     data/HelloClient.xml data/HelloServer.xml
-    
+
 
 .SUFFIXES:
 .SUFFIXES: .xml  .xml.in
@@ -83,8 +86,15 @@ gencode::
 	@echo "Generating $@ from $<"
 	@echo s%@prefix@%$(PWD)%g > sed_patterns
 	@echo s%@cdmw_home@%$(CDMW_HOME)%g >> sed_patterns
+	@echo s%@CDMW_HOME@%$(CDMW_HOME)%g >> sed_patterns
+	@echo s%@host_name@%`uname -n`%g >> sed_patterns
+	@echo s%@hostname@%`uname -n`%g >> sed_patterns
 	@echo s%@orbacus_bin@%$(ORBACUS_JAVA_BIN_PATH)%g >> sed_patterns
 	@echo s%@orbacus_idl@%$(ORBACUS_JAVA_IDL_PATH)%g >> sed_patterns
+	@echo s%@SystemMngt_port@%21`echo $PWD | wc -c | tail -c 2``id -u | tail -c 2``id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Monitoring_addr@%225.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@StateTransfert_addr@%226.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Service_addr@%227.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@cat  $< | sed -f sed_patterns > $@
 	@rm -f sed_patterns
 

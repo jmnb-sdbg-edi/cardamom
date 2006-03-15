@@ -30,5 +30,5 @@ fi
 DIRECTORY="`dirname $0`"
 
 
-exec $TERM -ls -sb -sl 500 -e $DIRECTORY/launch.sh Hello.MainComponentServer1 $*
-
+exec $TERM -ls -sb -sl 500 -e $DIRECTORY/launch.sh Hello.MainComponentServer1 $* 
+#$DIRECTORY/launch.sh Hello.MainComponentServer1 $* &

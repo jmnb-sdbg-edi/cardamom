@@ -44,9 +44,12 @@ XML_CONF_FILES:=xml/CodeGenerationDefn.xml
 
 XML_DATA_FILES:=data/HelloSystemDefinition.xml \
     data/CdmwPlatformMngtDaemon_conf.xml \
+    data/CdmwPlatformMngtSystemStart.xml \
+    data/CdmwFaultToleranceManager_conf.xml \
+    data/CdmwFTSystemMngtGroupCreator_conf.xml \
     data/Cdmw_nar.xml \
     data/HelloClient.xml data/HelloServer.xml
-    
+
 
 all :: conf gencode exe data
 

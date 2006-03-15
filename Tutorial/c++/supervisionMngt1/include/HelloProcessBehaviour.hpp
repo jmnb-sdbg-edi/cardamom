@@ -51,7 +51,7 @@ public:
     * Purpose:
     * <p> The constructor.
     */ 
-    HelloProcessBehaviour  (CORBA::ORB_ptr orb) 
+        HelloProcessBehaviour  (CORBA::ORB_ptr orb) : m_countIsAlive(0)
     {
         m_orb = CORBA::ORB::_duplicate(orb);
     }
@@ -65,33 +65,6 @@ public:
     {
      
     }
-
-    
-    /**
-    * Purpose:
-    * <p>
-    * the behaviour for the
-    * IDL:thalesgroup.com/CdmwSystemMngt/platformlibrary/Process/nb_steps:1.0
-    * attribute
-    */
-    virtual CORBA::ULong nb_steps() throw(CORBA::SystemException)
-    {
-        return 1;
-    }
-    
-    
-    /**
-	* Purpose:
-	* <p>
-	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwSystemMngt/platformlibrary/Process/get_service:1.0
-	* operation
-	*/
-    virtual CORBA::Object_ptr get_service() throw(CORBA::SystemException)
-    {
-        return CORBA::Object::_nil();
-    }
-    
     
     /**
 	* Purpose:
@@ -101,18 +74,18 @@ public:
 	* operation
 	*/
     virtual void initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
-        throw(CdmwPlatformMngt::Process::BadOrder, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::BadOrder, CORBA::SystemException)
     {
         // ==============================================================
         // get application and process names   
         // ==============================================================                 
-        m_applicationName = Cdmw::PlatformMngt::PlatformInterface::getApplicationName();
-        m_processName = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+        m_applicationName = Cdmw::PlatformMngt::PlatformInterface::Get_application_name();
+        m_processName = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
                     
         // ==============================================================
         // example of using the PlatformInterface for notifying a message
         // ==============================================================
-        Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+        Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), 
                 ">>>>>>>>>>>>>> Initialisation requested by supervision");                            
     }
@@ -128,14 +101,14 @@ public:
 	* operation
 	*/
     virtual void run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun,
-              CdmwPlatformMngt::Process::AlreadyDone,
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
+              CdmwPlatformMngt::ProcessDelegate::AlreadyDone,
               CORBA::SystemException)
     {    
         // ==============================================================        
         // example of using the PlatformInterface for notifying a message
         // ==============================================================
-        Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+        Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), 
                 ">>>>>>>>>>>>>> Run requested by supervision");                
     }
@@ -152,7 +125,7 @@ public:
         // ==============================================================         
         // example of using the PlatformInterface for notifying a message
         // ==============================================================
-        Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+        Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                 m_processName.c_str(), 
                 ">>>>>>>>>>>>>> Stop requested by supervision");
 
@@ -162,6 +135,24 @@ public:
         m_orb->shutdown(false);
     }
 
+    /**
+	* Purpose:
+	* <p>
+	* the behaviour for the IDL:FT/PullMonitorable/is_alive:1.0 operation
+	*/
+    virtual bool is_alive() throw(CORBA::SystemException)
+    {    
+        m_countIsAlive++;
+        if ( m_countIsAlive < 10)
+        {
+            std::cout << "Pull monitoring active : is_alive called" << std::endl;
+        }
+        else if ( m_countIsAlive == 10)
+        {
+            std::cout << "is_alive tracing will switch off now (to avoid too much traces)" << std::endl;
+        }
+        return true;
+    }
 
     
 private:
@@ -180,6 +171,8 @@ private:
     * The process name.
     */
     std::string m_processName;
+
+    int m_countIsAlive;
 };
 
 

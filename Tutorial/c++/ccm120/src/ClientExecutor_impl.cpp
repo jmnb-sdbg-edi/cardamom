@@ -20,8 +20,7 @@
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * =========================================================================== */
 
-
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <iostream>
 
 #include "ClientExecutor_impl.hpp"
@@ -93,7 +92,7 @@ void ClientExecutor_impl::ccm_activate()
         // ======================================================                      
         // create a naming interface on root context
         // ====================================================== 
-        Cdmw::NamingAndRepository::NamingInterface ni_root (nc_root.in());
+        Cdmw::CommonSvcs::Naming::NamingInterface ni_root (nc_root.in());
 
    
         // ========================================================

@@ -1,4 +1,0 @@
-CdmwLifeCycle:com.thalesgroup.CdmwLifeCycle
-CosLifeCycle:org.omg.CosLifeCycle
-Hello:com.thalesgroup.Hello
-HelloEntityFactoryModule:com.thalesgroup.HelloEntityFactoryModule

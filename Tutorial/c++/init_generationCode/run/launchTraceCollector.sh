@@ -37,3 +37,4 @@ SITE_CONFIG="$DIRECTORY/../../site.mk"
 CDMW_HOME="`cat $SITE_CONFIG | grep CDMW_HOME |cut -d= -f2`"
 
 exec $TERM -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_trace_collector $*
+#exec $TERM -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_trace_collector -ORBDebugLevel 10 $*

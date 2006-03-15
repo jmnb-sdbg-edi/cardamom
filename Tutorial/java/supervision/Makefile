@@ -31,11 +31,15 @@ PWD:=$(shell pwd)
 #   
 #   CDMW_HOME
 include ../site.mk
+include ../rules.mk
 
 BUILD_TARGET:=$(shell $(CDMW_HOME)/bin/config.guess)
 
 
 XML_DATA_FILES:=data/Cdmw_nar.xml data/HelloSystemDefinition.xml \
+		data/CdmwFaultToleranceManager_conf.xml \
+		data/CdmwFTSystemMngtGroupCreator_conf.xml \
+		data/CdmwPlatformMngtSystemStart.xml \
                 data/CdmwPlatformMngtDaemon_conf.xml
 
 .SUFFIXES:
@@ -59,16 +63,6 @@ exe::
 	@$(MAKE) -C $(PWD)/$(BUILD_TARGET) --no-print-directory  all
 
 
-# Rules to build each XML configuration file
-%.xml: %.xml.in
-	@echo "Generating $@ from $<"
-	@echo s%@prefix@%$(PWD)%g > sed_patterns
-	@echo s%@cdmw_home@%$(CDMW_HOME)%g >> sed_patterns
-	@echo s%@orbacus_bin@%$(ORBACUS_JAVA_BIN_PATH)%g >> sed_patterns
-	@echo s%@orbacus_idl@%$(ORBACUS_JAVA_IDL_PATH)%g >> sed_patterns
-	@cat  $< | sed -f sed_patterns > $@
-	@rm -f sed_patterns
-
 clean::
 	@if [ -d $(PWD)/$(BUILD_TARGET) ]; then \
 		$(MAKE) -C $(PWD)/$(BUILD_TARGET) --no-print-directory  $@ ; \
@@ -77,5 +71,4 @@ clean::
 
 cleanall: clean
 	@$(RM) $(XML_DATA_FILES)
-	@$(RM) -r $(PWD)/generated
 	@$(RM) -r $(PWD)/$(BUILD_TARGET)

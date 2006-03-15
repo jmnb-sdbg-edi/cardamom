@@ -31,7 +31,7 @@
 #include <Foundation/common/Assert.hpp>
 
 #include <ConfAndPlug/cdmwinit/InitUtils.hpp>
-#include <Repository/naminginterface/NamingUtil.hpp>
+#include <Foundation/commonsvcs/naming/NamingUtil.hpp>
 
 #include <CCMContainer/idllib/CdmwCcmComponentServer.stub.hpp>
 #include <CCMContainer/ccmcontainer/ConfigValue_impl.hpp>
@@ -331,13 +331,13 @@ int main(int argc, char* argv[])
     if ((rep_host == "no") ||
         (rep_host == "yes")) 
 	 {
-		 nar_url="corbaloc::localhost:" + rep_port + "/CdmwRepository";
-       naming_url = "corbaloc::localhost:" + rep_port + "/NameService";
-    }
-	 else
-	 {
-		 nar_url="corbaloc::" + rep_host + ":" + rep_port + "/CdmwRepository";
-       naming_url = "corbaloc::" + rep_host + ":" + rep_port + "/NameService";
+	   nar_url="corbaloc::localhost:" + rep_port + "/CdmwRepository";
+	   naming_url = "corbaloc::localhost:" + rep_port + "/NameService";
+	 }
+    else
+         {
+	   nar_url="corbaloc::" + rep_host + ":" + rep_port + "/CdmwRepository";
+	   naming_url = "corbaloc::" + rep_host + ":" + rep_port + "/NameService";
 	 }
 
 	 // Get Repository host
@@ -401,7 +401,7 @@ int main(int argc, char* argv[])
         // Register ValueType factory
 		  // ===================================================
 #if CDMW_ORB_VDR == tao
-        CORBA_ValueFactoryBase_var vf, old_vf;
+        CORBA::ValueFactoryBase_var vf, old_vf;
 #else
         CORBA::ValueFactoryBase_var vf, old_vf;
 #endif
@@ -421,8 +421,8 @@ int main(int argc, char* argv[])
         
         CosNaming::NamingContext_var root =
             repository->resolve_root_context(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT);
-        using namespace Cdmw::NamingAndRepository;
-        NamingInterface ni(root.in());
+        using namespace CdmwNamingAndRepository;
+       Cdmw::CommonSvcs::Naming::NamingInterface ni(root.in());
         // **************************************************************************
         // [1] Create the component installation object
         // **************************************************************************        
@@ -459,8 +459,8 @@ int main(int argc, char* argv[])
                   << "     the CARDAMOM NamingAndRepository service" << std::endl;
         const std::string client_process_location =
             "CDMW/SERVICES/ASSEMBLYANDDEPLOYMENT/ClientProcess@HelloApplication.ComponentServer";
-        CdmwCcmComponentServer::ComponentServer_var client_process =
-            NamingUtil<CdmwCcmComponentServer::ComponentServer>::resolve_name
+        CdmwCcmComponentServer::ComponentServer_var client_process = 
+	  Cdmw::CommonSvcs::Naming::NamingUtil<CdmwCcmComponentServer::ComponentServer>::resolve_name
             (ni,client_process_location);            
         client_process->set_component_installation(component_installation.in());
             
@@ -471,7 +471,7 @@ int main(int argc, char* argv[])
         const std::string server_process_location =
             "CDMW/SERVICES/ASSEMBLYANDDEPLOYMENT/ServerProcess@HelloApplication.ComponentServer";
         CdmwCcmComponentServer::ComponentServer_var server_process =
-            NamingUtil<CdmwCcmComponentServer::ComponentServer>::resolve_name
+            Cdmw::CommonSvcs::Naming::NamingUtil<CdmwCcmComponentServer::ComponentServer>::resolve_name
             (ni,server_process_location);
         server_process->set_component_installation(component_installation.in());
 
@@ -547,7 +547,7 @@ int main(int argc, char* argv[])
         // Get the Name Service object reference
         CosNaming::NamingContext_var naming_ctxt =
             get_naming_service(orb.in(),naming_url);
-        NamingInterface naming_ni(naming_ctxt.in());
+        Cdmw::CommonSvcs::Naming::NamingInterface naming_ni(naming_ctxt.in());
         std::cout << "   - Configuring ServerNo1 ...";
         // - Configure the two instances
         server1->name("ServerNo1");

@@ -31,15 +31,20 @@ PWD:=$(shell pwd)
 #   
 #   CDMW_HOME
 include ../site.mk
-include ../rules.mk
 
 BUILD_TARGET:=$(shell $(CDMW_HOME)/bin/config.guess)
+
+include ../rules.mk
+
 
 XML_CONF_FILES:=xml/CodeGenerationDefn.xml
 
 
 XML_DATA_FILES:=data/SystemDefinition.xml \
 	data/CdmwPlatformMngtDaemon_conf.xml \
+        data/CdmwFaultToleranceManager_conf.xml \
+        data/CdmwFTSystemMngtGroupCreator_conf.xml\
+        data/CdmwPlatformMngtSystemStart.xml  \
 	data/Cdmw_nar.xml \
 	data/ComponentServer1.xml \
 	data/ComponentServer2.xml \

@@ -39,6 +39,7 @@
 
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
 
+#include <Foundation/logging/LogManager.hpp>
 
 namespace 
 {
@@ -172,6 +173,8 @@ int main(int argc, char* argv[])
         // Initialise the trace service
         // ===================================================
         {
+
+	   Cdmw::Logging::LogManager::Init(argc, argv);
             // create the collector name list with the input
             // collector name 
             std::vector<std::string> collectorNameList;
@@ -194,7 +197,7 @@ int main(int argc, char* argv[])
             Cdmw::Trace::InitUtils::init_trace_library(rootPOA.in(),
                                           applicationName,
                                           processName,
-                                          5000,2,50*1024,
+                                          100,5000,2,50*1024,
                                           collectorNameList);
             
             

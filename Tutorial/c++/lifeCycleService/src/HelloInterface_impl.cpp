@@ -21,7 +21,7 @@
  * =========================================================================== */
 
 #include <string>
-
+#include <iostream>
 #include "HelloInterface_impl.hpp"
 
 

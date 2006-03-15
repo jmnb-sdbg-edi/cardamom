@@ -27,8 +27,8 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/orbsupport/RefCountLocalObject.hpp>
 
-#include "UserHello.skel.hpp"
-
+#include "UserHello.skel.hpp" 
+//#include "UserHelloC.h" 
 #include "DisplayFacetExecutor_impl.hpp"
 
 namespace Hello
@@ -37,9 +37,14 @@ namespace Hello
 //
 // IDL:thalesgroup.com/Hello/CCM_Server:1.0
 //
+/*
 class ServerExecutor_impl : virtual public User_Server, 
-                            virtual public Cdmw::OrbSupport::RefCountLocalObject,
-			                virtual public DisplayFacetExecutor_impl
+                            virtual public Cdmw::OrbSupport::RefCountLocalObject, 
+			    virtual public DisplayFacetExecutor_impl
+*/
+class ServerExecutor_impl : virtual public DisplayFacetExecutor_impl,
+                            virtual public Cdmw::OrbSupport::RefCountLocalObject
+
 {
   public:
 
@@ -54,8 +59,8 @@ class ServerExecutor_impl : virtual public User_Server,
         throw(CORBA::SystemException);
        
   private:
-  
-    ServerExecutor_impl(const ServerExecutor_impl&);
+
+  ServerExecutor_impl(const ServerExecutor_impl&);
     
     void operator=(const ServerExecutor_impl&);
         

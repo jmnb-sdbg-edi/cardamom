@@ -78,10 +78,8 @@ class ClientExecutorImpl
             // ======================================================                      
             // create a naming interface on default root context
             // ====================================================== 
-            cdmw.namingandrepository.NamingInterface niDefRoot =
-                new cdmw.namingandrepository.NamingInterface(defRootContext);
-            
-            
+            cdmw.commonsvcs.naming.NamingInterface niDefRoot =
+                new cdmw.commonsvcs.naming.NamingInterface(defRootContext);
             
             
             // ========================================================
@@ -90,7 +88,7 @@ class ClientExecutorImpl
             System.out.println("Get the server home reference...");
             org.omg.CORBA.Object objref1 = 
                 niDefRoot.resolve ("MyNaming/Tutorial/HelloServerHome");
-    
+
             com.acme.Hello.ServerHome helloServerHome = 
                 com.acme.Hello.ServerHomeHelper.narrow(objref1);
                  

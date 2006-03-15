@@ -45,6 +45,7 @@
 
 #include "HelloProcessBehaviour.hpp"
 
+#include <Foundation/logging/LogManager.hpp> 
 
 namespace 
 {
@@ -142,25 +143,25 @@ int main(int argc, char* argv[])
         // ==============================================
         
         // Call platform interface setup
-        Cdmw::PlatformMngt::PlatformInterface::setup(orb.in(), argc, argv);
+        Cdmw::PlatformMngt::PlatformInterface::Setup(orb.in(), argc, argv);
         
         // creates the hello process behaviour
         std::auto_ptr<HelloProcessBehaviour> pHelloProcess(
                                 new HelloProcessBehaviour(orb.in()));
                                               
         // acknowledge the creation of the process
-        Cdmw::PlatformMngt::PlatformInterface::acknowledgeCreation(pHelloProcess.get());
+        Cdmw::PlatformMngt::PlatformInterface::Acknowledge_creation(pHelloProcess.get());
         pHelloProcess.release();
                     
         // sample usage of the platform interface                    
-        applicationName = Cdmw::PlatformMngt::PlatformInterface::getApplicationName();
+        applicationName = Cdmw::PlatformMngt::PlatformInterface::Get_application_name();
 
-        processName = Cdmw::PlatformMngt::PlatformInterface::getProcessName();     
+        processName = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();     
         
         //
         // example of using the PlatformInterface for notifying a message
         //
-        Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+        Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                          processName.c_str(), ">>>>>>>>>>>>>> Launching .....");
 
                 
@@ -172,7 +173,7 @@ int main(int argc, char* argv[])
                                   CdmwNamingAndRepository::Repository::_nil();  
                                   
         CORBA::Object_var obj2 = 
-                Cdmw::PlatformMngt::PlatformInterface::getService(
+                Cdmw::PlatformMngt::PlatformInterface::Get_service(
                          Cdmw::PlatformMngt::ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
         repository = CdmwNamingAndRepository::Repository::_narrow(obj2.in());
         
@@ -191,6 +192,8 @@ int main(int argc, char* argv[])
         // Initialise the trace service
         // ===================================================
         {
+
+	    Cdmw::Logging::LogManager::Init(argc, argv);
             // create the collector name list with the input
             // collector name 
             std::vector<std::string> collectorNameList;
@@ -213,7 +216,7 @@ int main(int argc, char* argv[])
             Cdmw::Trace::InitUtils::init_trace_library(rootPOA.in(),
                                           applicationName,
                                           processName,
-                                          5000,2,50*1024,
+                                          100,5000,2,50*1024,
                                           collectorNameList);
             
             

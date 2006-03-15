@@ -24,8 +24,8 @@
 
 # History :
 # $Log: not supported by cvs2svn $
-# Revision 1.1.1.1.6.1  2005/06/16 17:24:10  italie01
-# ECR-0140:Updated headers
+# Revision 1.2  2005/06/21 15:43:47  italie01
+# ECR-0146: update of the headers
 #
 # Revision 1.1.1.1  2004/05/06 09:47:19  gomez
 # ECR-008: Update of Tutorial code examples according to CARDAMOM V0.

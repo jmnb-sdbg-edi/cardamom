@@ -96,24 +96,22 @@ LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
 
 
-LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface \
-          -lcdmwlifecycleinit -lcdmwlifecycle -lcdmwrepositoryinterface \
-          -lcdmwplatforminterface -lcdmwtracelibrary -lcdmwnaminginterface \
-          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
-          -lcdmwcommon -lcdmwccmcommon -lcdmwftccmcif -lcdmwccmcontainer \
-          -lcdmwccmcomponentserver -lcdmwtestutils -lxerces-c1_3 \
-          -lcdmwlifecycleidl -lcdmweventidl -lcdmwccmcontaineridl \
-          -lcdmwplatformvaluetypes -lcdmwplatformidl -lcdmwrepositoryidl \
-	  -lcdmwftcommon -lcdmwftstatemanager -lcdmwftinit -lcdmwftlocationmanager \
-          -lcdmwcommonidl -lcdmwsystemmngtidl -lcdmwplatformlibrary -lcdmwtraceidl \
-	  -lcdmwfaulttoleranceidl -lcdmwccmdeploymentidl -lcdmweventidl \
+LIBS_CDMW=-lcdmwlogging -lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface \
+	-lcdmwlifecycle -lcdmwlifecycleinit -lcdmwrepositoryinterface \
+	-lcdmwsystemmngtidl -lcdmwplatforminternallibrary -lcdmwplatformelementlibrary -lcdmwplatforminterface -lcdmwcommonsvcsnaming \
+	-lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
+	-lcdmwcommon -lcdmwtestutils -lcdmwccmcommon \
+	-lcdmwccmcontainer -lcdmwccmcomponentserver -lcdmwtestutils \
+	-lxerces-c1_3 -lcdmweventidl -lcdmwccmcontaineridl \
+	-lcdmwrepositoryidl -lcdmwlifecycleidl -lcdmwcommonidl \
+	-lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+	-lcdmwplatformlibrary -lcdmwplatformvaluetypes -lcdmwftcommon -lcdmwftstatemanager \
+	-lcdmwcosnotificationidl -lcdmwfaulttoleranceidl -lcdmwftinit -lcdmwftlocationmanager -lcdmwcommonsvcsdatastore \
+	-lcdmwftccmcif -lcdmwccmcif -lcdmwftreplicationmanager -lcdmwftgroupcreator
 
-"LIBS_CDMW:=$(foreach CSC,$(DEPEND_LIB),-lcdmw$(CSC))
-#LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface -lcdmwlifecycle -lcdmwrepositoryinterface  \
-#	-lcdmwplatforminterface -lcdmwtracelibrary -lcdmwperformancelibrary -lcdmwidl -lcdmwnaminginterface \
-#	-lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwcommon \
-#	-lxerces-c1_3
-#END CARDAMOM FLAGS
+
+
+#LIBS_CDMW:=$(foreach CSC,$(DEPEND_LIB),-lcdmw$(CSC))
 
 RM=rm -f
 CXX=g++

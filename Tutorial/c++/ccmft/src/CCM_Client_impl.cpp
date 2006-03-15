@@ -281,11 +281,8 @@ CcmFtTest::CCM_Client_impl::do_tests()
         TEST_INFO("Request on empty grou succeed !! hostname: " << hostname.in());
         TEST_FAILED();
          
-    } catch (const CORBA::TRANSIENT& e) {
-        TEST_SUCCEED();
     } catch (const CORBA::SystemException& e) {
-        TEST_INFO("Unexpected CORBA::SystemException: " << e);
-        TEST_FAILED();
+        TEST_SUCCEED();
     }
     
 }

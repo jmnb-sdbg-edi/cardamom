@@ -1,22 +1,22 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
  * and SELEX-SI. All rights reserved.
- *
+ * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
  * option) any later version.
- *
+ * 
  * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
  * License for more details.
- *
+ * 
  * You should have received a copy of the GNU Library General
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
-                                                                                                 
+
 /**
  * @brief The main for test lbinit.
  *
@@ -30,7 +30,6 @@
 #include <Foundation/orbsupport/StrategyList.hpp>
 #include <Foundation/osthreads/Thread.hpp>
 #include <Foundation/ossupport/OS.hpp>
-#include <LoadBalancing/idllib/PortableGroup.stub.hpp>
 #include <iostream>
 #include <fstream>
 #include <LoadBalancing/lbinit/LBServiceInit.hpp>
@@ -49,6 +48,7 @@ namespace
 
 int main( int argc, char* argv[] )
 {
+    CORBA::ORB_var orb;                        // orb reference
     try
     {
         // Initialises the ORB
@@ -56,8 +56,7 @@ int main( int argc, char* argv[] )
         strategyList.add_OrbThreaded();
         strategyList.add_PoaThreadPerConnection();
 
-
-        CORBA::ORB_var orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList);
+        orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList);
 
         using namespace Cdmw::OsSupport;
        
@@ -117,13 +116,7 @@ int main( int argc, char* argv[] )
         obj = group_manager->add_member(obj.in(),
                                         loc,
                                         hello_object.in());
-    
-        hello_object = Cdmw::LB::TestUtils::Get_hello_ref_from_file(orb.in(), "hello4");
-        loc[0].id = "HOST4";
-        obj = group_manager->add_member(obj.in(),
-                                        loc,
-                                        hello_object.in());
-        
+
         // export the object reference to a file
         std::string file_name = "hello_group_default";
         CORBA::String_var ref_string = orb->object_to_string(obj.in());
@@ -178,7 +171,6 @@ int main( int argc, char* argv[] )
         os2 << ref_string.in();
         os2.close();
         
-        
     }
     catch( const CORBA::Exception &e )
     {
@@ -196,6 +188,29 @@ int main( int argc, char* argv[] )
         return -1;
     }
     
+    // ========================================================
+    // program stopping
+    // ========================================================
+
+    // ===================================================
+    // Call ORB cleanup
+    // ===================================================
+    Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+
+    // =====================================================
+    // Destroy orb
+    // =====================================================
+    if (!CORBA::is_nil(orb.in()))
+    {
+        try
+        {
+            orb -> destroy();
+        }
+        catch(const CORBA::Exception& ex)
+        {
+            std::cerr << ex << std::endl;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

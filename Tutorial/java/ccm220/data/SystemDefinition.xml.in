@@ -23,11 +23,10 @@
  * =========================================================================== *
 -->
 
-
 <!--...-->
 <!--...-->
-<!--Cdmw deployment file for integration test:-->
-<!--Cdmw Repository launched with traces enabled-->
+<!--Cardamom deployment file for integration test:-->
+<!--Cardamom Repository launched with traces enabled-->
 
 <!DOCTYPE System SYSTEM "@cdmw_home@/share/CdmwPlatformMngtSystem.dtd">
 
@@ -36,7 +35,7 @@
 <!--                   -->
 <!-- ***************** -->
 
-<System Name="system_deployment" Port="21869">
+<System Name="system_deployment" Port="@SystemMngt_port@">
 
     <!-- Default timeouts for processes of the entire system -->
 	<Timeout Init="200000" Run="200000" Stop="200000"/>
@@ -50,25 +49,25 @@
 
     <!-- Services of the system -->
 	<Service Name="NamingAndRepositoryService"
-             App-name="CdmwServices"
+             App-name="CardamomServices"
              Process-name="Repository"/>
 
 	<Service Name="XMLService"
-             App-name="CdmwServices"
+             App-name="CardamomServices"
              Process-name="XML"/>
 
     <!-- Hosts of the system -->
-	<Host Name="localhost"
+	<Host Name="@hostname@"
           App-exec-path="./cdmw_platform_application"
           Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-          Probe-exec-path="./cdmw_host_probe"/>
+          />
 
     <!-- ********************** -->
     <!-- Application definition -->
     <!--                        -->
     <!-- ********************** -->
-	<Application Name="CdmwServices"
-                 Host-name="localhost"
+	<Application Name="CardamomServices"
+                 Host-name="@hostname@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -85,7 +84,7 @@
         <!--                     -->
         <!-- ******************* -->
 		<Managed-process Name="Repository"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="SERVICE-PROVIDER"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_naming_and_repository" 
@@ -97,7 +96,7 @@
 		</Managed-process>
 
 		<Managed-process Name="XML"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="SERVICE-PROVIDER"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_xml_server.sh"
@@ -110,32 +109,29 @@
 		
 
 		<Unmanaged-process Name="InterfaceRepository"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
 		                 Autoended="FALSE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_service.sh"
 		                 Port="-1"
-                         Args="--ifr-port 22789">
-		</Unmanaged-process>
+                         Args="--ifr-port 22789"/>
 		
 		<Unmanaged-process Name="IfrFeed"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
 		                 Autoended="TRUE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_feed.sh"
 		                 Port="-1"
-                         Args="@prefix@/idl/Hello.idl">
-		</Unmanaged-process>
-
+                         Args="@prefix@/idl/Hello.idl"/>
 		
 		<!--@IF_ORBACUS@-->
 		<Unmanaged-process Name="OBEventService"
-                 Host-name="localhost"
+                 Host-name="@hostname@"
                  Autoended="FALSE"
                  Exec-path="@ORB_BIN_PATH@/eventserv"
-                 Args="-ORBconfig @prefix@/data/ccm_event.conf">
-        </Unmanaged-process>
+                 Args="-ORBconfig @prefix@/data/ccm_event.conf"/>
+
 
 		<Managed-process Name="EventChannelManager"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="MANAGED-PROCESS"
                          Autoended="TRUE"
                          Exec-path="@cdmw_home@/bin/cdmw_event_channel_manager"
@@ -150,27 +146,20 @@
 		
 		
 		<!--@IF_TAO@-->
-		<Unmanaged-process Name="OBEventService"
-                 Host-name="localhost"
-                 Autoended="FALSE"
-                 Exec-path="@ORBACUS_JAVA_BIN_PATH@/eventserv"
-                 Args="-ORBconfig @prefix@/data/ccm_event.conf">
-      </Unmanaged-process>
-
 		<Managed-process Name="EventChannelManager"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="MANAGED-PROCESS"
                          Autoended="TRUE"
-                         Exec-path="@prefix@/run/start_event_channel_manager.sh"
-                         Args="-ORBconfig @prefix@/data/ccm_event.conf 
-								       @-xx-@ProfileXMLFile=@prefix@/data/EventChannelConf.xml
+                         Exec-path="@cdmw_home@/bin/cdmw_event_channel_manager"
+                         Args="@-xx-@ProfileXMLFile=@prefix@/data/EventChannelConf.xml
                                @-xx-@CdmwXMLFile=@prefix@/data/EventChannelManager.xml 
                                @-xx-@validateXML"
                          Port="-1">
 			<Init-step Name="step0" Timeout="100000"/>
 		</Managed-process>
 		<!--@ENDIF_TAO@-->
-
+		
+		<!--@IF_ORBACUS@-->
 		<Init-graph>
             <Graph-element Name="Repository">
                 <Graph-element-successor Name="XML"/>
@@ -182,12 +171,8 @@
 		    
 		    <Graph-element Name="EventChannelManager"/>		    
 
-           <Graph-element Name="InterfaceRepository">
-                <Graph-element-successor Name="IfrFeed"/>
-            </Graph-element>
-           <Graph-element Name="IfrFeed"/>  
-
-
+        <Graph-element Name="InterfaceRepository"/>
+   
             <Graph-element Name="OBEventService"/>
                         
 			<Graph-element-root Name="Repository"/>
@@ -212,13 +197,54 @@
                         
 			<Graph-element-root Name="EventChannelManager"/>
     	</Stop-graph>
+		<!--@ENDIF_ORBACUS@-->
+		
+		<!--@IF_TAO@-->
+		<Init-graph>
+            <Graph-element Name="Repository">
+                <Graph-element-successor Name="XML"/>
+            </Graph-element>
+            
+		    <Graph-element Name="XML">
+		        <Graph-element-successor Name="EventChannelManager"/>
+		    </Graph-element>
+		    
+		    <Graph-element Name="EventChannelManager"/>		    
+  
+        <Graph-element Name="InterfaceRepository">
+                <Graph-element-successor Name="IfrFeed"/>
+            </Graph-element>
+            
+        <Graph-element Name="IfrFeed"/>	
+                        
+			<Graph-element-root Name="Repository"/>
+			<Graph-element-root Name="InterfaceRepository"/>
+    	</Init-graph>
+ 
+		<Stop-graph>
+		    <Graph-element Name="EventChannelManager">
+                <Graph-element-successor Name="XML"/>
+            </Graph-element>
+            
+		    <Graph-element Name="XML">
+                <Graph-element-successor Name="Repository"/>
+                <Graph-element-successor Name="InterfaceRepository"/>
+            </Graph-element>
+
+            <Graph-element Name="Repository"/>            
+            <Graph-element Name="InterfaceRepository"/>
+                        
+			<Graph-element-root Name="EventChannelManager"/>
+    	</Stop-graph>
+		<!--@ENDIF_TAO@-->
+
     	
     </Application>
 
 
 
-	<Application Name="CdmwCcmTools"
-                 Host-name="localhost"
+	<Application Name="CardamomCcmTools"
+                 Host-name="@hostname@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -229,7 +255,7 @@
     	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
 
         <Managed-process Name="PackageManager"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="MANAGED-PROCESS"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_package_manager.sh"
@@ -243,7 +269,7 @@
 		</Managed-process>
                           
         <Managed-process Name="ServerActivator"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_server_activator.sh"
@@ -255,7 +281,7 @@
 		</Managed-process>
 
         <Managed-process Name="ComponentInstallation"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_component_installation.sh"
@@ -268,13 +294,13 @@
 		</Managed-process>
                           
         <Managed-process Name="AssemblyFactory"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_assembly_factory.sh"
                           Port="24040"
-                          Args="-ORBInitRef InterfaceRepository=corbaloc::localhost:22789/DefaultRepository
-                                -ORBInitRef NameService=corbaloc::localhost:22456/NameService">
+                          Args="-ORBInitRef InterfaceRepository=corbaloc::@hostname@:22789/DefaultRepository
+                                -ORBInitRef NameService=corbaloc::@hostname@:22456/NameService">
 			<Init-step Name="initialisation" Timeout="100000"/>
 		    <!--	<Run-timeout Timeout="1000"/>
 			        <Stop-timeout Timeout="2000"/> -->
@@ -319,7 +345,7 @@
 	</Application>
 
 	<Application Name="HelloApplication"
-                 Host-name="localhost"
+                 Host-name="@hostname@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -330,7 +356,7 @@
     	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
 
         <Managed-process Name="ServerProcess"
-                         Host-name="localhost"
+                         Host-name="@hostname@"
                          Type="MANAGED-PROCESS"
                          Autoended="FALSE"
                          Exec-path="./startServer.sh"
@@ -342,7 +368,7 @@
 		</Managed-process>
                           
         <Managed-process Name="ClientProcess"
-                          Host-name="localhost"
+                          Host-name="@hostname@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="./startClient.sh"
@@ -381,17 +407,17 @@
 
     <!-- Init graph of applications of the system-->
     <Init-graph>
-        <Graph-element Name="CdmwServices"> 
-            <Graph-element-successor Name="CdmwCcmTools"/>
+        <Graph-element Name="CardamomServices"> 
+            <Graph-element-successor Name="CardamomCcmTools"/>
     	</Graph-element>
         
-        <Graph-element Name="CdmwCcmTools"> 
+        <Graph-element Name="CardamomCcmTools"> 
             <Graph-element-successor Name="HelloApplication"/>
     	</Graph-element>
         
         <Graph-element Name="HelloApplication"/> 
         
-        <Graph-element-root Name="CdmwServices"/> 
+        <Graph-element-root Name="CardamomServices"/> 
     </Init-graph>
 
 <!-- ************************ -->

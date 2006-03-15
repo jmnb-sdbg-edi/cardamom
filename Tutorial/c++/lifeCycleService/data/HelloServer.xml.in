@@ -31,6 +31,7 @@
         <trace flush-area-sz="51200" 
                flush-area-nb="2" 
                flushing-time="500" 
+               msg-threshold="100"
                collector-name="the_collector"/>
                 
         <lifecycle>

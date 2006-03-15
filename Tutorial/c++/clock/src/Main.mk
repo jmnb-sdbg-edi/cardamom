@@ -1,22 +1,23 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
 #* and SELEX-SI. All rights reserved.
-#*
+#* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
 #* Free Software Foundation; either version 2 of the License, or (at your
 #* option) any later version.
-#*
+#* 
 #* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
 #* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 #* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
 #* License for more details.
-#*
+#* 
 #* You should have received a copy of the GNU Library General
 #* Public License along with CARDAMOM; see the file COPYING. If not, write to
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
-                                                                                                 
+
+
 SHELL = /bin/sh
 
 include ../../site.mk
@@ -61,17 +62,57 @@ include ../../config.mk
 #Append to CPPFLAGS and IDLFLAGS
 
 
-override CPPFLAGS := -I. -I../include -I../generated -I$(TAO_ROOT)/tao \
-	$(foreach d, $(shell find $(CDMW_HOME)/include/c++ -type d), -I$(d)) \
-	$(CPPFLAGS)
+override CPPFLAGS := -g -Dlinux \
+	    -D_REENTRANT \
+	    -DCDMW_ASSERT_NO_THROW \
+	    -DCDMW_POSIX \
+	    -DCDMW_ORB_VDR=4203 \
+	    -DCDMW_ORB_VER=14 \
+	    -D_POSIX_THREADS \
+	    -D_POSIX_THREAD_SAFE_FUNCTIONS \
+	    -DACE_HAS_EXCEPTIONS \
+	    -DACE_HAS_AIO_CALLS \
+	    -DTAO_HAS_VALUETYPE \
+	    -DTAO_USE_SEQUENCE_TEMPLATES \
+	    -Dtao=4203 \
+	    -I$(ACE_ROOT) \
+	    -I$(TAO_ROOT) \
+	    -I$(TAO_ROOT)/tao \
+	    -I$(TAO_ROOT)/tao/IFR_Client \
+	    -I$(TAO_ROOT)/orbsvcs \
+	    -I$(TAO_ROOT)/orbsvcs/orbsvcs/IFRService \
+	    -I/tools/exec/cppunit/include \
+	    -I$(CDMW_HOME)/include/c++ \
+        $(foreach d, $(shell find $(CDMW_HOME)/include/c++ -type d), -I$(d)) \
+	    -O0 -g3 -Wall -Wno-deprecated \
+	    -rdynamic -fPIC
+
 override IDLFLAGS += -I -I../generated
 
-ALL_LIBS=$(LIBS) $(LDFLAGS_CSC) -rdynamic -g -O2 -fPIC -L/tools/exec/cppunit-1.10.2/lib -lpthread\
-	-lcdmwclockservice -ldl -lACE -lTAO -lTAO_PortableServer\
-        -lTAO_CosNaming -lTAO_Messaging -lTAO_RTCORBA -lcdmwcommon -lcdmworbsupport\
-        -lcdmwcommonsvcs -lcdmwcommonidl -lTAO_CosProperty -lTAO_IORTable -luuid\
-        -lcppunit -lxerces-c1_3 -lcdmwossupport
-
+ALL_LIBS=-L$(CDMW_HOME)/lib/c++ \
+	    -lcdmwlogging -lcdmwclockservice \
+	    -lcdmwcommonidl \
+	    -lcdmwcommon \
+	    -lcdmwcommonsvcsdatastore \
+	    -lcdmwcommonsvcsfederation \
+	    -lcdmwcommonsvcsnaming \
+	    -lcdmworbsupport \
+	    -lcdmwossupport \
+	    -lcdmwosthreads \
+	    -lcdmwtestutils \
+	    -L/tools/exec/cppunit-1.10.2/lib \
+	    -lcppunit \
+	    -L/tools/exec/xerces-c-src1_3_0/lib \
+	    -lxerces-c1_3 \
+	    -L/tools/exec/TAO-OpenFusion-050826/src/ace \
+	    -lACE \
+	    -lTAO \
+	    -lTAO_PortableServer \
+	    -lTAO_CosNaming \
+	    -lTAO_Messaging \
+	    -lTAO_CosProperty \
+	    -lTAO_IORTable \
+	    -lpthread -ldl -luuid
 
 # Exported variables
 #   CORBA_ALL_IDL,

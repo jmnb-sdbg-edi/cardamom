@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -63,7 +60,7 @@ LIBS_solaris2_8=
 # ...........
 CXXFLAGS_linux=-g -Wall -Werror -fPIC
 #CPPFLAGS_linux= -I$(CDMW_HOME)/include/c++/deficiency/gcc-2-95-2
-LDFLAGS_linux= -lpthread -ldl -rdynamic
+LDFLAGS_linux= -lpthread -ldl -rdynamic -luuid
 IDLFLAGS_linux=
 LIBS_linux=
 # -------------------------------------------------------------------------------
@@ -88,24 +85,21 @@ LIBS_ORB:= $(LIBS_$(ORB))
 #BEGIN CARDAMOM FLAGS
 CPPFLAGS_CDMW=-I$(CDMW_HOME)/include/c++ \
 	-I$(XERCES_INC_PATH) \
-	-D_REENTRANT -DCDMW_ASSERT_NO_THROW
+	-DCDMW_TRACE_LEVEL=5 -D_REENTRANT -DCDMW_ASSERT_NO_THROW
 CXXFLAGS_CDMW=
 LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
 	-L$(XERCES_LIB_PATH)
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
 
-
-LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface \
-          -lcdmwlifecycleinit -lcdmwlifecycle -lcdmwrepositoryinterface \
-          -lcdmwplatforminterface -lcdmwtracelibrary -lcdmwnaminginterface \
-          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
-          -lcdmwcommon -lcdmwccmcommon -lcdmwccmcif -lcdmwccmcontainer \
-          -lcdmwccmcomponentserver -lcdmwtestutils -lxerces-c1_3 \
-          -lcdmwlifecycleidl -lcdmweventidl -lcdmwccmcontaineridl \
-          -lcdmwplatformvaluetypes -lcdmwplatformidl -lcdmwrepositoryidl \
-          -lcdmwcommonidl -lcdmwsystemmngtidl -lcdmwplatformlibrary -lcdmwtraceidl \
-          -lcdmwgroupmanageridl -lcdmwlbgroupmanager -lcdmwlbstrategy -lcdmwlbcommon \
-          -lcdmwlbinit -lcdmwloadbalancingidl
+LIBS_CDMW=-lcdmwcommon -lcdmwcommonidl -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
+	-lcdmwcommonsvcsnaming -lcdmwrepositoryinterface -lcdmwlifecycle \
+	-lcdmwcommonsvcsdatastore -lxerces-c1_3 -lcdmwlifecycleidl \
+	-lcdmwplatformvaluetypes -lcdmwplatformlibrary \
+	-lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+	-lcdmwrepositoryidl  -lcdmwgroupmanageridl \
+	-lcdmwcommonidl -lcdmwtraceidl -lcdmwtracelibrary -lcdmwcommonsvcsfederation \
+	-lcdmwlogging -lcdmwlbinit -lcdmwlbgroupmanager -lcdmwlbstrategy -lcdmwlbcommon -lcdmwloadbalancingidl \
+	-lTAO_DynamicInterface
 
 "LIBS_CDMW:=$(foreach CSC,$(DEPEND_LIB),-lcdmw$(CSC))
 #LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface -lcdmwlifecycle -lcdmwrepositoryinterface  \

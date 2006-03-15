@@ -100,37 +100,6 @@ ccm120              : facet deconnection/connection
 ccm130              : event connection 
                       (repository interface and naming service usage)
 ccm140              : component creation and connection (naming service usage)
-ccm210              : several receptacles on one facet
 ccm220              : several consumers
 ccm230              : client calls server facet which sends event to client
-ccm240              : client calls server facet which sends event to client with thread
-ccm_philosophers    : philosophers test
-
-
-
-
-ccm00-1  -> ccm010  : basic component without facet and event
-ccm00-2  -> ccm040  : facet component support (void return problem)
-ccm00-2a            : facet component support (string return)
-ccm0     -> ccm020  : facet delegation
-ccm1     -> ccm030  : facet inheritance
-ccm2     -> ccm050  : event publisher
-ccm2-1   -> ccm060  : event emitter
-ccm2-2   -> ccm070  : event with value type method
-ccm3     -> ccm080  : attributes (.cpf files)
-
-ccm4     -> ccm110  : facet deconnection/connection 
-                      (repository interface and naming service usage)
-ccm4a    -> ccm120  : facet deconnection/connection 
-                      (receptacle connection to naming service 
-                       => CosNaming.idl include problem in Hello.idl file)
-ccm5     -> ccm130  : event connection 
-                      (repository interface and naming service usage)
-ccm6     -> ccm140  : component creation and connection (naming service usage)
-ccm7     -> ccm210  : several receptacles on one facet
-ccm8     -> ccm220  : several consumers
-ccm9     -> ccm230  : client calls server facet which sends event to client
-ccm9a    -> ccm240  : client calls server facet which sends event to client with thread
-ccm_philosophers    : philosophers test
-
 

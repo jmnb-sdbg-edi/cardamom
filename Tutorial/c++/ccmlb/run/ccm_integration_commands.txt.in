@@ -1,0 +1,5 @@
+verbose
+install_assembly @prefix@/@cdmw_platform@/QualifCcmLb.aar
+create_assembly CcmLbAssembly myAssembly
+build_assembly myAssembly
+exit

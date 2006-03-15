@@ -67,11 +67,27 @@ fi
 
 # CDMW Tutorial folder
 CDMW_TUTORIAL_HOME="`cat $SITE_CONFIG | grep CDMW_TUTORIAL_HOME= |cut -d= -f2`"
-if [ "$CDMW_HOME" = "" ]
+if [ "$CDMW_TUTORIAL_HOME" = "" ]
 then
     $echo "CDMW_TUTORIAL_HOME is not set into $SITE_CONFIG"
     exit 1
 fi
+
+rm -fr workDir
+rsh $HOSTNAME2 rm -fr $CDMW_TUTORIAL_HOME/ccmft/run/workDir
+rsh $HOSTNAME3 rm -fr $CDMW_TUTORIAL_HOME/ccmft/run/workDir
+
+# FTP DIR
+FTP_DIR="`cat $SITE_CONFIG | grep FTP_DIR= |cut -d= -f2`"
+if [ "$FTP_DIR" = "" ]
+then
+    $echo "FTP_DIR is not set into $SITE_CONFIG"
+    exit 1
+fi
+
+rm -fr $FTP_DIR/cdmw_ccm_ft
+rsh $HOSTNAME2 rm -fr $FTP_DIR/cdmw_ccm_ft
+rsh $HOSTNAME3 rm -fr $FTP_DIR/cdmw_ccm_ft
 
 LD_LIBRARY_PATH=$CDMW_HOME/lib/c++:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH
@@ -181,7 +197,7 @@ rsh $HOSTNAME2 "(export LANG=$LANG; export TAO_DISABLE_CODESET_ENCODING=$TAO_DIS
 
 DAEMON_COMMAND3="$CDMW_HOME/bin/cdmw_platform_daemon.sh --CdmwXMLFile=$DEMO_DIR/data/CdmwPlatformMngtDaemon_conf.xml"
 TERM_COMMAND3="$TERM -sb -sl 5000 -geometry 90x30-0-0 -title ${HOSTNAME3}_platform_daemon -display $DISPLAY"
-rsh $HOSTNAME3 "(export LANG=$LANG; export TAO_DISABLE_CODESET_ENCODING=$TAO_DISABLE_CODESET_ENCODING; LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; TAO_ROOT=$TAO_ROOT; export TAO_ROOT; PATH=$PATH; export PATH; $TERM_COMMAND3 -e $DAEMON_COMMAND3)" &
+rsh $HOSTNAME3 "(cd $CDMW_TUTORIAL_HOME/ccmft/run; export LANG=$LANG; export TAO_DISABLE_CODESET_ENCODING=$TAO_DISABLE_CODESET_ENCODING; LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; TAO_ROOT=$TAO_ROOT; export TAO_ROOT; PATH=$PATH; export PATH; $TERM_COMMAND3 -e $DAEMON_COMMAND3)" &
 
 trap '$DAEMON_COMMAND stop; exit' 2
 #rsh $HOSTNAME2 trap '$DAEMON_COMMAND2 stop; exit' 2
@@ -190,22 +206,30 @@ sleep $INIT_TIMEOUT
 
 # 1b) Start FT Manager
 $echo Starting the FT Manager...
-$TERM -ls -sb -sl 2000 -e $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$DEMO_DIR/data/CdmwFaultToleranceManager_ccmft_conf.xml &
+#FT_MANAGER_COMMAND="$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$DEMO_DIR/data/CdmwFaultToleranceManager_ccmft_conf.xml --groupConf=$DEMO_DIR/data/CdmwFTSystemMngtGroupCreator_conf.xml ; cat"
+#TERM_FT="$TERM -sb -sl 5000 -geometry 90x30-0-0 -title ${HOSTNAME3}_ft_manager -display $DISPLAY"
+# if we want to launch FTManager on HOST3, in this case change corbaloc refs in Scenario
+#rsh $HOSTNAME3 "(export LANG=$LANG; export TAO_DISABLE_CODESET_ENCODING=$TAO_DISABLE_CODESET_ENCODING; LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; TAO_ROOT=$TAO_ROOT; export TAO_ROOT; PATH=$PATH; export PATH; $TERM_FT -e $FT_MANAGER_COMMAND)" &
+$TERM -ls -sb -sl 2000 -e $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$DEMO_DIR/data/CdmwFaultToleranceManager_ccmft_conf.xml --groupConf=$DEMO_DIR/data/CdmwFTSystemMngtGroupCreator_conf.xml&
 FT_MANAGER_PID=$!
 sleep $FT_MANAGER_TIMEOUT
 
 # 2) Start Platform Management Supervision
-$echo Starting the Platform Management Supervision...
-$CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21888 --FaultManagerRegistration=corbaloc::$HOST3:4565/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000 &
-SUPERVISION_PID=$!
+#$echo Starting the Platform Management Supervision...
+#$CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=21888 --FaultManagerRegistration=corbaloc::$HOST3:4565/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000 &
+#SUPERVISION_PID=$!
+#sleep $INIT_TIMEOUT
+
+# 2) Start Platform Management Supervision
+$CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=../data/CdmwPlatformMngtSystemStart.xml --validate
 sleep $INIT_TIMEOUT
 
 # 3) Define system
 $echo Defining the System '$SCENARIO_FILE'
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21888/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
 
 # 4) Start_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21888/CdmwPlatformMngtSupervision --sys-start
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-start
 if [ $? -eq "0" ];
 then
     #$echo "Waiting a while for the execution of the scenario...\c"
@@ -216,7 +240,7 @@ then
 fi
 
 # 5) Get a snapshot of the system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21888/CdmwPlatformMngtSupervision --sys-snapshot
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-snapshot
 
 # 6) Execute deployment
 $echo
@@ -224,7 +248,7 @@ $echo ============================
 $echo Execute deployment commands
 $echo ============================
 $echo
-$TERM -ls -sb -sl 1000 -e ./startDeploymentTool.sh
+$TERM -ls -sb -sl 1000 -e ./startDeploymentTool.sh&
 
 
 $echo "=============================================================="
@@ -233,7 +257,7 @@ read FOO
 $echo "=============================================================="
 
 # 7) stop_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21888/CdmwPlatformMngtSupervision --sys-stop
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-stop
 sleep $CLEANUP_TIMEOUT
 
 $echo "=============================================================="

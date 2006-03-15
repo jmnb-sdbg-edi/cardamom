@@ -1,10 +1,7 @@
 #!/bin/sh
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -64,7 +61,8 @@ echo "==========================================================="
 
 # 1) Start LBGroupManager
 $echo Starting the LBGroupManager...
-./groupManager.sh &
+#$CDMW_HOME/bin/cdmw_lb_group_manager --CdmwLBXMLFile=$CDMW_HOME/share/CdmwLBGroupManager_conf.xml &
+$TERM -geometry 79x20+0+0 -title groupManager -ls -sb -sl 500 -e $CDMW_HOME/bin/cdmw_lb_group_manager  --CdmwLBXMLFile=$CDMW_HOME/share/CdmwLBGroupManager_conf.xml &
 LB_GROUP_MANAGER_PID=$!
 sleep $INIT_TIMEOUT
 

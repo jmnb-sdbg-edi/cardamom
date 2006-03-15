@@ -1,9 +1,6 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -28,7 +25,6 @@
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
 
 
-#include <idllib/PortableGroup.stub.hpp>
 #include "Hello.stub.hpp"
 #include <idllib/CdmwLBGroupManager.stub.hpp>
 #include <idllib/CdmwLBIOGRFactory.stub.hpp>

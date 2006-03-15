@@ -1,21 +1,23 @@
 #!/bin/sh
 #* =========================================================================== *
-#* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI. All rights reserved.
-#* 
+#* Copyright (c) 2003-2005 THALES All rights reserved.
+#* Software commonly developed by THALES and AMS.
+#*
+#* This file is part of CARDAMOM.
+#*
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
 #* Free Software Foundation; either version 2 of the License, or (at your
 #* option) any later version.
-#* 
-#* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
-#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
-#* License for more details.
-#* 
-#* You should have received a copy of the GNU Library General
-#* Public License along with CARDAMOM; see the file COPYING. If not, write to
-#* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#*
+#* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT ANY
+#* WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#* FOR A PARTICULAR PURPOSE. See the GNU Library General Public License for
+#* more details.
+#*
+#* You should have received a copy of the GNU Library General Public License
+#* along with CARDAMOM; see the file COPYING.  If not, write to the Free
+#* Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
 if test "`echo -e xxx`" = "xxx"
@@ -84,22 +86,7 @@ FT_MANAGER_TIMEOUT=30
 EXEC_TIMEOUT=160
 CLEANUP_TIMEOUT=5
 
-if [ "$HOSTNAME1X" = "" ]
-then
-    $echo "Export HOSTNAME1X to set the DISPLAY Options for HOST1 used by this demo"
-    exit 1
-fi
-if [ "$HOSTNAME2X" = "" ]
-then
-    $echo "Export HOSTNAME2X to set the DISPLAY Options for HOST2 used by this demo"
-    exit 1
-fi
-#HOSTNAMEX="`hostname`:0.0"
-HOSTNAME1X=$HOSTNAME1X
-HOSTNAME2X=$HOSTNAME2X
-
-TERMPATHH1="/usr/bin/xterm  -display $HOSTNAME1X"
-TERMPATHH2="/usr/bin/xterm  -display $HOSTNAME2X"
+TERMPATH="/usr/bin/xterm -hold -display $DISPLAY"
 
 $echo "========================================================="
 $echo "=                  CDMW DEMO                           ="
@@ -110,7 +97,7 @@ echo "==========================================================="
 
 # 0) Install exe on HOSNAME2
 BUILD_TARGET=`$CDMW_HOME/bin/config.guess`
-DEMO_ALREADY_INSTALLED=`rsh $HOSTNAME2 ls $CDMW_TUTORIAL_HOME/ftclock 2>/dev/null` 
+DEMO_ALREADY_INSTALLED=`rsh $HOSTNAME2 ls $CDMW_TUTORIAL_HOME/ftclock/$BUILD_TARGET 2>/dev/null` 
 
 if [ "$DEMO_ALREADY_INSTALLED" = "" ]
 then
@@ -124,27 +111,32 @@ fi
 
 
 
+
 # 1) Start daemon 
 $echo Starting the Platform Management Daemon...
 DAEMON_COMMAND="$CDMW_HOME/bin/cdmw_platform_daemon.sh --CdmwXMLFile=$DAEMON_CONF_FILE"
 $echo "xterm -sb -sl 7000 -e $DAEMON_COMMAND &"
-xterm -sb -sl 7000 -e $DAEMON_COMMAND &
+xterm -hold -sb -sl 7000 -e $DAEMON_COMMAND &
+DAEMON_COMMAND_PID=$!
 
 DAEMON_COMMAND2="$CDMW_HOME/bin/cdmw_platform_daemon.sh --CdmwXMLFile=$CDMW_TUTORIAL_HOME/ftclock/data/CdmwPlatformMngtDaemon_conf.xml"
 
-$echo rsh $HOSTNAME2 "(LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; PATH=$PATH:/usr/X11R6/bin/; export PATH; $TERMPATHH2 -sb -sl 5000 -e $DAEMON_COMMAND2)" &
-rsh $HOSTNAME2 "(LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; PATH=$PATH:/usr/X11R6/bin/; export PATH; $TERMPATHH2 -sb -sl 5000 -e $DAEMON_COMMAND2)" &
+$echo rsh $HOSTNAME2 "(LD_LIBRARY_PATH=$LD_LIRARY_PATH; export LD_LIBRARY_PATH; PATH=$PATH:/usr/X11R6/bin/; export PATH; $TERMPATH -sb -sl 5000 -e $DAEMON_COMMAND2)" 
+rsh $HOSTNAME2 "(LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; PATH=$PATH:/usr/X11R6/bin/; export PATH; $TERMPATH  -sb -sl 5000 -e $DAEMON_COMMAND2)"  &
 
 trap '$DAEMON_COMMAND stop; exit' 2
 #rsh $HOSTNAME2 trap '$DAEMON_COMMAND2 stop; exit' 2
 
 sleep 2
 
+$echo "Hit a key when ready to Start FTManager........."
+read FOO
+$echo "********************************************Starting the FT Manager ..."
 # 1b) Start FT Manager
 $echo Starting the FT Manager...
-FT_CMD="$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=../data/CdmwFaultToleranceManager_clock_conf.xml" 
-$echo "$TERMPATHH1  -e $FT_CMD &"
-$TERMPATHH1  -e $FT_CMD &
+FT_CMD="$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=../data/CdmwFaultToleranceManager_clock_conf.xml --groupConf=../data/CdmwFTSystemMngtGroupCreator_conf.xml"
+$echo "$TERMPATH  -e $FT_CMD &"
+$TERMPATH  -e $FT_CMD &
 FT_MANAGER_PID=$!
 sleep 3
 
@@ -154,19 +146,22 @@ read FOO
 # 2) Start Platform Management Supervision
 $echo "********************************************+Starting the Platform Management Supervision..."
 
-SPV_COMMAND="$CDMW_HOME/bin/cdmw_platform_supervision --FaultManagerRegistration=corbaloc::localhost:4555/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000  --CdmwLocalisationService=21871" 
-$TERMPATHH1  -sb -sl 5000 -e $SPV_COMMAND &
-$echo $TERMPATHH1  -sb -sl 5000 -e $SPV_COMMAND 
+SPV_COMMAND="$CDMW_HOME/bin/cdmw_platform_supervision --FaultManagerRegistration=corbaloc::localhost:4555/fault_manager  --CdmwXMLFile=$CDMW_HOME/share/CdmwSystemMngtDatastoreConfig.xml --RequestDurationTime=20000000 --creation-timeout=20000  --CdmwLocalisationService=21871" 
+$TERMPATH  -sb -sl 5000 -e $SPV_COMMAND &
+$echo $TERMPATH  -sb -sl 5000 -e $SPV_COMMAND 
 $echo "******************************************************************"
 
-#SUPERVISION_PID=$!
+SUPERVISION_PID=$!
 $echo Platform Management Supervision...STARTED
 sleep $INIT_TIMEOUT
 
 
 
 # 3) Define system
-$echo "*****************Defining the System "
+$echo "***************** Defining the System ***************"
+$echo "Hit a key when ready ...."
+read FOO
+$echo "=============================================================="
 $echo "$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE"
 $CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
 
@@ -181,7 +176,7 @@ $echo "Hit a key when ready to stop the Primary FT Clock and test the Fault Tole
 read FOO
 $echo "=============================================================="
 
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --proc-stop FTApplication FTClock1
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --proc-stop FTApplication FTClock1 $HOSTNAME2
 
 
 if [ $? -eq "0" ];
@@ -205,8 +200,11 @@ $echo "=============================================================="
 
 $DAEMON_COMMAND stop
 rsh $HOSTNAME2 $DAEMON_COMMAND2 stop
+# killall command above clean but clean also outside the demo scope..
+#rsh $HOSTNAME2 killall xterm
 kill -9 $SUPERVISION_PID
 kill -9 $FT_MANAGER_PID
+kill -9 $DAEMON_COMMAND_PID
 $echo "done."
 
 rm -f *.ior

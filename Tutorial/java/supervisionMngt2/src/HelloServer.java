@@ -131,7 +131,7 @@ public class HelloServer {
                                                       CDMW_rootPOA,
                                                       processCtrl);
     
-            com.thalesgroup.CdmwPlatformMngt.Process process = processImpl._this(orb);
+            com.thalesgroup.CdmwPlatformMngt.ProcessDelegate process = processImpl._this(orb);
             
             // Call init platform interface
             cdmw.cdmwinit.InitUtils.initPlatformInterface (orb, args, process);                       
@@ -183,7 +183,7 @@ public class HelloServer {
                 cdmw.trace.InitUtils.initTraceLibrary(rootPOA,
                                                        applicationName,
                                                        processName,
-                                                       5000,
+                                                       100, 5000,
                                                        2,
                                                        50*1024,
                                                        collectorNameList);

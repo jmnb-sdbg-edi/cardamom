@@ -31,6 +31,7 @@ PWD:=$(shell pwd)
 #   
 #   CDMW_HOME
 include ../site.mk
+include ../rules.mk
 
 BUILD_TARGET:=$(shell $(CDMW_HOME)/bin/config.guess)
 
@@ -39,6 +40,9 @@ XML_CONF_FILES:=xml/CodeGenerationDefn.xml
 
 XML_DATA_FILES:=data/HelloSystemDefinition.xml \
     data/CdmwPlatformMngtDaemon_conf.xml \
+    data/CdmwFaultToleranceManager_conf.xml \
+    data/CdmwFTSystemMngtGroupCreator_conf.xml \
+    data/CdmwPlatformMngtSystemStart.xml \
     data/Cdmw_nar.xml \
     data/HelloClient.xml data/HelloServer.xml
 
@@ -78,15 +82,6 @@ gencode::
 	$(CDMW_HOME)/bin/cdmw_code_generator.sh --xml=$(PWD)/$(XML_CONF_FILES) --dir=$(PWD)/generated --lang=java --validate
 	@echo "#################### Code Generation completed"
 
-# Rules to build each XML configuration file
-%.xml: %.xml.in
-	@echo "Generating $@ from $<"
-	@echo s%@prefix@%$(PWD)%g > sed_patterns
-	@echo s%@cdmw_home@%$(CDMW_HOME)%g >> sed_patterns
-	@echo s%@jacorb_bin@%$(JACORB_BIN_PATH)%g >> sed_patterns
-	@echo s%@jacorb_idl@%$(JACORB_IDL_PATH)%g >> sed_patterns
-	@cat  $< | sed -f sed_patterns > $@
-	@rm -f sed_patterns
 
 clean::
 	@if [ -d $(PWD)/$(BUILD_TARGET) ]; then \

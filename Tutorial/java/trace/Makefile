@@ -67,7 +67,7 @@ jar::
 	@echo s%@orbacus_java_idl@%$(ORBACUS_JAVA_IDL_PATH)%g >> sed_patterns
 	@cat  $< | sed -f sed_patterns > $@
 	@rm -f sed_patterns
-	
+
 
 clean::
 	@if [ -d $(PWD)/$(BUILD_TARGET) ]; then \
@@ -77,5 +77,4 @@ clean::
 
 cleanall: clean
 	@$(RM) $(XML_DATA_FILES)
-	@$(RM) -r $(PWD)/generated
 	@$(RM) -r $(PWD)/$(BUILD_TARGET)

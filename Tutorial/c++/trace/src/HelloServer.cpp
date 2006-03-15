@@ -39,6 +39,8 @@
 
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
 
+#include <Foundation/logging/LogManager.hpp> 
+
 
 namespace 
 {
@@ -84,7 +86,6 @@ int main(int argc, char* argv[])
       return SUCCESS;
     }
 
-
     //
     // get Naming & Repository URL from arguments
     //
@@ -98,12 +99,12 @@ int main(int argc, char* argv[])
  	    return FAILURE;
     }
 	
-
     //
     // get Trace Collector Name from arguments
     //
     std::string collectorName = 
          Cdmw::OsSupport::OS::get_option_value (argc, argv, COLLECTOR_NAME_OPTION);
+
          
     if (collectorName == "no")
     {
@@ -114,8 +115,6 @@ int main(int argc, char* argv[])
                   << std::endl;
     }
     
-    
-
 
     CORBA::ORB_var orb;                        // orb reference
     std::string applicationName = "Tutorial";  // name of application
@@ -132,6 +131,7 @@ int main(int argc, char* argv[])
         orb_strategies.add_OrbThreaded();
         orb_strategies.add_PoaThreadPool(POA_THREAD_POOL_SIZE);
 
+
         orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, orb_strategies);
         
         // ===================================================
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
         // ===================================================
         PortableServer::POAManager_var poaManager = rootPOA->the_POAManager();
         poaManager->activate();
-        
+
         
         // ===================================================
         // Get the naming and repository
@@ -167,11 +167,12 @@ int main(int argc, char* argv[])
         Cdmw::NamingAndRepository::RepositoryInterface::init ("CDMW",
                                                                repository.in());
                                                                
-                                                               
         // ===================================================
         // Initialise the trace service
         // ===================================================
         {
+
+	    Cdmw::Logging::LogManager::Init(argc, argv);
             // create the collector name list with the input
             // collector name 
             std::vector<std::string> collectorNameList;
@@ -192,11 +193,14 @@ int main(int argc, char* argv[])
             // May raise CORBA::SystemException
             
             Cdmw::Trace::InitUtils::init_trace_library(rootPOA.in(),
-                                          applicationName,
-                                          processName,
-                                          5000,2,50*1024,
-                                          collectorNameList);
-            
+						       applicationName,
+						       processName, 
+						       100,
+						       5000,
+						       2,
+						       50*1024,
+						       collectorNameList);
+
             
             // active the trace flushing to trace collector
             // (start to send messages to trace collector)

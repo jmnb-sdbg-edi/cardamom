@@ -20,6 +20,7 @@
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
+
 Welcome to the CARDAMOM TUTORIAL Version 2.0
 ============================================
 
@@ -80,32 +81,6 @@ For each tutorial subdirectory :
 
 
 examples :
-
-polynome_lifecycle3 : 2nd degree polynome, check roots interval, using Cardamom factories
-                      (no roots, single root, two roots). 
-                      Server provides polynome (request coefs) to client. 
-                      Server builds the object id requested by factory without client
-                      parameter.   
-                                                     
-printerBW_lifecycle2 : print on Black and White printer, using Cardamom factories
-                      Server creates Black and White printer
-                      Client provides device name parameter to server.
-printerColor_lifecycle2 : 
-                      print on Color printer, using Cardamom factories
-                      Server creates Color printer
-                      Client provides device name parameter to server.
-                      Interface "set_color" provided in idl to set printer in color.
-                      The client of printerBW_lifecycle2 calls the Color printer server
-                      still having the capacity to print in black and white (object inheritance)
-printerColor_lifecycle3 : 
-                      print on Color printer, using Cardamom factories
-                      Server creates Color printer set to print in color or in B&W 
-                      according to factory interface called (factory inheritance is used)                      
-                      Client provides device name parameter to server.
-                      Interface "set_color" provided in idl to set printer in color.
-                      The client of printerBW_lifecycle2 calls the Color printer server
-                      still having the capacity to print in black and white (object inheritance)
-                      
                       
 hello               : basic exemple with client calling server using file object reference
                       Cardamom ORB_init usage
@@ -114,56 +89,12 @@ namingAndRepository : in server, registering an object in cardamom repository us
                       cardamom default root context
                       in client, get object reference from cardamom repository using naming interface 
                       
-naming_objectBase   : in server initialise a base of object in repository (using domain)
-                      TUTORIAL/HELLO/US/HelloInterface (John)
-                      TUTORIAL/HELLO/US/DENVER/HelloInterface (Mike)
-                      TUTORIAL/HELLO/US/DALLAS/HelloInterfaceBob
-                      TUTORIAL/HELLO/US/DALLAS/HelloInterfacePeter
-                      TUTORIAL/HELLO/US/DALLAS/HelloInterfaceJack
-                      
-                      in client (using naming interface)
-                      get the HelloInterface object from TUTORIAL/HELLO/USA/HelloInterface
-                      get the HelloInterface object from TUTORIAL/HELLO/USA/DENVER/HelloInterface
-                      get the HelloInterface objects from TUTORIAL/HELLO/USA/DALLAS using two list methods
-                      (.list and .list_context)
-                      
-naming_domLink      : in server initialise a base of objects in repository (using domain)
-                      TUTORIAL/HELLO/USA/NEW_YORK/HelloInterface (John)
-                      TUTORIAL/HELLO/USA/DETROIT/HelloInterface (Mike)
-                      Under the domain TUTORIAL/HELLO/AMERICA, create a new domain USA linked to 
-                      the domain TUTORIAL/HELLO/USA and its corresponding context
-                      
-                      in client (using naming interface)
-                      get the HelloInterface (John) object from TUTORIAL/HELLO/AMERICA/USA/NEW_YORK/HelloInterface
-                      get the HelloInterface (Mike) object from TUTORIAL/HELLO/AMERICA/USA/DETROIT/HelloInterface
-                      
-
-naming_write        : in server initialise a base of object in repository (using domain)
-                      TUTORIAL/HELLO/US/HelloInterface (John)
-                      
-                      in client (using naming interface)
-                      try to bind a new HelloInterface (Mike) under TUTORIAL/HELLO/US domain
-                      (not permitted operation)
-                      try to bind a new HelloInterface (Mike) under admin root context
-                      (permitted operation)
-                      
-naming_writeExt     : in server initialise a base of object in repository (using domain)
-                      TUTORIAL/HELLO/US/HelloInterface (John)
-                      
-                      in client (using naming interface)
-                      try to bind a new HelloInterface (Mike) under default root context
-                      (permitted operation)
-
 trace               : in server initialise the trace library and trace a message to 
                       the started trace collector
                       
 supervision         : start and stop the unmanaged process "trace" used in trace exemple
-                      with the repository and trace services
+                      with the repository and trace services. also, process monitoring is set.
                       
-supervisionMngt0    : the server is a process managed by the supervision, 
-                      using platformMgt interface
-                      start and stop the managed process
-
 supervisionMngt1    : the server is a process managed by the supervision, 
                       using platformMgt interface and trace
                       start and stop the managed process
@@ -172,64 +103,17 @@ supervisionMngt2    : the server is a process managed by the supervision,
                       using CdmwInit::ProcessControl and CdmwInit::InitUtils::init_platform_interface
                       start and stop the managed process
                       
-supervisionMngt2Dbug: as supervisionMngt2 but the server is started under the debugger ddd/gdb 
-                      to debug in code. Breaks has been set on the methods 
-                      on_initialise() and on_run() of HelloServerProcessControl by the script helloServer.sh,
-                      this script builds a commmand file for ddd
-                      use stop_system.sh to stop the processes by the supervision
-                      
-supervisionMngt3    : example of user event notification and observation.
-
-supervisionMngt4    : example of a Cardamom Supervision Administration Console
-                      and a Cardamom Supervision Observer.
-
 init_generationCode : use code generation tool to generate Cardamom init
                       define Server and Client
                       repository and trace services are used
                       no factory used
                       Client calls display_hello of HelloInterface implemented in server                   
-                      
-lifeCycleEntity     : use code generation tool to generate Cardamom init
-                      define Server and Client
-                      repository and trace services are used
-                      Cardamom Entity factory is generated to create by client HelloInterface object
-                      Client calls display_hello of HelloInterface implemented in server
-                      
-lifeCycleEntity_property     
-                    : use code generation tool to generate Cardamom init
-                      define Server and Client
-                      repository and trace services are used
-                      property service is started
-                      Cardamom Entity factory is generated to create by client HelloInterface object
-                      Client calls display_hello of HelloInterface implemented in server
-                      Server is stopped then restarted to check object persistance
-                      A second HelloInterface object is created during initialization 
-                      then removed when Server is restarted
-                      
-lifeCycleSession    : use code generation tool to generate Cardamom init
-                      define Server and Client
-                      repository and trace services are used
-                      Cardamom Session factory is generated to create by client HelloInterface object
-                      Client calls display_hello of HelloInterface implemented in server
-                      
+                                            
 lifeCycleService    : use code generation tool to generate Cardamom init
                       define Server and Client
                       repository and trace services are used
                       Cardamom Service factory is generated to create by client HelloInterface object
                       Client calls display_hello of HelloInterface implemented in server
-
-lifeCycleUnmanagedEntity : 
-                      use code generation tool to generate Cardamom init
-                      define Server and Client
-                      repository and trace services are used
-                      Cardamom UnmanagedEntity factory is generated to create by client HelloInterface object
-                      Client calls display_hello of HelloInterface implemented in server
-                      
-lifeCycleUserFac    : use code generation tool to generate Cardamom init
-                      define Server and Client
-                      repository and trace services are used
-                      user factory is used to create by client HelloInterface object
-                      Client calls display_hello of HelloInterface implemented in server                  
 
 thread              : same as lifeCycle example, but client is implemented in a thread 
                       created on initialisation supervision step and started on run 
@@ -239,17 +123,14 @@ event               : Client thread sends periodically a non typed event to serv
                       use event service of ORB
                       use code generation tool to generate Cardamom init
 
-eventTyped          : same as event but in this case the event are typed as defined 
-                      in idl file    (Only for Orbacus)
-                                                  
-
 lb_initialization   : Illustrates how to the Load Balancing Service is used and how to define LB Strategies.
 
-lb_demo             : Illustrates how to the Load Balancing Service is used and the how the load balancing group
+demo_lb             : Illustrates how to the Load Balancing Service is used and the how the load balancing group
                       is updated when a member crashes.
 
-clock
+clock               : client ask Time Service to obtain clock and use it
 
-controlled_clock
+controlled_clock    : client ask Time Service to obtain clock and start, pause, resume, stop it
 
-controlled_executor_clock
+ftclock             : client ask Time Service from a fault tolerant group of clocks, a clock crash
+                      but client is stil able to get time

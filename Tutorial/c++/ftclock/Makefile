@@ -1,20 +1,13 @@
 #* =========================================================================== *
-#* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI. All rights reserved.
-#* 
-#* CARDAMOM is free software; you can redistribute it and/or modify it under
-#* the terms of the GNU Library General Public License as published by the
-#* Free Software Foundation; either version 2 of the License, or (at your
-#* option) any later version.
-#* 
-#* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
-#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
-#* License for more details.
-#* 
-#* You should have received a copy of the GNU Library General
-#* Public License along with CARDAMOM; see the file COPYING. If not, write to
-#* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#* THALES (R) - CARDAMOM
+#*
+#* Copyright (c) THALES 2000-2004 All rights reserved.
+#* Software commonly developed by THALES and AMS.
+#*
+#* This file and the information  it contains  are   property  of  THALES  and
+#* confidential.   They  shall  not be reproduced nor disclosed  to any person
+#* except to those having  a need  to know them without  prior written consent
+#* of THALES.
 #* =========================================================================== *
 
 SHELL = /bin/sh
@@ -36,8 +29,9 @@ XML_DATA_FILES:=data/Client.xml data/Server.xml data/GroupCreator.xml \
 	data/CdmwPlatformMngtDaemon_conf.xml \
 	data/FTClock.xml \
 	data/CdmwFaultToleranceManager_clock_conf.xml  \
+	data/CdmwFTSystemMngtGroupCreator_conf.xml \
 	data/cdmw_nar_integ_clock.xml  \
-	data/ClientClock.xml                          
+	data/ClientClock.xml 
 
 .SUFFIXES:
 .SUFFIXES: .xml  .xml.in
@@ -84,7 +78,6 @@ gencode::
 	@echo s%@ORB_IDL_PATH@%$(ORB_IDL_PATH)%g >> sed_patterns
 	@echo s%@host_name@%`uname -n`%g >> sed_patterns
 	@echo s%@host_name2@%`echo $(HOSTNAME2)`%g >> sed_patterns
-	@echo s%@host_name3@%`echo $(HOSTNAME3)`%g >> sed_patterns
 	@echo s%@SystemMngt_port@%21`echo $PWD | wc -c | tail -c 2``id -u | tail -c 2``id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@Monitoring_addr@%225.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@StateTransfert_addr@%226.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns

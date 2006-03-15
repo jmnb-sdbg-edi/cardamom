@@ -1,9 +1,6 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -34,7 +31,7 @@
 #include <LoadBalancing/lbinit/LBServiceInit.hpp>
 #include "TestHello_impl.hpp"
 #include <Foundation/common/String.hpp>
-#include <LoadBalancing/idllib/PortableGroup.stub.hpp>
+//#include <LoadBalancing/idllib/PortableGroup.stub.hpp> 
 #include <LoadBalancing/idllib/CdmwLBGroupManager.stub.hpp>
 
 namespace
@@ -109,6 +106,7 @@ int main( int argc, char* argv[] )
         Cdmw::OrbSupport::StrategyList strategyList;
         strategyList.add_OrbThreaded();
         strategyList.add_PoaThreadPerConnection();
+        strategyList.add_multicast();
 
         CORBA::ORB_var orb
             = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList);

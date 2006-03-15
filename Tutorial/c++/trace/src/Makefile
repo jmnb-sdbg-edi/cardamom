@@ -69,6 +69,8 @@ all server:
 	@echo "Executing $(MAINMK)"
 	@${MAKE} -f $(MAINMK) $@
 
-clean cleanall:  idl_var.mk idl_rules.mk
+#clean cleanall:  idl_var.mk idl_rules.mk
+clean cleanall: 
 	@echo "Executing $(MAINMK)"
 	@${MAKE} -f $(MAINMK) $@
+#	-$(RM) idl_var.mk idl_rules.mk

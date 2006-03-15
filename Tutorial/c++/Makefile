@@ -37,10 +37,23 @@ all :: exe
 
 # We Build executable files
 .PHONY: exe
+.PHONY: dataconf
+
 exe::
 	@for f in $(TUTORIAL_LIST); do\
-	        echo "Compliation of $$f" ;\
+	        echo "-------------------" ;\
+	        echo "Compilation of $$f" ;\
+	        echo "-------------------" ;\
 		$(MAKE) -C $(CDMW_TUTORIAL_HOME)/$$f --no-print-directory  all;\
+	done;
+
+dataconf::
+	@for f in $(TUTORIAL_LIST); do\
+	        echo "-------------------" ;\
+	        echo "Make data in $$f" ;\
+	        echo "-------------------" ;\
+		$(MAKE) -C $(CDMW_TUTORIAL_HOME)/$$f --no-print-directory  data;\
+		$(MAKE) -C $(CDMW_TUTORIAL_HOME)/$$f --no-print-directory  conf;\
 	done;
 
 clean::

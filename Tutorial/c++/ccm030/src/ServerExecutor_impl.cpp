@@ -23,6 +23,10 @@
 #include <iostream>
 #include "ServerExecutor_impl.hpp"
 
+#include "DisplayFacetExecutor_impl.hpp"
+
+
+
 namespace Hello
 {
     

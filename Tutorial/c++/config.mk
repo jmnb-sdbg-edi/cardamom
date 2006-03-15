@@ -22,7 +22,7 @@
 
 
 #################################################################################
-# DO NOT EDIT !!!!!!
+# DO NOT UPDATE BELOW!!!!!!
 #################################################################################
 
 # NOTA: This file requires prior inclusion of site.mk file
@@ -88,20 +88,27 @@ LIBS_ORB:= $(LIBS_$(ORB))
 #BEGIN CARDAMOM FLAGS
 CPPFLAGS_CDMW=-I$(CDMW_HOME)/include/c++ \
 	-I$(XERCES_INC_PATH) \
-	-D_REENTRANT -DCDMW_ASSERT_NO_THROW
+	-DCDMW_TRACE_LEVEL=5 -D_REENTRANT -DCDMW_ASSERT_NO_THROW
 CXXFLAGS_CDMW=
 LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
 	-L$(XERCES_LIB_PATH)
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
-LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface \
-          -lcdmwlifecycleinit -lcdmwlifecycle -lcdmwrepositoryinterface \
-          -lcdmwplatforminterface -lcdmwtracelibrary -lcdmwnaminginterface \
-          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
-          -lcdmwcommon -lcdmwccmcommon -lcdmwccmcif -lcdmwccmcontainer \
-          -lcdmwccmcomponentserver -lcdmwtestutils -lxerces-c1_3 \
-          -lcdmwlifecycleidl -lcdmweventidl -lcdmwccmcontaineridl \
-          -lcdmwplatformvaluetypes -lcdmwplatformidl -lcdmwrepositoryidl \
-          -lcdmwcommonidl -lcdmwsystemmngtidl -lcdmwplatformlibrary -lcdmwtraceidl
+
+
+LIBS_CDMW=-lcdmwcommon -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
+	-lcdmwcommonsvcsnaming -lcdmwrepositoryinterface -lcdmwplatforminterface \
+	-lcdmwcdmwinit -lcdmwlifecycle -lcdmwtestutils -lcdmwftinit \
+	-lcdmwftlocationmanager  -lcdmwcommonsvcsdatastore -lcdmwftcommon \
+	-lcdmwftstatemanager -lcdmwmonitoringidl -lcdmweventinterface\
+	-lxerces-c1_3 -lcdmwlifecycleidl -lcdmweventsupport -lcdmweventidl \
+	-lcdmwplatformvaluetypes -lcdmwplatformlibrary -lcdmwlifecycleinit \
+	-lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+	-lcdmwfaulttoleranceidl -lcdmwrepositoryidl \
+	-lcdmwsystemmngtidl -lcdmwcommonidl -lcdmwtraceidl -lcdmwtracelibrary \
+	-lcdmwccmcommon -lcdmwccmcif -lcdmwccmcontainer -lcdmwccmcontaineridl \
+	-lcdmwccmcomponentserver -lcdmwlogging
+
+
 
 "LIBS_CDMW:=$(foreach CSC,$(DEPEND_LIB),-lcdmw$(CSC))
 #LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface -lcdmwlifecycle -lcdmwrepositoryinterface  \

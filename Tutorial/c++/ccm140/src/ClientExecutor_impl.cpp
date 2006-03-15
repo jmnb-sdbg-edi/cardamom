@@ -21,7 +21,7 @@
  * =========================================================================== */
 
 
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
@@ -88,7 +88,7 @@ void ClientExecutor_impl::ccm_activate()
         // ======================================================                      
         // create a naming interface on default root context
         // ====================================================== 
-        Cdmw::NamingAndRepository::NamingInterface ni_defRoot (
+        Cdmw::CommonSvcs::Naming::NamingInterface ni_defRoot (
                                                          def_root_context.in());
         
         

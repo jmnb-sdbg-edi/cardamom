@@ -22,6 +22,7 @@
  * ========================================================================= *
 -->
 
+
 <!DOCTYPE componentassembly SYSTEM "componentassembly.dtd">
 
 <componentassembly id="HelloAssembly">
@@ -139,7 +140,7 @@
 			
 			<existinginterface>
 			    <findby>
-			        <stringifiedobjectref>corbaloc::localhost:22456/NameService</stringifiedobjectref>
+			        <stringifiedobjectref>corbaloc::@hostname@:22456/NameService</stringifiedobjectref>
 			    </findby>
 			</existinginterface>
 			

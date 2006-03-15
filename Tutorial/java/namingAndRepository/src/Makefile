@@ -31,7 +31,7 @@ include $(CODE_GEN_DIR_RELATIV_PROD)/../$(ORB).mk
 include $(CODE_GEN_DIR_RELATIV_PROD)/../config.mk
 BUILD_TARGET=$(shell $(CDMW_HOME)/bin/config.guess)
 PROD_RELATIVE=$(CODE_GEN_DIR_RELATIV_PROD)/$(BUILD_TARGET)
-GEN_RELATIVE=$(CODE_GEN_DIR_RELATIV_PROD)/generated
+#GEN_RELATIVE=$(CODE_GEN_DIR_RELATIV_PROD)/generated
 
 include $(CODE_GEN_DIR_RELATIV_PROD)/src/CSC.mk
 CDMW_CP:=$(foreach CSC,$(CSC_DEPEND_LIB),$(CDMW_HOME)/lib/java/libcdmw$(CSC).jar)
@@ -83,7 +83,7 @@ all: $(SRCS_GENERATED) $(JAR_NAME)
 
 $(JAR_NAME): $(SRCS_RELATIV) $(SRCS_GENERATED)
 	@echo "CLASSPATH=$(CLASSPATH)"
-	$(JAVAC) -bootclasspath $(CLASSPATH):$(JDK_JAR)/rt.jar -d $(PROD_RELATIVE) $(SRCS_RELATIV) `find $(PROD_RELATIVE) -name '*.java'` `find $(GEN_RELATIVE) -name '*.java'`;
+	$(JAVAC) -bootclasspath $(CLASSPATH):$(JDK_JAR)/rt.jar -d $(PROD_RELATIVE) $(SRCS_RELATIV) `find $(PROD_RELATIVE) -name '*.java'`;
 	@echo Creating $(JAR_NAME) archive
 	@cd $(PROD_RELATIVE); \
 	$(JAR) cvf $(JAR_NAME) `find . -name '*.class'`;

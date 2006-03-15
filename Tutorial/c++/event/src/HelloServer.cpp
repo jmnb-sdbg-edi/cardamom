@@ -39,7 +39,7 @@
 
 
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
 
 #include <Event/eventinterface/EventChannelInterface.hpp>
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
         // ========================================================
 
         // Get NamingInterface object from RepositoryInterface
-        Cdmw::NamingAndRepository::NamingInterface ni =
+        Cdmw::CommonSvcs::Naming::NamingInterface ni =
               Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface(
                             Cdmw::Common::Locations::CDMW_SERVICES_NAME_DOMAIN);
 

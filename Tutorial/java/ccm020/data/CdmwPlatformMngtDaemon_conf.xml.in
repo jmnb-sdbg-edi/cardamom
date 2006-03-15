@@ -23,14 +23,21 @@
  * =========================================================================== *
 -->
 
+<!DOCTYPE CdmwPlatformMngtDaemon SYSTEM "@CDMW_HOME@/share/CdmwPlatformMngtDaemon.dtd">
 
-
-<!DOCTYPE CdmwPlatformMngtDaemon SYSTEM "@cdmw_home@/share/CdmwPlatformMngtDaemon.dtd">
 <CdmwPlatformMngtDaemon>
-	<SystemPort>21875</SystemPort>
+	<SystemPort>@SystemMngt_port@</SystemPort>
 	<UID>-1</UID>
 	<GID>-1</GID>
 	<LogFile>CdmwDaemon.log</LogFile>
 	<IorFile>CdmwDaemon.ior</IorFile>
 	<NotificationCallTimeout>10000</NotificationCallTimeout>
+        <RequestDurationTime>20000000</RequestDurationTime>
+        <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-1/@Monitoring_addr@:8556</SimplePullCorbaloc>
+        <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-2/@Monitoring_addr@:8557</SimplePushCorbaloc>
+        <ServiceLocator locator-service-address="corbaloc:miop:1.0@1.0-cdmwftdomain-5/@Service_addr@:4560"
+            registration-service-address="corbaloc:miop:1.0@1.0-cdmwftdomain-6/@Service_addr@:4561"
+            nb-retries="5"
+            time-interval="200"/>
 </CdmwPlatformMngtDaemon>
+

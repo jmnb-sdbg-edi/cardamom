@@ -30,38 +30,15 @@ class HelloProcessBehaviour extends cdmw.platformmngt.ProcessBehaviour
     
     private String applicationName;
     private String processName;
-    
+    private int    countIsAlive;
     
     
     public HelloProcessBehaviour(org.omg.CORBA.ORB orb) {
         this.orb = orb;
         applicationName = null;
         processName = null;
+        countIsAlive = 0;
     }
-    
-    
-    /**
-    * Purpose:
-    * <p>
-    * the behaviour for the
-    * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
-    * attribute
-    */
-    public int nbSteps() {
-        return 1;
-    }
-
-    /**
-    * Purpose:
-    * <p>
-    * the behaviour for the
-    * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
-    * operation
-    */
-    public org.omg.CORBA.Object getService() {
-        return null;
-    }
-
     
     /**
     * Purpose:
@@ -112,7 +89,7 @@ class HelloProcessBehaviour extends cdmw.platformmngt.ProcessBehaviour
 	* operation
 	*/
     public void run() 
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun
     {    
         try {
             // ==============================================================        
@@ -177,5 +154,26 @@ class HelloProcessBehaviour extends cdmw.platformmngt.ProcessBehaviour
         }
     }
     
+    /**
+        * Purpose:
+        * <p> 
+        * the behaviour for the
+        * IDL:FT/PullMonitorable/is_alive:1.0
+        * operation
+        */
+    public boolean is_alive()
+    {
+        countIsAlive = countIsAlive + 1;
+        if ( countIsAlive < 10 )
+            {
+                System.out.println("Pull monitoring active : is_alive called");
+            }
+        else if ( countIsAlive == 10 )
+            {
+                System.out.println("is_alive tracing will switch off now (to avoid too much traces)");
+            }
+        return true;
+    }
+
 }
 

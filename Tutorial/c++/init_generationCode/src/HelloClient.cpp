@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
         // ======================================================
         // Get Naming Interface of TUTORIAL name domain
         // ======================================================
-        Cdmw::NamingAndRepository::NamingInterface ni =
+        Cdmw::CommonSvcs::Naming::NamingInterface ni =
             Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface (
                             "TUTORIAL");
              

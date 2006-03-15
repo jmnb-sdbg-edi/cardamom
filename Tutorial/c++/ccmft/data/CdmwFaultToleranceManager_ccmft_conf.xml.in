@@ -29,17 +29,28 @@
 	<SystemPort>4565</SystemPort>
     <RequestDurationTime>20000000</RequestDurationTime>
     <FaultToleranceDomainID>CDMW__FaultToleranceDomain</FaultToleranceDomainID>
-    <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-1/225.1.1.8:4566</SimplePullCorbaloc>
-    <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-2/225.1.1.8:4567</SimplePushCorbaloc>
-    <MutualPullCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-3/225.1.1.8:4568</MutualPullCorbaloc>
-    <MutualPushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-4/225.1.1.8:4569</MutualPushCorbaloc>
+
+ <!--   <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-1/225.1.1.8:4566</SimplePullCorbaloc> -->
+ <!--   <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-2/225.1.1.8:4567</SimplePushCorbaloc> -->
+ <!--   <MutualPullCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-3/225.1.1.8:4568</MutualPullCorbaloc> -->
+ <!--   <MutualPushCorbaloc>corbaloc:miop:1.0@1.0-cdmw_ftdomain-4/225.1.1.8:4569</MutualPushCorbaloc>--> 
+
+     <SimplePullCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-1/@Monitoring_addr@:8556</SimplePullCorbaloc>
+     <SimplePushCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-2/@Monitoring_addr@:8557</SimplePushCorbaloc>
+     <MutualPullCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-3/@Monitoring_addr@:8558</MutualPullCorbaloc>
+     <MutualPushCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-4/@Monitoring_addr@:8559</MutualPushCorbaloc>
+     <LocalisationServiceAddress>corbaloc:miop:1.0@1.0-cdmwftdomain-5/@Service_addr@:4560</LocalisationServiceAddress>
+
     <MasterInterrogationTime>900</MasterInterrogationTime>
     <MasterElectionTime>600</MasterElectionTime>
     <MasterConfirmationTime>700</MasterConfirmationTime>
     <SlaveAcknowledgementTime>800</SlaveAcknowledgementTime>
     <DaemonAcknowledgementTime>500</DaemonAcknowledgementTime>
     <StateTransfertDomain>_ftdomain</StateTransfertDomain>
-    <StateTransfertIPAddress>225.1.1.8</StateTransfertIPAddress>
+
+    <!-- <StateTransfertIPAddress>225.1.1.8</StateTransfertIPAddress> -->
+    <StateTransfertIPAddress>@StateTransfert_addr@</StateTransfertIPAddress>
+
     <CohortTimeOut>2000</CohortTimeOut>
     <CoordinatorTimeOut>2000</CoordinatorTimeOut>
     <MaxTransactionInProgress>100</MaxTransactionInProgress>
@@ -62,4 +73,3 @@
         </BaseInterfaces>
     </SupportedInterface> 
 </CdmwFaultToleranceManager>
-

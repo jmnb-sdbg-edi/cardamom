@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
         CdmwNamingAndRepository::NameDomain::RegistrationId_var regId = 
                                     helloDomain->new_name ("Hello1");
         // register the object
-        helloDomain->register_object (regId, helloInterface.in());
+        helloDomain->register_object (regId.in(), helloInterface.in());
        
         
        
