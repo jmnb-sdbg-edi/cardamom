@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * THALES (R) - CARDAMOM
+ *
+ * Copyright (c) THALES 2000-2004 All rights reserved
+ * This file and the information  it contains  are   property  of  THALES  and
+ * confidential.   They  shall  not be reproduced nor disclosed  to any person
+ * except to those having  a need  to know them without  prior written consent
+ * of THALES.
+ * =========================================================================== *
+-->
+
+<cdmw>
+
+   <factories>
+      <factory kind="HOME" 
+               idl-interface="CcmLbTest.ClientHome"
+               idl-filename="ccm_lb.idl">
+         <idl-search-dir>@cdmw_home@/idl</idl-search-dir>
+         <idl-search-dir>@prefix@/idl</idl-search-dir>
+         <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+      </factory>
+
+      <factory kind="HOME" 
+               idl-interface="CcmLbTest.ServerWithFacetHome"
+               idl-filename="ccm_lb.idl">
+         <idl-search-dir>@cdmw_home@/idl</idl-search-dir>
+         <idl-search-dir>@prefix@/idl</idl-search-dir>
+         <idl-search-dir>@ORB_IDL_PATH@</idl-search-dir>
+      </factory>
+
+   </factories>
+
+   
+   <lifecycle-frameworks>
+
+      <lifecycle-framework id="serverwithfacet.framework"
+                           factory-idref="CcmLbTest.ServerWithFacetHome">
+         <home-impl category="SESSION" threading="MULTITHREAD" segmented="no"/>
+      </lifecycle-framework>
+
+      <lifecycle-framework id="client.framework"
+                           factory-idref="CcmLbTest.ClientHome">
+         <home-impl category="SESSION" threading="MULTITHREAD"/>
+      </lifecycle-framework>
+
+   </lifecycle-frameworks>
+   
+
+   <programs>
+
+      <program filename="ServerCdmwInterface"
+               init-dtd="ServerComponentServerLB.dtd">
+         <services>
+            <repository-interface/>
+            <lifecycle>
+               <framework idref="serverwithfacet.framework" occurrences="1"/>
+            </lifecycle>
+         </services>
+      </program>
+
+      <program filename="ClientCdmwInterface"
+               init-dtd="ClientComponentServerLB.dtd">
+         <services>
+            <repository-interface/>
+            <lifecycle>
+               <framework idref="client.framework" occurrences="1"/>
+            </lifecycle>
+         </services>
+
+      </program>
+
+      <program filename="GroupCreatorCdmwInterface"
+               init-dtd="GroupCreatorLB.dtd">
+         <services>
+            <repository-interface/>
+         </services>
+      </program>
+ 
+   </programs>
+
+</cdmw>
+

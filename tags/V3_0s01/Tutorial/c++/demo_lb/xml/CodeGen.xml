@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ * =========================================================================== *
+ * THALES (R) - CARDAMOM
+ *
+ * Copyright (c) THALES 2000-2004 All rights reserved
+ * This file and the information  it contains  are   property  of  THALES  and
+ * confidential.   They  shall  not be reproduced nor disclosed  to any person
+ * except to those having  a need  to know them without  prior written consent
+ * of THALES.
+ * =========================================================================== *
+-->
+
+
+<cdmw>
+   <factories/>
+   <lifecycle-frameworks/>
+   <programs>
+      <program filename="ServerCdmwInterface"
+               init-dtd="HelloLB.dtd">
+         <services>
+            <repository-interface/>
+         </services>
+      </program>
+      <program filename="ClientCdmwInterface"
+               init-dtd="HelloLB.dtd">
+         <services>
+            <repository-interface/>
+         </services>
+      </program>
+   </programs>
+</cdmw>

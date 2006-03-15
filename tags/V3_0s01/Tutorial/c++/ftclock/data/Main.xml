@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<cdmw>
+   <factories/>
+   <lifecycle-frameworks/>
+   <programs>
+      <program filename="ClientCdmwInterface"
+               init-dtd="Client_Clock_Desc.dtd">
+         <services>
+            <repository-interface/>
+            <fault-tolerance/>
+         </services>
+      </program>      
+   </programs>
+</cdmw>
+
+
