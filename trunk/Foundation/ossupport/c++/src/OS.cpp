@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -251,7 +251,21 @@ namespace Cdmw
             Thread::sleep(milliseconds);
         }
 
+        // 
+        // Extended version
+        //
+        void
+        OS::sleep(unsigned int seconds,
+              unsigned int nanoseconds)
+            throw (std::range_error)
+        {
+            timespec ts;
+            ts.tv_sec  = seconds;
+            ts.tv_nsec = nanoseconds;
 
+            if (::nanosleep(&ts, 0) != 0)
+                throw std::range_error(strerror(errno));
+        }
 
         //
         // Return true if the specified file exists
@@ -466,6 +480,77 @@ namespace Cdmw
 
         }
 
+        void
+        OS::mkdir(const std::string& path, unsigned short mode )
+        throw( BadParameterException,
+               PermissionDeniedException,
+               InterruptedException,
+               InternalErrorException)
+        {
+
+#if defined(CDMW_POSIX)
+
+            int status = ::mkdir (path.c_str(), mode);
+
+            if (status != 0)
+            {
+
+                switch (errno)
+                {
+                        case EROFS:
+                        // No break
+
+                        case ENOSPC:
+                        // No break
+
+                        case EACCES:
+                        CDMW_THROW(PermissionDeniedException);
+                        break;
+
+                        case EEXIST:
+                        // ignore
+                        break;
+
+                        case EINTR:
+                        CDMW_THROW(InterruptedException);
+                        break;
+
+                        case ENAMETOOLONG:
+                        // No break
+
+                        case ELOOP:
+                        CDMW_THROW2(BadParameterException, "path", "path too long");
+                        break;
+
+                        case ENOTDIR:
+                        // No break
+
+                        case ENOENT:
+                        CDMW_THROW2(BadParameterException, "path", "invalid path");
+                        break;
+
+                        case EFAULT:
+                        // No break
+
+                        default:
+                        CDMW_THROW(InternalErrorException);
+                        break;
+                }
+
+            }
+
+#elif defined(_WIN32)
+            int status = ::_mkdir (path.c_str(), mode);
+
+            if (status != 0)
+            {
+                CDMW_THROW2(BadParameterException, "path", "invalid path");
+            }
+
+#endif
+
+        }
+
 
         std::string
         OS::get_absolute_path (const std::string& path)
@@ -634,6 +719,57 @@ namespace Cdmw
             M_uid = uid;
             M_gid = gid;
         }
+
+
+
+        uid_t OS::get_uid()
+        {
+            return M_uid;
+        }
+        
+        gid_t OS::get_gid()
+        {
+            return M_gid;
+        }
+        
+        
+        void OS::chown(const std::string& path, uid_t uid, gid_t gid)
+        throw (PermissionDeniedException,
+               BadParameterException,
+               OutOfMemoryException,
+               InternalErrorException)
+        {
+            int res = ::chown(path.c_str(), uid, gid);
+            if (res != 0)
+            {
+                switch (errno)
+                {
+                    
+                    // The system ressource are exhausted
+                    
+                    case EPERM:
+                        // No break
+
+                    case EACCES:
+                        // No break
+                        
+                    case EROFS:
+                        
+                        CDMW_THROW(PermissionDeniedException);
+                        break;
+
+                    case ENOTDIR:
+                        CDMW_THROW2(BadParameterException, "path", "File not found");
+                        break;
+
+                    default:
+                        CDMW_THROW(InternalErrorException);
+                        break;
+                }
+            }
+        }
+        
+        
 
 #endif
 
@@ -961,7 +1097,11 @@ namespace Cdmw
             
 #if defined(CDMW_POSIX)
 
+#ifdef CDMW_USE_GCOV
+            int status_kill = ::kill (processId, SIGTERM);
+#else
             int status_kill = ::kill (processId, SIGKILL);
+#endif
 
             if ( status_kill == -1 )
             {
@@ -1076,9 +1216,15 @@ namespace Cdmw
         throw()
         {
             CDMW_MUTEX_GUARD(M_processNotifierThread_mutex);
-            if (M_pProcessNotifierThread != NULL)
-            {
-                delete M_pProcessNotifierThread;
+            if (M_pProcessNotifierThread != NULL) {
+// PCR-0562 workaround: don't delete M_pProcessNotifierThread
+// In ProcessNotifierThread destructor, a join() operation could block
+// indefinitely, as the thread could be blocked on ::wait() call (if the 
+// process doesn't have child process anymore.
+// But the ProcessNotifierThread cannot be deleted without a join(), else,
+// an assert occurs in Thread destructor if it's still running.
+// Memory leak to be corrected with PCR-0xxx
+//                delete M_pProcessNotifierThread;
                 M_pProcessNotifierThread = NULL;
             }
         }
@@ -1311,8 +1457,19 @@ namespace Cdmw
             {
                 CDMW_THROW( InternalErrorException );
             }
-
+#if defined(CDMW_USE_CANONICAL_HOSTNAME)
+            std:: string res(uts_info.nodename);
+#ifdef _GNU_SOURCE
+            std::string domainname(uts_info.domainname);
+            if (!domainname.empty()) {
+                res +='.';
+                res += uts_info.domainname;
+            }
+#endif
+            return res;
+#else
             return uts_info.nodename;
+#endif
 
 #elif defined(_WIN32)
 

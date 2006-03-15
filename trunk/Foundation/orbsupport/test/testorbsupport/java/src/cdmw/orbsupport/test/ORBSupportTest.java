@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -48,9 +48,19 @@ public class ORBSupportTest extends Testable {
 	
 ThreadedProcess namingp;
 ThreadedProcess propertyp= null;
+
+    private boolean validOnly;
+
     public ORBSupportTest() {
         this.name = "ORBSupportTest";
         this.out = System.out;
+        this.validOnly = true;
+    }
+
+    public ORBSupportTest(boolean validationOnly) {
+        this.name = "ORBSupportTest";
+        this.out = System.out;
+        this.validOnly = validationOnly;
     }
 
     public String readFromFile(String file) {
@@ -85,9 +95,9 @@ ThreadedProcess propertyp= null;
             println("Exception: " + e.toString()); 
         }
 
-        try {        
-            String serverSTCorbaloc = "corbaloc::localhost:" + ServerProcess.SERVER_ST_PORT + 
+        String serverSTCorbaloc = "corbaloc::localhost:" + ServerProcess.SERVER_ST_PORT + 
                                       "/" + ServerProcess.SERVER_ST_CORBALOC_NAME;
+        try {        
             println("Try to contact single-threaded server via corbaloc: " + serverSTCorbaloc);
      	    org.omg.CORBA.Object objST = orb.string_to_object( serverSTCorbaloc );
             ORBSupportServer serverST = ORBSupportServerHelper.narrow( objST );
@@ -95,10 +105,30 @@ ThreadedProcess propertyp= null;
 
             serverST.computeSquare((short)5);
             succeed();
+            /* See PCR-0309
+            println("Remove the corbaloc binding (on server process)");
+            serverST.removeBinding();
+            succeed();
+
+            println("Check contact of single-threaded server via object is still ok");
+            serverST.computeSquare((short)5);
+            succeed();
+            */
         } catch (Exception e) {
             fail();
             println("Exception: " + e.toString()); 
-        }        
+        }
+        /* See PCR-0309
+        try {
+            println("Check that corbaloc can't be used after remove");
+     	    org.omg.CORBA.Object objST = orb.string_to_object( serverSTCorbaloc );
+            ORBSupportServer serverST = ORBSupportServerHelper.narrow( objST );
+            fail();
+        } catch (Exception e) {
+            succeed();
+            println("Exception: " + e.toString()); 
+        }
+        */
     }
     
     
@@ -109,6 +139,7 @@ ThreadedProcess propertyp= null;
         println("Starting a thread with requesting a slow service");
         ClientThread thread_1 = new ClientThread(server,"slow");
         thread_1.start();
+        OS.sleep(getTimescale() * 1000);
 
         println("Starting a thread with requesting a fast service");
         ClientThread thread_2 = new ClientThread(server,"");
@@ -267,20 +298,24 @@ ThreadedProcess propertyp= null;
         ORBSupportServer serverST = ORBSupportServerHelper.narrow( objST );
         check( serverST!=null );
 
-       	println("Invoking a method on the server Multi-thread");
-        int resultMT = serverMT.computeSquare((short)5);
-        check( resultMT == 25 );
+        if (!validOnly) {
+            println("Invoking a method on the server Multi-thread");
+            int resultMT = serverMT.computeSquare((short)5);
+            check( resultMT == 25 );
 
-		println("Invoking a method on the server Single-thread");
-		int resultST = serverST.computeSquare((short)5);
-		check( resultST == 25 );
+            println("Invoking a method on the server Single-thread");
+            int resultST = serverST.computeSquare((short)5);
+            check( resultST == 25 );
+        }
 
         // Check if the server accept concurrent requests
         doORBMultithreadTests(serverMT);
 
         // Check if the server use a thread pool limiting
         //    the number of request to be handled
-        doORBThreadPoolLimitTests(serverMT);
+        if (!validOnly) {
+            doORBThreadPoolLimitTests(serverMT);
+        }
 
        // Check if the server is truely single-threaded
         doPOACreationTests(serverST);
@@ -301,7 +336,8 @@ ThreadedProcess propertyp= null;
     public void doTests() {
     	
     	// set number of requested successfull tests
-		setNbOfRequestedTestOK(36);
+        if (validOnly) { setNbOfRequestedTestOK(20); }
+		else { setNbOfRequestedTestOK(36); }
 	
         println("Creating a strategy list");
         StrategyList strategyList = new StrategyList();
@@ -342,57 +378,59 @@ ThreadedProcess propertyp= null;
             succeed("Success: POAThreadPool already set");
         }
 
-        println("Setting the POA Threaded strategy in the list (ThreadPerRequest)");
-        try {
-            strategyList_2.addPOAThreadPerRequest();
-        } catch (BadParameterException bpe) {}
-        println("Checking the POA Threaded strategy in the list");
-        check( strategyList_2.isPOAThreadPerRequest() );
+        if (!validOnly) {
+            println("Setting the POA Threaded strategy in the list (ThreadPerRequest)");
+            try {
+                strategyList_2.addPOAThreadPerRequest();
+            } catch (BadParameterException bpe) {}
+            println("Checking the POA Threaded strategy in the list");
+            check( strategyList_2.isPOAThreadPerRequest() );
 
-        println("Setting the POA Thread Pool strategy incompatible with the threaded");
-        try {
-            strategyList_2.addPOAThreadPerRequest();
-            fail("Error: POAThreaded should be already set");
-        } catch (BadParameterException bpe) {
-            succeed("Success: POAThreaded already set");
+            println("Setting the POA Thread Pool strategy incompatible with the threaded");
+            try {
+                strategyList_2.addPOAThreadPerRequest();
+                fail("Error: POAThreaded should be already set");
+            } catch (BadParameterException bpe) {
+                succeed("Success: POAThreaded already set");
+            }
+
+            println("Setting the POA Threaded strategy in the list (ThreadPerConnection)");
+            try {
+                strategyList_3.addPOAThreadPerConnection();
+            } catch (BadParameterException bpe) {}
+            println("Checking the POA Threaded strategy in the list");
+            check( strategyList_3.isPOAThreadPerConnection() );
+
+            println("Setting the POA Thread Pool strategy incompatible with the threaded");
+            try {
+                strategyList_3.addPOAThreadPerConnection();
+                fail("Error: POAThreaded should be already set");
+            } catch (BadParameterException bpe) {
+                succeed("Success: POAThreaded already set");
+            }
+
+            println( "Trying to construct a new strategy from this one" );
+            StrategyList strategyListCopied = strategyList.copy();
+            StrategyList strategyListCopied_2 = strategyList_2.copy();
+            println( "Checking the value" );
+            check( strategyListCopied.isORBThreaded() );
+            check( strategyListCopied.isPOAThreadPool() );
+            check( strategyListCopied.getNbPOAThreads() == 3 );
+
+            check( strategyListCopied_2.isPOAThreadPerRequest() );
+
+            println("Trying to assign a new strategy from this one");
+            StrategyList strategyListAssigned = strategyList;
+            StrategyList strategyListAssigned_2 = strategyList_2;
+
+            println("Checking the value");
+            check( strategyListAssigned.isORBThreaded() );
+            check( strategyListAssigned.isPOAThreadPool() );
+            check( strategyListAssigned.getNbPOAThreads() == 3 );
+
+            check( strategyListAssigned_2.isPOAThreadPerRequest() );
         }
 
-        println("Setting the POA Threaded strategy in the list (ThreadPerConnection)");
-        try {
-            strategyList_3.addPOAThreadPerConnection();
-        } catch (BadParameterException bpe) {}
-        println("Checking the POA Threaded strategy in the list");
-        check( strategyList_3.isPOAThreadPerConnection() );
-
-        println("Setting the POA Thread Pool strategy incompatible with the threaded");
-        try {
-            strategyList_3.addPOAThreadPerConnection();
-            fail("Error: POAThreaded should be already set");
-        } catch (BadParameterException bpe) {
-            succeed("Success: POAThreaded already set");
-        }
-
-        println( "Trying to construct a new strategy from this one" );
-        StrategyList strategyListCopied = strategyList.copy();
-        StrategyList strategyListCopied_2 = strategyList_2.copy();
-        println( "Checking the value" );
-        check( strategyListCopied.isORBThreaded() );
-        check( strategyListCopied.isPOAThreadPool() );
-        check( strategyListCopied.getNbPOAThreads() == 3 );
-
-        check( strategyListCopied_2.isPOAThreadPerRequest() );
-
-        println("Trying to assign a new strategy from this one");
-        StrategyList strategyListAssigned = strategyList;
-        StrategyList strategyListAssigned_2 = strategyList_2;
-
-        println("Checking the value");
-        check( strategyListAssigned.isORBThreaded() );
-        check( strategyListAssigned.isPOAThreadPool() );
-        check( strategyListAssigned.getNbPOAThreads() == 3 );
-
-        check( strategyListAssigned_2.isPOAThreadPerRequest() );
-	
 	 	try {
             doORBTests();
         } catch(InterruptedException ie) {

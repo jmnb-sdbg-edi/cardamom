@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -30,7 +30,7 @@
 
 #include "Foundation/common/MacroDefs.h"
 #include "Foundation/ossupport/OS.hpp"
-#include "Foundation/ossupport/ProcessCallback.hpp"
+//#include "Foundation/ossupport/ProcessCallback.hpp"
 
 namespace Cdmw
 {
@@ -44,7 +44,6 @@ namespace Cdmw
         *Portability issues: [if no pertinent write none ]
         *<p>
         */
-
         extern "C"
         {
             double test(double r)
@@ -53,43 +52,8 @@ namespace Cdmw
             };
         }
 
-
-        class TestProcessCallback : public ProcessCallback
-        {
-
-            public:
-
-                TestProcessCallback()
-                        : m_processId(0)
-                {}
-
-                virtual ~TestProcessCallback()
-                { }
-
-                OS::ProcessId getProcessId()
-                {
-                    return m_processId;
-                }
-
-                void execute(OsSupport::OS::ProcessId processId) throw()
-                {
-                    m_processId = processId;
-                }
-
-            private:
-
-                OS::ProcessId m_processId;
-
-        };
-
-
-
-
-
-
-        TestOSDriver::TestOSDriver( const std::string& processName )
-                : Testable("Cdmw::OS"),
-                m_processName(processName)
+        TestOSDriver::TestOSDriver( )
+                : Testable("Cdmw::OS")
         {
         }
 
@@ -99,13 +63,13 @@ namespace Cdmw
         {
         }
 
-
         void
         TestOSDriver::do_tests()
         {
+
             // set number of requested successfull tests
-            set_nbOfRequestedTestOK (38);
-	    int timescale = Cdmw::TestUtils::Testable::get_timescale();
+            set_nbOfRequestedTestOK (24);
+	        int timescale = Cdmw::TestUtils::Testable::get_timescale();
 
 
             // TODO: finding how to better test the returned date.
@@ -127,9 +91,9 @@ namespace Cdmw
             try
             {
                 OS::Timeval timeval1 = OS::get_time();
-		OS::sleep(timescale*1000);
+		        OS::sleep(timescale*1000);
                 OS::Timeval timeval2 = OS::get_time();
-		TEST_CHECK( timeval2 > timeval1 );
+		        TEST_CHECK( timeval2 > timeval1 );
                 TEST_CHECK( timeval1 < timeval2 );
                 TEST_CHECK( !(timeval2 == timeval1) )
             }
@@ -161,174 +125,6 @@ namespace Cdmw
             {
                 TEST_FAILED();
             }
-
-            TEST_INFO("Creating a temporary file name");
-            char* tmp_file = ::tempnam(NULL, "Prco");
-            std::string tmp_file_str = tmp_file;
-            ::free(tmp_file);
-
-            TEST_INFO("Checking this file not exists");
-            TEST_CHECK( ! OS::file_exists(tmp_file_str) );
-
-            // Process Creation
-            
-            TEST_INFO("Creating a new process");
-
-            TestProcessCallback creationCallback;
-
-            // warning : the ending callback is created on the stack in this basic
-            // test. A normal use requires that the ending callback survives
-            // until the ending is notified asynchronously.
-            TestProcessCallback endingCallback;
-
-            OS::ProcessId pid_created = OS::create_process(m_processName, "--create-file=" + tmp_file_str,
-                                        "", &creationCallback, &endingCallback);
-
-            // We sleep a while to wait the process and file creation
-            OS::sleep(timescale*4000);
-
-            TEST_INFO("Checking if we have been notified of the process creation");
-            TEST_CHECK( pid_created == creationCallback.getProcessId());
-
-            TEST_INFO("Checking if we have been notified of the process termination");
-            TEST_CHECK( pid_created == endingCallback.getProcessId());
-
-            TEST_INFO("Checking the file has been created by process");
-            TEST_CHECK( OS::file_exists(tmp_file_str) );
-
-            {
-                TEST_INFO("Checking if a process can retreive its own process id");
-                std::ifstream pidfile(tmp_file_str.c_str());
-                OS::ProcessId pid_retreived;
-                pidfile >> pid_retreived;
-                pidfile.close();
-                TEST_CHECK( pid_created == pid_retreived);
-            }
-
-            TEST_INFO("Trying to execute a non executable file");
-
-            try
-            {
-                OS::create_process(tmp_file_str, "");
-
-            }
-            catch ( const BadParameterException& )
-            {
-
-                TEST_SUCCEED();
-
-            }
-            catch (...)
-            {
-
-                TEST_FAILED();
-            }
-
-            TEST_INFO("Trying to delete an existing file");
-
-            try
-            {
-                OS::unlink(tmp_file_str);
-                TEST_CHECK( ! OS::file_exists(tmp_file_str) );
-
-            }
-            catch ( ... )
-            {
-
-                TEST_FAILED();
-
-            }
-
-            TEST_INFO("Trying to delete an unexisting file");
-
-            try
-            {
-                OS::unlink(tmp_file_str);
-                TEST_FAILED();
-
-            }
-            catch ( const BadParameterException& )
-            {
-
-                TEST_SUCCEED();
-
-            }
-
-
-            // Process Creation with working directory and set with PATH environment
-
-            TEST_INFO("Creating a new process defined by PATH and with working directory");
-            TEST_INFO(m_processName.c_str());
-
-            TestProcessCallback creationCallback2;
-
-            // warning : the ending callback is created on the stack in this basic
-            // test. A normal use requires that the ending callback survives
-            // until the ending is notified asynchronously.
-            TestProcessCallback endingCallback2;
-
-            OS::ProcessId pid_created2 = OS::create_process("test_process", "--create-file=" + tmp_file_str,
-                                        ".", &creationCallback2, &endingCallback2);
-
-            // We sleep a while to wait the process and file creation
-            OS::sleep(timescale*4000);
-
-            TEST_INFO("Checking if we have been notified of the process creation");
-            TEST_CHECK( pid_created2 == creationCallback2.getProcessId());
-
-            TEST_INFO("Checking if we have been notified of the process termination");
-            TEST_CHECK( pid_created2 == endingCallback2.getProcessId());
-
-            TEST_INFO("Checking the file has been created by process");
-            TEST_CHECK( OS::file_exists(tmp_file_str) );
-            
-            
-            // delete the created file
-            try
-            {
-                OS::unlink(tmp_file_str);
-            }
-            catch ( ... )
-            {
-            }
-        
-            
-            // Process Creation with not existing working directory
-
-            TEST_INFO("Creating a new process with not existing working directory");
-
-            TestProcessCallback creationCallback3;
-
-            // warning : the ending callback is created on the stack in this basic
-            // test. A normal use requires that the ending callback survives
-            // until the ending is notified asynchronously.
-            TestProcessCallback endingCallback3;
-
-            OS::ProcessId pid_created3 = OS::create_process(m_processName, "--create-file=" + tmp_file_str,
-                                        "/notexistdir", &creationCallback3, &endingCallback3);
-
-            // We sleep a while to wait the process and file creation
-            OS::sleep(timescale*4000);
-
-            TEST_INFO("Checking if we have been notified of the process creation");
-            TEST_CHECK( pid_created3 == creationCallback3.getProcessId());
-
-            TEST_INFO("Checking if we have been notified of the process termination");
-            TEST_CHECK( pid_created3 == endingCallback3.getProcessId());
-
-            // the process has not started effectiveley in fact (exec has not been called)
-            TEST_INFO("Checking the file is not created by process");
-            TEST_CHECK( !OS::file_exists(tmp_file_str) );            
-            
-
-            try
-            {
-                OS::unlink(tmp_file_str);
-            }
-            catch ( ... )
-            {
-        }
-            
 
             std::auto_ptr<OS::SharedObjectHandle> handle;
             std::auto_ptr<OS::SharedObjectHandle> handle2;

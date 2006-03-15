@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -100,7 +100,14 @@ namespace Cdmw
 
 
         TestThreadDriver::TestThreadDriver()
-                : Testable("Cdmw::Thread")
+            : Testable("Cdmw::Thread"),
+              m_valid_only(false)
+        {
+        }
+
+        TestThreadDriver::TestThreadDriver(bool valid_only)
+            : Testable("Cdmw::Thread"),
+              m_valid_only(valid_only)
         {
         }
 
@@ -264,7 +271,9 @@ namespace Cdmw
             // Thread priority change
             // --------------------------------------------------------------------
 
+/****** PCR-0323: deactivate priority tests as set_priority is not available with Linux kernel 2.4.x *******
             Thread::Priority thread_init_priority = 0;
+****** PCR-0323 *******************************************************************************************/
             Thread::Priority thread_priority = 0;
             Thread::Priority priority = 0;
 
@@ -275,6 +284,7 @@ namespace Cdmw
 
 #   if defined (CDMW_POSIX_THREAD)
 
+/****** PCR-0323: deactivate priority tests as set_priority is not available with Linux kernel 2.4.x *******
             nbOfRequestedTestOK += 2;
 
             try
@@ -331,6 +341,7 @@ namespace Cdmw
             }
 
             TEST_CHECK(thread_priority == priority);
+****** PCR-0323 *******************************************************************************************/
 
 #   endif
 
@@ -350,6 +361,9 @@ namespace Cdmw
 
             Thread::sleep(timescale*2000);
 
+            // PCR-0323: 2 tests not performed
+            nbOfRequestedTestOK -=2;
+/****** PCR-0323: deactivate priority tests as set_priority is not available with Linux kernel 2.4.x *******
             TEST_INFO("Trying to change priority of started thread");
 
             try
@@ -409,6 +423,7 @@ namespace Cdmw
             }
 
             TEST_CHECK(thread_priority == priority);
+****** PCR-0323 *******************************************************************************************/
 
             // stop thread
             testThread_3.stop_loop();
@@ -431,7 +446,7 @@ namespace Cdmw
             // set the contention scope and scheduling policy
             // --------------------------------------------------------------------
 
-            nbOfRequestedTestOK += 2;
+            nbOfRequestedTestOK += 1;
 
             // priority is set by the thread itself
             priority = 10;
@@ -460,642 +475,665 @@ namespace Cdmw
                 TEST_FAILED();
             }
 
-
-            TEST_INFO("Trying to set scope and scheduling policy of a new thread");
-
-            TEST_INFO("PROCESS SCOPE and SCHED OTHER");
-            TestThread testThread_4 ("Thread_4", 5, valueToBeChanged, true);
-
-            try
+            // This part is only for unit test
+            if (!m_valid_only)
             {
-                testThread_4.set_scopeSchedPolicy (Thread::THR_PROCESS_SCOPE, Thread::THR_SCHEDULE_OTHER);
-                TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                nbOfRequestedTestOK += 1;
 
-            }
-            catch (const Cdmw::BadParameterException&)
-            {
+                TEST_INFO("Trying to set scope and scheduling policy of a new thread");
+
+                TEST_INFO("PROCESS SCOPE and SCHED OTHER");
+                TestThread testThread_4 ("Thread_4", 5, valueToBeChanged, true);
+
+                try
+                {
+                    testThread_4.set_scopeSchedPolicy (Thread::THR_PROCESS_SCOPE, Thread::THR_SCHEDULE_OTHER);
+                    TEST_SUCCEED();
+
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
+
+                }
+                catch (const Cdmw::BadParameterException&)
+                {
 #       if defined (CDMW_POSIX_LINUX_THREAD)
-                // PROCESS SCOPE is not implemented on Linux
-                TEST_INFO("Policy not implemented on Linux");
-                TEST_SUCCEED();
+                    // PROCESS SCOPE is not implemented on Linux
+                    TEST_INFO("Policy not implemented on Linux");
+                    TEST_SUCCEED();
 #       else
 
-                TEST_FAILED();
+                    TEST_FAILED();
 #       endif
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 #   if !defined (CDMW_POSIX_LINUX_THREAD)
 
 
 
-            nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
+                nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
 
-            nbOfRequestedTestOK += 4;
+                nbOfRequestedTestOK += 4;
 
-            TEST_INFO(" ");
+                TEST_INFO(" ");
 
-            try
-            {
-                // start thread
-                TEST_INFO("Trying to start the thread");
-                testThread_4.start();
+                try
+                {
+                    // start thread
+                    TEST_INFO("Trying to start the thread");
+                    testThread_4.start();
 
-                Thread::sleep(timescale*2000);
+                    Thread::sleep(timescale*2000);
 
-                TEST_INFO("Trying to retreive the priority of the thread");
+                    TEST_INFO("Trying to retreive the priority of the thread");
 
-                thread_priority = testThread_4.get_priority();
+                    thread_priority = testThread_4.get_priority();
 
-                TEST_CHECK(thread_priority == priority);
+                    TEST_CHECK(thread_priority == priority);
 
-                TEST_INFO("Trying to retreive the scope and policy of the thread");
-                Thread::ThrScope scope;
-                Thread::ThrSchedulPolicy policy;
+                    TEST_INFO("Trying to retreive the scope and policy of the thread");
+                    Thread::ThrScope scope;
+                    Thread::ThrSchedulPolicy policy;
 
-                testThread_4.get_scopeSchedPolicy (scope, policy);
-                TEST_CHECK(scope == Thread::THR_PROCESS_SCOPE);
-                TEST_CHECK(policy == Thread::THR_SCHEDULE_OTHER);
-                // stop thread
-                testThread_4.stop_loop();
+                    testThread_4.get_scopeSchedPolicy (scope, policy);
+                    TEST_CHECK(scope == Thread::THR_PROCESS_SCOPE);
+                    TEST_CHECK(policy == Thread::THR_SCHEDULE_OTHER);
+                    // stop thread
+                    testThread_4.stop_loop();
 
-                testThread_4.join();
-                TEST_SUCCEED();
+                    testThread_4.join();
+                    TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
-
-
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 
 #   endif
+                nbOfRequestedTestOK += 1;
 
-            nbOfRequestedTestOK += 1;
+                TEST_INFO(" ");
 
-            TEST_INFO(" ");
+                TEST_INFO("PROCESS SCOPE and SCHED FIFO");
 
-            TEST_INFO("PROCESS SCOPE and SCHED FIFO");
+                TestThread testThread_5 ("Thread_5", 5, valueToBeChanged, true);
 
-            TestThread testThread_5 ("Thread_5", 5, valueToBeChanged, true);
+                try
+                {
+                    testThread_5.set_scopeSchedPolicy (Thread::THR_PROCESS_SCOPE, Thread::THR_SCHEDULE_FIFO);
 
-            try
-            {
-                testThread_5.set_scopeSchedPolicy (Thread::THR_PROCESS_SCOPE, Thread::THR_SCHEDULE_FIFO);
+                    TEST_SUCCEED();
 
-                TEST_SUCCEED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
-
-            }
-            catch (const Cdmw::BadParameterException&)
-            {
+                }
+                catch (const Cdmw::BadParameterException&)
+                {
 #       if defined (CDMW_POSIX_LINUX_THREAD)
-                // PROCESS SCOPE is not implemented on Linux
-                TEST_INFO("Policy not implemented on Linux");
-                TEST_SUCCEED();
+                    // PROCESS SCOPE is not implemented on Linux
+                    TEST_INFO("Policy not implemented on Linux");
+                    TEST_SUCCEED();
 #       else
 
-                TEST_FAILED();
+                    TEST_FAILED();
 #       endif
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 #   if !defined (CDMW_POSIX_LINUX_THREAD)
 
-            nbOfRequestedTestOK += 2;
+                nbOfRequestedTestOK += 2;
 
-            TEST_INFO(" ");
+                TEST_INFO(" ");
 
-            try
-            {
-                // start thread
-                TEST_INFO("Trying to start the thread");
-                testThread_5.start();
+                try
+                {
+                    // start thread
+                    TEST_INFO("Trying to start the thread");
+                    testThread_5.start();
 
-                Thread::sleep(timescale*2000);
+                    Thread::sleep(timescale*2000);
 
-                TEST_INFO("Trying to retreive the priority of the thread");
+                    TEST_INFO("Trying to retreive the priority of the thread");
 
-                thread_priority = testThread_5.get_priority();
+                    thread_priority = testThread_5.get_priority();
 
-                TEST_CHECK(thread_priority == priority);
+                    TEST_CHECK(thread_priority == priority);
 
-                // stop thread
-                testThread_5.stop_loop();
+                    // stop thread
+                    testThread_5.stop_loop();
 
-                testThread_5.join();
-                TEST_SUCCEED();
+                    testThread_5.join();
+                    TEST_SUCCEED();
 
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 #   endif
 
-            nbOfRequestedTestOK += 1;
+                nbOfRequestedTestOK += 1;
 
-            TEST_INFO(" ");
+                TEST_INFO(" ");
 
-            TEST_INFO("PROCESS SCOPE and SCHED RR");
+                TEST_INFO("PROCESS SCOPE and SCHED RR");
 
-            TestThread testThread_6 ("Thread_6", 5, valueToBeChanged, true);
+                TestThread testThread_6 ("Thread_6", 5, valueToBeChanged, true);
 
-            try
-            {
-                testThread_6.set_scopeSchedPolicy (Thread::THR_PROCESS_SCOPE, Thread::THR_SCHEDULE_RR);
+                try
+                {
+                    testThread_6.set_scopeSchedPolicy (Thread::THR_PROCESS_SCOPE, Thread::THR_SCHEDULE_RR);
 
-                TEST_SUCCEED();
+                    TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::BadParameterException&)
-            {
+                }
+                catch (const Cdmw::BadParameterException&)
+                {
 #       if defined (CDMW_POSIX_LINUX_THREAD)
-                // PROCESS SCOPE is not implemented on Linux
-                TEST_INFO("Policy not implemented on Linux");
-                TEST_SUCCEED();
+                    // PROCESS SCOPE is not implemented on Linux
+                    TEST_INFO("Policy not implemented on Linux");
+                    TEST_SUCCEED();
 #       else
 
-                TEST_FAILED();
+                    TEST_FAILED();
 #       endif
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 #   if !defined (CDMW_POSIX_LINUX_THREAD)
 
-            nbOfRequestedTestOK += 2;
+                nbOfRequestedTestOK += 2;
 
-            TEST_INFO(" ");
+                TEST_INFO(" ");
 
-            try
-            {
-                // start thread
-                TEST_INFO("Trying to start the thread");
-                testThread_6.start();
+                try
+                {
+                    // start thread
+                    TEST_INFO("Trying to start the thread");
+                    testThread_6.start();
 
-                Thread::sleep(timescale*2000);
+                    Thread::sleep(timescale*2000);
 
-                TEST_INFO("Trying to retreive the priority of the thread");
+                    TEST_INFO("Trying to retreive the priority of the thread");
 
-                thread_priority = testThread_6.get_priority();
+                    thread_priority = testThread_6.get_priority();
 
-                TEST_CHECK(thread_priority == priority);
+                    TEST_CHECK(thread_priority == priority);
 
-                // stop thread
-                testThread_6.stop_loop();
+                    // stop thread
+                    testThread_6.stop_loop();
 
-                testThread_6.join();
-                TEST_SUCCEED();
+                    testThread_6.join();
+                    TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 #   endif
 
 
-            nbOfRequestedTestOK += 1;
 
-            TEST_INFO(" ");
+            } // end of if (!m_valid_only) of test Thread 4
 
-            TEST_INFO("SYSTEM SCOPE and SCHED OTHER");
+                nbOfRequestedTestOK += 1;
 
-            TestThread testThread_7 ("Thread_7", 5, valueToBeChanged, true);
+                TEST_INFO(" ");
 
-            try
-            {
-                testThread_7.set_scopeSchedPolicy (Thread::THR_SYSTEM_SCOPE, Thread::THR_SCHEDULE_OTHER);
+                TEST_INFO("SYSTEM SCOPE and SCHED OTHER");
 
-                int max_priority = ::sched_get_priority_max(SCHED_OTHER);
-                int min_priority = ::sched_get_priority_min(SCHED_OTHER);
-                std::stringstream buffer;
-                buffer << "euid : " << ::geteuid()
-                << " Max Priority : " << max_priority
-                << " Min Priority : " << min_priority
-                << " Max Cdmw Priority : " << testThread_7.get_max_priority()
-                << " Min Cdmw Priority : " << testThread_7.get_min_priority()
-                << std::endl;
-                TEST_INFO(buffer.str());
+                TestThread testThread_7 ("Thread_7", 5, valueToBeChanged, true);
 
-                TEST_SUCCEED();
+                try
+                {
+                    testThread_7.set_scopeSchedPolicy (Thread::THR_SYSTEM_SCOPE, Thread::THR_SCHEDULE_OTHER);
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                    int max_priority = ::sched_get_priority_max(SCHED_OTHER);
+                    int min_priority = ::sched_get_priority_min(SCHED_OTHER);
+                    std::stringstream buffer;
+                    buffer << "euid : " << ::geteuid()
+                           << " Max Priority : " << max_priority
+                           << " Min Priority : " << min_priority
+                           << " Max Cdmw Priority : " << testThread_7.get_max_priority()
+                           << " Min Cdmw Priority : " << testThread_7.get_min_priority()
+                           << std::endl;
+                    TEST_INFO(buffer.str());
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                    TEST_SUCCEED();
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
+
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
+
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 
-            nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
-            nbOfRequestedTestOK += 4;
+                nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
+                nbOfRequestedTestOK += 4;
 
-            try
-            {
-                // start thread
-                TEST_INFO("Trying to start the thread");
-                testThread_7.start();
+                try
+                {
+                    // start thread
+                    TEST_INFO("Trying to start the thread");
+                    testThread_7.start();
 
-                Thread::sleep(timescale*2000);
+                    Thread::sleep(timescale*2000);
 
-                TEST_INFO("Trying to retreive the priority of the thread");
+                    TEST_INFO("Trying to retreive the priority of the thread");
 
 #       if defined (CDMW_POSIX_SOLARIS_THREAD)
 
-                priority = 10;
+                    priority = 10;
 #       elif defined (CDMW_POSIX_AIX_THREAD)
 
-                priority = 10;
+                    priority = 10;
 #       elif defined (CDMW_POSIX_LINUX_THREAD)
 
-                priority = 0;
+                    priority = 0;
 #       endif
 
-                thread_priority = testThread_7.get_priority();
+                    thread_priority = testThread_7.get_priority();
 
-                TEST_CHECK(thread_priority == priority);
+                    TEST_CHECK(thread_priority == priority);
 
-                TEST_INFO("Trying to retreive the scope and policy of the thread");
-                Thread::ThrScope scope;
-                Thread::ThrSchedulPolicy policy;
+                    TEST_INFO("Trying to retreive the scope and policy of the thread");
+                    Thread::ThrScope scope;
+                    Thread::ThrSchedulPolicy policy;
 
-                testThread_7.get_scopeSchedPolicy (scope, policy);
-                TEST_CHECK(scope == Thread::THR_SYSTEM_SCOPE);
-                TEST_CHECK(policy == Thread::THR_SCHEDULE_OTHER);
+                    testThread_7.get_scopeSchedPolicy (scope, policy);
+                    TEST_CHECK(scope == Thread::THR_SYSTEM_SCOPE);
+                    TEST_CHECK(policy == Thread::THR_SCHEDULE_OTHER);
 
-                // stop thread
-                testThread_7.stop_loop();
+                    // stop thread
+                    testThread_7.stop_loop();
 
-                testThread_7.join();
-                TEST_SUCCEED();
+                    testThread_7.join();
+                    TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
+
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
+
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
+
+
+            // This part is only for unit test
+            if (!m_valid_only)
             {
-                TEST_FAILED();
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                nbOfRequestedTestOK += 1;
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                TEST_INFO(" ");
+                TEST_INFO("SYSTEM SCOPE and SCHED FIFO");
+                TestThread testThread_8 ("Thread_8", 10, valueToBeChanged, true);
 
+                try
+                {
+                    testThread_8.set_scopeSchedPolicy (Thread::THR_SYSTEM_SCOPE, Thread::THR_SCHEDULE_FIFO);
 
-            nbOfRequestedTestOK += 1;
-
-            TEST_INFO(" ");
-            TEST_INFO("SYSTEM SCOPE and SCHED FIFO");
-            TestThread testThread_8 ("Thread_8", 10, valueToBeChanged, true);
-
-            try
-            {
-                testThread_8.set_scopeSchedPolicy (Thread::THR_SYSTEM_SCOPE, Thread::THR_SCHEDULE_FIFO);
-
-                int max_priority = ::sched_get_priority_max(SCHED_FIFO);
-                int min_priority = ::sched_get_priority_min(SCHED_FIFO);
-                std::stringstream buffer;
-                buffer << "euid : " << ::geteuid()
-                << " Max Priority : " << max_priority
-                << " Min Priority : " << min_priority
-                << " Max Cdmw Priority : " << testThread_8.get_max_priority()
-                << " Min Cdmw Priority : " << testThread_8.get_min_priority()
-                << std::endl;
-                TEST_INFO(buffer.str());
+                    int max_priority = ::sched_get_priority_max(SCHED_FIFO);
+                    int min_priority = ::sched_get_priority_min(SCHED_FIFO);
+                    std::stringstream buffer;
+                    buffer << "euid : " << ::geteuid()
+                           << " Max Priority : " << max_priority
+                           << " Min Priority : " << min_priority
+                           << " Max Cdmw Priority : " << testThread_8.get_max_priority()
+                           << " Min Cdmw Priority : " << testThread_8.get_min_priority()
+                           << std::endl;
+                    TEST_INFO(buffer.str());
 
 #       if defined (CDMW_POSIX_LINUX_THREAD)
 
-                TEST_INFO("Trying to change priority of created thread");
-                priority = 1;
-                testThread_8.set_priority(priority);
+/****** PCR-0323: deactivate priority tests as set_priority is not available with Linux kernel 2.4.x *******
+                    TEST_INFO("Trying to change priority of created thread");
+                    priority = 1;
+                    testThread_8.set_priority(priority);
+****** PCR-0323 *******************************************************************************************/
 
 #       endif
 
-                TEST_SUCCEED();
+                    TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
-            nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
-            nbOfRequestedTestOK += 2;
+                nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
+                nbOfRequestedTestOK += 2;
 
-            try
-            {
-                // start thread
-                TEST_INFO("Trying to start the thread");
-                testThread_8.start();
+                try
+                {
+                    // start thread
+                    TEST_INFO("Trying to start the thread");
+                    testThread_8.start();
 
-                Thread::sleep(timescale*2000);
+                    Thread::sleep(timescale*2000);
 
-                TEST_INFO("Trying to change priority of started thread");
-                priority = testThread_8.get_priority();
-                priority ++;
-                testThread_8.set_priority(priority);
+                // PCR-0323: 1 test not performed
+                nbOfRequestedTestOK -= 1;
+/****** PCR-0323: deactivate priority tests as set_priority is not available with Linux kernel 2.4.x *******
+                    TEST_INFO("Trying to change priority of started thread");
+                    priority = testThread_8.get_priority();
+                    priority ++;
+                    testThread_8.set_priority(priority);
 
-                TEST_INFO("Trying to retreive the priority of the thread");
-                TEST_CHECK(testThread_8.get_priority() == priority);
+                    TEST_INFO("Trying to retreive the priority of the thread");
+                    TEST_CHECK(testThread_8.get_priority() == priority);
+****** PCR-0323 *******************************************************************************************/
 
-                // stop thread
-                testThread_8.stop_loop();
+                    // stop thread
+                    testThread_8.stop_loop();
 
-                testThread_8.join();
-                TEST_SUCCEED();
+                    testThread_8.join();
+                    TEST_SUCCEED();
 
-            }
-            catch (const ThreadSchedulingException& ex)
-            {
+                }
+                catch (const ThreadSchedulingException& ex)
+                {
 
 #   if defined (CDMW_POSIX_SOLARIS_THREAD)
 
-                nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
-                nbOfRequestedTestOK += 1;
+                    nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
+                    nbOfRequestedTestOK += 1;
 
-                // SYSTEM SCOPE and SCHED FIFO is not permitted on Posix Solaris (must be superuser)
-                TEST_INFO("Policy not permitted on Posix Solaris as user");
-                TEST_INFO("Exception " << ex.what());
-                TEST_SUCCEED();
+                    // SYSTEM SCOPE and SCHED FIFO is not permitted on Posix Solaris (must be superuser)
+                    TEST_INFO("Policy not permitted on Posix Solaris as user");
+                    TEST_INFO("Exception " << ex.what());
+                    TEST_SUCCEED();
 #   elif defined (CDMW_POSIX_LINUX_THREAD)
 
-                nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
-                nbOfRequestedTestOK += 1;
+                    nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
+                    nbOfRequestedTestOK += 1;
 
-                // SYSTEM SCOPE and SCHED FIFO is not permitted on Linux (must be superuser)
-                TEST_INFO("Policy not permitted on Linux as user");
-                TEST_INFO("Exception " << ex.what());
-                TEST_SUCCEED();
+                    // SYSTEM SCOPE and SCHED FIFO is not permitted on Linux (must be superuser)
+                    TEST_INFO("Policy not permitted on Linux as user");
+                    TEST_INFO("Exception " << ex.what());
+                    TEST_SUCCEED();
 #   elif defined (CDMW_POSIX_AIX_THREAD)
 
-                nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
-                nbOfRequestedTestOK += 1;
+                    nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
+                    nbOfRequestedTestOK += 1;
 
-                // SYSTEM SCOPE and SCHED FIFO is not permitted on AIX (must be superuser)
-                TEST_INFO("Policy not permitted on AIX as user");
-                TEST_INFO("Exception " << ex.what());
-                TEST_SUCCEED();
+                    // SYSTEM SCOPE and SCHED FIFO is not permitted on AIX (must be superuser)
+                    TEST_INFO("Policy not permitted on AIX as user");
+                    TEST_INFO("Exception " << ex.what());
+                    TEST_SUCCEED();
 #   else
 
-                TEST_FAILED();
+                    TEST_FAILED();
 #   endif
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 
-            nbOfRequestedTestOK += 1;
+                nbOfRequestedTestOK += 1;
 
-            TEST_INFO(" ");
-            TEST_INFO("SYSTEM SCOPE and SCHED RR");
-            TestThread testThread_9 ("Thread_9", 10, valueToBeChanged, true);
+                TEST_INFO(" ");
+                TEST_INFO("SYSTEM SCOPE and SCHED RR");
+                TestThread testThread_9 ("Thread_9", 10, valueToBeChanged, true);
 
-            try
-            {
-                testThread_9.set_scopeSchedPolicy (Thread::THR_SYSTEM_SCOPE, Thread::THR_SCHEDULE_RR);
+                try
+                {
+                    testThread_9.set_scopeSchedPolicy (Thread::THR_SYSTEM_SCOPE, Thread::THR_SCHEDULE_RR);
 
-                int max_priority = ::sched_get_priority_max(SCHED_RR);
-                int min_priority = ::sched_get_priority_min(SCHED_RR);
-                std::stringstream buffer;
-                buffer << "euid : " << ::geteuid()
-                << " Max Priority : " << max_priority
-                << " Min Priority : " << min_priority
-                << " Max Cdmw Priority : " << testThread_9.get_max_priority()
-                << " Min Cdmw Priority : " << testThread_9.get_min_priority()
-                << std::endl;
+                    int max_priority = ::sched_get_priority_max(SCHED_RR);
+                    int min_priority = ::sched_get_priority_min(SCHED_RR);
+                    std::stringstream buffer;
+                    buffer << "euid : " << ::geteuid()
+                           << " Max Priority : " << max_priority
+                           << " Min Priority : " << min_priority
+                           << " Max Cdmw Priority : " << testThread_9.get_max_priority()
+                           << " Min Cdmw Priority : " << testThread_9.get_min_priority()
+                           << std::endl;
 
-                TEST_INFO(buffer.str());
+                    TEST_INFO(buffer.str());
 
 #       if defined (CDMW_POSIX_LINUX_THREAD)
 
-                TEST_INFO("Trying to change priority of created thread");
-                priority = 1;
-                testThread_9.set_priority(priority);
+/****** PCR-0323: deactivate priority tests as set_priority is not available with Linux kernel 2.4.x *******
+                    TEST_INFO("Trying to change priority of created thread");
+                    priority = 1;
+                    testThread_9.set_priority(priority);
+****** PCR-0323 *******************************************************************************************/
 
 #       endif
 
-                TEST_SUCCEED();
+                    TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 
-            nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
-            nbOfRequestedTestOK += 2;
+                nbOfRequestedTestOKMemo = nbOfRequestedTestOK;
+                nbOfRequestedTestOK += 2;
 
-            try
-            {
-                // start thread
-                TEST_INFO("Trying to start the thread");
-                testThread_9.start();
+                try
+                {
+                    // start thread
+                    TEST_INFO("Trying to start the thread");
+                    testThread_9.start();
 
-                Thread::sleep(timescale*2000);
+                    Thread::sleep(timescale*2000);
 
-                TEST_INFO("Trying to change priority of started thread");
-                priority = testThread_9.get_priority();
-                priority ++;
-                testThread_9.set_priority(priority);
+                // PCR-0323: 1 test not performed
+                nbOfRequestedTestOK -= 1;
+/****** PCR-0323: deactivate priority tests as set_priority is not available with Linux kernel 2.4.x *******
+                    TEST_INFO("Trying to change priority of started thread");
+                    priority = testThread_9.get_priority();
+                    priority ++;
+                    testThread_9.set_priority(priority);
 
-                TEST_INFO("Trying to retreive the priority of the thread");
-                TEST_CHECK(testThread_9.get_priority() == priority);
+                    TEST_INFO("Trying to retreive the priority of the thread");
+                    TEST_CHECK(testThread_9.get_priority() == priority);
+****** PCR-0323 *******************************************************************************************/
 
-                // stop thread
-                testThread_9.stop_loop();
+                    // stop thread
+                    testThread_9.stop_loop();
 
-                testThread_9.join();
-                TEST_SUCCEED();
+                    testThread_9.join();
+                    TEST_SUCCEED();
 
-            }
-            catch (const Cdmw::InternalErrorException & ex)
-            {
-                TEST_FAILED();
+                }
+                catch (const Cdmw::InternalErrorException & ex)
+                {
+                    TEST_FAILED();
 
-            }
-            catch (const ThreadSchedulingException& ex)
-            {
+                }
+                catch (const ThreadSchedulingException& ex)
+                {
 
 #   if defined (CDMW_POSIX_SOLARIS_THREAD)
 
-                nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
-                nbOfRequestedTestOK += 1;
+                    nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
+                    nbOfRequestedTestOK += 1;
 
-                // SYSTEM SCOPE and SCHED RR is not permitted on Posix Solaris (must be superuser)
-                TEST_INFO("Policy not permitted on Posix Solaris as user");
-                TEST_INFO("Exception " << ex.what());
-                TEST_SUCCEED();
+                    // SYSTEM SCOPE and SCHED RR is not permitted on Posix Solaris (must be superuser)
+                    TEST_INFO("Policy not permitted on Posix Solaris as user");
+                    TEST_INFO("Exception " << ex.what());
+                    TEST_SUCCEED();
 #   elif defined (CDMW_POSIX_LINUX_THREAD)
 
-                nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
-                nbOfRequestedTestOK += 1;
+                    nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
+                    nbOfRequestedTestOK += 1;
 
-                // SYSTEM SCOPE and SCHED RR is not permitted on Linux (must be superuser)
-                TEST_INFO("Policy not permitted on Linux as user");
-                TEST_INFO("Exception " << ex.what());
-                TEST_SUCCEED();
+                    // SYSTEM SCOPE and SCHED RR is not permitted on Linux (must be superuser)
+                    TEST_INFO("Policy not permitted on Linux as user");
+                    TEST_INFO("Exception " << ex.what());
+                    TEST_SUCCEED();
 #   elif defined (CDMW_POSIX_AIX_THREAD)
 
-                nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
-                nbOfRequestedTestOK += 1;
+                    nbOfRequestedTestOK = nbOfRequestedTestOKMemo;
+                    nbOfRequestedTestOK += 1;
 
-                // SYSTEM SCOPE and SCHED RR is not permitted on AIX (must be superuser)
-                TEST_INFO("Policy not permitted on AIX as user");
-                TEST_INFO("Exception " << ex.what());
-                TEST_SUCCEED();
+                    // SYSTEM SCOPE and SCHED RR is not permitted on AIX (must be superuser)
+                    TEST_INFO("Policy not permitted on AIX as user");
+                    TEST_INFO("Exception " << ex.what());
+                    TEST_SUCCEED();
 #   else
 
-                TEST_FAILED();
+                    TEST_FAILED();
 #   endif
 
-            }
-            catch (const Cdmw::Exception& ex)
-            {
-                TEST_FAILED();
-                TEST_INFO("Exception " << ex.what());
+                }
+                catch (const Cdmw::Exception& ex)
+                {
+                    TEST_FAILED();
+                    TEST_INFO("Exception " << ex.what());
 
-            }
-            catch ( ... )
-            {
-                TEST_FAILED();
-            }
+                }
+                catch ( ... )
+                {
+                    TEST_FAILED();
+                }
 
 #   endif
+
+            } // end of if (!m_valid_only) set before test Thread 8
 
             // set number of requested successfull tests
             set_nbOfRequestedTestOK (nbOfRequestedTestOK);

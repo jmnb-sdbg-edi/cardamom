@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -35,6 +35,28 @@
 #include "Foundation/orbsupport/StrategyList.hpp"
 
 #include "testorbsupport/TestOrbSupportServer_impl.hpp"
+
+
+
+
+
+
+
+
+CORBA::ORB_var orb = CORBA::ORB::_nil();
+
+void exit_handler(int sig) {
+    if (!CORBA::is_nil(orb.in())) {
+        try {
+            orb->shutdown(false);
+        } catch (const CORBA::SystemException& e) {
+            std::cerr << "Error while shuting ORB down in exit_handler:\n"
+                      << e << " - minor code: " << e.minor() << std::endl;
+        }
+    }
+}
+
+
 
 
 namespace Cdmw
@@ -71,108 +93,133 @@ namespace Cdmw
 
             using namespace CdmwTest;
 
-            // We initialise the ORB, with a thread pool of 5
-            //    OrbSupport orbSupport;
-            StrategyList strategyList;
-            strategyList.add_OrbThreaded();
-            strategyList.add_PoaThreadPool(5);
+            try {
+                // We initialise the ORB, with a thread pool of 5
+                //    OrbSupport orbSupport;
+                StrategyList strategyList;
+                strategyList.add_OrbThreaded();
+                strategyList.add_PoaThreadPool(5);
+    
+                // force CdmwProcessPort and CdmwLocalisationService
+                int argc2 = argc + 2;
+                char** argv2 = NULL;
+                std::string str_opt( "" );
+                // copy initial args
+    
+                for (int i = 0; i < argc; i++)
+                    str_opt += std::string( argv[i] ) + " ";
+    
+                // add args
+                std::stringstream str_stream;
+    
+                str_stream << "--CdmwProcessPort=" << CDMW_PROCESS_PORT
+                << " --CdmwLocalisationService=" << CDMW_LOCALISATION_PORT;
+    
+                str_opt += str_stream.str();
+    
+                argv2 = Cdmw::Common::String::to_char_array(
+                            Cdmw::Common::String::to_strings( str_opt ) );
+    
+                orb = OrbSupport::ORB_init( argc2, argv2, strategyList);
+    
+    
+                // And activate the root POA
+                CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
+    
+                PortableServer::POA_var poa = PortableServer::POA::_narrow(obj.in());
+    
+                PortableServer::POAManager_var poaMgr = poa->the_POAManager();
+    
+    
+    
+                // We create the servant server on the RootPOA
+                TestOrbSupportServer_impl testOrbSupportServer_impl;
+    
+                TestOrbSupportServer_var testOrbSupportServer = testOrbSupportServer_impl._this();
+    
+                // bind multi-threaded object to corbaloc
+                OrbSupport::bind_object_to_corbaloc(orb.in(), SERVER_MT_CORBALOC_NAME, testOrbSupportServer.in());
+    
+                // We write its ior in a file
+                std::ofstream iorFile("SupportServerMT.ior");
+    
+                CORBA::String_var strIor = orb->object_to_string( testOrbSupportServer.in() );
+    
+                iorFile << strIor.in() << std::endl;
+    
+                iorFile.close();
+    
+                // Now we create a POA mono-threaded ( with a thread pool of 1)
+                StrategyList strategyListSingleThread;
+    
+                strategyListSingleThread.add_PoaThreadPool(1);
+    
+                CORBA::PolicyList policies;
+    
+                // Give it the CDMW_ROOT_POA_NAME. thus, its POAManager
+                // will use the CdmwProcessPort
+                PortableServer::POA_var poaSingleThread = OrbSupport::create_POA(
+                            poa.in(),
+                            CDMW_ROOT_POA_NAME,
+                            NULL,
+                            policies,
+                            strategyListSingleThread);
+    
+                // Construct instance giving orb & corbaloc, to use the remove_binding()
+                TestOrbSupportServer_impl* ptestOrbSupportServer_impl_SingleThread =
+                    new TestOrbSupportServer_impl(orb.in(), SERVER_ST_CORBALOC_NAME);
+    
+    
+                PortableServer::ObjectId_var id_ptestOrbSupportServer =
+                    poaSingleThread->activate_object(ptestOrbSupportServer_impl_SingleThread);
+    
+                CORBA::Object_var obj_id_ptestOrbSupportServer =
+                    poaSingleThread->id_to_reference( id_ptestOrbSupportServer.in() );
+    
+                // bind single-threaded object to corbaloc
+                OrbSupport::bind_object_to_corbaloc(orb.in(), SERVER_ST_CORBALOC_NAME, obj_id_ptestOrbSupportServer.in());
+    
+                // We write its ior in a file
+                std::ofstream iorFile2("SupportServerST.ior");
+    
+                CORBA::String_var strIor2 = orb->object_to_string( obj_id_ptestOrbSupportServer.in() );
+    
+                iorFile2 << strIor2.in() << std::endl;
+    
+                iorFile2.close();
+    
+    
+    
+                // Ok, we can start the ORB
+                poaMgr->activate();
+    
+                poaSingleThread->the_POAManager()->activate();
+    
+                struct sigaction action;
+                action.sa_handler=exit_handler;
+                sigemptyset(&action.sa_mask);
+                sigaction(SIGTERM, &action, NULL);
+                sigaction(SIGINT, &action, NULL);
+                sigaction(SIGQUIT, &action, NULL);
+                sigaction(SIGABRT, &action, NULL);
 
-            // force CdmwProcessPort and CdmwLocalisationService
-            int argc2 = argc + 2;
-            char** argv2 = NULL;
-            std::string str_opt( "" );
-            // copy initial args
+                orb->run();
 
-            for (int i = 0; i < argc; i++)
-                str_opt += std::string( argv[i] ) + " ";
-
-            // add args
-            std::stringstream str_stream;
-
-            str_stream << "--CdmwProcessPort=" << CDMW_PROCESS_PORT
-            << " --CdmwLocalisationService=" << CDMW_LOCALISATION_PORT;
-
-            str_opt += str_stream.str();
-
-            argv2 = Cdmw::Common::String::to_char_array(
-                        Cdmw::Common::String::to_strings( str_opt ) );
-
-            CORBA::ORB_var orb = OrbSupport::ORB_init( argc2, argv2, strategyList);
-
-
-            // And activate the root POA
-            CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-
-            PortableServer::POA_var poa = PortableServer::POA::_narrow(obj.in());
-
-            PortableServer::POAManager_var poaMgr = poa->the_POAManager();
-
-
-
-            // We create the servant server on the RootPOA
-            TestOrbSupportServer_impl testOrbSupportServer_impl;
-
-            TestOrbSupportServer_var testOrbSupportServer = testOrbSupportServer_impl._this();
-
-            // bind multi-threaded object to corbaloc
-            OrbSupport::bind_object_to_corbaloc(orb.in(), SERVER_MT_CORBALOC_NAME, testOrbSupportServer.in());
-
-            // We write its ior in a file
-            std::ofstream iorFile("SupportServerMT.ior");
-
-            CORBA::String_var strIor = orb->object_to_string( testOrbSupportServer.in() );
-
-            iorFile << strIor.in() << std::endl;
-
-            iorFile.close();
-
-            // Now we create a POA mono-threaded ( with a thread pool of 1)
-            StrategyList strategyListSingleThread;
-
-            strategyListSingleThread.add_PoaThreadPool(1);
-
-            CORBA::PolicyList policies;
-
-            // Give it the CDMW_ROOT_POA_NAME. thus, its POAManager
-            // will use the CdmwProcessPort
-            PortableServer::POA_var poaSingleThread = OrbSupport::create_POA(
-                        poa.in(),
-                        CDMW_ROOT_POA_NAME,
-                        NULL,
-                        policies,
-                        strategyListSingleThread);
-
-            TestOrbSupportServer_impl* ptestOrbSupportServer_impl_SingleThread =
-                new TestOrbSupportServer_impl;
-
-
-            PortableServer::ObjectId_var id_ptestOrbSupportServer =
-                poaSingleThread->activate_object(ptestOrbSupportServer_impl_SingleThread);
-
-            CORBA::Object_var obj_id_ptestOrbSupportServer =
-                poaSingleThread->id_to_reference( id_ptestOrbSupportServer.in() );
-
-            // bind single-threaded object to corbaloc
-            OrbSupport::bind_object_to_corbaloc(orb.in(), SERVER_ST_CORBALOC_NAME, obj_id_ptestOrbSupportServer.in());
-
-            // We write its ior in a file
-            std::ofstream iorFile2("SupportServerST.ior");
-
-            CORBA::String_var strIor2 = orb->object_to_string( obj_id_ptestOrbSupportServer.in() );
-
-            iorFile2 << strIor2.in() << std::endl;
-
-            iorFile2.close();
-
-
-
-            // Ok, we can start the ORB
-            poaMgr->activate();
-
-            poaSingleThread->the_POAManager()->activate();
-
-            orb->run();
-
+            } catch (const CORBA::SystemException& e) {
+                std::cerr << "Unexpected CORBA::SystemException:\n"
+                          << e << " - minor code: " << e.minor() << std::endl;
+            }
+            
+            
+            if (!CORBA::is_nil(orb.in())) {
+                try {
+                    OrbSupport::ORB_cleanup(orb.in());
+                    orb->destroy();
+                } catch (const CORBA::SystemException& e) {
+                    std::cerr << "Unexpected CORBA::SystemException during orb->detroy():\n"
+                              << e << " - minor code: " << e.minor() << std::endl;
+                }
+            }
         }
 
 

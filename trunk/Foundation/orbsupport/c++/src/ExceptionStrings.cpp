@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -143,7 +143,11 @@ namespace Cdmw
                 // --> BAD_PARAMInvalidLocation
                 "Location is not valid (length 0)",
                 // --> BAD_PARAMInvalidConfigValues
-                "ConfigValues are not valid"
+                "ConfigValues are not valid",
+                // --> BAD_PARAMIncompatibleMonitoringInterval
+                "Incompatible monitoring interval",
+                // --> BAD_PARAMIncompatibleMonitoringTimeout
+                "Incompatible monitoring timeout"
             };
 
         const char* ExceptionStrings::INTERNAL_reasons[] =
@@ -176,6 +180,8 @@ namespace Cdmw
                 "Executor is not as expected",
                 // --> INTERNALFaultToleranceError
                 "CDMW Fault Tolerance Error",
+                // --> NoCodecFactory 
+                "No Codec Factory",
                 // --> INTERNALLocationAlreadyPresent
                 "Iterator ready exists for the supplied location",
                 // --> INTERNALDataStoreNotFound
@@ -207,7 +213,13 @@ namespace Cdmw
                 // --> INTERNALNullObjGroupCtxtPtr
                 "The ObjectGroupCtxt has been found but is a NULL pointer",
                 // --> INTERNALLoadBalancingError
-                "CDMW Load Balancing Error"                
+                "CDMW Load Balancing Error",
+                // --> INTERNALComponentInvalidName
+                "Component Invalid Name",
+                // --> INTERNALNoChannel
+                "No Channel created",
+                // --> INTERNALNoContext
+                "No Context",
             };
 
 
@@ -255,7 +267,15 @@ namespace Cdmw
                 "Object does not exist",
                 // --> OBJECT_NOT_EXISTInvalidExecutor
                 "Executor does not exist",
-
+                // --> OBJECT_NOT_EXISTObjectRemoved
+                "Object is removed",
+                // --> OBJECT_NOT_EXISTInvalidObjectId
+                "Invalid Object Id",
+                // --> OBJECT_NOT_EXISTExecutorCreateFailure
+                "Executor Creation Failure",
+                // --> OBJECT_NOT_EXISTCCMObjectNotFound
+                "CCM Object Not Found",
+                
             };
 
         const char* ExceptionStrings::INV_OBJREF_reasons[] =

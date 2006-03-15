@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -160,42 +160,86 @@ int main(int argc, char** argv)
     if ( all || get_option_value(argc, argv, "--test-Thread") == "yes" )
     {
 
-        // Testing the Thread object
-        TestThreadDriver testThreadDriver;
-        testThreadDriver.start();
+        if (get_option_value(argc, argv, "--valid-only") == "yes" )
+        {
+          // Testing the Thread object but has a validation test
+          TestThreadDriver testThreadDriver(true);;
+          testThreadDriver.start();
+        }
+        else
+        {
+          // Testing the Thread object
+          TestThreadDriver testThreadDriver;
+          testThreadDriver.start();
+        }
     }
 
 
     if ( all || get_option_value(argc, argv, "--test-Mutex") == "yes" )
     {
 
-        // Testing the Mutex, MutexGuard objects
-        TestMutexThreadDriver testMutexThreadDriver;
-        testMutexThreadDriver.start();
+        if (get_option_value(argc, argv, "--valid-only") == "yes" )
+        {
+          // Testing the Mutex, MutexGuard objects but has a validation test
+          TestMutexThreadDriver testMutexThreadDriver(true);
+          testMutexThreadDriver.start();
+        }
+        else
+        {
+          // Testing the Mutex, MutexGuard objects
+          TestMutexThreadDriver testMutexThreadDriver;
+          testMutexThreadDriver.start();
+        }
     }
 
     if ( all || get_option_value(argc, argv, "--test-Condition") == "yes" )
     {
-
-        // Testing the Condition object
-        TestConditionDriver testConditionDriver;
-        testConditionDriver.start();
+        if (get_option_value(argc, argv, "--valid-only") == "yes" )
+        {
+          // Testing the Condition object but has a validation test
+          TestConditionDriver testConditionDriver(true);
+          testConditionDriver.start();
+        }
+        else
+        {
+          // Testing the Condition object
+          TestConditionDriver testConditionDriver;
+          testConditionDriver.start();
+        }
     }
 
     if ( all || get_option_value(argc, argv, "--test-Lock") == "yes" )
     {
 
-        // Testing the ReaderWriterLock, ReaderWriterLockGuard objects
-        TestReaderWriterLockDriver testReaderWriterLockDriver;
-        testReaderWriterLockDriver.start();
+        if (get_option_value(argc, argv, "--valid-only") == "yes" )
+        {
+          // Testing the ReaderWriterLock, ReaderWriterLockGuard objects but has a validation test
+          TestReaderWriterLockDriver testReaderWriterLockDriver(true);
+          testReaderWriterLockDriver.start();
+        }
+        else
+        {
+          // Testing the ReaderWriterLock, ReaderWriterLockGuard objects
+          TestReaderWriterLockDriver testReaderWriterLockDriver;
+          testReaderWriterLockDriver.start();
+        }
     }
 
     if ( all || get_option_value(argc, argv, "--test-Barrier") == "yes" )
     {
 
-        // Testing the Barrier object
-        TestBarrierDriver testBarrierDriver;
-        testBarrierDriver.start();
+        if (get_option_value(argc, argv, "--valid-only") == "yes" )
+        {
+          // Testing the Barrier object
+          TestBarrierDriver testBarrierDriver(true);
+          testBarrierDriver.start();
+        }
+        else
+        {
+          // Testing the Barrier object
+          TestBarrierDriver testBarrierDriver;
+          testBarrierDriver.start();
+        }
     }
 
 }

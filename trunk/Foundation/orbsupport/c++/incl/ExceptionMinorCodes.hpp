@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -129,9 +129,9 @@ namespace Cdmw
             BAD_PARAMInvalidExecutorName = 38 | CDMW_VMCID,
             BAD_PARAMInvalidComponentExecutor = 39 | CDMW_VMCID,
             BAD_PARAMInvalidLocation = 40 | CDMW_VMCID,
-            BAD_PARAMInvalidConfigValues = 41 | CDMW_VMCID
-
-
+            BAD_PARAMInvalidConfigValues = 41 | CDMW_VMCID,
+            BAD_PARAMIncompatibleMonitoringInterval = 42 | CDMW_VMCID,
+            BAD_PARAMIncompatibleMonitoringTimeout = 43 | CDMW_VMCID
         };
 
 
@@ -169,7 +169,11 @@ namespace Cdmw
             INTERNALIncompleteLocationInfo         = 27 | CDMW_VMCID,
             INTERNALUnexpectedLocInfoState         = 28 | CDMW_VMCID,
             INTERNALNullObjGroupCtxtPtr            = 29 | CDMW_VMCID,
-            INTERNALLoadBalancingError             = 30 | CDMW_VMCID
+            INTERNALLoadBalancingError             = 30 | CDMW_VMCID,
+            INTERNALComponentInvalidName           = 31 | CDMW_VMCID,
+            INTERNALNoChannel                      = 32 | CDMW_VMCID,
+            INTERNALNoContext                      = 33 | CDMW_VMCID,
+
         };
 
 
@@ -222,7 +226,11 @@ namespace Cdmw
         */
         enum OBJECT_NOT_EXISTMinorCodes {
             OBJECT_NOT_EXIST = 0 | CDMW_VMCID,
-            OBJECT_NOT_EXISTInvalidExecutor = 1 | CDMW_VMCID
+            OBJECT_NOT_EXISTInvalidExecutor = 1 | CDMW_VMCID,
+            OBJECT_NOT_EXISTObjectRemoved = 2 | CDMW_VMCID,
+            OBJECT_NOT_EXISTInvalidObjectId = 3 | CDMW_VMCID,
+            OBJECT_NOT_EXISTExecutorCreateFailure = 4 | CDMW_VMCID,
+            OBJECT_NOT_EXISTCCMObjectNotFound = 5 | CDMW_VMCID,
         };
 
         /**

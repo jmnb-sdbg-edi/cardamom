@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -64,7 +64,17 @@ namespace Cdmw
 
         TestOrbSupportDriver::TestOrbSupportDriver(const std::string& process_name)
                 : Testable("Cdmw::OrbSupport"),
-                m_process_name(process_name)
+                  m_process_name(process_name),
+                  m_valid_only(false)
+        {
+            // Nothing to do
+        }
+
+        TestOrbSupportDriver::TestOrbSupportDriver(const std::string& process_name,
+                                                   bool valid_only)
+                : Testable("Cdmw::OrbSupport"),
+                  m_process_name(process_name),
+                  m_valid_only(valid_only)
         {
             // Nothing to do
         }
@@ -79,7 +89,7 @@ namespace Cdmw
         void
         TestOrbSupportDriver::do_port_number_test(CORBA::ORB_ptr orb)
         {
-            add_nbOfRequestedTestOK (4);
+            add_nbOfRequestedTestOK (7);
 
             try
             {
@@ -97,7 +107,6 @@ namespace Cdmw
 
                 serverMT->compute_square(5);
                 TEST_SUCCEED();
-
             }
             catch (CORBA::Exception& e)
             {
@@ -106,9 +115,9 @@ namespace Cdmw
                 TEST_INFO(OrbSupport::exception_to_string(e));
             }
 
+            std::stringstream serverSTCorbaloc;
             try
             {
-                std::stringstream serverSTCorbaloc;
                 serverSTCorbaloc << "corbaloc::localhost:"
                 << TestOrbSupportServerProcess::SERVER_ST_PORT
                 << "/"
@@ -123,6 +132,13 @@ namespace Cdmw
                 serverST->compute_square(5);
                 TEST_SUCCEED();
 
+                TEST_INFO("Remove the corbaloc binding (on server process)");
+                serverST->remove_binding();
+                TEST_SUCCEED();
+                TEST_INFO("Check contact of single-threaded server via object is still ok");
+                serverST->compute_square(5);
+                TEST_SUCCEED();
+
             }
             catch (CORBA::Exception& e)
             {
@@ -130,6 +146,20 @@ namespace Cdmw
                 TEST_INFO("Exception: ");
                 TEST_INFO(OrbSupport::exception_to_string(e));
             }
+
+            try
+            {
+                TEST_INFO("Check that corbaloc can't be used after remove");
+                CORBA::Object_var objST = orb->string_to_object( serverSTCorbaloc.str().c_str() );
+                CdmwTest::TestOrbSupportServer_var serverST =
+                    CdmwTest::TestOrbSupportServer::_narrow( objST.in() );
+                TEST_FAILED();
+            }
+            catch (CORBA::Exception& e)
+            {
+                TEST_SUCCEED();
+            }
+
         }
 
 
@@ -281,7 +311,8 @@ namespace Cdmw
         throw()
         {
             // add number of requested successfull tests
-            add_nbOfRequestedTestOK (6);
+            if (m_valid_only) add_nbOfRequestedTestOK (3);
+            else add_nbOfRequestedTestOK (6);
 
 
             const std::string IOR_MT_FILE = "SupportServerMT.ior";
@@ -360,25 +391,33 @@ namespace Cdmw
                 CdmwTest::TestOrbSupportServer::_narrow( objST.in() );
             TEST_CHECK( ! CORBA::is_nil(serverST.in()) );
 
-            TEST_INFO("Extract the repository_id from the multi-thread server ref");
-            std::string repository_id = OrbSupport::get_repository_id_from_ior(orb.in(), serverMT.in());
-            TEST_INFO("repository_id "<<repository_id);
-            TEST_CHECK(repository_id == "IDL:CdmwTest/TestOrbSupportServer:1.0");
+            if (!m_valid_only)
+            {
+                TEST_INFO("Extract the repository_id from the multi-thread server ref");
+                std::string repository_id = OrbSupport::get_repository_id_from_ior(orb.in(), serverMT.in());
+                TEST_INFO("repository_id "<<repository_id);
+                TEST_CHECK(repository_id == "IDL:CdmwTest/TestOrbSupportServer:1.0");
 
-            TEST_INFO( "Invoking a method on the server Multi-thread" );
-            CORBA::Long resultMT = serverMT->compute_square(5);
-            TEST_CHECK( resultMT == 25 );
+                TEST_INFO( "Invoking a method on the server Multi-thread" );
+                CORBA::Long resultMT = serverMT->compute_square(5);
+                TEST_CHECK( resultMT == 25 );
 
-            TEST_INFO( "Invoking a method on the server Single-thread" );
-            CORBA::Long resultST = serverST->compute_square(5);
-            TEST_CHECK( resultST == 25 );
+                TEST_INFO( "Invoking a method on the server Single-thread" );
+                CORBA::Long resultST = serverST->compute_square(5);
+                TEST_CHECK( resultST == 25 );
+            }
 
             // Check if the server accept concurrent requests
             do_orb_multithread_tests(serverMT);
 
             // Check if the server use a thread pool limiting
             //    the number of request to be handled
-            do_orb_thread_pool_limit_tests(serverMT);
+            // No need to do this test to validate policies management :
+            // the test multi/single thread prove that policies are managed
+            if (!m_valid_only) 
+            {
+              do_orb_thread_pool_limit_tests(serverMT);
+            }
 
             // Check if the server is truely single-threaded
             do_poa_creation_tests(serverST);
@@ -425,7 +464,8 @@ namespace Cdmw
             }
 #endif
 
-            nbOfRequestedTestOK += 22;
+            //nbOfRequestedTestOK += 22;
+            nbOfRequestedTestOK += 10;
 
             TEST_INFO("Creating a strategy list");
             StrategyList strategyList;
@@ -479,118 +519,124 @@ namespace Cdmw
                 TEST_SUCCEED();
             }
 
-            TEST_INFO( "Setting the POA Threaded strategy in the list (Thread_per_request)" );
-            strategyList_2.add_PoaThreadPerRequest();
-            TEST_INFO( "Checking the POA Threaded strategy in the list" );
-            TEST_CHECK( strategyList_2.is_PoaThreadPerRequest() == true );
-
-            TEST_INFO( "Setting the POA Thread Pool strategy incompatible with the threaded" );
-
-            try
+            // No need in validation context to do other test on strategies (for policies)
+            // and to perform ORB id test : an ORB_init is done in do_orb_tests() 
+            if (!m_valid_only)
             {
+                nbOfRequestedTestOK += 12;
+
+                TEST_INFO( "Setting the POA Threaded strategy in the list (Thread_per_request)" );
                 strategyList_2.add_PoaThreadPerRequest();
-                TEST_FAILED();
-            }
-            catch ( ... )
-            {
-                TEST_SUCCEED();
-            }
+                TEST_INFO( "Checking the POA Threaded strategy in the list" );
+                TEST_CHECK( strategyList_2.is_PoaThreadPerRequest() == true );
 
-            TEST_INFO( "Setting the POA Threaded strategy in the list (Thread_per_connection)" );
-            strategyList_3.add_PoaThreadPerConnection();
-            TEST_INFO( "Checking the POA Threaded strategy in the list" );
-            TEST_CHECK( strategyList_3.is_PoaThreadPerConnection() == true );
+                TEST_INFO( "Setting the POA Thread Pool strategy incompatible with the threaded" );
 
-            TEST_INFO( "Setting the POA Thread Pool strategy incompatible with the threaded" );
+                try
+                {
+                    strategyList_2.add_PoaThreadPerRequest();
+                    TEST_FAILED();
+                }
+                catch ( ... )
+                {
+                    TEST_SUCCEED();
+                }
 
-            try
-            {
+                TEST_INFO( "Setting the POA Threaded strategy in the list (Thread_per_connection)" );
                 strategyList_3.add_PoaThreadPerConnection();
-                TEST_FAILED();
-            }
-            catch ( ... )
-            {
+                TEST_INFO( "Checking the POA Threaded strategy in the list" );
+                TEST_CHECK( strategyList_3.is_PoaThreadPerConnection() == true );
+
+                TEST_INFO( "Setting the POA Thread Pool strategy incompatible with the threaded" );
+
+                try
+                {
+                    strategyList_3.add_PoaThreadPerConnection();
+                    TEST_FAILED();
+                }
+                catch ( ... )
+                {
+                    TEST_SUCCEED();
+                }
+
+                TEST_INFO( "Trying to construct a new strategy from this one" );
+                StrategyList strategyListCopied(strategyList);
+                StrategyList strategyListCopied_2(strategyList_2);
+                TEST_INFO( "Checking the value" );
+                TEST_CHECK( strategyListCopied.is_OrbThreaded() == true );
+                TEST_CHECK( strategyListCopied.is_PoaThreadPool( nbThread ) == true );
+                TEST_CHECK( nbThread == 3 );
+                //    TEST_CHECK( strategyListCopied.is_PoaPortAssigned( poaPort ) == true );
+                //    TEST_CHECK( poaPort == 5577 );
+
+                TEST_CHECK( strategyListCopied_2.is_PoaThreadPerRequest() == true );
+
+
+
+                TEST_INFO( "Trying to assign a new strategy from this one" );
+                StrategyList strategyListAssigned;
+                StrategyList strategyListAssigned_2;
+                strategyListAssigned = strategyList;
+                strategyListAssigned_2 = strategyList_2;
+
+                TEST_INFO( "Checking the value" );
+                TEST_CHECK( strategyListAssigned.is_OrbThreaded() == true );
+                TEST_CHECK( strategyListAssigned.is_PoaThreadPool( nbThread ) == true );
+                TEST_CHECK( nbThread == 3 );
+                //    TEST_CHECK( strategyListAssigned.is_PoaPortAssigned( poaPort ) == true );
+                //    TEST_CHECK( poaPort == 5577 );
+
+                TEST_CHECK( strategyListAssigned_2.is_PoaThreadPerRequest() == true );
+            
+
+                nbOfRequestedTestOK += 9;
+
+                StrategyList strategies;
+                strategies.add_OrbThreaded();
+                strategies.add_PoaThreadPool(5);
+                int timescale = Cdmw::TestUtils::Testable::get_timescale();
+
+                int argc_1 = 0;
+                TEST_INFO( "Checking the used of the ORBid" );
+                TEST_INFO( "Checking the used of the NULL ORBid" );
+                CORBA::ORB_var orb = OrbSupport::ORB_init(argc_1, NULL, strategies);
                 TEST_SUCCEED();
+                CORBA::ORB_var orb2 = OrbSupport::ORB_init(argc_1, NULL, strategies);
+                TEST_SUCCEED();
+                OsSupport::OS::sleep(timescale*1000);
+                TEST_CHECK(orb.in() == orb2.in());
+
+                OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+                orb->destroy();
+
+                TEST_INFO( "Checking the used of the different ORBid" );
+                CORBA::ORB_var orb3 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test1");
+                TEST_SUCCEED();
+                CORBA::ORB_var orb4 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test2");
+                TEST_SUCCEED();
+                TEST_CHECK(orb3.in() != orb4.in());
+                OsSupport::OS::sleep(timescale*1000);
+                OrbSupport::OrbSupport::ORB_cleanup(orb3.in());
+                orb3->destroy();
+                OrbSupport::OrbSupport::ORB_cleanup(orb4.in());
+                orb4->destroy();
+
+                TEST_INFO( "Checking the used of the same  ORBid" );
+                CORBA::ORB_var orb5 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test");
+                TEST_SUCCEED();
+                CORBA::ORB_var orb6 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test");
+                TEST_SUCCEED();
+                TEST_CHECK(orb5.in() == orb6.in());
+                OsSupport::OS::sleep(timescale*1000);
+                OrbSupport::OrbSupport::ORB_cleanup(orb5.in());
+                orb5->destroy();
             }
-
-            TEST_INFO( "Trying to construct a new strategy from this one" );
-            StrategyList strategyListCopied(strategyList);
-            StrategyList strategyListCopied_2(strategyList_2);
-            TEST_INFO( "Checking the value" );
-            TEST_CHECK( strategyListCopied.is_OrbThreaded() == true );
-            TEST_CHECK( strategyListCopied.is_PoaThreadPool( nbThread ) == true );
-            TEST_CHECK( nbThread == 3 );
-            //    TEST_CHECK( strategyListCopied.is_PoaPortAssigned( poaPort ) == true );
-            //    TEST_CHECK( poaPort == 5577 );
-
-            TEST_CHECK( strategyListCopied_2.is_PoaThreadPerRequest() == true );
-
-
-
-            TEST_INFO( "Trying to assign a new strategy from this one" );
-            StrategyList strategyListAssigned;
-            StrategyList strategyListAssigned_2;
-            strategyListAssigned = strategyList;
-            strategyListAssigned_2 = strategyList_2;
-
-            TEST_INFO( "Checking the value" );
-            TEST_CHECK( strategyListAssigned.is_OrbThreaded() == true );
-            TEST_CHECK( strategyListAssigned.is_PoaThreadPool( nbThread ) == true );
-            TEST_CHECK( nbThread == 3 );
-            //    TEST_CHECK( strategyListAssigned.is_PoaPortAssigned( poaPort ) == true );
-            //    TEST_CHECK( poaPort == 5577 );
-
-            TEST_CHECK( strategyListAssigned_2.is_PoaThreadPerRequest() == true );
-
-
-            nbOfRequestedTestOK += 9;
-
-            StrategyList strategies;
-            strategies.add_OrbThreaded();
-            strategies.add_PoaThreadPool(5);
-            int timescale = Cdmw::TestUtils::Testable::get_timescale();
-
-            int argc_1 = 0;
-            TEST_INFO( "Checking the used of the ORBid" );
-            TEST_INFO( "Checking the used of the NULL ORBid" );
-            CORBA::ORB_var orb = OrbSupport::ORB_init(argc_1, NULL, strategies);
-            TEST_SUCCEED();
-            CORBA::ORB_var orb2 = OrbSupport::ORB_init(argc_1, NULL, strategies);
-            TEST_SUCCEED();
-            OsSupport::OS::sleep(timescale*1000);
-            TEST_CHECK(orb.in() == orb2.in());
-
-            OrbSupport::OrbSupport::ORB_cleanup(orb.in());
-            orb->destroy();
-
-            TEST_INFO( "Checking the used of the different ORBid" );
-            CORBA::ORB_var orb3 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test1");
-            TEST_SUCCEED();
-            CORBA::ORB_var orb4 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test2");
-            TEST_SUCCEED();
-            TEST_CHECK(orb3.in() != orb4.in());
-            OsSupport::OS::sleep(timescale*1000);
-            OrbSupport::OrbSupport::ORB_cleanup(orb3.in());
-            orb3->destroy();
-            OrbSupport::OrbSupport::ORB_cleanup(orb4.in());
-            orb4->destroy();
-
-            TEST_INFO( "Checking the used of the same  ORBid" );
-            CORBA::ORB_var orb5 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test");
-            TEST_SUCCEED();
-            CORBA::ORB_var orb6 = OrbSupport::ORB_init(argc_1, NULL, strategies, "test");
-            TEST_SUCCEED();
-            TEST_CHECK(orb5.in() == orb6.in());
-            OsSupport::OS::sleep(timescale*1000);
-            OrbSupport::OrbSupport::ORB_cleanup(orb5.in());
-            orb5->destroy();
-
-
 
             // set number of requested successfull tests
             set_nbOfRequestedTestOK (nbOfRequestedTestOK);
 
             do_orb_tests();
+
         }
 
     } // End namespace OrbSupport
