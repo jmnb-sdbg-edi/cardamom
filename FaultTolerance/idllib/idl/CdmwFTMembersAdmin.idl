@@ -1,0 +1,98 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef __CDMW_FT_MEMBERS_ADMIN_IDL__
+#define __CDMW_FT_MEMBERS_ADMIN_IDL__
+
+#include <CdmwFTCommon.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW Fault Tolerance
+* service.
+*/
+module CdmwFT {
+/**
+* This module describes local interfaces and data types available for
+* a CDMW location (process).
+*/
+module Location {
+
+    /** 
+    * The MembersAdmin object manages local replicas of object groups.
+    * It represents a location for the CDMW ReplicationManager and is
+    * notified there is a group view change (a change of object group members).
+    * The meaning of a view is the same as in the virtual synchrony (Isis & co).
+    */
+    interface MembersAdmin
+    {
+        /**
+        * Updates the view of the specified object group. 
+        *
+        * @param group_info contains all the informations about the object
+        * group (id, ref, version, member locations).
+        *
+        * @exception FT::ObjectGroupNotFound if the object group cannot be
+        * found.
+        */
+        void update_group_view(in CdmwFT::GroupInfo group_info)
+            raises(FT::ObjectGroupNotFound);
+            
+        readonly attribute FT::Location the_location;
+        /** 
+	 * The location as string
+	 */
+        readonly attribute string       the_slocation;
+    }; // MembersAdmin
+
+    /** 
+    * The PrimaryBackupAdmin interface extends the MembersAdmin interface for
+    * primary/backup replication.
+    */
+    interface PrimaryBackupAdmin : MembersAdmin
+    {
+        /**
+        * Updates the view of the specified object group following a change
+        * of the primary location.
+        *
+        * @param group_info contains all the informations about the object
+        * group (id, ref, version, member locations).
+        * @param primary_location Location of the primary member.
+        *
+        * @exception FT::ObjectGroupNotFound if the object group cannot be
+        * found.
+        */
+        void update_primary(in CdmwFT::GroupInfo group_info,
+                            in FT::Location       primary_location)
+            raises(FT::ObjectGroupNotFound);
+
+    }; // PrimaryBackupAdmin
+    
+};  // Location
+};  // CdmwFT
+
+#endif // __CDMW_FT_MEMBERS_ADMIN_IDL__
+

@@ -1,0 +1,267 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef _CDMW_FT_OBJECT_GROUP_DATA_IDL_
+#define _CDMW_FT_OBJECT_GROUP_DATA_IDL_
+
+#include <CdmwFTCommon.idl>
+#include <CdmwFTRepMgrCommon.idl>
+#include <CdmwFTStateTransfer.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW Fault Tolerance
+* service.
+*/
+module CdmwFT {
+
+    /**
+    * Member state definition
+    */
+    enum MemberState {
+        /*
+        * member is created but not initialized
+        */
+        MemberState_INITIAL, 
+        
+        /*
+        * member has been updated with its primary
+        * from now, it may be elected as primary
+        */
+        MemberState_BACKUP, 
+        
+        /*
+        * member has been elected primary and eventually has retrieve 
+        * its data from a persistent file.
+        */
+        MemberState_PRIMARY, 
+        
+        /*
+        * process is down, member is failed
+        */
+        MemberState_FAILED
+	 }; // MemberState
+
+
+    /**
+    * ObjectGroup state definition
+    */
+    enum ObjectGroupState {
+        ObjectGroupState_INITIAL, 
+        ObjectGroupState_FAILED,            
+        ObjectGroupState_LOST_REDUNDANCY, 
+        ObjectGroupState_DEGRADED_REDUNDANCY,
+        ObjectGroupState_FULLY_REDUNDANT
+	 }; // ObjectGroupState
+
+
+    /*
+    * indicates the performed action implying a modification of the datastore.
+    */
+    enum LastEvent {
+        /**
+        * a member has been removed from the group
+        */
+        EVT_REMOVE_MEMBER,
+        
+        /**
+        * a new primary has been elected
+        */
+        EVT_SET_NEW_PRIMARY,
+        
+        /**
+        * a member has been added to the group.
+        */
+        EVT_ADD_MEMBER,
+        
+        /**
+        * a group has been created.
+        */
+        EVT_CREATE_GROUP,
+                        
+        /**
+        * fallback reference has been updated.
+        */
+        EVT_UPDATE_FALLBACK,
+        
+        /*
+        * backup insertion failure
+        */
+        EVT_BACKUP_INSERTION_FAILURE
+        
+    }; // LastEvent
+    
+            
+    /*
+    * information concerning performed action which has modified the datastore.
+    */
+    struct LastEventInfo {
+        /**
+        * last action type
+        */
+        LastEvent    last_event;
+        
+        /**
+        * location can be a removed location, added location or elected location
+        * or failed location
+        */
+        ::FT::Location  the_location;
+        
+        /**
+        * context of the event (that is client request). It contains client_id, retention_id
+        * and expiration_time.
+        */
+        ::FT::FTRequestServiceContext event_context;
+    }; // LastEventInfo
+    
+    /*
+    * Overall information concerning member stored in the replication manager
+    */
+    typedef sequence<LastEventInfo> LastEventInfos;
+            
+    /*
+    * Overall information concerning member stored in the replication manager
+    */
+    struct MemberOverallInfo {
+
+        /**
+         * Local identifier allocated by the rep. mgr. to this member.
+         */
+        long           local_id;
+
+        /**
+        * Object reference of the member
+        */
+        Object         the_reference;
+        
+        /**
+        * Location of the member
+        */
+        ::FT::Location the_location;
+        
+        /**
+        * State of the member
+        */
+		    MemberState    the_state;
+        
+        /**
+        * State of the generated state machine 
+        */
+		    MemberState    the_internal_fsm_state;
+        
+    }; // MemberOverallInfo
+  
+    typedef sequence<MemberOverallInfo> MemberOverallInfos;
+  
+    enum GroupStateness {
+        GroupStateness_STATELESS,
+        GroupStateness_STATEFULL
+    };
+
+    
+    /** 
+    * This structure holds basic information for an object group data.
+    */
+    struct ObjectGroupData {
+
+        /**
+         * Group alias: optional member, may be empty
+         */
+        string                         alias;
+
+        /**
+         * Repository ID
+         */
+        string                         repository_id;
+        
+        /**
+         * Statefull group
+         */
+        GroupStateness                 stateness;
+
+        /**
+        * State of the group as defined in the enum above
+        */
+		    ObjectGroupState               state;
+        
+        /**
+        * State as internally defined by the sm compiler
+        */
+		    long                           fsm_internal_state;
+
+        /**
+         * The object group ID
+         */
+        ::FT::ObjectGroupId            group_id;
+
+        /**
+         * Interoperable Object Group Reference (IOGR)
+         */
+        ::FT::ObjectGroup              object_group_ref;
+        
+        /**
+         * Version of the Object Group
+         */
+        ::FT::ObjectGroupRefVersion    object_group_ref_version;
+        
+        /**
+         * Minimum number of replicas: is also available in the 
+         * dynamic_properties sequence.
+         */
+        long                           min_nb_replicas;
+        
+        /**
+         * A sequence of (reference,location) for all group members
+         */
+        ::CdmwFT::MemberOverallInfos   members;
+
+        /**
+         * creation properties
+         */
+        ::FT::Properties               creation_properties;
+        
+        /**
+         * dynamic properties
+         */
+        ::FT::Properties               dynamic_properties;
+        
+        /**
+         * Identifiers of used DataStore
+         */
+        ::CdmwFT::StateTransfer::DataStoreIDs data_store_ids;
+        
+        /**
+         * informations of last action involved in the update of the datastore
+         */
+        ::CdmwFT::LastEventInfos       last_event;
+
+      // the object used the reply logging and it is initialised
+      boolean             init_reply_logging;
+
+    };
+};
+
+#endif // _CDMW_FT_OBJECT_GROUP_DATA_IDL_

@@ -1,7 +1,0 @@
-V1.Op4 : PCR-0022 Problem in the get_processes method in the SystemMngt: 
-				  incrementation of the list was badly encoded,
-				  and the number of requisit process was not readjust is the number of process was lower
-
-V1.0p1 : PCR-0001 CARDAMOM Application Agent does not return 
-                  the application name
-V1.0   : initial revision

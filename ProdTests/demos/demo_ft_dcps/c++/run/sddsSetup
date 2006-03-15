@@ -1,3 +1,0 @@
-unset LD_ASSUME_KERNEL
-SPLICE_DDS_URI=file:///home/tnnl01/splice_default.xml
-export SPLICE_DDS_URI

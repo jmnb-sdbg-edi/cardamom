@@ -1,7 +1,0 @@
-Dinner:com.acme.Dinner
-UserDinner:com.thalesgroup.UserDinner
-CdmwLifeCycle:com.thalesgroup.CdmwLifeCycle
-CdmwCcmCif:com.thalesgroup.CdmwCcmCif
-CosLifeCycle:org.omg.CosLifeCycle
-Components:org.omg.Components
-Cdmw_Dinner:com.thalesgroup.Cdmw_Dinner

@@ -1,2 +1,0 @@
-Cdmw_HelloModule:com.thalesgroup.Cdmw_HelloModule
-HelloModule:com.thalesgroup.HelloModule

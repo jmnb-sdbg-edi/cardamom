@@ -1,4 +1,0 @@
-install_assembly @prefix@/@cdmw_platform@/Dinner.aar
-create_assembly DinnerAssembly myAssembly
-build_assembly myAssembly
-

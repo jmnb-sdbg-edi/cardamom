@@ -1,0 +1,116 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
+ * 
+ * Copyright (C) THALES 2004-2005. All rights reserved
+ * 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
+ * 
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*/
+/* ===================================================================== */
+
+
+#ifndef __CDMW_FT_CURRENT_IDL__
+#define __CDMW_FT_CURRENT_IDL__
+
+#include <FT.idl>
+
+#pragma prefix "thalesgroup.com"
+
+/**
+* This module describes interfaces and data types of the CDMW Fault Tolerance
+* service.
+*/
+
+module CdmwFT {
+    /**
+    * This local interface provides access to request context information 
+    * (domain_id, group_id, group_version, client_id, retention_id
+    * and expiration_time). 
+    * Applications can retrieve its object reference by calling
+    * ORB::resolve_initial_references("FTCurrent").
+    */
+    local interface Current : CORBA::Current {
+       /**
+        * Exception raised when an operation on FT Current is called outside the context of
+        * an FT operation. A FT operation is CORBA request invoked on a group reference.
+        */
+        exception NoContext { };
+        
+        /**
+        * Returns the domain ID extracted from TAO's FT_GROUP_VERSION service context
+        *
+        * @param 
+        *
+        * @throws NoContext if called outside the context of a FT operation,
+        */
+        ::FT::FTDomainId get_ft_domain_id()
+            raises(NoContext);
+
+        /**
+        * Returns the group ID extracted from TAO's FT_GROUP_VERSION service context
+        *
+        * @param 
+        *
+        * @throws NoContext if called outside the context of a FT operation,
+        */
+        ::FT::ObjectGroupId get_object_group_id()
+            raises(NoContext);
+
+        /**
+        * Returns the group version extracted from FT_GROUP_VERSION service context
+        *
+        * @param 
+        *
+        * @throws NoContext if called outside the context of a FT operation,
+        */
+        ::FT::ObjectGroupRefVersion get_object_group_ref_version()
+            raises(NoContext);
+
+        /**
+        * Returns the group ID extracted from FT_REQUEST service context
+        *
+        * @param 
+        *
+        * @throws NoContext if called outside the context of a FT operation,
+        */
+        string get_client_id()
+            raises(NoContext);
+
+        /**
+        * Returns the retention ID extracted from FT_REQUEST service context
+        *
+        * @param 
+        *
+        * @throws NoContext if called outside the context of a FT operation,
+        */
+        long get_retention_id()
+            raises(NoContext);
+
+        /**
+        * Returns the expiration time extracted from FT_REQUEST service context
+        *
+        * @param 
+        *
+        * @throws NoContext if called outside the context of a FT operation,
+        */
+        ::TimeBase::TimeT get_expiration_time()
+            raises(NoContext);
+    };
+};
+
+#endif // __CDMW_FT_CURRENT_IDL__
+
