@@ -1,4 +1,0 @@
-CommonDemo:com.acme.CommonDemo
-BasicDemo:com.acme.BasicDemo
-UserBasicDemo:com.thalesgroup.UserBasicDemo
-Cdmw_BasicDemo:com.thalesgroup.Cdmw_BasicDemo

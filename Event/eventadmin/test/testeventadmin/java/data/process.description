@@ -1,7 +1,0 @@
-PROCESS_NAME=PROCESS
-XML_FILE=Server.xml
-PROCESS_PORT=15300
-PROGRAM=cdmw_event_channel_manager
-ADD_ARGS=--ProfileXMLFile=EventChannelConf.xml
-LOCALISATION_SERVICE_PORT=15228
-
