@@ -1,3 +1,0 @@
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:@cdmw_home@/lib/c++
-export PATH=$PATH:@cdmw_home@/bin
-cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21869/CdmwPlatformMngtSupervision --proc-stop CcmLbApplication2 ServerProcess21 @hostname2val@

@@ -1,5 +1,0 @@
-verbose
-install_assembly @config.install.dir@/share/QualifCcmLbFT.aar
-create_assembly CcmLbAssemblyFT myAssembly
-build_assembly myAssembly
-exit

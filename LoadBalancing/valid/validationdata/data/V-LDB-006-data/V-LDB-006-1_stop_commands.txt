@@ -1,7 +1,0 @@
-verbose
-tear_assembly_down myAssembly
-destroy_assembly myAssembly
-remove_assembly CcmLbAssembly
-remove_component Client 1,0,0,0
-remove_component ServerWithFacet 1,0,0,0
-exit
