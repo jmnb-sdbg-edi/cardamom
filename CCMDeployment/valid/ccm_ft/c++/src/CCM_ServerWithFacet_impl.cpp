@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -65,12 +65,12 @@ CcmFtTest::CCM_ServerWithFacet_impl::expectedClientHostname(const char* a)
 //
 // facet serverHostInfo
 //
-CcmFtTest::CCM_HostInfo_ptr 
+CcmFtTest::FacetModule::CCM_HostInfo_ptr 
 CcmFtTest::CCM_ServerWithFacet_impl::get_serverHostInfo ()
     throw (CORBA::SystemException)
 {
     std::cout << "   ... CCM_ServerWithFacet_impl::get_serverHostInfo()" << std::endl; 
-    return CcmFtTest::CCM_HostInfo::_duplicate(this);
+    return CcmFtTest::FacetModule::CCM_HostInfo::_duplicate(this);
 }
 
 char*
@@ -92,7 +92,7 @@ CcmFtTest::CCM_ServerWithFacet_impl::set_session_context(Components::SessionCont
 {
     std::cout << "   ... CCM_ServerWithFacet_impl::Set_session_context called!" << std::endl;
    
-    m_session_context = ::CcmFtTest::CCM_ServerWithFacet_Context::_narrow(ctx); 
+    m_session_context = ::CcmFtTest::ServerModule::CCM_ServerWithFacet_Context::_narrow(ctx); 
 }
 
 

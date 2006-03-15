@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -63,6 +63,7 @@
             + "-initialize"
             + "-run-package-selection"
             + "-configure-interfaces"
+            + "-configure-traces"
             + "-configure-install-dir"
             + "-locate-cscis"
             + "-check-csci-versions"
@@ -77,7 +78,8 @@
     -->
     <target name="-configure"
             depends="-initialize, -run-package-selection,
-                     -configure-interfaces, -configure-install-dir,
+                     -configure-interfaces, -configure-traces,
+                     -configure-install-dir,
                      -locate-cscis, -check-csci-versions, -configure-tools,
                      -configure-dcps, -create-lowercase-product-name,
                      -create-tokens-properties, -save-configuration,
@@ -572,7 +574,7 @@
         <!-- ask about the shared libraries -->
 
         <!-- find out if the default values are available -->
-        <propertycopy property="cb.prev.cfg.cpp.shared" silent="true"
+<!--        <propertycopy property="cb.prev.cfg.cpp.shared" silent="true"
                       from="${mb.prev}.config.cpp.shared"/>
 
         <var name="s" value="Do you want to compile SHARED libraries ? "/>
@@ -580,7 +582,7 @@
         <if>
             <isset property="cb.prev.cfg.cpp.shared"/>
             <then>
-                <!-- we have default values -->
+                we have default values 
                 <if>
                     <isfalse value="${passive.mode}"/>
                     <then>
@@ -594,11 +596,16 @@
                     </else>
                 </if>
             </then>
-            <else> <!-- no default values -->
+        <else> 
+        no default values 
                 <input message="${s}" validargs="y,n"
                        addproperty="config.cpp.shared"/>
             </else>
-        </if>
+        </if>-->
+
+
+        <property name="config.cpp.shared"
+            value="y"/>
 
         <!-- save some properties temporarily -->
      <if>
@@ -610,37 +617,50 @@
        </then>
      </if>
 
-        <!-- ask about the optimisation flags -->
-
-        <!-- find out if the default values are available -->
-        <propertycopy property="cb.prev.cfg.cpp.optim" silent="true"
-                      from="${mb.prev}.config.cpp.optim"/>
-
-        <var name="s" value="Do you want to compile with the optimisation flags? "/>
-
+        <!-- check gcov option -->
         <if>
-            <isset property="cb.prev.cfg.cpp.optim"/>
+            <istrue value="${generate.gcov.infos}"/>
             <then>
-                <!-- we have default values -->
+                <property name="config.cpp.gcov" value="y"/>
+                <!-- gcov is not compatible with optimisation. Set not optimisation without asking -->
+                <echo>Do you want to compile with the optimisation flags? (y,n)</echo>
+                <echo> n  (gcov usage is not compatible with optimisation)</echo>
+                <property name="config.cpp.optim" value="n"/>
+            </then>
+            <else>
+                <property name="config.cpp.gcov" value="n"/>
+                
+                <!-- ask about the optimisation flags -->
+                <!-- find out if the default values are available -->
+                <propertycopy property="cb.prev.cfg.cpp.optim" silent="true"
+                              from="${mb.prev}.config.cpp.optim"/>
+        
+                <var name="s" value="Do you want to compile with the optimisation flags? "/>
+        
                 <if>
-                    <isfalse value="${passive.mode}"/>
+                    <isset property="cb.prev.cfg.cpp.optim"/>
                     <then>
-                        <xinput message="${s}" validargs="y,n"
-                                addproperty="config.cpp.optim"
-                                default="${cb.prev.cfg.cpp.optim}"/>
+                        <!-- we have default values -->
+                        <if>
+                            <isfalse value="${passive.mode}"/>
+                            <then>
+                                <xinput message="${s}" validargs="y,n"
+                                        addproperty="config.cpp.optim"
+                                        default="${cb.prev.cfg.cpp.optim}"/>
+                            </then>
+                            <else>
+                                <propertycopy property="config.cpp.optim"
+                                              from="cb.prev.cfg.cpp.optim"/>
+                            </else>
+                        </if>
                     </then>
-                    <else>
-                        <propertycopy property="config.cpp.optim"
-                                      from="cb.prev.cfg.cpp.optim"/>
+                    <else> <!-- no default values -->
+                        <input message="${s}" validargs="y,n"
+                               addproperty="config.cpp.optim"/>
                     </else>
                 </if>
-            </then>
-            <else> <!-- no default values -->
-                <input message="${s}" validargs="y,n"
-                       addproperty="config.cpp.optim"/>
             </else>
         </if>
-
         <!-- save some properties temporarily -->
      <if>
      <not> <isset property="is.needed.tools"/> </not>
@@ -720,6 +740,72 @@
     </target>
 
 
+    <!-- =======================================================================
+        The "-configure-traces" target asks the user whether he wants the
+        traces to be inhibited.
+    -->
+    <target name="-configure-traces">
+
+        <!-- find out if the default values are available -->
+        <propertycopy property="cb.prev.config.traces.level" silent="true"
+                      from="${mb.prev}.config.traces.level"/>
+        <propertycopy property="cb.prev.config.call.traces.inhibited" silent="true"
+                      from="${mb.prev}.config.call.traces.inhibited"/>
+
+        <echo>Enter the trace level you want for your CARDAMOM System" </echo>
+        <echo>    0) No trace</echo>
+        <echo>    1) Fatal traces only</echo>
+        <echo>    2) Error traces + selection 1)</echo>
+        <echo>    3) Warning traces + selection 2)</echo>
+        <echo>    4) Info traces + selection 3)</echo>
+        <echo>    5) Debug traces + selection 4)</echo>
+        <echo>    6) All : Custumer debug + selection 5)</echo>
+        <var name="s" value="Enter your choise:" />
+        <if>
+            <isset property="cb.prev.config.traces.level"/>
+            <then>
+                <xinput
+                    message="${s}"
+                    validargs="0,1,2,3,4,5,6"
+                    addproperty="config.traces.level"
+                    default="${cb.prev.config.traces.level}"/>
+            </then>
+            <else>
+                <xinput
+                    message="${s}"
+                    validargs="0,1,2,3,4,5,6"
+                    addproperty="config.traces.level"
+                    default="6"/>
+            </else>
+        </if>
+        
+        <if>
+            <equals arg1="${config.traces.level}" arg2="6" />
+            <then>
+                <var name="s" value="Should the Call-Traces messages from"/>
+                <var name="s" value="${s} the CARDAMOM services be activated ?" />
+                <if>
+                    <isset property="cb.prev.config.call.traces.inhibited"/>
+                    <then>                       
+                        <xinput
+                            message="${s}"
+                            validargs="y,n"
+                            addproperty="config.call.traces.inhibited"
+                            default="${cb.prev.config.call.traces.inhibited}"/>
+                    </then>
+                    <else>
+                        <xinput
+                            message="${s}"
+                            validargs="y,n"
+                            addproperty="config.call.traces.inhibited"
+                            default="n"/>
+                    </else>
+                </if>
+            </then>
+        </if>
+
+    </target>
+        
     <!-- =======================================================================
         The "-configure-install-dir" target asks the user about the installation
         directory.
@@ -917,7 +1003,7 @@
 
                         <propertycopy property="cb.required.csci.version"
                                       from="require.@{cb.param.csci}.version"/>
-
+                        
                         <!-- check -->
                         <checkcsciattributes
                             my.csci.name="${cb.check.csci.name}"
@@ -1331,6 +1417,8 @@
         "config." into the site properties file.
     -->
     <target name="-save-configuration">
+
+        <property name="config.product.version" value="${product.version}"/>
         <property name="config.completed" value="true"/>
 
         <!-- create the time stamp for the configuration file -->
@@ -1514,15 +1602,31 @@
                 <isset property="config.sel.packages"/>
             </and>
             <then>
-                <findcscs pkgdesc="${cb.pkg.desc}"
-                          addProperty="cb.target.cscs"
-                          cscis="${config.sel.min.cscis}"
-                          interfaces="${config.sel.interfaces}"
-                          packages="${config.sel.packages}"
-                          validationtests="${has.validation}"
-                          integrationtests="${has.integration}"
-                          qualificationtests="${has.qualification}"
-                />
+                <if>
+                    <istrue value="${without.unittests}" />
+                    <then>
+                        <findcscs
+                            pkgdesc="${cb.pkg.desc}"
+                            addProperty="cb.target.cscs"
+                            cscis="${config.sel.min.cscis}"
+                            interfaces="${config.sel.interfaces}"
+                            packages="${config.sel.packages}"
+                            csctype="build"
+                        />
+                    </then>
+                    <else>
+                        <findcscs
+                            pkgdesc="${cb.pkg.desc}"
+                            addProperty="cb.target.cscs"
+                            cscis="${config.sel.min.cscis}"
+                            interfaces="${config.sel.interfaces}"
+                            packages="${config.sel.packages}"
+                            validationtests="${has.validation}"
+                            integrationtests="${has.integration}"
+                            qualificationtests="${has.qualification}"
+                        />
+                    </else>
+                </if>
             </then>
         </if>
     </target>
@@ -1622,6 +1726,115 @@
         <delete file="${my.already.built.cscs}"    quiet="true"/>
         -->
         <delete file="${csci.global.dependencies}" quiet="true"/>
+    </target>
+
+
+    <!-- =======================================================================
+        The "-version" target prints the version of the product and the version 
+        of each CSCI
+
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="-version"
+            depends="-initialize">
+
+        <var name="cb.patch.level" value="00"/>
+        
+        <for list="${config.sel.min.cscis}" delimiter=" "
+            param="cb.param.csci">
+            
+            <sequential>
+                <!-- load the CSCI properties -->
+                <loadcsciproperties csci.name="@{cb.param.csci}"/>
+                
+                <propertycopy property="cb.required.csci.version"
+                    from="require.@{cb.param.csci}.version"/>
+                                
+                <selecttoken string="${cb.check.csci.version}" delimiter="p"
+                    tokenNumber="1" property="cb.csci.patch.version"/>
+                <if>
+                    <not>
+                        <equals arg1="${cb.csci.patch.version}" arg2=""/>
+                    </not>
+                    <then>
+                        <issuperior val1="${cb.csci.patch.version}" val2="${cb.patch.level}"  property="is.superior"/>
+                        <if>
+                            <istrue value="${is.superior}"/>
+                            <then>
+                                <var name="cb.patch.level" value="${cb.csci.patch.version}"/>
+                            </then>
+                        </if>
+                    </then>
+                </if>
+                
+                <!-- unset properties -->
+                <propertyselector property="cb.check.props"
+                    match="^cb\.check\.(.*)" select="\1"/>
+                
+                <for list="${cb.check.props}" param="p">
+                    <sequential>
+                        <xvar name="cb.check.@{p}" unset="true"/>
+                    </sequential>
+                </for>
+                
+                <xvar name="cb.required.csci.version" unset="true"/>
+                <xvar name="cb.check.props"           unset="true"/>
+                <xvar name="cb.csci.patch.version"           unset="true"/>
+                <xvar name="is.superior" unset="true"/>
+                <callgc/>
+            </sequential>
+        </for>    
+
+        <if>
+            <equals arg1="${cb.patch.level}" arg2="00"/>
+            <then>
+                <echo>${config.product.name} version V${product.version}</echo>
+            </then>
+            <else>
+                <echo>${config.product.name} version V${product.version} Patch Level ${cb.patch.level}</echo>
+            </else>
+        </if>
+        <echo>(Platfrom :${config.site.csn}  --  Configuration time: ${config.tstamp})</echo>
+        <echo>Configuration:</echo>
+        <echo>    Interface(s) : ${config.sel.interfaces}</echo>
+        <echo>    ORB(s)       : ${config.sel.min.orbs}</echo>
+        <echo>    Package(s)   : ${config.sel.packages}</echo>
+        <echo></echo>
+        <echo></echo>
+        <echo>CSCIs versions</echo>
+        <for list="${config.sel.min.cscis}" delimiter=" "
+            param="cb.param.csci">
+            
+            <sequential>
+                <!-- load the CSCI properties -->
+                <loadcsciproperties csci.name="@{cb.param.csci}"/>
+                
+                <propertycopy property="cb.required.csci.version"
+                    from="require.@{cb.param.csci}.version"/>
+                
+                <echo>    CSCI ${cb.check.csci.name} version:</echo>
+                <echo>                                  ${cb.check.csci.version}</echo>               
+                
+                <!-- unset properties -->
+                <propertyselector property="cb.check.props"
+                    match="^cb\.check\.(.*)" select="\1"/>
+                
+                <for list="${cb.check.props}" param="p">
+                    <sequential>
+                        <xvar name="cb.check.@{p}" unset="true"/>
+                    </sequential>
+                </for>
+                
+                <xvar name="cb.required.csci.version" unset="true"/>
+                <xvar name="cb.check.props"           unset="true"/>
+                <xvar name="cb.csci.patch.version"           unset="true"/>
+                <xvar name="is.superior" unset="true"/>
+                <callgc/>
+            </sequential>
+        </for>       
+
+
     </target>
 
 

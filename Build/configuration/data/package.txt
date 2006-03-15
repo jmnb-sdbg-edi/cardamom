@@ -34,3 +34,4 @@ FT:org.omg.FT
 CdmwFT:com.thalesgroup.CdmwFT
 CORBA:org.omg.CORBA
 PortableGroup:org.omg.PortableGroup
+CosPropertyService:org.omg.CosPropertyService

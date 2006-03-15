@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -32,14 +32,14 @@
 
 
 //
-// IDL:thalesgroup.com/CcmFtTest/CCM_Client:1.0
+// IDL:thalesgroup.com/CcmFtTest/ClientModule/CCM_Client:1.0
 //
 CcmFtTest::CCM_Client_impl::CCM_Client_impl()
 	: Testable("Test CCM with Fault Tolerance - Client side"),
       m_expectedPrimaryHostname(""),
       m_expectedBackup1Hostname(""),
       m_hostnameCommandResult(""),
-      m_session_context(CcmFtTest::CCM_Client_Context::_nil()),
+      m_session_context(CcmFtTest::ClientModule::CCM_Client_Context::_nil()),
       m_testThread(this)
 {
 }
@@ -109,11 +109,11 @@ CcmFtTest::CCM_Client_impl::expectedBackup2Hostname(const char* a)
 //
 // facet clientHostInfo
 //
-CcmFtTest::CCM_HostInfo_ptr 
+CcmFtTest::FacetModule::CCM_HostInfo_ptr 
 CcmFtTest::CCM_Client_impl::get_clientHostInfo ()
     throw (CORBA::SystemException)
 {
-    return CcmFtTest::CCM_HostInfo::_duplicate(this);
+    return CcmFtTest::FacetModule::CCM_HostInfo::_duplicate(this);
 }
 
 char*
@@ -130,7 +130,7 @@ CcmFtTest::CCM_Client_impl::get_hostname()
 // consumer hostnameResults
 //
 void 
-CcmFtTest::CCM_Client_impl::push_hostnameResults (CcmFtTest::HostnameResult * event)
+CcmFtTest::CCM_Client_impl::push_hostnameResults (CcmFtTest::EventTypeModule::HostnameResult * event)
     throw (CORBA::SystemException)
 {
     std::cout << "   ... CCM_Client_impl::CCM_Client_impl::push_hostnameResults called with event " << event->hostname() << std::endl;
@@ -149,7 +149,7 @@ CcmFtTest::CCM_Client_impl::set_session_context(Components::SessionContext_ptr c
 {
     std::cout << "   ... CCM_Client_impl::Set_session_context called!" << std::endl;
    
-    m_session_context = ::CcmFtTest::CCM_Client_Context::_narrow(ctx); 
+    m_session_context = ::CcmFtTest::ClientModule::CCM_Client_Context::_narrow(ctx); 
 }
 
 
@@ -218,8 +218,8 @@ CcmFtTest::CCM_Client_impl::do_tests()
     try {
         TEST_INFO("Send kill command to group (only primary will stop)");    
     
-        CcmFtTest::Command_var command = new CcmFtTest::Command_impl();
-        command->commandName(CcmFtTest::COMMAND_KILL);
+        CcmFtTest::EventTypeModule::Command_var command = new CcmFtTest::Command_impl();
+        command->commandName(CcmFtTest::EventTypeModule::COMMAND_KILL);
     
         TEST_INFO("    emits command " <<  command->commandName());
         m_session_context->push_commandEmits(command.in());
@@ -239,8 +239,8 @@ CcmFtTest::CCM_Client_impl::do_tests()
     try {
         TEST_INFO("Send kill command to group (only backup1 will stop)");    
     
-        CcmFtTest::Command_var command = new CcmFtTest::Command_impl();
-        command->commandName(CcmFtTest::COMMAND_KILL);
+        CcmFtTest::EventTypeModule::Command_var command = new CcmFtTest::Command_impl();
+        command->commandName(CcmFtTest::EventTypeModule::COMMAND_KILL);
     
         TEST_INFO("    emits command " <<  command->commandName());
         m_session_context->push_commandEmits(command.in());
@@ -259,8 +259,8 @@ CcmFtTest::CCM_Client_impl::do_tests()
     try {
         TEST_INFO("Send kill command to group (last primary will stop)");    
     
-        CcmFtTest::Command_var command = new CcmFtTest::Command_impl();
-        command->commandName(CcmFtTest::COMMAND_KILL);
+        CcmFtTest::EventTypeModule::Command_var command = new CcmFtTest::Command_impl();
+        command->commandName(CcmFtTest::EventTypeModule::COMMAND_KILL);
     
         TEST_INFO("    emits command " <<  command->commandName());
         m_session_context->push_commandEmits(command.in());
@@ -277,16 +277,16 @@ CcmFtTest::CCM_Client_impl::do_tests()
         TEST_INFO("Test that group is empty");
         add_nbOfRequestedTestOK(1);
         
-        CcmFtTest::HostInfo_var hostInfo = m_session_context->get_connection_serverHostInfo();
+        CcmFtTest::FacetModule::HostInfo_var hostInfo = m_session_context->get_connection_serverHostInfo();
     
         CORBA::String_var hostname = hostInfo->get_hostname();
-        TEST_INFO("Request on empty grou succeed !! hostname: " << hostname.in());
+        TEST_INFO("Request on empty group succeed !! hostname: " << hostname.in());
         TEST_FAILED();
          
-    } catch (const CORBA::TRANSIENT& e) {
-        TEST_SUCCEED();
     } catch (const CORBA::SystemException& e) {
-        TEST_INFO("Unexpected CORBA::SystemException: " << e);
+        TEST_SUCCEED();
+    } catch (const CORBA::Exception& e) {
+        TEST_INFO("Unexpected CORBA::Exception: " << e);
         TEST_FAILED();
     }
     
@@ -302,7 +302,7 @@ CcmFtTest::CCM_Client_impl::test_connections(const char* expectedHostname)
         TEST_INFO("Test connections to ServerWithFacet group (expected primary host: " 
                   << expectedHostname << ")");    
     
-        CcmFtTest::HostInfo_var hostInfo = m_session_context->get_connection_serverHostInfo();
+        CcmFtTest::FacetModule::HostInfo_var hostInfo = m_session_context->get_connection_serverHostInfo();
 
         if (CORBA::is_nil(hostInfo.in())) {
             TEST_INFO("hostInfo is NIL !!!! ");
@@ -336,8 +336,8 @@ CcmFtTest::CCM_Client_impl::test_connections(const char* expectedHostname)
         TEST_INFO("Test connections to ServerWithEvents group (expected primary host: " 
                   << expectedHostname << ")");    
     
-        CcmFtTest::Command_var command = new CcmFtTest::Command_impl();
-        command->commandName(CcmFtTest::COMMAND_GET_HOSTNAME);
+        CcmFtTest::EventTypeModule::Command_var command = new CcmFtTest::Command_impl();
+        command->commandName(CcmFtTest::EventTypeModule::COMMAND_GET_HOSTNAME);
     
         TEST_INFO("    emits command " <<  command->commandName());
         m_session_context->push_commandEmits(command.in());

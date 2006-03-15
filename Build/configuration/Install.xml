@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -49,11 +49,13 @@
             + "-find-target-cscs"
             + "-change-permissions-on-sh-file"
             + "-create-tutorials-config-files"
+            + "-remove-perftests"
     -->
     <target name="-install-delivery"
             depends="-create-installation-directories, -run-codegen-specific-tasks,
                      -find-target-cscs, -change-permissions-on-sh-file,
-                     -create-tutorials-config-files">
+                     -create-tutorials-config-files,
+                     -remove-perftests">
     </target>
 
     <!-- =======================================================================
@@ -84,7 +86,7 @@
                      -create-setenv-sh, -update-paths">
 
         <!-- replicate the installation directory on the target hosts -->
-        <for list="1,2,3" param="n">
+        <for list="1,2,3,4,5" param="n">
             <sequential>
                 <replicatedir dir="${install.dir}" host="valid.targethost@{n}"/>
             </sequential>
@@ -107,7 +109,7 @@
                      -create-setenv-sh, -update-paths">
 
         <!-- replicate the installation directory on the target hosts -->
-        <for list="1,2,3" param="n">
+        <for list="1,2,3,4,5" param="n">
             <sequential>
                 <replicatedir dir="${install.dir}" host="integ.targethost@{n}"/>
             </sequential>
@@ -145,7 +147,7 @@
 
         <dirname file="${install.dir}" property="install.dir.dirname_"/>
         <!-- replicate the installation directory on the target hosts -->
-        <for list="1,2,3" param="n">
+        <for list="1,2,3,4,5" param="n">
             <sequential>
                 <replicatedir dir="${install.dir.dirname_}" host="qualif.targethost@{n}"/>
             </sequential>
@@ -207,88 +209,88 @@
             </or>
             <then>
                 <if>
-                    <and>
+                    <not>
                         <isset property="install.gccdir"/>
-                        <isset property="install.makedir"/>
-                        <isset property="install.binutilsdir"/>
-                    </and>
+                    </not>
                     <then>
-                        <!-- check if the specific directory exist -->
-                        <available file="${install.gccdir}" type="dir" property="install.gccdir.ok"/>
-                        <available file="${install.makedir}" type="dir" property="install.makedir.ok"/>
-                        <available file="${install.binutilsdir}" type="dir" property="install.binutilsdir.ok"/>
-                        <if>
-                            <not>
-                                <equals arg1="${install.gccdir}" arg2="none"/>
-                            </not>
-                            <then>
-                                <if>
-                                    <isset property="install.gccdir.ok"/>
-                                    <then>                                
-                                        <property name="gcc.install.dir" value="${install.gccdir}"/>
-                                        <property name="config.GCC.install.dir" value="${install.gccdir}"/>
-                                    </then>
-                                    <else>
-                                        <fail>Bad directory for gcc</fail>
-                                    </else>
-                                </if>
-                            </then>
-                        </if>
-                        <if>
-                            <not>
-                                <equals arg1="${install.makedir}" arg2="none"/>
-                            </not>
-                            <then>
-                                <if>
-                                    <isset property="install.makedir.ok"/>
-                                    <then>                                
-                                        <property name="make.install.dir" value="${install.makedir}"/>
-                                        <property name="config.MAKE.install.dir" value="${install.makedir}"/>
-                                    </then>
-                                    <else>
-                                        <fail>Bad directory for make</fail>
-                                    </else>
-                                </if>
-                            </then>
-                        </if>
-                        <if>
-                            <not>
-                                <equals arg1="${install.binutilsdir}" arg2="none"/>
-                            </not>
-                            <then>
-                                <if>
-                                    <isset property="install.binutilsdir.ok"/>
-                                    <then>                                
-                                        <property name="binutils.install.dir" value="${install.binutilsdir}"/>
-                                        <property name="config.BINUTILS.install.dir" value="${install.binutilsdir}"/>
-                                    </then>
-                                    <else>
-                                        <fail>Bad directory for binutils</fail>
-                                    </else>
-                                </if>
-                            </then>
-                        </if>
+                        <property name="install.gccdir" value="none"/>
                     </then>
-                    <else>
-                        <!-- invalid or missing options -->
+                </if>
+                <if>
+                    <not>
+                        <isset property="install.makedir"/>
+                    </not>
+                    <then>
+                        <property name="install.makedir" value="none"/>
+                    </then>
+                </if>
+                <if>
+                    <not>
+                        <isset property="install.binutilsdir"/>
+                    </not>
+                    <then>
+                        <property name="install.binutilsdir" value="none"/>
+                    </then>
+                </if>
+
+                <!-- check if the specific directory exist -->
+                <available file="${install.gccdir}" type="dir" property="install.gccdir.ok"/>
+                <available file="${install.makedir}" type="dir" property="install.makedir.ok"/>
+                <available file="${install.binutilsdir}" type="dir" property="install.binutilsdir.ok"/>
+                <if>
+                    <not>
+                        <equals arg1="${install.gccdir}" arg2="none"/>
+                    </not>
+                    <then>
                         <if>
-                            <isset property="is.install.binary"/>
-                            <then>
-                                <var name="s" value="install-binary options:"/>                       
+                            <isset property="install.gccdir.ok"/>
+                            <then>                                
+                                <property name="gcc.install.dir" value="${install.gccdir}"/>
+                                <property name="config.GCC.install.dir" value="${install.gccdir}"/>
                             </then>
                             <else>
-                                <var name="s" value="install-qualif options:"/>           
+                                <fail>Bad directory for gcc</fail>
                             </else>
                         </if>
-                        <var name="s" value="${s} gccdir=[install_dir|none]"/>
-                        <var name="s" value="${s} makedir=[install_dir|none]"/>
-                        <var name="s" value="${s} binutilsdir=[install_dir|none]"/>
-                        <fail>${s}</fail>
-                    </else>
+                    </then>
+                </if>
+                <if>
+                    <not>
+                        <equals arg1="${install.makedir}" arg2="none"/>
+                    </not>
+                    <then>
+                        <if>
+                            <isset property="install.makedir.ok"/>
+                            <then>                                
+                                <property name="make.install.dir" value="${install.makedir}"/>
+                                <property name="config.MAKE.install.dir" value="${install.makedir}"/>
+                            </then>
+                            <else>
+                                <fail>Bad directory for make</fail>
+                            </else>
+                        </if>
+                    </then>
+                </if>
+                <if>
+                    <not>
+                        <equals arg1="${install.binutilsdir}" arg2="none"/>
+                    </not>
+                    <then>
+                        <if>
+                            <isset property="install.binutilsdir.ok"/>
+                            <then>                                
+                                <property name="binutils.install.dir" value="${install.binutilsdir}"/>
+                                <property name="config.BINUTILS.install.dir" value="${install.binutilsdir}"/>
+                            </then>
+                            <else>
+                                <fail>Bad directory for binutils</fail>
+                            </else>
+                        </if>
+                    </then>
                 </if>
             </then>
         </if>
-
+        
         <!-- check the hosts and targets -->
         <if>
             <or>
@@ -301,9 +303,17 @@
                     <and>
                         <contains string="${install.options}" substring="host1="/>
                         <contains string="${install.options}" substring="host2="/>
-                        <contains string="${install.options}" substring="targethost1="/>
                     </and>
-                    <then>
+                    <then>                       
+                        <if>
+                            <not>
+                                <contains string="${install.options}" substring="targethost"/>
+                            </not>
+                            <then>
+                                <echo>The same host will be used for the installation</echo>
+                                <property name="host.as.targethost" value="yes"/>
+                            </then>
+                        </if>
                         <for list="${install.options}" param="option" delimiter=" ">
                             <sequential>
                                 <!-- name of the option -->
@@ -320,17 +330,35 @@
                                     <isset property="is.install.valid"/>
                                     <then>
                                         <property name="valid.${opt}" value="${host}"/>
+                                        <if>
+                                            <isset property="host.as.targethost"/>
+                                            <then>
+                                                <property name="valid.target${opt}" value="${host}"/>
+                                            </then>
+                                        </if>
                                     </then>
                                     <elseif>
                                         <isset property="is.install.integ"/>
                                         <then>
                                             <property name="integ.${opt}" value="${host}"/>
+                                            <if>
+                                                <isset property="host.as.targethost"/>
+                                                <then>
+                                                    <property name="integ.target${opt}" value="${host}"/>
+                                                </then>
+                                            </if>
                                         </then>
-                                    </elseif>
+                                   </elseif>
                                     <elseif>
                                         <isset property="is.install.qualif"/>
                                         <then>
                                             <property name="qualif.${opt}" value="${host}"/>
+                                            <if>
+                                                <isset property="host.as.targethost"/>
+                                                <then>
+                                                    <property name="qualif.target${opt}" value="${host}"/>
+                                                </then>
+                                            </if>
                                         </then>
                                     </elseif>
                                 </if>
@@ -340,7 +368,7 @@
                                 <xvar name="host" unset="true"/>
                             </sequential>
                         </for>
-                        
+
                         <echoproperties prefix="valid."/>
                         
                         <!-- define token values for configuration files -->
@@ -392,9 +420,13 @@
                         <var name="s" value="${s} host1=xmlhostname1"/>
                         <var name="s" value="${s} host2=xmlhostname2"/>
                         <var name="s" value="${s} [host3=xmlhostname3]"/>
-                        <var name="s" value="${s} targethost1=targethostname1"/>
+                        <var name="s" value="${s} [host4=xmlhostname4]"/>
+                        <var name="s" value="${s} [host5=xmlhostname5]"/>
+                        <var name="s" value="${s} [targethost1=targethostname1]"/>
                         <var name="s" value="${s} [targethost2=targethostname2]"/>
                         <var name="s" value="${s} [targethost3=targethostname3]"/>
+                        <var name="s" value="${s} [targethost4=targethostname4]"/>
+                        <var name="s" value="${s} [targethost5=targethostname5]"/>
                         <fail>${s}</fail>
                     </else>                   
                 </if>
@@ -420,6 +452,10 @@
                 <propertycopy property="host2val" from="@{prefix}.host2"/>
                 <propertycopy property="host3val" from="@{prefix}.host3"
                               silent="true"/>
+                <propertycopy property="host4val" from="@{prefix}.host4"
+                              silent="true"/>
+                <propertycopy property="host5val" from="@{prefix}.host5"
+                              silent="true"/>
 
                 <propertyfile file="@{file}">
                     <entry key="hostname1val" value="${host1val}"/>
@@ -435,10 +471,29 @@
                     </then>
                 </if>
 
+                <if>
+                    <isset property="host4val"/>
+                    <then>
+                        <propertyfile file="@{file}">
+                            <entry key="hostname4val" value="${host4val}"/>
+                        </propertyfile>
+                    </then>
+                </if>
+                <if>
+                    <isset property="host5val"/>
+                    <then>
+                        <propertyfile file="@{file}">
+                            <entry key="hostname5val" value="${host5val}"/>
+                        </propertyfile>
+                    </then>
+                </if>
+
                 <!-- unset properties -->
                 <xvar name="host1val" unset="true"/>
                 <xvar name="host2val" unset="true"/>
                 <xvar name="host3val" unset="true"/>
+                <xvar name="host4val" unset="true"/>
+                <xvar name="host5val" unset="true"/>
             </sequential>
         </macrodef>
 
@@ -591,6 +646,17 @@
                       casesensitive="true"/>
             <then>
                 <mkdir dir="${install.dir}${FS}include${FS}c++"/>
+                <for list="TAOOpenFusion" param="cpp.orb">
+                    <sequential>
+                        <if>
+                            <contains string="${config.sel.min.orbs}"
+                                      substring="@{cpp.orb}"/>
+                            <then>
+                                <mkdir dir="${install.dir}${FS}include${FS}c++${FS}@{cpp.orb}"/>
+                            </then>
+                        </if>
+                    </sequential>
+                </for>
             </then>
         </if>
 
@@ -909,8 +975,9 @@
                          param="file" inheritall="true" delimiter="; "/>
             </case>
             <case value="JacORB">
+                <dirname file="${config.JacORB.install.dir}" property="config.JacORB.install.dir.dirname"/>
                 <xexec executable="rcp" showCmd="true">
-                    <arg line="-r localhost:${config.JacORB.install.dir}"/>            
+                    <arg line="-r localhost:${config.JacORB.install.dir.dirname}"/>            
                     <arg value="${install.tools.dir}"/>
                 </xexec>
             </case>
@@ -920,9 +987,8 @@
                     <arg value="${install.tools.dir}"/>
                 </xexec>
             </case>
-            <case value="FtpJAVA">
-                    <echo>FtpJAVA</echo>
-            </case>            
+            <case value="Ftp">               
+            </case>
             <default>
                 <fail>unknown tool '${local-tool}'.</fail>
             </default>
@@ -1112,7 +1178,7 @@ echo " ";
     all specific path by token or by other value following the install configuration
     -->
     <target name="-custumisation-delivery-file">       
-        <echo> Custumisation files ... </echo>
+        <echo> Custumisation files into ${install.dir}... </echo>
         <findfile file="*"
                   dir="${install.dir}"
                   recursive="true"
@@ -1153,6 +1219,7 @@ echo " ";
                 </or>
             </not>
             <then>
+                <echo>file ${file}...</echo>
                 <loadfile srcFile="${file}" property="file.content"/>
                 <if>
                     <isset property="is.install.qualif"/>
@@ -1371,10 +1438,11 @@ echo " ";
         <condition property="build.install.tokens.properties.exist">
             <and>
                 <available file="${install.tokens.file}" />
-                <not><isemptyfile file="${install.tokens.file}" /></not>
+<!--                <not><isemptyfile file="${install.tokens.file}" /></not>-->
             </and>
         </condition>
         
+
         <if>
             <and>
                 <isset property="build.site.properties.exist"/>
@@ -1656,6 +1724,7 @@ echo " ";
                   findFirst="true" recursive="false"
                   property="csc.build.file"/>
 
+
         <var name="my.var" 
              value="${my.cscs.target}${FS}${config.csc.data.dir}"/>
         <var name="my.var"
@@ -1913,16 +1982,30 @@ echo " ";
     <target name="-copy-delivery" depends="-determine-information"
             if="the.delivery.is.exportable">
 
+
+        <selecttoken
+            string="${my.cscs.target}"
+            delimiter="${FS}${install.csc.owner}${FS}"
+            tokennumber="1"
+            property="bcpp.csc.path"/>
+        <selecttoken
+            string="${bcpp.csc.path}"
+            delimiter="${FS}${install.csc.lang}"
+            tokennumber="0"
+            property="bcpp.csc.path"
+            override="true"/>
+
+
         <var name="my.var" value="${install.dir}${FS}include${FS}c++"/>
         <var name="my.var" value="${my.var}${FS}${install.csc.owner}"/>
-        <var name="my.var" value="${my.var}${FS}${install.csc.name}"/>
+        <var name="my.var" value="${my.var}${FS}${bcpp.csc.path}"/>
         <property name="directory.to.install" value="${my.var}"/>
 
         <var name="my.var" value="${my.csci.location}${FS}"/>
         <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
         <var name="my.var" value="${my.var}${config.delivery.include.dir}"/>
         <var name="my.var" value="${my.var}${FS}c++${FS}${install.csc.owner}"/>
-        <var name="my.var" value="${my.var}${FS}${install.csc.name}"/>
+        <var name="my.var" value="${my.var}${FS}${bcpp.csc.path}"/>
         <property name="directory.to.copy" value="${my.var}"/>
 
         <if>
@@ -1931,6 +2014,34 @@ echo " ";
                 <copy todir="${directory.to.install}" failonerror="false">
                     <fileset dir="${directory.to.copy}"/>
                 </copy>
+                <propertycopy property="bcpp.csci.orb.ver"
+                    from="config.${install.csc.owner}.cpp.orb.ver"/>
+                <propertycopy property="bcpp.cpp.orb"
+                    from="config.${install.csc.owner}.cpp.orb"/>
+                <if>
+                    <available file="${directory.to.install}${FS}${bcpp.cpp.orb}-${bcpp.csci.orb.ver}" type="dir"/>
+                    <then>
+                        <findfile dir="${directory.to.install}${FS}${bcpp.cpp.orb}-${bcpp.csci.orb.ver}" file="*"
+                            property="bcpp.stubskels.to.export"/>
+                        <basename file="${install.dir}"
+                            property="install.dir.basename"/>
+                        <for list="${bcpp.stubskels.to.export}" delimiter=" " param="include">
+                            <sequential>
+                                <selecttoken string="@{include}" 
+                                    delimiter="${install.dir}"
+                                    tokenNumber="1" property="path.after.install.dir"/>                                
+                                <xexec executable="ln" failonerror="true"
+                                    showCmd="true " outputproperty="dummy"
+                                    vmlauncher="false">
+                                    
+                                    <arg line="-fs ..${FS}..${FS}..${FS}..${FS}${install.dir.basename}${FS}${path.after.install.dir}"/>
+                                    <arg value="${install.dir}${FS}include${FS}c++${FS}${bcpp.cpp.orb}"/>
+                                </xexec>
+                                <xvar name="path.after.install.dir"       unset="true"/>
+                            </sequential>
+                        </for>
+                    </then>
+                </if>               
             </then>
         </if>
 
@@ -2233,7 +2344,10 @@ echo " ";
         <!-- if the install.properties file exist, 
         use it to realise filterset -->
         <if>
-            <isset property="build.install.tokens.properties.exist"/>
+            <and>
+                <isset property="build.install.tokens.properties.exist"/>
+                <not><isemptyfile file="${install.tokens.file}" /></not>
+            </and>
             <then>
                 <if>
                     <or>
@@ -2810,9 +2924,22 @@ export CLASSPATH=${env.CLASSPATH}:${config.JacORB.install.dir}
             <entry key="config.interfaces" value="${config.sel.interfaces}"/>
         </propertyfile>
     </target>
+    
+    <!-- =======================================================================
+        The "-remove-perftests" target remove perftests directory from
+        the install directory.
 
+    -->
+    <target name="-remove-perftests">
+        <if>
+            <and>
+                <not><isset property="is.install.valid"/></not>
+                <not><isset property="is.install.qualif"/></not>
+            </and>
+        <then>
+            <delete dir="${install.dir}${FS}perftests"/>
+        </then>
+        </if>
+    </target>
 
 </project>
-
-
-

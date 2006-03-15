@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -45,6 +45,10 @@ import com.thalesgroup.CdmwDeployment.LBStrategyValueHelper;
  * This class represents a load balanced component group.
  */
 class LBComponentGroup extends ComponentGroup {
+
+    private static final String REPOSITORY_GROUP_MANAGER_GROUP_NAME= "lb_group_manager/object_groups";
+    private static final String GROUP_MANAGER_OBJECT_GROUP_NAME = "LBGroupManagerGroup";
+    private com.thalesgroup.CdmwNamingAndRepository.Repository repository;
 
 
     /**
@@ -271,16 +275,36 @@ class LBComponentGroup extends ComponentGroup {
                 org.omg.CORBA.Object obj = null;
                 try {
                     obj = orb.resolve_initial_references("LBGroupManager");
-                } catch (org.omg.CORBA.ORBPackage.InvalidName e) {
-                    throw new Exception(
-                        "could not resolve initial reference: LBGroupManager");
+		 } catch (org.omg.CORBA.ORBPackage.InvalidName e){
                 }
 
-                if (obj == null) {
-                    throw new Exception("invalid LBGroupManager reference");
+             if (obj == null) {
+             try {
+                        repository = cdmw.cdmwinit.InitUtils.getCdmwRepository();
+                        // Get NamingInterface to object_groups (for reading)
+                        cdmw.commonsvcs.naming.NamingInterface objGroupsInterface =
+                            cdmw.namingandrepository.RepositoryInterface.getDomainNamingInterface(REPOSITORY_GROUP_MANAGER_GROUP_NAME);
+
+                        // Get LB GroupManager Object Group
+                        obj = objGroupsInterface.resolve(GROUP_MANAGER_OBJECT_GROUP_NAME);
+                
+                    } catch (cdmw.orbsupport.CORBASystemExceptionWrapper ex) {
+                        // shouldn't happen
+                        ex.printStackTrace();
+                        cdmw.common.Assert.check(false);
+                    } catch (com.thalesgroup.CdmwNamingAndRepository.InvalidName ex) {
+                        // shouldn't happen
+                        ex.printStackTrace();
+                        cdmw.common.Assert.check(false);
+                    } catch (com.thalesgroup.CdmwNamingAndRepository.NoNameDomain ex) {
+                        // shouldn't happen
+                        ex.printStackTrace();
+                        cdmw.common.Assert.check(false);
+                    }
+
                 }
 
-                try {
+	  try {
                     TheLBGroupManager =
                         CdmwLB.LBGroupManagerHelper.narrow(obj);
                 } catch (org.omg.CORBA.BAD_PARAM e) {

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -273,6 +273,15 @@
         <propertycopy property="bcpp.idl.opt.output.dir"
                       from="config.${my.csci.orb}.idlcompiler.opt.outputdir"/>
 
+
+        <if>
+            <isset property="config.${my.csci.orb}.lib.dir"/>
+            <then>
+                <propertycopy property="bcpp.orb.skel.ext"
+                              from="config.${my.csci.orb}.skel.ext"/>
+            </then>
+        </if>
+
         <!-- orb.cflags -->
         <propertycopy property="bcpp.orb.cflags"
                       from="config.${my.csci.orb}.cflags"/>
@@ -386,6 +395,16 @@
             </then>
         </if>
 
+        <!-- cpp.gcov.flags -->
+        <var name="bcpp.cpp.gcov.flags" value=""/>
+        <if>
+            <equals arg1="${config.cpp.gcov}" arg2="y"/>
+            <then>
+                <propertycopy override="true" property="bcpp.cpp.gcov.flags"
+                    from="config.${bcpp.csci.compiler}.cxx.gcovflags"/>
+            </then>
+        </if>
+        
          <!-- cpp.optim.flags -->
         <var name="bcpp.cpp.optim.flags" value=""/>
         <if>
@@ -430,6 +449,24 @@
                 <!-- ld.flags -->
                 <propertycopy property="bcpp.ld.flags"
                     from="config.${bcpp.csci.compiler}.ld.shared.flags"/>
+                 
+                <!-- gcovflags -->
+                <if>
+                    <equals arg1="${config.cpp.gcov}" arg2="y"/>
+                    <then>
+                        <!-- add bcpp..ld.shared.gcovflags to bcpp.ld.flags -->
+                        <propertycopy property="bcpp.ld.gcovflags"
+                            from="config.${bcpp.csci.compiler}.ld.shared.gcovflags"/>
+                        <var name="bcpp.ld.flags"
+                             value="${bcpp.ld.gcovflags} ${bcpp.ld.flags}"/>
+                        <!-- add bcpp..ar.shared.gcovflags to bcpp.ar.flags -->
+                        <propertycopy property="bcpp.ar.gcovflags"
+                            from="config.${bcpp.csci.compiler}.ar.shared.gcovflags"/>
+                        <var name="bcpp.ar.flags"
+                             value="${bcpp.ar.gcovflags} ${bcpp.ar.flags}"/>
+                    </then>
+                </if>
+                 
             </then>
             <else> <!-- static -->
                 <!-- cpp.shared.flags -->
@@ -450,7 +487,24 @@
                 <!-- ld.flags -->
                 <propertycopy property="bcpp.ld.flags"
                     from="config.${bcpp.csci.compiler}.ld.static.flags"/>
-            </else>
+
+                <!-- gcovflags -->
+                <if>
+                    <equals arg1="${config.cpp.gcov}" arg2="y"/>
+                    <then>
+                        <!-- add bcpp..ld.static.gcovflags to bcpp.ld.flags -->
+                        <propertycopy property="bcpp.ld.gcovflags"
+                            from="config.${bcpp.csci.compiler}.ld.static.gcovflags"/>
+                        <var name="bcpp.ld.flags"
+                             value="${bcpp.ld.gcovflags} ${bcpp.ld.flags}"/>
+                        <!-- add bcpp..ar.static.gcovflags to bcpp.ar.flags -->
+                        <propertycopy property="bcpp.ar.gcovflags"
+                            from="config.${bcpp.csci.compiler}.ar.static.gcovflags"/>
+                        <var name="bcpp.ar.flags"
+                             value="${bcpp.ar.gcovflags} ${bcpp.ar.flags}"/>
+                    </then>
+                </if>
+                </else>
         </if>
 
         <!-- cxx -->
@@ -471,7 +525,7 @@
 
         <!-- cpp.flags -->
         <var name="bcpp.cpp.flags"
-             value="${bcpp.cpp.debug.flags} ${bcpp.cpp.optim.flags} ${bcpp.cpp.shared.flags}"/>
+             value="${bcpp.cpp.debug.flags} ${bcpp.cpp.gcov.flags} ${bcpp.cpp.optim.flags} ${bcpp.cpp.shared.flags}"/>
         <var name="bcpp.cpp.flags"
              value="${bcpp.cpp.flags} ${bcpp.cxx.compiler.flags}"/>
     </target>
@@ -677,25 +731,7 @@
     <target name="-generate-stubs-and-skels" if="my.csc.stubskel.dir"
             depends="-make-csc-stubskel-dir">
 
-        <!-- server -->
-        <if>
-            <isset property="my.idl.server"/>
-            <then>
-                <!-- fix invalid path for generated IDL files -->
-                <stringmanip property="my.idl.server.copy" action="replace"
-                             string="${my.idl.server}" substring="@GENERATED@"
-                             replaceWith="${my.codegen.generated.dir}"/>
-                <var name="my.idl.server" value="${my.idl.server.copy}"/>
 
-                <foreach list="${my.idl.server}" target="-compile-idl-file"
-                         param="my.idl.file" inheritall="true" delimiter=" ">
-
-                    <param name="bcpp.orb.idlflags"
-                           value="${bcpp.orb.idlflags.svr}"/>
-                    <param name="bcpp.idl.tstamp.suffix" value=".server"/>
-                </foreach>
-            </then>
-        </if>
 
         <!-- client -->
         <if>
@@ -713,11 +749,33 @@
                     <param name="bcpp.orb.idlflags"
                            value="${bcpp.orb.idlflags.clt}"/>
                     <param name="bcpp.idl.tstamp.suffix" value=".client"/>
+                     <param name="bcpp.idl.generated.server" value="false"/>
+               </foreach>
+            </then>
+        </if>
+
+         <!-- server -->
+        <if>
+            <isset property="my.idl.server"/>
+            <then>
+                <!-- fix invalid path for generated IDL files -->
+                <stringmanip property="my.idl.server.copy" action="replace"
+                             string="${my.idl.server}" substring="@GENERATED@"
+                             replaceWith="${my.codegen.generated.dir}"/>
+                <var name="my.idl.server" value="${my.idl.server.copy}"/>
+
+                <foreach list="${my.idl.server}" target="-compile-idl-file"
+                         param="my.idl.file" inheritall="true" delimiter=" ">
+
+                    <param name="bcpp.orb.idlflags"
+                           value="${bcpp.orb.idlflags.svr}"/>
+                    <param name="bcpp.idl.tstamp.suffix" value=".server"/>
+                    <param name="bcpp.idl.generated.server" value="true"/>
                 </foreach>
             </then>
         </if>
 
-        <!-- tie -->
+       <!-- tie -->
         <if>
             <isset property="my.idl.tie"/>
             <then>
@@ -733,7 +791,8 @@
                     <param name="bcpp.orb.idlflags"
                            value="${bcpp.orb.idlflags.tie}"/>
                     <param name="bcpp.idl.tstamp.suffix" value=".tie"/>
-                </foreach>
+                    <param name="bcpp.idl.generated.server" value="true"/>
+               </foreach>
             </then>
         </if>
     </target>
@@ -817,6 +876,31 @@
                     <arg value="${my.idl.file}"/>
                 </xexec>
 
+                <basename property="my.idl.basename" file="${my.idl.file}"/>
+                <selecttoken string="${my.idl.basename}" delimiter="idl"
+                             tokenNumber="0" 
+                             property="my.idl.basename.without.ext"/>
+                <selecttoken string="${my.idl.basename}" delimiter=".idl"
+                             tokenNumber="0" 
+                             property="my.idl.basename.without.ext2"/>
+
+
+                <!-- remove sever part for the idl client compilation -->
+                <if>
+                    <equals arg1="${bcpp.idl.generated.server}" arg2="false" />
+                    <then>
+                        <if>
+                            <isset property="bcpp.orb.skel.ext"/>
+                            <then>
+                                <delete>
+                                    <fileset dir="${my.csc.stubskel.dir}" includes="**/${my.idl.basename.without.ext2}${bcpp.orb.skel.ext}"/>
+                                </delete>
+                            </then>
+                        </if>
+                    </then>
+                </if>
+
+
                 <!-- generate the unified stubs and skels header files -->
                 <var name="my.var"
                      value="${csc.name}${FS}${bcpp.orb.key.string}"/>
@@ -825,10 +909,7 @@
                               orb="${my.csci.orb}" file="${my.idl.file}"
                               headerInclDir="${my.var}"/>
 
-                <basename property="my.idl.basename" file="${my.idl.file}"/>
-                <selecttoken string="${my.idl.basename}" delimiter="idl"
-                             tokenNumber="0" 
-                             property="my.idl.basename.without.ext"/>
+
 
                 <var name="my.var"
                      value="${my.csc.unified.stubskel.dir}${FS}..${FS}"/>
@@ -1164,16 +1245,33 @@
     <target name="-construct-csci-delivery-stubskel-incl-dir-path"
             if="require.csci.delivery.idl.dir">
 
-        <var name="my.var" value="${my.csci.location}${FS}"/>
-        <var name="my.var" value="${my.var}${config.delivery.dir}${FS}"/>
-        <var name="my.var" value="${my.var}${config.delivery.include.dir}"/>
-        <var name="my.var" value="${my.var}${FS}${FS}${csc.lang}"/>
-        <var name="my.var" value="${my.var}${FS}${csc.owner}"/>
-        <var name="my.var" value="${my.var}${FS}${csc.name}"/>
-        <var name="my.var" value="${my.var}${FS}${bcpp.orb.key.string}"/>
+        <selecttoken
+            string="${basedir}"
+            delimiter="${FS}${csc.owner}${FS}"
+            tokennumber="1"
+            property="bcpp.csc.path"
+        />
+        <selecttoken
+            string="${bcpp.csc.path}"
+            delimiter="${FS}${csc.lang}"
+            tokennumber="0"
+            property="bcpp.csc.path"
+            override="true"
+        />
+
+        <var name="p" value="${my.csci.location}${FS}" />
+        <var name="p" value="${p}${config.delivery.dir}${FS}" />
+        <var name="p" value="${p}${config.delivery.include.dir}" />
+        <var name="p" value="${p}${FS}${csc.lang}" />
+        <var name="p" value="${p}${FS}${csc.owner}" />
+        <!--
+        <var name="p" value="${p}${FS}${csc.name}"/>
+        -->
+        <var name="p" value="${p}${FS}${bcpp.csc.path}" />
+        <var name="p" value="${p}${FS}${bcpp.orb.key.string}" />
 
         <property name="bcpp.csci.delivery.stubskel.incl.dir"
-                  location="${my.var}"/>
+                  location="${p}" />
     </target>
 
 
@@ -1407,17 +1505,34 @@
                     <isset property="bcpp.csc.public.incl.files"/>
                     <then>
                         <!-- set the directory path -->
-                        <var name="my.var" value="${my.csci.location}${FS}"/>
-                        <var name="my.var"
-                             value="${my.var}${config.delivery.dir}"/>
-                        <var name="my.var"
-                        value="${my.var}${FS}${config.delivery.include.dir}"/>
-                        <var name="my.var" value="${my.var}${FS}${csc.lang}"/>
-                        <var name="my.var" value="${my.var}${FS}${csc.owner}"/>
-                        <var name="my.var" value="${my.var}${FS}${csc.name}"/>
+                        <selecttoken
+                            string="${basedir}"
+                            delimiter="${FS}${csc.owner}${FS}"
+                            tokennumber="1"
+                            property="bcpp.csc.path"
+                        />
+                        <selecttoken
+                            string="${bcpp.csc.path}"
+                            delimiter="${FS}${csc.lang}"
+                            tokennumber="0"
+                            property="bcpp.csc.path"
+                            override="true"
+                        />
+
+                        <var name="p" value="${my.csci.location}${FS}" />
+                        <var name="p"
+                             value="${p}${config.delivery.dir}${FS}" />
+                        <var name="p"
+                             value="${p}${config.delivery.include.dir}" />
+                        <var name="p" value="${p}${FS}${csc.lang}" />
+                        <var name="p" value="${p}${FS}${csc.owner}" />
+                        <!--
+                        <var name="p" value="${p}${FS}${csc.name}"/>
+                        -->
+                        <var name="p" value="${p}${FS}${bcpp.csc.path}" />
 
                         <property name="bcpp.csci.delivery.incl.dir"
-                                  location="${my.var}"/>
+                                  location="${p}" />
                     </then>
                 </if>
             </then>
@@ -1511,6 +1626,7 @@
 
         <!-- construct bcpp.cpp.cflags -->
         <var name="my.var" value="${bcpp.cpp.debug.flags}"/>
+        <var name="my.var" value="${my.var} ${bcpp.cpp.gcov.flags}"/>
         <var name="my.var" value="${my.var} ${bcpp.cpp.optim.flags}"/>
         <var name="my.var" value="${my.var} ${bcpp.cpp.shared.flags}"/>
         <var name="my.var" value="${my.var} ${bcpp.cxx.compiler.flags}"/>
@@ -1580,6 +1696,28 @@
         </if>
 
         <property name="bcpp.cpp.cflags" value="${my.var}"/>
+
+        <var name="bcpp.cpp.cflags"
+            value="${bcpp.cpp.cflags} -DCDMW_TRACE_LEVEL=${config.traces.level}"
+            />
+        <if>
+            <isset property="config.call.traces.inhibited"/>
+            <then>
+                <if>
+                    <equals arg1="${config.call.traces.inhibited}" arg2="n" />
+                    <then>
+                        <var name="bcpp.cpp.cflags"
+                            value="${bcpp.cpp.cflags} -DCDMW_DISABLE_LOG_FUNCTION"
+                            />
+                    </then>
+                </if>
+            </then>
+            <else>
+                <var name="bcpp.cpp.cflags"
+                    value="${bcpp.cpp.cflags} -DCDMW_DISABLE_LOG_FUNCTION"
+                    />               
+            </else>
+        </if>
     </target>
 
 
@@ -1775,7 +1913,6 @@
                     <then>
                         <xexec executable="${bcpp.ar}" showCmd="true"
                                failonerror="true" vmlauncher="false">
-
                             <arg line="${bcpp.cpp.ldflags}"/>
                             <arg line="${bcpp.ar.flags}"/>
                             <arg line="${my.delivery.file}"/>
@@ -1785,7 +1922,7 @@
                     <else> <!-- static -->
                         <xexec executable="${bcpp.ar}" showCmd="true"
                                failonerror="true" vmlauncher="false">
-
+                            <arg line="${bcpp.cpp.ldflags}"/>
                             <arg line="${bcpp.ar.flags}"/>
                             <arg line="${my.delivery.file}"/>
                             <arg line="${bcpp.obj.files}"/>

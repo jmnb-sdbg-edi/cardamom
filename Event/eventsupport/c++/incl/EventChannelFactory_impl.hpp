@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -80,6 +80,9 @@ class EventChannelFactory_impl : virtual public POA_CdmwEvent::EventChannelFacto
         *@param factory_name Fully qualified name of the Cdmw factory
         *@param argc Number of additional arguments
         *@param argv Additional program arguments
+        *@param use_profile_manager use an EventChannelProfileManager to get
+        *       each event channel profile at creation. Default value is true.
+        *       If false, each created event channel won't have a specific profile.s
         *
         *@exception Cdmw::BadParameterException Wrong parameter value, such as 
         * threading ... etc.
@@ -92,7 +95,8 @@ class EventChannelFactory_impl : virtual public POA_CdmwEvent::EventChannelFacto
                                  const std::string &                      name_domain_name,
                                  const std::string &                      factory_name,
                                  Cdmw::OrbSupport::POAThreadingPolicy &   threading_policy,
-                                 int & argc, char** argv)
+                                 int & argc, char** argv,
+                                 bool use_profile_manager = true)
                 throw(Cdmw::BadParameterException,
                       Cdmw::InternalErrorException,
                       CORBA::SystemException);
@@ -192,6 +196,8 @@ class EventChannelFactory_impl : virtual public POA_CdmwEvent::EventChannelFacto
         // find created event channels by name
         typedef std::map<std::string, PortableServer::ServantBase_var , std::less<std::string> > ChannelMap;
         ChannelMap                               m_created_channels;
+        
+        bool                                     m_use_profile_manager;
 
 }; // End class EventChannelFactory_impl 
 

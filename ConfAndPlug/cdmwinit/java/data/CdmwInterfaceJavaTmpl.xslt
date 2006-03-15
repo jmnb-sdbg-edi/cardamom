@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -178,7 +178,7 @@ import cdmw.common.InternalErrorException;
 import cdmw.orbsupport.ExceptionMinorCodes;
 import cdmw.orbsupport.CORBASystemExceptionWrapper;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 import com.thalesgroup.CdmwNamingAndRepository.DEFAULT_ROOT_CONTEXT;
 import com.thalesgroup.CdmwNamingAndRepository.RepositoryPackage.NoRootContext;
@@ -226,6 +226,8 @@ public class <xsl:value-of select="$_javaClassname"/> {
         Assert.check(orb != null);
 
         try {
+            // PCR-0049
+            cdmw.orbsupport.Codec.init(orb);
 
             // Get the XML init filename. This may raise BAD_PARAM or INTERNAL
             String xmlFile = InitUtils.getXmlInitialisationFile(args);
@@ -295,7 +297,7 @@ public class <xsl:value-of select="$_javaClassname"/> {
                     InitUtils.getRootPOA(orb),
                     cdmwRootPOA,
                     processCtrl);
-            com.thalesgroup.CdmwPlatformMngt.Process initProcess =
+            com.thalesgroup.CdmwPlatformMngt.ProcessDelegate initProcess =
                 processImpl._this(orb);
             InitUtils.initPlatformInterface(orb, args, initProcess);
             //  From now on, a platform supervisor may initiate a call to 
@@ -367,6 +369,7 @@ public class <xsl:value-of select="$_javaClassname"/> {
 
             String res;
             int flushingTime = 0;
+            int msgThreshold = 0;
             int nbFlushArea = 0;
             int sizeFlushArea = 0;
             String collectorName;
@@ -393,6 +396,15 @@ public class <xsl:value-of select="$_javaClassname"/> {
                         org.omg.CORBA.CompletionStatus.COMPLETED_NO);
                 }
 
+                try {
+                    msgThreshold = Integer.parseInt(
+                        xmlData.getServiceAttributeValue(
+                            "trace",
+                            "msg-threshold"));
+                } catch (BadParameterException bpe) {
+                    // do nothing : parameter is optional
+                }
+ 
                 try {
                     collectorName =
                         xmlData.getServiceAttributeValue(
@@ -421,6 +433,7 @@ public class <xsl:value-of select="$_javaClassname"/> {
                 applicationName,
                 processName,
                 flushingTime,
+                msgThreshold,
                 nbFlushArea,
                 sizeFlushArea,
                 collectorNameList);
@@ -1318,7 +1331,7 @@ public class <xsl:value-of select="$_javaClassname"/> {
                  new org.omg.CORBA.INTERNAL(
                      ExceptionMinorCodes.INTERNAL,
                      org.omg.CORBA.CompletionStatus.COMPLETED_NO));
-         } catch(cdmw.namingandrepository.InvalidNameException ine) {
+         } catch(cdmw.commonsvcs.naming.InvalidNameException ine) {
              throw new CORBASystemExceptionWrapper(
                  new org.omg.CORBA.INTERNAL(
                      ExceptionMinorCodes.INTERNAL,

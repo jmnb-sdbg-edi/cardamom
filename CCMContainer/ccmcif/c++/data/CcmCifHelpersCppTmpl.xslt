@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -43,6 +43,7 @@
    <xsl:param name="_interfaceName"/>
    <xsl:param name="_type"/>
    <xsl:param name="_template"/>
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <xsl:param name="_strategy" select="'Session'"/>
    <!--
       Private parameters.
@@ -72,7 +73,16 @@
          <xsl:with-param name="_name" select="$interfaceNameInUse"/>
       </xsl:call-template>
    </xsl:variable>
-   <xsl:variable name="interfaceImplClassname" select="concat($_strategy, $interfaceNameInUse, '_impl')"/>
+   <xsl:variable name="interfaceImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FT', $_strategy, $interfaceNameInUse, '_impl')"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="concat($_strategy, $interfaceNameInUse, '_impl')"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
    <xsl:variable name="interfaceObjRefVar" select="concat($cppInterfaceScope, $cppSep, 'CCM_', $interfaceNameInUse, '_var')"/>
    <xsl:variable name="ccmInterfaceId">
       <xsl:choose>
@@ -338,6 +348,7 @@
    <xsl:param name="_componentName"/>
    <xsl:param name="_template"/>
    <xsl:param name="_isSegmented" select="'yes'"/>
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <xsl:param name="_strategy" select="'Session'"/>
    <!--
       Private parameters.
@@ -362,7 +373,16 @@
          </xsl:otherwise>
       </xsl:choose>
    </xsl:variable>
-   <xsl:variable name="componentImplClassname" select="concat($_strategy, $componentNameInUse, '_impl')"/>
+   <xsl:variable name="componentImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FT', $_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="concat($_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
    <xsl:variable name="ccmProvidesId" select="key('stereotypeByName', 'CCMProvides')/@xmi.id"/>
    <xsl:variable name="providesNodes" select="key('associationByStereotypeId', $ccmProvidesId)[UML:Association.connection/UML:AssociationEnd[1]/@type = $componentNode/@xmi.id]"/>
    <xsl:variable name="ccmComponentId" select="key('stereotypeByName', 'CCMComponent')/@xmi.id"/>
@@ -513,6 +533,7 @@
 <xsl:template name="findAllComponentReceptacles">
    <xsl:param name="_componentName"/>
    <xsl:param name="_template"/>
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <xsl:param name="_strategy" select="'Session'"/>
    <!--
       Private parameters.
@@ -537,7 +558,16 @@
          </xsl:otherwise>
       </xsl:choose>
    </xsl:variable>
-   <xsl:variable name="componentImplClassname" select="concat($_strategy, $componentNameInUse, '_impl')"/>
+   <xsl:variable name="componentImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FT', $_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="concat($_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
    <xsl:variable name="contextImplClassname" select="concat('CCM_', $componentNameInUse, '_', $_strategy, 'Context_impl')"/>
    <xsl:variable name="ccmUsesId" select="key('stereotypeByName', 'CCMUses')/@xmi.id"/>
    <xsl:variable name="usesNodes" select="key('associationByStereotypeId', $ccmUsesId)[UML:Association.connection/UML:AssociationEnd[1]/@type = $componentNode/@xmi.id]"/>
@@ -668,6 +698,7 @@
 <xsl:template name="findAllComponentEmitters">
    <xsl:param name="_componentName"/>
    <xsl:param name="_template"/>
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <xsl:param name="_strategy" select="'Session'"/>
    <!--
       Private parameters.
@@ -692,7 +723,16 @@
          </xsl:otherwise>
       </xsl:choose>
    </xsl:variable>
-   <xsl:variable name="componentImplClassname" select="concat($_strategy, $componentNameInUse, '_impl')"/>
+   <xsl:variable name="componentImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FT', $_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="concat($_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
    <xsl:variable name="contextImplClassname" select="concat('CCM_', $componentNameInUse, '_', $_strategy, 'Context_impl')"/>
    <xsl:variable name="ccmEmitsId" select="key('stereotypeByName', 'CCMEmits')/@xmi.id"/>
    <xsl:variable name="emitsNodes" select="key('associationByStereotypeId', $ccmEmitsId)[UML:Association.connection/UML:AssociationEnd[1]/@type = $componentNode/@xmi.id]"/>
@@ -781,6 +821,12 @@
                <xsl:with-param name="_componentImplClassname" select="$componentImplClassname"/>
             </xsl:call-template>
          </xsl:when>
+         <!-- PCR-0049 -->
+         <xsl:when test="$_template = 'session_context_cpp.content.3'">
+            <xsl:call-template name="session_context_cpp.content.3">
+               <xsl:with-param name="_eventTypeName" select="$emitterName"/>
+            </xsl:call-template>
+         </xsl:when>
       </xsl:choose>
    </xsl:for-each>
 
@@ -822,6 +868,7 @@
 <xsl:template name="findAllComponentPublishers">
    <xsl:param name="_componentName"/>
    <xsl:param name="_template"/>
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <xsl:param name="_strategy" select="'Session'"/>
    <!--
       Private parameters.
@@ -846,7 +893,16 @@
          </xsl:otherwise>
       </xsl:choose>
    </xsl:variable>
-   <xsl:variable name="componentImplClassname" select="concat($_strategy, $componentNameInUse, '_impl')"/>
+   <xsl:variable name="componentImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FT', $_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="concat($_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
    <xsl:variable name="contextImplClassname" select="concat('CCM_', $componentNameInUse, '_', $_strategy, 'Context_impl')"/>
    <xsl:variable name="ccmPublishesId" select="key('stereotypeByName', 'CCMPublishes')/@xmi.id"/>
    <xsl:variable name="publishesNodes" select="key('associationByStereotypeId', $ccmPublishesId)[UML:Association.connection/UML:AssociationEnd[1]/@type = $componentNode/@xmi.id]"/>
@@ -935,6 +991,12 @@
                <xsl:with-param name="_componentImplClassname" select="$componentImplClassname"/>
             </xsl:call-template>
          </xsl:when>
+         <!-- PCR-0049 -->
+         <xsl:when test="$_template = 'session_context_cpp.content.3'">
+            <xsl:call-template name="session_context_cpp.content.3">
+               <xsl:with-param name="_eventTypeName" select="$publisherName"/>
+            </xsl:call-template>
+         </xsl:when>
       </xsl:choose>
    </xsl:for-each>
 
@@ -977,6 +1039,7 @@
    <xsl:param name="_componentName"/>
    <xsl:param name="_template"/>
    <xsl:param name="_isSegmented" select="'yes'"/>
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <xsl:param name="_strategy" select="'Session'"/>
    <!--
       Private parameters.
@@ -1001,7 +1064,16 @@
          </xsl:otherwise>
       </xsl:choose>
    </xsl:variable>
-   <xsl:variable name="componentImplClassname" select="concat($_strategy, $componentNameInUse, '_impl')"/>
+   <xsl:variable name="componentImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FT', $_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="concat($_strategy, $componentNameInUse, '_impl')"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
    <xsl:variable name="ccmConsumesId" select="key('stereotypeByName', 'CCMConsumes')/@xmi.id"/>
    <xsl:variable name="consumesNodes" select="key('associationByStereotypeId', $ccmConsumesId)[UML:Association.connection/UML:AssociationEnd[1]/@type = $componentNode/@xmi.id]"/>
    <xsl:variable name="ccmComponentId" select="key('stereotypeByName', 'CCMComponent')/@xmi.id"/>
@@ -1122,6 +1194,7 @@
          <xsl:call-template name="findAllComponentConsumers">
             <xsl:with-param name="_componentName" select="$superClassNode/@name"/>
             <xsl:with-param name="_template" select="$_template"/>
+            <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
             <xsl:with-param name="_strategy" select="$_strategy"/>
             <xsl:with-param name="_componentNameSave">
                <xsl:choose>

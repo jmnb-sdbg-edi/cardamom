@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -66,7 +66,7 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
         
             Assert.check(this.client != null);
             
-            com.acme.BasicDemo.Registration registerServer = null;
+            com.acme.CommonDemo.Registration registerServer = null;
             com.acme.BasicDemo.CCM_Client_Context clientContext = 
                 this.client.getContext();
 
@@ -126,13 +126,13 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
             try {
                 if (registerServer != null) {
                     com.acme.BasicDemo.Event event = new EventImpl();
-                    event.text = "Hello ValueType!";
+                    event.text = new String("Hello ValueType!");
          
                     display.print_event(event);
                     testOk = true;
                 }
             } catch (Exception e) {
-                println("Unexpected exception raised!");
+                println("Unexpected exception raised!" + e.toString());
             }
             check(testOk);
 
@@ -407,10 +407,11 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
                 if (registerServer != null) {
                     com.acme.BasicDemo.s1 in_ = new com.acme.BasicDemo.s1();
                     in_.l=1;
-                    com.acme.BasicDemo.s1Holder inout_ = new com.acme.BasicDemo.s1Holder(); 
+                    com.acme.BasicDemo.s1Holder inout_ = new com.acme.BasicDemo.s1Holder(new com.acme.BasicDemo.s1()); 
+                    inout_.value.l=0;
                     com.acme.BasicDemo.s1Holder out_ = new com.acme.BasicDemo.s1Holder();
                     com.acme.BasicDemo.s1 ret_;                   
-         
+
                     ret_ = display.test_fixed_struct(in_, inout_, out_);
                     if ((inout_.value.l == in_.l)
                         && (out_.value.l == in_.l)
@@ -418,7 +419,7 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
                         testOk = true;
                 }
             } catch (Exception e) {
-                println("Unexpected exception raised!");
+                println("Unexpected exception raised!" + e.toString());
             }
             check(testOk);
 
@@ -428,7 +429,7 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
                 if (registerServer != null) {
                     com.acme.BasicDemo.s2 in_ = new com.acme.BasicDemo.s2();
                     in_.s="1";
-                    com.acme.BasicDemo.s2Holder inout_ = new com.acme.BasicDemo.s2Holder(); 
+                    com.acme.BasicDemo.s2Holder inout_ = new com.acme.BasicDemo.s2Holder( new com.acme.BasicDemo.s2()); 
                     com.acme.BasicDemo.s2Holder out_ = new com.acme.BasicDemo.s2Holder();
                     com.acme.BasicDemo.s2 ret_;                   
          
@@ -449,7 +450,9 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
                 if (registerServer != null) {
                     com.acme.BasicDemo.DisplayPackage.union1 in_ = new com.acme.BasicDemo.DisplayPackage.union1();
                     in_.l(1);
-                    com.acme.BasicDemo.DisplayPackage.union1Holder inout_ = new com.acme.BasicDemo.DisplayPackage.union1Holder(); 
+                    com.acme.BasicDemo.DisplayPackage.union1Holder inout_ = new com.acme.BasicDemo.DisplayPackage.union1Holder();
+                    inout_.value = new com.acme.BasicDemo.DisplayPackage.union1();
+                    inout_.value.l(0);
                     com.acme.BasicDemo.DisplayPackage.union1Holder out_ = new com.acme.BasicDemo.DisplayPackage.union1Holder();
                     com.acme.BasicDemo.DisplayPackage.union1 ret_;                   
          
@@ -470,7 +473,9 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
                 if (registerServer != null) {
                     com.acme.BasicDemo.DisplayPackage.union2 in_ = new com.acme.BasicDemo.DisplayPackage.union2();
                     in_.s1("1");
-                    com.acme.BasicDemo.DisplayPackage.union2Holder inout_ = new com.acme.BasicDemo.DisplayPackage.union2Holder(); 
+                    com.acme.BasicDemo.DisplayPackage.union2Holder inout_ = new com.acme.BasicDemo.DisplayPackage.union2Holder();
+                    inout_.value = new com.acme.BasicDemo.DisplayPackage.union2();
+                    inout_.value.s1("0");
                     com.acme.BasicDemo.DisplayPackage.union2Holder out_ = new com.acme.BasicDemo.DisplayPackage.union2Holder();
                     com.acme.BasicDemo.DisplayPackage.union2 ret_;                   
          
@@ -493,7 +498,7 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
                     com.acme.BasicDemo.s1 s = new com.acme.BasicDemo.s1();
                     s.l = 1;
                     in_[0] = s;
-                    com.acme.BasicDemo.s1sHolder inout_ = new com.acme.BasicDemo.s1sHolder(); 
+                    com.acme.BasicDemo.s1sHolder inout_ = new com.acme.BasicDemo.s1sHolder(new com.acme.BasicDemo.s1[0]); 
                     com.acme.BasicDemo.s1sHolder out_ = new com.acme.BasicDemo.s1sHolder();
                     com.acme.BasicDemo.s1[] ret_;   
          
@@ -573,7 +578,12 @@ public class CCMClientImpl extends org.omg.CORBA.LocalObject
             try {
                 if (registerServer != null) {
                     java.lang.String[] in_ = {"hello","2","3","4","5"};
-                    com.acme.BasicDemo.DisplayPackage.array2Holder inout_ = new com.acme.BasicDemo.DisplayPackage.array2Holder(new String[5]);              
+                    com.acme.BasicDemo.DisplayPackage.array2Holder inout_ = new com.acme.BasicDemo.DisplayPackage.array2Holder(new String[5]);   
+                    inout_.value[0] = "1";
+                    inout_.value[1] = "2";
+                    inout_.value[2] = "3";
+                    inout_.value[3] = "4";
+                    inout_.value[4] = "5";
                     com.acme.BasicDemo.DisplayPackage.array2Holder out_ = new com.acme.BasicDemo.DisplayPackage.array2Holder();
                     java.lang.String[] ret_;
          

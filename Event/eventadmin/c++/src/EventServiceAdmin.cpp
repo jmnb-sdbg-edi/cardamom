@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -126,7 +126,7 @@ namespace
             try 
             {
                 CORBA::Object_var obj 
-                    = Cdmw::PlatformMngt::PlatformInterface::getService(Cdmw::PlatformMngt::ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
+                    = Cdmw::PlatformMngt::PlatformInterface::Get_service(Cdmw::PlatformMngt::ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
                       
                 CdmwNamingAndRepository::Repository_var repository 
                     = CdmwNamingAndRepository::Repository::_narrow(obj.in());
@@ -169,7 +169,7 @@ namespace
             catch (const Cdmw::EventAdmin::InitException& e)
             {
                 std::cout << e.what() << std::endl;
-                Cdmw::PlatformMngt::PlatformInterface::notifyFatalError("cdmw_event_admin", e.what());
+                Cdmw::PlatformMngt::PlatformInterface::Notify_fatal_error("cdmw_event_admin", e.what());
                 return;
             }
             
@@ -186,7 +186,7 @@ namespace
                 if (!command_file)
                 {
                     std::cout << "cannot open file : " << m_command_file_name << std::endl;
-                    Cdmw::PlatformMngt::PlatformInterface::notifyFatalError("cdmw_event_admin", "cannot open command file");
+                    Cdmw::PlatformMngt::PlatformInterface::Notify_fatal_error("cdmw_event_admin", "cannot open command file");
                 }
                 else
                 {
@@ -196,7 +196,7 @@ namespace
         }
         
         virtual void run()
-            throw(CdmwPlatformMngt::Process::NotReadyToRun, CORBA::SystemException)
+            throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, CORBA::SystemException)
         {
             std::cout << "INFO: cdmw_event_admin run" << std::endl;
 
@@ -224,7 +224,14 @@ namespace
                 m_run_thread->join();
             }
         }
-        
+       
+
+    virtual bool is_alive()
+        throw(CORBA::SystemException)
+    {
+         return true;
+    }
+ 
       private:
       
         CORBA::ORB_var               m_orb;
@@ -335,20 +342,23 @@ int main(int argc, char* argv[])
     try
     {
         using namespace Cdmw::PlatformMngt;
-        bool platformManaged =  PlatformInterface::isLaunchedByPlatformManagement(argc, argv);
+        bool platformManaged =  PlatformInterface::Is_launched_by_PlatformManagement(argc, argv);
             
         if (platformManaged) 
         {
             poa_manager->activate();
             
             // initialise the platform interface
-            PlatformInterface::setup(orb.in(), argc, argv);
+            PlatformInterface::Setup(orb.in(), argc, argv);
             
             // Create a Process Behaviour
             // acknowledge the creation of the process
-            PlatformInterface::acknowledgeCreation(new MyProcessBehaviour(orb.in(), commandFile));  
+            PlatformInterface::Acknowledge_creation(new MyProcessBehaviour(orb.in(), commandFile));  
             
             orb->run();
+            
+            // cleanup the platform interface
+            PlatformInterface::Cleanup();
         }
         else
         {

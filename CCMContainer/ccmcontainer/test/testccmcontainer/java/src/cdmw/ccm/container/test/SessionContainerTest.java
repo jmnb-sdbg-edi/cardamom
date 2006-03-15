@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -48,20 +48,37 @@ public class SessionContainerTest extends Testable {
         
         // set number of requested successfull tests
         setNbOfRequestedTestOK(14);
+        int timescale = cdmw.testutils.Testable.getTimescale();
         
         println("Testing Session Container");
 
-        // Creating the Component Installtion
-        MyComponentInstallation cmpInst = new MyComponentInstallation(this.poa);
-        com.thalesgroup.CdmwDeployment.ComponentInstallation
-            componentInstallation = cmpInst._this(this.orb);
-        // Creating the Component Server
-        MyComponentServer cmpSvr = new MyComponentServer(
-            this.orb,
-            this.poa,
-            componentInstallation);
-        org.omg.Components.Deployment.ComponentServer componentServer =
-            cmpSvr._this(this.orb);
+        cdmw.ossupport.ThreadedProcess process = null;
+        try {
+            process = cdmw.ossupport.OS.createJavaProcess("cdmw.ccm.container.test.MainTest --server");
+            try {
+                cdmw.ossupport.OS.sleep(timescale*2000);
+            } catch (java.lang.InterruptedException e) {
+                // ignore
+            }
+        } catch (java.io.IOException e) {
+            println("Error while starting MainTest process: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+        
+        org.omg.Components.Deployment.ComponentServer componentServer = null;
+        println("get the reference of the component_server");
+        try {
+            org.omg.CORBA.Object obj = orb.string_to_object("file://componentServer.ior");
+            componentServer = org.omg.Components.Deployment.ComponentServerHelper.narrow(obj);
+            
+        } catch (org.omg.CORBA.BAD_PARAM e) {
+            println("Error while retrieving component_server reference: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+            
+
 
         // Create a container instance
         // Create a set of ConfigValues.
@@ -190,7 +207,7 @@ public class SessionContainerTest extends Testable {
 
         // Testing valuetype factories
         try {
-            println("Calling say_hello() on the 1st component with no available valuetype factory...");
+            println("Calling say_hello() on the 2nd component with no available valuetype factory...");
             com.thalesgroup.HelloModule.TraceMessage msg =
                 new TraceMessageImpl("Hello ...", 5);
             comp2.log_message(msg);
@@ -221,7 +238,7 @@ public class SessionContainerTest extends Testable {
         }
 
         try {
-            println("Calling say_hello() on the 1st component WITH a valuetype factory installed...");
+            println("Calling say_hello() on the 2nd component WITH a valuetype factory installed...");
             com.thalesgroup.HelloModule.TraceMessage msg =
                 new TraceMessageImpl("Hello ...", 5);
             comp2.log_message(msg);
@@ -261,6 +278,16 @@ public class SessionContainerTest extends Testable {
             System.err.println("ex = " + ex.toString() );
             fail();
         }
+
+        println( "Killing process component_server" );
+        cdmw.ossupport.OS.killProcess(process);
+        try {
+            cdmw.ossupport.OS.sleep(timescale*2000);
+        } catch (java.lang.InterruptedException e) {
+            // ignore
+        }
+
+
     }
 
     private org.omg.Components.ConfigValue[] createConfigValues(

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -41,7 +41,7 @@
       Parameters below are used for recursiveness.
    -->
    <xsl:param name="_index" select="1"/>
-   
+
    <xsl:if test="boolean($lifecycleFrameworkNodes/home-impl)">
       <xsl:if test="$_index &lt;= count($lifecycleFrameworkNodes/home-impl)">
          <xsl:variable name="homeImplNode" select="$lifecycleFrameworkNodes[home-impl and position() = $_index]/home-impl"/>
@@ -68,14 +68,14 @@
             -->
             <xsl:variable name="ccmConsumesId" select="key('stereotypeByName', 'CCMConsumes')/@xmi.id"/>
             <xsl:variable name="consumers" select="key('associationByStereotypeId', $ccmConsumesId)[UML:Association.connection/UML:AssociationEnd[1]/@type = $managedComponentNode/@xmi.id]"/>
-         
+
             <xsl:for-each select="$consumers">
                <xsl:sort select="@xmi.id"/>
 
                <xsl:variable name="consumerTypeName" select="key('classById', UML:Association.connection/UML:AssociationEnd[2]/@type)/@name"/>
                <xsl:variable name="consumerClassname" select="concat($consumerTypeName, 'Consumer')"/>
                <xsl:variable name="consumerImplClassname" select="concat($consumerClassname, '_impl')"/>
-               
+
                <!--
                   Get the output filename.
                -->
@@ -179,6 +179,11 @@
    </xsl:variable>
    <xsl:variable name="lowercaseComponentName" select="translate($_componentName, $ucase, $lcase)"/>
    <xsl:variable name="lowercaseConsumerTypeName" select="translate($_consumerTypeName, $ucase, $lcase)"/>
+   <xsl:variable name="cppComponentScope">
+      <xsl:call-template name="getScope">
+         <xsl:with-param name="_name" select="$_componentName"/>
+      </xsl:call-template>
+   </xsl:variable>
 
    <!--
       References to some nodes.
@@ -203,17 +208,22 @@
    <![CDATA[
    #include <Foundation/orbsupport/CORBA.hpp>
    #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
+   #include <Foundation/orbsupport/Codec.hpp>
    #include <CCMContainer/ccmcommon/CCMUtils.hpp>
    ]]>
    #include "<xsl:value-of select="concat($pathPrefix, $consumerImplClassname, '.hpp')"/>"
-   
+
+   DEFINE_VALUETYPE_DATA_TRAITS(<xsl:value-of select="$cppScopedConsumerTypeName"/>)
+
    <xsl:call-template name="openNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppScopedConsumerTypeName)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="false()"/>
    </xsl:call-template>
 
    <xsl:value-of select="concat($consumerImplClassname, $cppSep, $consumerImplClassname)"/>(Components::ExecutorLocator_ptr exec_locator,
-                        const char* name,
-                        Components::CCM2Context_ptr ctx,
+                        const <![CDATA[std::string&]]> name,
+                        Context*                    ctx,
                         PortableServer::Servant     component)
       : LifeCycleObjectBase(ctx),
         m_executor_locator(Components::ExecutorLocator::_duplicate(exec_locator)),
@@ -232,31 +242,31 @@
    }
 
    void
-   <xsl:value-of select="concat($consumerImplClassname, $cppSep, 'push_', $_consumerTypeName, 
+   <xsl:value-of select="concat($consumerImplClassname, $cppSep, 'push_', $_consumerTypeName,
       '(', $cppScopedConsumerTypeName, '* the_', $lowercaseConsumerTypeName, ')')"/>
       throw (CORBA::SystemException)
    {
        try
         {
          <![CDATA[CORBA::Object_var obj = m_executor_locator->obtain_executor(m_sink_name.c_str());]]>
-    
+
          if (CORBA::is_nil(obj.in()))
          {
-            throw CORBA::OBJECT_NOT_EXIST(OrbSupport::OBJECT_NOT_EXIST, 
+            throw CORBA::OBJECT_NOT_EXIST(OrbSupport::OBJECT_NOT_EXIST,
                                           CORBA::COMPLETED_NO);
          }
-    
+
          // For monolithic component, push operation is implemented in <xsl:value-of select="$_componentName"/> component
          // instead of the consumer executor for segmented component
-         <xsl:value-of select="concat($cppConsumerScope, $cppSep, 'CCM_', $_componentName, '_var ', $lowercaseComponentName, '_exec = ', 
-                                      $cppConsumerScope, $cppSep, 'CCM_', $_componentName, $cppSep, '_narrow(obj.in());')"/>
+         <xsl:value-of select="concat($cppComponentScope, $cppSep, 'CCM_', $_componentName, '_var', ' ', $lowercaseComponentName, '_exec = ', 
+                                      $cppComponentScope, $cppSep, 'CCM_', $_componentName, $cppSep, '_narrow(obj.in());')"/>
 
          if (CORBA::is_nil(<xsl:value-of select="concat($lowercaseComponentName, '_exec.in()')"/>))
          {
             // Component may segmented
             <xsl:value-of select="concat($cppConsumerScope, $cppSep, 'CCM_', $_consumerClassname, '_var consumer_exec = ',
                                          $cppConsumerScope, $cppSep, 'CCM_', $_consumerClassname, $cppSep, '_narrow(obj.in());')"/>
-        
+
             if (CORBA::is_nil(consumer_exec.in()))
             {
                throw CORBA::OBJECT_NOT_EXIST(OrbSupport::OBJECT_NOT_EXIST, 
@@ -272,21 +282,21 @@
          {
             <xsl:value-of select="$lowercaseComponentName"/><![CDATA[_exec->push_]]><xsl:value-of select="concat($_consumerVarName, '(the_', $lowercaseConsumerTypeName,');')"/>
          }
-    
+
          <![CDATA[m_executor_locator->release_executor(obj.in());]]>
       }
         catch (const <![CDATA[Components::CCMException&]]> )
         {
-            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError,
                                CORBA::COMPLETED_NO);
         }
    }
 
-   void 
+   void
    <xsl:value-of select="$consumerImplClassname"/>::push_event(Components::EventBase * evt)
       throw (Components::BadEventType, CORBA::SystemException)
    {
-      <xsl:value-of select="$cppScopedConsumerTypeName"/>_var info_evt 
+      <xsl:value-of select="$cppScopedConsumerTypeName"/>_var info_evt
          = <xsl:value-of select="$cppScopedConsumerTypeName"/>::_downcast(evt);
       CORBA::add_ref(info_evt.in());
 
@@ -300,13 +310,21 @@
       }
    }
 
-   void 
+   void
    <xsl:value-of select="$consumerImplClassname"/>::push(const <![CDATA[CORBA::Any& data]]>)
-      throw (CosEventComm::Disconnected, 
+      throw (CosEventComm::Disconnected,
              CORBA::SystemException)
    {
       <xsl:value-of select="$cppScopedConsumerTypeName"/>_var event;
+      /* PCR-0049
       <![CDATA[data >>= event;]]>
+      */
+      const CORBA::OctetSeq* p_encoded_data;
+      data >>= p_encoded_data;
+      CORBA::OctetSeq encoded_data(*p_encoded_data);
+
+      Cdmw::OrbSupport::Codec<xsl:value-of select="concat('&lt;', $cppScopedConsumerTypeName, '&gt;')"/> codec;
+      codec.decode(encoded_data, event.inout());
       CORBA::add_ref(event.in());
 
       try
@@ -324,9 +342,11 @@
       throw (CORBA::SystemException)
    {
    }
-   
+
    <xsl:call-template name="closeNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppScopedConsumerTypeName)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="false()"/>
    </xsl:call-template>
 
    <!--
@@ -338,5 +358,3 @@
 
 
 </xsl:stylesheet>
-
-

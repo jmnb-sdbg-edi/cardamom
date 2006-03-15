@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -212,27 +212,27 @@ public class FindFile extends Task {
     protected void checkConfiguration() {
         if ((m_file == null) || m_file.trim().equals("")) {
             throw new BuildException(
-                "attribute file must not be null.", getLocation());
+                                     "attribute file must not be null.", getLocation());
         }
 
         if (m_dir == null) {
             throw new BuildException(
-                "attribute dir must not be null.", getLocation());
+                                     "attribute dir must not be null.", getLocation());
         }
 
         if (!m_dir.exists()) {
             throw new BuildException(
-                m_dir + " does not exist.", getLocation());
+                                     m_dir + " does not exist.", getLocation());
         }
 
         if (!m_dir.isDirectory()) {
             throw new BuildException(
-                m_dir + " is not a directory.", getLocation());
+                                     m_dir + " is not a directory.", getLocation());
         }
 
         if ((m_property == null) || m_property.trim().equals("")) {
             throw new BuildException(
-                "attribute property must not be null.", getLocation());
+                                     "attribute property must not be null.", getLocation());
         }
     }
 
@@ -242,12 +242,11 @@ public class FindFile extends Task {
      */
     protected String findFileMethod1() {
         String value = null;
-
         try {
             if (m_findFirst) {
                 // Return only the first match.
                 File f = FindUtils.findFile(
-                            getProject(), m_file, m_dir, m_recursive);
+                                            getProject(), m_file, m_dir, m_recursive);
 
                 if (f != null) {
                     value = new String(f.getCanonicalPath());
@@ -295,8 +294,8 @@ public class FindFile extends Task {
             exec.setFailonerror(false);
             long id = System.currentTimeMillis();
             exec.setOutputproperty("find.result." + id);
-	    exec.setResultProperty("find.error." + id);
-	    exec.setLogError(false);
+            exec.setResultProperty("find.error." + id);
+            exec.setLogError(false);
             
             Commandline.Argument arg = exec.createArg();
             arg.setLine(m_dir.getCanonicalPath() + " -type f -name " + m_file +
@@ -306,28 +305,43 @@ public class FindFile extends Task {
             exec.execute();
 
             String findResult = getProject().getProperty("find.result." + id);
-	    int error = new Integer(getProject().getProperty("find.error." + id)).intValue();
+            int error = new Integer(getProject().getProperty("find.error." + id)).intValue();
 
             if (findResult.length() > 0) {
-		StringTokenizer st = new StringTokenizer(findResult, "\n");
+                StringTokenizer st = new StringTokenizer(findResult, "\n");
 	       
-		if (error ==1)
-		    log("but ignored", Project.MSG_ERR);
+                if (error ==1)
+                    log("but ignored", Project.MSG_ERR);
+
 
                 if (m_findFirst) {
-                    // Return only the first match.
-                    File f = new File(st.nextToken());
-                    if (f.exists()) {
-                        value = f.getAbsolutePath();
+
+                    while (st.hasMoreTokens()) {
+                        String s = st.nextToken();
+                        if (s.indexOf("find:") == -1)
+                            {
+                                // Return only the first match.
+                                File f = new File(s);
+                                if (f.exists()) {
+                                    value = f.getAbsolutePath();
+                                    break;
+                                }
+                            }
                     }
                 } else {
+
                     // Return all the matches.
                     StringBuffer sb = new StringBuffer();
                     while (st.hasMoreTokens()) {
-                        File f = new File(st.nextToken());
-                        if (f.exists()) {
-                            sb.append(m_delimiter).append(f.getAbsolutePath());
-                        }
+                        String s = st.nextToken();
+                        if (s.indexOf("find:") == -1)
+                            {
+                                
+                                File f = new File(s);
+                                if (f.exists()) {
+                                    sb.append(m_delimiter).append(f.getAbsolutePath());
+                                }
+                            }
                     }
 
                     if (sb.length() > 0) {
@@ -335,7 +349,7 @@ public class FindFile extends Task {
                             value = new String(sb.toString().trim());
                         } else {
                             value = sb.toString().
-                                        substring(m_delimiter.length());
+                                substring(m_delimiter.length());
                         }
                     }
                 }

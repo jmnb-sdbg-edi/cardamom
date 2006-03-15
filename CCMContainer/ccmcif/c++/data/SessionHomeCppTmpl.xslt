@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -32,11 +32,30 @@
 
 <!--
    Main - This template fetches the necessary data from inputs
-   to generate a file.
+   to generate a file when FT.
 
    @param none
 -->
+<xsl:template name="ft_session_home_cpp">
+   <xsl:call-template name="session_home_cpp">
+      <xsl:with-param name="_hasFaultTolerance" select="'yes'"/>
+   </xsl:call-template>
+</xsl:template> <!-- end of template ft_session_home_cpp -->
+
+
+<!--
+   Main - This template fetches the necessary data from inputs
+   to generate a file. It can be called by ft_session_home_cpp template
+   if FT. In this case the parameter _hasFaultTolerance is set to true.
+
+   @param none
+-->
+
 <xsl:template name="session_home_cpp">
+   <!--
+      Parameter below are used for FT.
+   -->
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <!--
       Parameters below are used for recursiveness.
    -->
@@ -69,12 +88,25 @@
                <xsl:with-param name="_homeImplNode" select="$homeImplNode"/>
             </xsl:call-template>
          </xsl:variable>
-         <xsl:variable name="homeImplClassname">
+         <xsl:variable name="shortHomeImplClassname">
             <xsl:call-template name="getLastToken">
                <xsl:with-param name="_string" select="$scopedHomeImplClassname"/>
                <xsl:with-param name="_separator" select="$xmlSep"/>
             </xsl:call-template>
          </xsl:variable>
+         
+         <xsl:variable name="homeImplClassname">
+             <xsl:choose>
+                 <xsl:when test="$_hasFaultTolerance = 'yes'">
+                     <xsl:value-of select="concat('FT', $shortHomeImplClassname)"/>
+                 </xsl:when>
+                 <xsl:otherwise>
+                     <xsl:value-of select="$shortHomeImplClassname"/>
+                 </xsl:otherwise>
+             </xsl:choose>
+         </xsl:variable>
+
+
 
          <!--
             Get the output filename.
@@ -117,6 +149,7 @@
                   </xsl:call-template>
                </xsl:with-param>
                <xsl:with-param name="_isSegmented" select="$isSegmented"/>
+               <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
             </xsl:call-template>
          </xsl:document>
 
@@ -124,6 +157,7 @@
             Proceed to the next home impl if any.
          -->
          <xsl:call-template name="session_home_cpp">
+            <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
             <xsl:with-param name="_index" select="$_index + 1"/>
          </xsl:call-template>
       </xsl:if>
@@ -142,15 +176,26 @@
    <xsl:param name="_scopedHomeImplClassname"/>
    <xsl:param name="_homeName"/>
    <xsl:param name="_isSegmented"/>
+   <xsl:param name="_hasFaultTolerance"/>
 
    <!--
       Miscellaneous variables.
    -->
-   <xsl:variable name="homeImplClassname">
+   <xsl:variable name="shortHomeImplClassname">
       <xsl:call-template name="getLastToken">
          <xsl:with-param name="_string" select="$_scopedHomeImplClassname"/>
          <xsl:with-param name="_separator" select="$xmlSep"/>
       </xsl:call-template>
+   </xsl:variable>
+   <xsl:variable name="homeImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FT', $shortHomeImplClassname)"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="$shortHomeImplClassname"/>
+         </xsl:otherwise>
+      </xsl:choose>
    </xsl:variable>
    <xsl:variable name="cppHomeScope">
       <xsl:call-template name="getScope">
@@ -174,7 +219,13 @@
          <xsl:with-param name="_name" select="$managedComponentNode/@name"/>
       </xsl:call-template>
    </xsl:variable>
-
+   <xsl:variable name="idlmanagedComponentNameScope">
+      <xsl:call-template name="replaceCharsInString">
+         <xsl:with-param name="_stringIn" select="$managedComponentNameScope"/>
+         <xsl:with-param name="_charsIn" select="'::'"/>
+         <xsl:with-param name="_charsOut" select="'/'"/>
+      </xsl:call-template>
+   </xsl:variable>
 
    <!--
       References to some nodes.
@@ -203,8 +254,14 @@
 #include <CCMContainer/idllib/CdmwDeployment.stub.hpp>
 ]]>
 
+   <xsl:if test="$_hasFaultTolerance = 'no'">
 #include "<xsl:value-of select="$pathPrefix"/>Session<xsl:value-of select="$_homeName"/>_impl.hpp"
 #include "<xsl:value-of select="$pathPrefix"/>Session<xsl:value-of select="$managedComponentNode/@name"/>_impl.hpp"
+   </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+#include "<xsl:value-of select="$pathPrefix"/>FTSession<xsl:value-of select="$_homeName"/>_impl.hpp"
+#include "<xsl:value-of select="$pathPrefix"/>FTSession<xsl:value-of select="$managedComponentNode/@name"/>_impl.hpp"
+   </xsl:if>
 
 namespace {
       <xsl:variable name="cdmwHomeRepId">
@@ -219,13 +276,15 @@ namespace {
       const char* COMP_REP_ID = "<xsl:value-of select="$managedComponentNode/UML:ModelElement.taggedValue/UML:TaggedValue[@tag = 'typeid']/@value"/>";
       </xsl:if>
       <xsl:if test="$_isSegmented = 'no'">
-      const char* COMP_REP_ID = "IDL:thalesgroup.com/Cdmw_<xsl:value-of select="concat($managedComponentNameScope, '/', $managedComponentNode/@name, ':1.0')"/>";
+      const char* COMP_REP_ID = "IDL:thalesgroup.com/Cdmw_<xsl:value-of select="concat($idlmanagedComponentNameScope, '/', $managedComponentNode/@name, ':1.0')"/>";
       </xsl:if>
 
 };  // End of anonymous namespace
 
    <xsl:call-template name="openNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
 
    // Constructor 
@@ -234,7 +293,12 @@ namespace {
           const <![CDATA[Cdmw::LifeCycle::ObjectDeactivator&]]> deactivator,
           const <![CDATA[Components::ConfigValues&]]> config)
       throw(CORBA::SystemException)
+   <xsl:if test="$_hasFaultTolerance = 'no'">
          : CCMHome_impl(HOME_REP_ID, COMP_REP_ID, deactivator, config)
+   </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+         : FTCCMHome_impl(HOME_REP_ID, COMP_REP_ID, deactivator, config)
+   </xsl:if>
    {
       try {
          m_home_executor = <xsl:value-of select="concat($cppHomeScope, $cppSep, 'CCM_', $_homeName)"/>::_narrow(home_exec);
@@ -287,11 +351,7 @@ namespace {
       throw(Components::CreateFailure,
             CORBA::SystemException)
    {
-      if (is_removed(m_oid.in()))
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed(m_oid.in());
 
       // Create an empty config
       Components::ConfigValues config(0L);
@@ -311,11 +371,7 @@ namespace {
       throw(Components::CreateFailure,
             CORBA::SystemException)
    {
-      if (is_removed(m_oid.in()))
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed(m_oid.in());
 
       // Create an empty config
       Components::ConfigValues config(0L);
@@ -334,11 +390,7 @@ namespace {
      throw(Components::CreateFailure,
             CORBA::SystemException)
    {
-      if (is_removed(m_oid.in()))
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed(m_oid.in());
 
       CORBA::Object_var obj = create_component_ref(config);
       <xsl:value-of select="concat($scopedManagedComponentName, '_var')"/> result = <xsl:value-of select="$scopedManagedComponentName"/>::_narrow(obj.in());
@@ -346,7 +398,7 @@ namespace {
       if (CORBA::is_nil(result.in()))
       {
          PRINT_ERROR("Created reference is not a <xsl:value-of select="$managedComponentNode/@name"/>!");
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+         throw CORBA::INTERNAL(OrbSupport::INTERNALLifeCycleFrameworkError, CORBA::COMPLETED_NO);
       }
 
  
@@ -375,14 +427,15 @@ namespace {
       throw(CosLifeCycle::NotRemovable,
             CORBA::SystemException)
    {
-      if (is_removed(m_oid.in()))
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed(m_oid.in());
 
       m_home_executor = <xsl:value-of select="concat($cppHomeScope, $cppSep, 'CCM_', $_homeName, $cppSep, '_nil()')"/>;
+      <xsl:if test="$_hasFaultTolerance = 'no'">
       CCMHome_impl::remove();
+      </xsl:if>
+      <xsl:if test="$_hasFaultTolerance = 'yes'">
+      FTCCMHome_impl::remove();
+      </xsl:if>
    }
 
    //
@@ -458,17 +511,13 @@ namespace {
    ]]>
    PortableServer::Servant 
    <xsl:value-of select="$homeImplClassname"/>::create_component_servant
-         (const std::string                  comp_oid,
-          CdmwCcmContainer::CCM2Context_ptr  ctx,
-          <![CDATA[ComponentInfo&]]>                     comp_info)
+         (const <![CDATA[std::string&]]>                comp_oid,
+          Context*            ctx,
+          <![CDATA[ComponentInfo&]]>   comp_info)
       throw(Components::CreateFailure,
             CORBA::SystemException)
    {
-      if (is_removed(m_oid.in()))
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed(m_oid.in());
 
       try
       {
@@ -494,11 +543,17 @@ namespace {
             is_created_by_factory_operation = true;
          }
 
+   <xsl:if test="$_hasFaultTolerance = 'no'">
          return new <xsl:value-of select="concat('Session', $managedComponentNode/@name, '_impl')"/>(comp_oid, ctx, comp_info.comp_ref.in(), comp_exec.in(),
-#ifdef CDMW_USE_FAULTTOLERANCE         
-         comp_info.comp_group_ref.in(),
-#endif
          is_created_by_factory_operation);
+   </xsl:if>
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+         CORBA::Object_var group_ref = find_component_group(comp_oid);
+         
+         return new <xsl:value-of select="concat('FTSession', $managedComponentNode/@name, '_impl')"/>(comp_oid, ctx, comp_info.comp_ref.in(), comp_exec.in(),
+         group_ref.in(),
+         is_created_by_factory_operation);
+   </xsl:if>
       }
       catch (const <![CDATA[Components::CCMException&]]>)
       {
@@ -512,7 +567,9 @@ namespace {
    }
 
    <xsl:call-template name="closeNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
 
    <!--
@@ -561,11 +618,7 @@ namespace {
       throw(Components::CreateFailure,
             CORBA::SystemException)
    {
-      if (is_removed(m_oid.in()))
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed(m_oid.in());
 
       // Create executor
       Components::EnterpriseComponent_var comp_exec;
@@ -602,7 +655,7 @@ namespace {
       if (CORBA::is_nil(result.in()))
       {
          PRINT_ERROR("Created reference is not a <xsl:value-of select="$_managedComponentName"/>!");
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+         throw CORBA::INTERNAL(OrbSupport::INTERNALLifeCycleFrameworkError, CORBA::COMPLETED_NO);
       }
 
       return result._retn();
@@ -628,11 +681,7 @@ namespace {
       <xsl:value-of select="concat($lf, $_returnType, $lf, $_homeImplClassname, $cppSep, $_cppOperationName, '()', $lf)"/>
          throw(CORBA::SystemException)
       {
-         if (is_removed(m_oid.in()))
-         {
-             throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                           CORBA::COMPLETED_NO); 
-          }
+         check_is_removed(m_oid.in());
 
          <xsl:value-of select="$_objRefVarType"/> result = <![CDATA[m_home_executor->]]><xsl:value-of select="$_cppOperationName"/>();
 
@@ -653,11 +702,7 @@ namespace {
          <xsl:value-of select="concat($_homeImplClassname, $cppSep, $_cppOperationName, '(', $_paramType, ' ', $_paramName, ')')"/>
             throw(CORBA::SystemException)
          {
-            if (is_removed(m_oid.in()))
-            {
-                throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                              CORBA::COMPLETED_NO); 
-            }
+            check_is_removed(m_oid.in());
 
              <![CDATA[m_home_executor->]]><xsl:value-of select="concat($_cppOperationName, '(', $_paramName, ');')"/>
          }

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -121,6 +121,137 @@
    </xsl:choose>
 </xsl:template>
 
+<xsl:template name="datastore.context">
+   <xsl:param name="_dataStoresKind"/>
+   <xsl:param name="_hasReplyLogging"/>
+<![CDATA[ // get information for DataStore context ]]><![CDATA[
+     try {
+             std::string res;
+	     unsigned long res_long;	   
+             res = xml_data->getDataStoresAttributeValue("max-transaction-in-progress"); 
+             max_transaction_in_progress = atoi(res.c_str());
+
+             res = xml_data->getDataStoresAttributeValue("max-transaction-done"); 
+             max_transaction_done = atoi(res.c_str());
+
+             res = xml_data->getDataStoresAttributeValue("cohort-timeout");
+             res_long = atoi(res.c_str());				 
+             cohort_timeout.seconds = res_long/1000;
+             cohort_timeout.microseconds = (res_long%1000)*1000;
+
+             res = xml_data->getDataStoresAttributeValue("coordinator-timeout");				 
+             res_long = atoi(res.c_str());				 
+             coordinator_timeout.seconds = res_long/1000;
+             coordinator_timeout.microseconds = (res_long%1000)*1000;
+
+             res = xml_data->getDataStoresAttributeValue("number-of-scheduler-thread");
+             number_of_scheduler_thread = atoi(res.c_str());
+
+             res = xml_data->getDataStoresAttributeValue("chunk-size");
+             chunk_size = atoi(res.c_str());
+
+             res = xml_data->getDataStoresAttributeValue("freeze-size");
+             freeze_size = atoi(res.c_str());
+
+             res = xml_data->getDataStoresAttributeValue("freeze-timeout");
+             res_long = atoi(res.c_str());				 
+             freeze_timeout.seconds = res_long/1000;
+             freeze_timeout.microseconds = (res_long%1000)*1000;
+]]>
+<xsl:if test="$_dataStoresKind = 'MIOP'">
+<![CDATA[    multicast_port = xml_data->getDataStoresAttributeValue("multicast_port");
+
+             multicast_domain = xml_data->getDataStoresAttributeValue("multicast_domain");
+
+             multicast_IP_address = xml_data->getDataStoresAttributeValue("multicast_IP_address");]]>
+</xsl:if>
+
+<![CDATA[    } catch (const Cdmw::BadParameterException& ex) {
+                CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::BAD_PARAM>,
+                             CORBA::BAD_PARAM(Cdmw::OrbSupport::BAD_PARAMInvalidXMLInitData,
+                                              CORBA::COMPLETED_NO),ex.what() );
+             }
+]]>
+<![CDATA[ Cdmw::FT::DataStoreContext *datastore_context = new Cdmw::FT::DataStoreContext( ]]>
+      <xsl:choose>
+	 <xsl:when test="$_dataStoresKind = 'MIOP'">
+	    <![CDATA[orb,
+	    CDMW_rootPOA.in(),
+	    multicast_port,
+	    multicast_domain,
+	    multicast_IP_address,
+	    max_transaction_in_progress,
+	    max_transaction_done,
+	    cohort_timeout,
+	    coordinator_timeout,
+	    number_of_scheduler_thread]]>
+	 </xsl:when>
+	 <xsl:when test="$_dataStoresKind = 'IIOP'">
+	    <![CDATA[orb,
+	    CDMW_rootPOA.in(),
+	    max_transaction_in_progress,
+	    max_transaction_done,
+	    cohort_timeout,
+	    coordinator_timeout,
+	    number_of_scheduler_thread]]>
+	 </xsl:when>
+      </xsl:choose>
+      <![CDATA[ ); ]]>
+<![CDATA[
+     // TODO clean up manager (since this can only be done at the end of the program execution
+     // then this leak is harmless). Also applise to datastore_context and datastores
+    Cdmw::FT::TXManager* manager = new Cdmw::FT::TXManager(*datastore_context);
+]]>
+<![CDATA[
+      CdmwFT::StateTransfer::LocalDataStoreInfo localDataStoreInfo;
+
+      CdmwFT::StateTransfer::DataStoreGroup_var ftdatastoregroup_ref = 
+          (new Cdmw::FT::DataStoreGroup_impl(CDMW_rootPOA.in(), *datastore_context))->_this();
+
+      localDataStoreInfo.local_data_store = CdmwFT::StateTransfer::DataStoreGroup::_duplicate(ftdatastoregroup_ref.in());
+]]>
+
+      <xsl:choose>
+	 <xsl:when test="$_dataStoresKind = 'MIOP'">
+<![CDATA[
+      localDataStoreInfo.coordinator = CdmwFT::Transaction::TPCCoordinator::_nil();
+      localDataStoreInfo.cohort = CdmwFT::Transaction::TPCCohort::_nil();
+]]>
+	 </xsl:when>
+	 <xsl:when test="$_dataStoresKind = 'IIOP'">
+<![CDATA[
+      localDataStoreInfo.coordinator = datastore_context->get_tpc_coordinator();
+      localDataStoreInfo.cohort = datastore_context->get_tpc_cohort();
+]]>
+	 </xsl:when>
+      </xsl:choose>
+
+
+     <xsl:choose>
+         <xsl:when test="$_hasReplyLogging='yes'">
+<![CDATA[
+      // incrementation for the reply logging
+      localDataStoreInfosSize = localDataStoreInfosSize + 1;
+]]>
+	 </xsl:when>
+       <xsl:otherwise>
+       <![CDATA[
+      // incrementation for the reply logging
+      localDataStoreInfosSize = localDataStoreInfosSize + 0;
+]]>
+   
+       </xsl:otherwise>	
+      </xsl:choose>
+
+
+
+
+<![CDATA[
+      localDataStoreInfo.dsids.length(localDataStoreInfosSize);
+      (*localDataStoreInfos)[0] = localDataStoreInfo;
+]]>
+</xsl:template>
+
 <xsl:template name="datastore.occurrence">
    <xsl:param name="_occurrences"/>
    <xsl:param name="_occurrencesInProgress"/>
@@ -146,6 +277,12 @@
 	    <xsl:variable name="datastoreOidType" select="$datastoreTypeNode/@oid-type"/>
 	    <xsl:variable name="datastoreDataType" select="$datastoreTypeNode/@data-type"/>
 	    <xsl:variable name="datastoreIdlfilename" select="$datastoreTypeNode/@idl-filename"/>
+
+           <xsl:if test="string-length($_datastoreTypename)=0"> 
+	     <xsl:message terminate="yes">
+	           <xsl:value-of select="concat('ERROR ---  ', $datastoreIdref, ' defined as idref does not correspond to a defined Datastore typename ')"/>
+             </xsl:message>
+           </xsl:if>
 	  
 	    <!--
 	       define the type of the storage home
@@ -205,151 +342,34 @@
    <!--
        export the specification for the storage home
    -->
-   <![CDATA[ typedef Cdmw::FT::DataStore<]]><xsl:value-of select="$datastoreoid"/><![CDATA[,]]>
-	                           <xsl:value-of select="$datastoredata"/><![CDATA[>]]>
-				   <xsl:value-of select="$_datastoreTypename"/><![CDATA[;]]>
-
-
-
-<![CDATA[ // get information for  ]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",n°]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[
+<![CDATA[
      try {
              std::string res;
-	     unsigned long res_long;	   
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							  "max-transaction-in-progress"); 
-             max_transaction_in_progress = atoi(res.c_str());
-
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "max-transaction-done"); 
-             max_transaction_done = atoi(res.c_str());
-
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "cohort-timeout");
-             res_long = atoi(res.c_str());				 
-             cohort_timeout.seconds = res_long/1000;
-             cohort_timeout.microseconds = (res_long%1000)*1000;
-
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "coordinator-timeout");				 
-             res_long = atoi(res.c_str());				 
-             coordinator_timeout.seconds = res_long/1000;
-             coordinator_timeout.microseconds = (res_long%1000)*1000;
-
              res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
 	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
 							 "datastore-id");
              datastore_id = atoi(res.c_str());
-
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "number-of-scheduler-thread");
-             number_of_scheduler_thread = atoi(res.c_str());
-
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "chunk-size");
-             chunk_size = atoi(res.c_str());
-
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "freeze-size");
-             freeze_size = atoi(res.c_str());
-
-             res = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "freeze-timeout");
-             res_long = atoi(res.c_str());				 
-             freeze_timeout.seconds = res_long/1000;
-             freeze_timeout.microseconds = (res_long%1000)*1000;
-]]>
-<xsl:if test="$_dataStoresKind = 'MIOP'">
-<![CDATA[    multicast_port = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "multicast_port");
-
-             multicast_domain = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "multicast_domain");
-
-             multicast_IP_address = xml_data->getDataStoreAttributeValue("]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[.datastore",
-	                                                 ]]><xsl:value-of select="$_occurrencesInProgressForThisDataStore"/><![CDATA[,
-							 "multicast_IP_address");]]>
-</xsl:if>
-
-<![CDATA[    } catch (const Cdmw::BadParameterException& ex) {
+    } catch (const Cdmw::BadParameterException& ex) {
                 CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::BAD_PARAM>,
                              CORBA::BAD_PARAM(Cdmw::OrbSupport::BAD_PARAMInvalidXMLInitData,
                                               CORBA::COMPLETED_NO),ex.what() );
              }
 ]]>
+<![CDATA[    (*localDataStoreInfos)[0].dsids[dataStore_inc++] = datastore_id;
+    typedef Cdmw::FT::TXDataStore<]]><xsl:value-of select="$datastoreoid"/><![CDATA[,]]>
+	                           <xsl:value-of select="$datastoredata"/><![CDATA[>]]>
+				   <xsl:value-of select="$_datastoreTypename"/><![CDATA[;]]>
+
 
       <xsl:variable name="datastoreVariable" select="translate($_datastoreTypename, $ucase, $lcase)"/>
-      <xsl:value-of select="$_datastoreTypename"/><![CDATA[ * ]]>
-      <xsl:value-of select="$datastoreVariable"/><![CDATA[_]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[ = new ]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[ ( ]]>
-      <xsl:choose>
-	 <xsl:when test="$_dataStoresKind = 'MIOP'">
-	    <![CDATA[datastore_id,
+      <![CDATA[        new ]]><xsl:value-of select="$_datastoreTypename"/><![CDATA[ (*manager,
+            datastore_id,
 	    orb,
 	    CDMW_rootPOA.in(),
-	    multicast_port,
-	    multicast_domain,
-	    multicast_IP_address,
-	    max_transaction_in_progress,
-	    max_transaction_done,
-	    cohort_timeout,
-	    coordinator_timeout,
-	    number_of_scheduler_thread,
 	    freeze_size,
 	    chunk_size,
-	    freeze_timeout]]>
-	 </xsl:when>
-	 <xsl:when test="$_dataStoresKind = 'IIOP'">
-	    <![CDATA[datastore_id,
-	    orb,
-	    CDMW_rootPOA.in(),
-	    max_transaction_in_progress,
-	    max_transaction_done,
-	    cohort_timeout,
-	    coordinator_timeout,
-	    number_of_scheduler_thread,
-	    freeze_size,
-	    chunk_size,
-	    freeze_timeout]]>
-	 </xsl:when>
-      </xsl:choose>
-      <![CDATA[ ); ]]>
+	    freeze_timeout);]]>
 
-<![CDATA[
-      CdmwFT::StateTransfer::LocalDataStoreInfo localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[ ;
-      localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[.dsid = datastore_id;
-      CdmwFT::StateTransfer::DataStore_var ]]><xsl:value-of select="$datastoreVariable"/><![CDATA[_]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[_ref = ]]>
-<![CDATA[
-      (new Cdmw::FT::DataStore_impl(CDMW_rootPOA.in(),*]]><xsl:value-of select="$datastoreVariable"/><![CDATA[_]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[))->_this();
-
-
-      localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[.local_data_store = CdmwFT::StateTransfer::DataStore::_duplicate(]]><xsl:value-of select="$datastoreVariable"/><![CDATA[_]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[_ref.in());]]>
-
-      <xsl:choose>
-	 <xsl:when test="$_dataStoresKind = 'MIOP'">
-	 <![CDATA[
-	 localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[.coordinator = NULL;
-	 localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[.cohort = NULL; ]]>
-	 </xsl:when>
-	 <xsl:when test="$_dataStoresKind = 'IIOP'">
-	 <![CDATA[      localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[.coordinator = ]]>
-	    <xsl:value-of select="$datastoreVariable"/><![CDATA[_]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[->get_tpc_coordinator();]]>
-	 <![CDATA[      localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[.cohort = ]]>
-	    <xsl:value-of select="$datastoreVariable"/><![CDATA[_]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[->get_tpc_cohort();]]>
-	 </xsl:when>
-      </xsl:choose>
-<![CDATA[
-      localDataStoreInfos[dataStore_inc] = localDataStoreInfo]]><xsl:value-of select="$_occurrencesInProgress"/><![CDATA[;
-      dataStore_inc++;
-]]>
       <!--
           Proceed to the next node.
        -->
@@ -399,6 +419,7 @@
    <xsl:variable name="servicesNode" select="$_programNode/services"/>
    <xsl:variable name="frameworkNodes" select="$servicesNode/lifecycle/framework"/>
    <xsl:variable name="datastoreNodes" select="$servicesNode/fault-tolerance/datastores/datastore"/>
+   <xsl:variable name="hasDatastoreNodes" select="boolean($servicesNode/fault-tolerance/datastores/datastore)"/>
 
    <!--
       Miscellaneous variables.
@@ -422,6 +443,7 @@
       </xsl:call-template>
    </xsl:variable>
    <xsl:variable name="cdmwinitNamespace" select="'Cdmw.CdmwInit'"/>
+   <xsl:variable name="cdmweventNamespace" select="'Cdmw.Event'"/>
    <xsl:variable name="datastoreNamespace" select="'DataStore'"/>
 
    <!--
@@ -432,8 +454,10 @@
    #include "ConfAndPlug/cdmwinit/CdmwInterface.hpp"
    #include "ConfAndPlug/cdmwinit/CdmwInitConfiguration.hpp"
    #include "ConfAndPlug/cdmwinit/InitUtils.hpp"
+   #include "SystemMngt/platforminterface/PlatformInterface.hpp"
    #include "Foundation/common/Assert.hpp"
 
+   #include <Foundation/orbsupport/Codec.hpp>
    #include "Foundation/orbsupport/StrategyList.hpp"
 
    #include "Foundation/osthreads/Mutex.hpp"
@@ -459,7 +483,13 @@
       #include "FaultTolerance/ftlocationmanager/PrimaryBackupAdmin_impl.hpp"
       #include "FaultTolerance/idllib/CdmwFTReplicationManager.stub.hpp"
       #include "FaultTolerance/ftcommon/FTConfiguration.hpp"
-      #include "FaultTolerance/ftstatemanager/StorageHome.hpp"
+      #include "Foundation/commonsvcs/datastore/StorageHome.hpp"
+      #include "FaultTolerance/ftstatemanager/TXManager.hpp"
+      #include "FaultTolerance/ftstatemanager/TXDataStore.hpp"
+      #include "FaultTolerance/ftstatemanager/DataStoreContext.hpp"
+      #include "FaultTolerance/ftstatemanager/DataStoreGroup_impl.hpp"
+      #include <FaultTolerance/ftrequestlogging/FTReplyRecording.hpp>
+      #include <FaultTolerance/ftinit/FTServiceInit.hpp>
 	  
       ]]>
    </xsl:if>
@@ -480,8 +510,14 @@
       <![CDATA[
       #include "FaultTolerance/ftlocationmanager/StatefullPrimaryBackupAdmin_impl.hpp"
       #include <FaultTolerance/ftlocationmanager/LocationDataStoreTimeoutHandler_impl.hpp>
-      #include "]]><xsl:value-of select="$pathPrefix"/><![CDATA[GlobalDataStores.hpp"
-      ]]>
+
+       ]]> 
+
+       <xsl:if test="$hasDatastoreNodes='true'">
+       <![CDATA[
+       #include "]]><xsl:value-of select="$pathPrefix"/><![CDATA[GlobalDataStores.hpp"
+       ]]>
+       </xsl:if>
    </xsl:if>
 
 
@@ -492,17 +528,47 @@
       #include "CCMContainer/ccmcomponentserver/InitUtils.hpp"
       #include "CCMContainer/ccmcontainer/HomeAllocatorRegistry.hpp"
       #include "Foundation/common/Locations.hpp"
-      #include "Repository/naminginterface/NamingUtil.hpp"
-      #include "Event/idllib/CdmwEvent.stub.hpp"
+      #include "Foundation/commonsvcs/naming/NamingUtil.hpp"
       ]]>
+
+      <xsl:if test="$hasEventPorts='true'">
+        <![CDATA[
+        #include "Event/idllib/CdmwEvent.stub.hpp"
+        #include "Event/eventsupport/EventChannelFactory_impl.hpp"
+        ]]>
+      </xsl:if>
+   </xsl:if>
+   
+   <xsl:variable name="hasFaultToleranceServer">
+      <xsl:choose>
+         <xsl:when test="boolean($servicesNode/fault-tolerance/@server)">
+            <xsl:value-of select="$servicesNode/fault-tolerance/@server"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="'no'"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
+   <xsl:if test="$hasFaultToleranceServer='yes'">
+      <![CDATA[// generate for FaultToleranceServer]]>
+      <xsl:for-each select="$frameworkNodes">
+         <xsl:call-template name="includeFramework">
+            <xsl:with-param name="_framework" select="."/>
+            <xsl:with-param name="_hasHomeImplRef" select="$hasHomeImpl"/>
+            <xsl:with-param name="_hasFaultTolerance" select="true()"/>
+         </xsl:call-template>
+      </xsl:for-each>
+   </xsl:if>
+   <xsl:if test="$hasFaultToleranceServer='no'">
+      <xsl:for-each select="$frameworkNodes">
+         <xsl:call-template name="includeFramework">
+            <xsl:with-param name="_framework" select="."/>
+            <xsl:with-param name="_hasHomeImplRef" select="$hasHomeImpl"/>
+         </xsl:call-template>
+      </xsl:for-each>
    </xsl:if>
 
-   <xsl:for-each select="$frameworkNodes">
-      <xsl:call-template name="includeFramework">
-         <xsl:with-param name="_framework" select="."/>
-         <xsl:with-param name="_hasHomeImplRef" select="$hasHomeImpl"/>
-      </xsl:call-template>
-   </xsl:for-each>
+
 
 
    <xsl:call-template name="includeOidDataForDataStore">
@@ -519,6 +585,8 @@
 
    <xsl:if test="$hasTrace">
       <![CDATA[
+      #include <Foundation/logging/LogManager.hpp> // ECR-0169
+
       #include "TraceAndPerf/tracelibrary/Trace.hpp"
       #include "TraceAndPerf/tracelibrary/CdmwTrace.hpp"
       #include "TraceAndPerf/tracelibrary/InitUtils.hpp"
@@ -557,6 +625,59 @@
 
    //--------------------------------------------------------------------------
 
+   <xsl:if test="$hasEventPorts='true'">
+//
+// Re-implement EventChannelFactory allocator to set 
+// use_profile_manager parameter attribute to false 
+// in EventChannelFactory constructor call.
+//   
+      <xsl:call-template name="openNamespace">
+         <xsl:with-param name="_scope" select="$cdmweventNamespace"/>
+         <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
+      </xsl:call-template>
+   
+      <![CDATA[
+        template <>
+        PortableServer::Servant
+        EventChannelFactory_impl_Allocator::allocate(
+                CORBA::ORB_ptr orb,
+                PortableServer::POA_ptr parent,
+                CdmwLifeCycle::ObjectRegistration_ptr name_domain,
+                const std::string & name_domain_name,
+                const std::string & factory_name,
+                Cdmw::OrbSupport::POAThreadingPolicy & threading_policy,
+                int & argc, char** argv)
+            throw(Cdmw::OutOfMemoryException,
+                  Cdmw::BadParameterException,
+                  Cdmw::InternalErrorException,
+                  CORBA::SystemException)
+        {
+            try {
+                return new Cdmw::Event::EventChannelFactory_impl(orb,
+                                                                 parent,
+                                                                 name_domain,
+                                                                 name_domain_name,
+                                                                 factory_name,
+                                                                 threading_policy,
+                                                                 argc,
+                                                                 argv,
+                                                                 false);
+            }
+            catch (const std::bad_alloc &)
+            {
+                CDMW_THROW(Cdmw::OutOfMemoryException);
+            }
+        }    
+      ]]>
+   
+      <xsl:call-template name="closeNamespace">
+         <xsl:with-param name="_scope" select="$cdmweventNamespace"/>
+         <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
+      </xsl:call-template>
+   
+   //--------------------------------------------------------------------------
+   </xsl:if>
+   
    <xsl:call-template name="openNamespace">
       <xsl:with-param name="_scope" select="$cdmwinitNamespace"/>
       <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
@@ -574,6 +695,12 @@
             CdmwProcess_impl * process_impl = 0;
 
       try {
+         // PCR-0049
+         Cdmw::OrbSupport::CodecBase::init(orb);
+
+         // Initialize XML library
+         Cdmw::CdmwInit::InitUtils::init_xml_library();
+
          // Get the XML init filename. This may raise CORBA::BAD_PARAM, CORBA::NO_MEMORY,
          // or CORBA::INTERNAL    
          std::string xml_file = InitUtils::get_xml_initialisation_file(argc, argv);
@@ -639,7 +766,7 @@
          // *************  setup FaultTolerance Policies   ******************
          // *****************************************************************
 
-         Cdmw::OrbSupport::OrbSupport::set_endpoint_selector_factory(::Cdmw::FT::FTConfiguration::get_FT_endpoint_selector_factory());
+         Cdmw::OrbSupport::OrbSupport::set_endpoint_selector_factory(::Cdmw::FT::FTConfiguration::Get_FT_endpoint_selector_factory());
 
          size_t duration_time;
          std::string client_id_str;
@@ -658,7 +785,7 @@
 
                try  {
                   client_id_str = xml_data->getServiceAttributeValue("fault-tolerance", "client-id");
-				  ::Cdmw::FT:: FTConfiguration::set_client_id(orb, client_id_str.c_str());
+				  ::Cdmw::FT::FTConfiguration::Set_client_id(orb, client_id_str.c_str());
                } catch (const Cdmw::BadParameterException& ) {
                   // do nothing : parameter is optional
                }
@@ -718,7 +845,7 @@
                                                  process_ctrl_var._retn());
             PortableServer::ServantBase_var process_impl_servant = process_impl;
             
-            CdmwPlatformMngt::Process_var process = process_impl->_this();
+            CdmwPlatformMngt::ProcessDelegate_var process = process_impl->_this();
             
             InitUtils::init_platform_interface(orb, argc, argv, process.in());
             //  From now on, a platform supervisor may initiate a call to 
@@ -733,13 +860,15 @@
          //
          // Get the application name. This may raise CORBA::BAD_INV_ORDER
          std::string application_name = InitUtils::get_cdmw_application_name();  
-        
+
          // Retreive Repository object reference. This may raise CORBA::BAD_PARAM
          // or CORBA::BAD_INV_ORDER
          CdmwNamingAndRepository::Repository_var repository 
             = InitUtils::get_cdmw_repository();
+
    ]]>
-   	 
+
+
    <xsl:if test="$hasFaultTolerance">
    <![CDATA[
          // *****************************************************************
@@ -772,19 +901,19 @@
 	 ]]>
 	</xsl:if>
 
-     <xsl:variable name="hasFaultToleranceServer">
-         <xsl:choose>
-             <xsl:when test="boolean($servicesNode/fault-tolerance/@server)">
-                 <xsl:value-of select="$servicesNode/fault-tolerance/@server"/>
-             </xsl:when>
-             <xsl:otherwise>
-                 <xsl:value-of select="'no'"/>
-             </xsl:otherwise>
-         </xsl:choose>
-     </xsl:variable>
-
       <xsl:choose>
          <xsl:when test="$hasFaultToleranceServer='yes'">
+
+         <xsl:variable name="hasReplyLogging">
+           <xsl:choose>
+               <xsl:when test="boolean($servicesNode/fault-tolerance/@reply-logging)">
+                   <xsl:value-of select="$servicesNode/fault-tolerance/@reply-logging"/>
+               </xsl:when>
+               <xsl:otherwise>
+                   <xsl:value-of select="'no'"/>
+               </xsl:otherwise>
+           </xsl:choose>
+         </xsl:variable>
 
       <![CDATA[
          // *****************************************************************
@@ -803,12 +932,12 @@
          loc[2].kind = "processname";
          
 	std::string location_str 
-	   = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+	   = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
 	std::cout << "setup FaultTolerance LocationManager for location: " << location_str << std::endl;
 			
          // create a reference for the PrimaryBackupGroupRepository
          ::Cdmw::FT::Location::PrimaryBackupGroupRepository_impl * primary_backup_repository
-             = ::Cdmw::FT::Location::PrimaryBackupGroupRepository_impl::get_instance();
+             = ::Cdmw::FT::Location::PrimaryBackupGroupRepository_impl::Get_instance();
 	     
 
       ]]>
@@ -859,13 +988,32 @@
       
       <![CDATA[long localDataStoreInfosSize = ]]><xsl:value-of select="$dataStoreOccurrence"/><![CDATA[;
       CdmwFT::StateTransfer::LocalDataStoreInfos_var localDataStoreInfos = new CdmwFT::StateTransfer::LocalDataStoreInfos();
-      localDataStoreInfos->length(localDataStoreInfosSize);
+      localDataStoreInfos->length(1);
       ]]>
 
+      <![CDATA[
+         std::string hotrestart_arg = ::Cdmw::OsSupport::OS::get_option_value( argc, argv, "--HotRestart");
+	 bool cold_restart = (hotrestart_arg != "yes");
+
+         ::Cdmw::FT::Location::StatefullPrimaryBackupAdmin_impl * statefull_primary_backup_admin
+             = new ::Cdmw::FT::Location::StatefullPrimaryBackupAdmin_impl(orb, 
+                                                                          CDMW_rootPOA.in(), 
+                                                                          loc, 
+                                                                          primary_backup_repository, 
+									  cold_restart);
+
+       bool reply_logging = false;									  									  
+      ]]>
 
       <!-- 
           get the kind of datastore (IIOP or MIOP)
-      --> 
+      -->
+
+      <xsl:call-template name="datastore.context">
+         <xsl:with-param name="_dataStoresKind" select="$dataStoresKind"/>
+	 <xsl:with-param name="_hasReplyLogging" select="$hasReplyLogging"/>
+      </xsl:call-template>
+
       <xsl:call-template name="datastore.occurrence">
          <xsl:with-param name="_datastoreNodes" select="$datastoreNodes"/>
 	 <xsl:with-param name="_occurrencesInProgress" select="1"/>
@@ -874,27 +1022,41 @@
          <xsl:with-param name="_dataStoresKind" select="$dataStoresKind"/>
          <xsl:with-param name="_index_datastore" select="1"/>
       </xsl:call-template>
+         
+      <xsl:choose>
+         <xsl:when test="$hasReplyLogging='yes'">
+<![CDATA[
+     reply_logging = true;
+    typedef Cdmw::FT::TXDataStore<std::string, CdmwFT::ReplyData>
+				   ReplyLogging;
 
+    datastore_id = Cdmw::FT::FT_REPLY_DATASTORE_ID;
+
+    ReplyLogging * logging = new ReplyLogging(*manager,
+                                              datastore_id,
+                                              orb,
+                                              CDMW_rootPOA.in(),
+                                              freeze_size,
+                                              chunk_size,
+                                              freeze_timeout);
+    
+       (*localDataStoreInfos)[0].dsids.length(dataStore_inc + 1);
+      (*localDataStoreInfos)[0].dsids[dataStore_inc++] = Cdmw::FT::FT_REPLY_DATASTORE_ID;
+
+      Cdmw::FT::FTServiceInit::Set_reply_recorder
+          (new Cdmw::FT::RequestLogging::ReplyRecording(logging->get_datastore()));
+
+]]>
+         </xsl:when>
+      </xsl:choose>
 
       <![CDATA[
-         std::string string_arg = ::Cdmw::OsSupport::OS::get_option_value( argc, argv, "--HotRestart");
-	 bool cold_restart= true;
-	 if (strcmp(string_arg.c_str(), "yes")==0)
-	     cold_restart = false;
-
-         ::Cdmw::FT::Location::StatefullPrimaryBackupAdmin_impl * statefull_primary_backup_admin
-             = new ::Cdmw::FT::Location::StatefullPrimaryBackupAdmin_impl(orb, 
-                                                                          CDMW_rootPOA.in(), 
-                                                                          loc, 
-                                                                          primary_backup_repository, 
-									  cold_restart);
-         
          ::CdmwFT::Location::StatefullPrimaryBackupAdmin_var statefull_primary_backup_admin_ref 
              = statefull_primary_backup_admin->_this();
 
          replication_manager->register_statefull_location(loc, 
 	                                                  statefull_primary_backup_admin_ref.in(),
-	                                                  localDataStoreInfos.in());
+	                                                  localDataStoreInfos.in(), reply_logging);
       ]]>
 
       </xsl:when>
@@ -971,18 +1133,21 @@
    <xsl:if test="$hasTrace">
       <![CDATA[
          #ifdef CDMW_TRACES_ENABLED
-         
+
          // *****************************************************************
-         // *********         Init The CDMW Trace Library          *********
-         // ***************************************************************** 
+         // *********         Init The CDMW Trace Library           *********
+         // *****************************************************************
          {
             std::string res;
-            size_t flushing_time;
-            size_t nb_FlushArea;
-            size_t size_FlushArea;
+            size_t flushing_time = 0;
+            size_t msg_threshold = 0;
+            size_t nb_FlushArea = 0;
+            size_t size_FlushArea = 0;
             std::string collectorName;
             std::vector<std::string> collectorNameList;
-            
+
+            Cdmw::Logging::LogManager::Init(argc, argv); // ECR-0169
+
             try {
                try {
                   res = xml_data->getServiceAttributeValue("trace", "flushing-time"); //FlushAreaMngr::DEFAULT_FLUSHING_TIME;
@@ -999,6 +1164,13 @@
                }
 
                try  {
+                  res = xml_data->getServiceAttributeValue("trace", "msg-threshold"); //FlushAreaMngr::DEFAULT_MSG_THRESHOLD;
+                  msg_threshold = atoi(res.c_str());
+
+               } catch (const Cdmw::BadParameterException& ) {
+                  // do nothing : parameter is optional
+               }
+	       try  {
                   collectorName = xml_data->getServiceAttributeValue("trace", "collector-name");
                   collectorNameList.push_back(collectorName);
                } catch (const Cdmw::BadParameterException& ) {
@@ -1014,16 +1186,19 @@
                              CORBA::NO_MEMORY(Cdmw::OrbSupport::NO_MEMORY,
                                               CORBA::COMPLETED_NO),
                              ex.what() );
-            } 
+            }
 
             // May raise CORBA::SystemException
             Trace::InitUtils::init_trace_library(CDMW_rootPOA.in(),
                                                  application_name,
                                                  process_name,
-                                                 flushing_time,nb_FlushArea,size_FlushArea,
+                                                 flushing_time,
+                                                 msg_threshold,
+                                                 nb_FlushArea,
+                                                 size_FlushArea,
                                                  collectorNameList);
 
-            CDMW_TRACE_ACTIVE_FLUSHING();           
+            CDMW_TRACE_ACTIVE_FLUSHING();
          }
 
          #endif // CDMW_TRACES_ENABLED
@@ -1172,7 +1347,7 @@
                           ex );
          }
          // May raise a CORBA::SystemException 
-         Cdmw::NamingAndRepository::NamingInterface root_context (nc_root_context.in());
+         Cdmw::CommonSvcs::Naming::NamingInterface root_context (nc_root_context.in());
 
       ]]>
 
@@ -1211,6 +1386,7 @@
             </xsl:choose>
          </xsl:variable>
 
+            
          <!--
             Format the class name for output.
          -->
@@ -1247,6 +1423,30 @@
                HomeAllocatorRegistry::Register("<xsl:value-of select="$factoryClassname"/>",
                                                <![CDATA[&CdmwHome_Allocator::TheAllocator);]]>
             }
+
+            <xsl:if test="$hasFaultToleranceServer='yes'">
+               <xsl:variable name="ftHomeClassname">
+                  <xsl:call-template name="buildHomeImplClassname">
+                        <xsl:with-param name="_homeImplNode" select="$lifecycleFrameworkNode/home-impl"/>
+                        <xsl:with-param name="_prefix" select="'FT'"/>
+                  </xsl:call-template>
+               </xsl:variable>
+
+               <xsl:variable name="cppFtFactoryClassname">
+                  <xsl:call-template name="replaceCharsInString">
+                     <xsl:with-param name="_stringIn" select="$ftHomeClassname"/>
+                     <xsl:with-param name="_charsIn" select="$xmlSep"/>
+                     <xsl:with-param name="_charsOut" select="$cppSep"/>
+                  </xsl:call-template>
+               </xsl:variable>
+
+            // Register <xsl:value-of select="$cppFtFactoryClassname"/> HomeAllocator
+            {
+               typedef <![CDATA[HomeAllocator<]]><xsl:value-of select="$cppFtFactoryClassname"/><![CDATA[> CdmwHome_Allocator;]]>
+               HomeAllocatorRegistry::Register("<xsl:value-of select="$ftHomeClassname"/>",
+                                               <![CDATA[&CdmwHome_Allocator::TheAllocator);]]>
+            }
+            </xsl:if>
          </xsl:if>
 
          <!--
@@ -2018,16 +2218,86 @@
 
       <xsl:if test="$hasHomeImpl='true'">
          <![CDATA[  
-         // Get a Default Event Channel Factory
+         // Default Event Channel Factory
          CdmwEvent::EventChannelFactory_var event_channel_factory 
              = CdmwEvent::EventChannelFactory::_nil();
          ]]>
 
          <xsl:if test="$hasEventPorts = 'true'">
             <![CDATA[
+            // *****************************************************************
+            // ******        Create a local Event Channel Factory         ******
+            // *****************************************************************
+            
+            // the factory name will be: <application_name>.<processname>.EventChannelFactory
+            std::string tmp_ec_factory_name = 
+                application_name + "." + process_name + ".EventChannelFactory";
+            CosNaming::Name ec_factory_name;
+            ec_factory_name.length(1);
+            ec_factory_name[0].id = tmp_ec_factory_name.c_str();
+            std::string event_channel_factory_name = 
+                Cdmw::CommonSvcs::Naming::NamingInterface::to_string(ec_factory_name);
+
+            {
+                std::string full_name_domain_name;
+                full_name_domain_name = Cdmw::Common::Locations::CDMW_EVENT_SERVICE_NAME_DOMAIN;
+                full_name_domain_name += "/EVENT_CHANNELS";
+                std::string full_factory_name;
+                full_factory_name = Cdmw::Common::Locations::CDMW_EVENT_SERVICE_NAME_DOMAIN;
+                full_factory_name += "/FACTORIES/";
+                full_factory_name += event_channel_factory_name;
+                
+                // TAO doesn't support thread-pool policy with a persistent POA
+                std::auto_ptr<Cdmw::OrbSupport::POAThreadingPolicy> threading_policy(
+                    new Cdmw::OrbSupport::ThreadPerConnectionPolicy());
+            
+                // Get the factory Allocator
+                NamedObjectsFactoryAllocatorBase & allocator =
+                    Cdmw::Event::EventChannelFactory_impl_Allocator::TheAllocator;
+            
+                try {
+                    NamedObjectsFactory_initUtil::setup_named_object_factory(
+                        allocator,
+                        orb,
+                        factories_poa.in(),
+                        repository.in(),
+                        root_context,
+                        full_name_domain_name,
+                        full_factory_name,
+                        "",
+                        *threading_policy,
+                        argc, argv
+                        );
+                
+                } catch (const Cdmw::OutOfMemoryException & ex ) {
+                    std::string s ("Could not allocate memory for ");
+                    s += full_factory_name;
+                    s += "\n";
+                    s += ex.what();
+                    CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::NO_MEMORY>,
+                                 CORBA::NO_MEMORY(Cdmw::OrbSupport::NO_MEMORY,
+                                                  CORBA::COMPLETED_NO),
+                                 s );
+                } catch (const Cdmw::BadParameterException & ex) {
+                    CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::BAD_PARAM>,
+                                 CORBA::BAD_PARAM(Cdmw::OrbSupport::BAD_PARAMLifeCycleFrameworkInit,
+                                                  CORBA::COMPLETED_NO),
+                                 ex.what() );
+                } catch (const Cdmw::InternalErrorException & ex ) {
+                    CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::INTERNAL>,
+                                 CORBA::INTERNAL(Cdmw::OrbSupport::INTERNALLifeCycleFrameworkError,
+                                                 CORBA::COMPLETED_NO),
+                                 ex.what() );
+                } catch (const CORBA::SystemException & ex ) {
+                    CDMW_THROW1( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::SystemException>,
+                                 ex );
+                }
+            }
+            
             try {
-                // Retreive reference to the Default Event Channel factory 
+                // Retreive reference to the local Event Channel factory 
                 using namespace Cdmw::NamingAndRepository;             
+                using namespace Cdmw::CommonSvcs::Naming;
                 using namespace Cdmw::Common;
 
                 std::string evt_factories_nd(Locations::CDMW_EVENT_SERVICE_NAME_DOMAIN);
@@ -2036,11 +2306,9 @@
                 NamingInterface evt_ni = 
                     RepositoryInterface::get_domain_naming_interface(evt_factories_nd);
            
-                const std::string EVENT_CHANNEL_FACTORY_NAME("DefaultEventChannelFactory");
-
                 typedef NamingUtil<CdmwEvent::EventChannelFactory> Util;
-               
-                event_channel_factory = Util::resolve_name(evt_ni,EVENT_CHANNEL_FACTORY_NAME);
+                event_channel_factory = Util::resolve_name(evt_ni, event_channel_factory_name);
+                
             } catch (const CdmwNamingAndRepository::NoNameDomain &) {
                CDMW_THROW2( Cdmw::OrbSupport::CORBASystemExceptionWrapperT<CORBA::BAD_PARAM>,
                              CORBA::BAD_PARAM(Cdmw::OrbSupport::BAD_PARAMNameDomainNotFound,
@@ -2094,6 +2362,7 @@
              name[0].kind = kind.c_str();
 
              using namespace Cdmw::NamingAndRepository;             
+             using namespace Cdmw::CommonSvcs::Naming;
              using namespace Cdmw::Common;
 
              std::string key = NamingInterface::to_string(name);
@@ -2248,6 +2517,16 @@
                   </xsl:variable>
 
                   HomeAllocatorRegistry::Unregister("<xsl:value-of select="$factoryClassname"/>");
+                  <xsl:if test="$hasFaultToleranceServer='yes'">
+                     <xsl:variable name="ftHomeClassname">
+                        <xsl:call-template name="buildHomeImplClassname">
+                           <xsl:with-param name="_homeImplNode" select="$lifecycleFrameworkNode/home-impl"/>
+                           <xsl:with-param name="_prefix" select="'FT'"/>
+                        </xsl:call-template>
+                     </xsl:variable>
+                  HomeAllocatorRegistry::Unregister("<xsl:value-of select="$ftHomeClassname"/>");
+                  </xsl:if>
+
                </xsl:if>
             </xsl:for-each>
          }
@@ -2288,7 +2567,23 @@
      ]]>
      </xsl:if>
      
+   <![CDATA[
+
+         // Release all static object references held by PlatformInterface
+         Cdmw::PlatformMngt::PlatformInterface::Cleanup();
+   
+         try {
+             // Cleanup XML library
+             Cdmw::CdmwInit::InitUtils::cleanup_xml_library();
+         } catch (const Cdmw::OrbSupport::CORBASystemExceptionWrapper& ex) {
+             std::cerr << "CDMW_cleanup Warning at XML library cleanup: \n"
+                      << "File : " << __FILE__ << "\n"
+                      << "Line : " << __LINE__ << "\n"
+                      << "CORBA Exception : " << ex << std::endl;
+         }	 
       }
+
+     ]]>
 
    <xsl:call-template name="closeNamespace">
       <xsl:with-param name="_scope" select="$cdmwinitNamespace"/>

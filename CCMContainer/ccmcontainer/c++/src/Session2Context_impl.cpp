@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -30,7 +30,7 @@
 #include <Foundation/ossupport/OS.hpp>
 #include <Foundation/orbsupport/OrbSupport.hpp>
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <CCMContainer/ccmcommon/CCMUtils.hpp>
 #include <sstream>
 #include <iomanip>
@@ -227,7 +227,7 @@ namespace
             name[0].id   = ostr.str().c_str();
             name[0].kind = kind.c_str();
             
-            using namespace Cdmw::NamingAndRepository;
+            using namespace Cdmw::CommonSvcs::Naming;
             key = NamingInterface::to_string(name);
 
             ::CosEventChannelAdmin::EventChannel_var ec
@@ -307,35 +307,6 @@ Session2Context_impl::Session2Context_impl(CORBA::ORB_ptr                       
 {
     CDMW_ASSERT(!CORBA::is_nil(orb));
 
-#ifdef CDMW_USE_FAULTTOLERANCE  
-    try
-    {
-       CORBA::Object_var obj = m_orb->resolve_initial_references("FTGroupRepository");
-
-       if (CORBA::is_nil(obj))
-       {
-          // this case is possible: component may be compiled with FT but embedded in a non FT process.
-          m_group_repository = CdmwFT::Location::GroupRepository::_nil();
-       }
-       else
-       {
-          m_group_repository = CdmwFT::Location::GroupRepository::_narrow(obj.in());
-       }
-    }
-    catch (const CORBA::ORB::InvalidName& )
-    {
-        // this case is possible: component may be compiled with FT but embedded in a non FT process.
-    }
-    catch (const CORBA::Exception& e)
-    {
-        DEBUG_ECHO << "File : " << __FILE__ << "\n"
-                   << "Line : " << __LINE__ << "\n"
-                   << "CORBA Exception : " << ex << std::endl;
-        _set_ref_count(0);
-        throw;
-    }
-
-#endif
     try {
         CORBA::Object_var obj =
             orb->resolve_initial_references("POACurrent");

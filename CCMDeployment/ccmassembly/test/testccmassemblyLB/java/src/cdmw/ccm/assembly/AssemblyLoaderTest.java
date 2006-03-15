@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -133,7 +133,7 @@ public class AssemblyLoaderTest
     public void doTests()
     {
         // set number of requested successfull tests
-        setNbOfRequestedTestOK(76);
+        setNbOfRequestedTestOK(72);
         
         // create ComponentPackageStub for Server
         ComponentPackageStub componentPackStubServer =
@@ -411,13 +411,6 @@ public class AssemblyLoaderTest
             fail("HomeRepositoryId of of " + serverHome.getId() + " is not " + SERVER_HOME_REP_ID);
         }
       
-        // check that HomeServantClassname of ServerHome is SERVER_HOME_SERVANT_CLASSNAME
-        if (SERVER_HOME_SERVANT_CLASSNAME.equals(serverHome.getHomeServantClassname())) {
-            succeed();
-        } else {
-            fail("HomeServantClassname of of " + serverHome.getId() + " is not " + SERVER_HOME_SERVANT_CLASSNAME);
-        }
-      
         println("Check Server1");
         // check that server1 is a SingleComponent
         if (server1 instanceof SingleComponent) {
@@ -511,14 +504,7 @@ public class AssemblyLoaderTest
         } else {
             fail("HomeRepositoryId of of " + clientHome1.getId() + " is not " + CLIENT_HOME_REP_ID);
         }
-      
-        // check that HomeServantClassname of ClientHome1 is CLIENT_HOME_SERVANT_CLASSNAME
-        if (CLIENT_HOME_SERVANT_CLASSNAME.equals(clientHome1.getHomeServantClassname())) {
-            succeed();
-        } else {
-            fail("HomeServantClassname of of " + clientHome1.getId() + " is not " + CLIENT_HOME_SERVANT_CLASSNAME);
-        }
-        
+              
 
         println("Check Client1");
         // check that client1 is a SingleComponent
@@ -605,15 +591,6 @@ public class AssemblyLoaderTest
         } else {
             fail("HomeRepositoryId of of " + clientHome2.getId() + " is not " + CLIENT_HOME_REP_ID);
         }
-      
-        // check that HomeServantClassname of ClientHome2 is CLIENT_HOME_SERVANT_CLASSNAME
-        if (CLIENT_HOME_SERVANT_CLASSNAME.equals(clientHome2.getHomeServantClassname())) {
-            succeed();
-        } else {
-            fail("HomeServantClassname of of " + clientHome2.getId() + " is not " + 
-                 CLIENT_HOME_SERVANT_CLASSNAME);
-        }
-
 
         println("Check MyHost2");
         // check that destination MyHost2 is DESTINATION2
@@ -692,15 +669,7 @@ public class AssemblyLoaderTest
         } else {
             fail("HomeRepositoryId of of " + clientHome2.getId() + " is not " + CLIENT_HOME_REP_ID);
         }
-      
-        // check that HomeServantClassname of ClientHome2 is CLIENT_HOME_SERVANT_CLASSNAME
-        if (CLIENT_HOME_SERVANT_CLASSNAME.equals(clientHome2.getHomeServantClassname())) {
-            succeed();
-        } else {
-            fail("HomeServantClassname of of " + clientHome2.getId() + " is not " + CLIENT_HOME_SERVANT_CLASSNAME);
-        }
-      
-        
+              
         println("Check Client2");
         // check that client2 is a SingleComponent
         if (client2 instanceof SingleComponent) {

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -151,6 +151,11 @@
             <xsl:with-param name="_searchDirs" select="//idl-search-dir"/>
          </xsl:call-template>
       </xsl:when>
+      <xsl:when test="$template = 'get_preproc_flags'">
+         <xsl:call-template name="get_preproc_flags">
+            <xsl:with-param name="_preprocFlags" select="//preprocessing-flags"/>
+         </xsl:call-template>
+      </xsl:when>
       <xsl:when test="$template = 'has_only_user_factories'">
          <xsl:call-template name="has_only_user_factories"/>
       </xsl:when>
@@ -228,6 +233,13 @@
          <xsl:text> </xsl:text>
       </xsl:if>
    </xsl:for-each>
+   <xsl:variable name="existFactories" select="/cdmw/factories/factory"/>
+   <xsl:if test="boolean($existFactories)">
+      <xsl:variable name="existDatastores" select="/cdmw/datastore-types/datastore-type"/>
+      <xsl:if test="boolean($existDatastores)">
+         <xsl:text> </xsl:text>
+      </xsl:if>
+   </xsl:if>
    <xsl:for-each select="/cdmw/datastore-types/datastore-type">
       <xsl:if test="boolean(@idl-filename)">
          <xsl:text></xsl:text><xsl:value-of select="@idl-filename"/>
@@ -276,6 +288,46 @@
       </xsl:otherwise>
    </xsl:choose>
 </xsl:template> <!-- end of template get_idl_dirs -->
+
+
+<!--
+   This template returns the preprocessing flags specified in all factories.<br>
+   Duplicates are output only once.
+
+   @param _preprocFlags   The preprocessing flags.
+-->
+<xsl:template name="get_preproc_flags">
+   <xsl:param name="_preprocFlags"/>
+   <!--
+      Parameters below are used for recursiveness.
+   -->
+   <xsl:param name="_index" select="1"/>
+   <xsl:param name="_flags" select="''"/>
+
+   <xsl:choose>
+      <xsl:when test="$_index &lt;= count($_preprocFlags)">
+         <xsl:call-template name="get_preproc_flags">
+            <xsl:with-param name="_preprocFlags" select="$_preprocFlags"/>
+            <xsl:with-param name="_index" select="$_index + 1"/>
+            <xsl:with-param name="_flags">
+               <xsl:choose>
+                  <xsl:when test="string-length($_preprocFlags[$_index]) = 0 or 
+                                  contains($_flags, $_preprocFlags[$_index])">
+                     <xsl:value-of select="$_flags"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                     <xsl:value-of select="concat($_flags, $_preprocFlags[$_index], ' ')"/>
+                  </xsl:otherwise>
+               </xsl:choose>
+            </xsl:with-param>
+         </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+         <xsl:text></xsl:text><xsl:value-of select="$_flags"/>
+      </xsl:otherwise>
+   </xsl:choose>
+</xsl:template> <!-- end of template get_preproc_flags -->
+
 
 
 

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -27,7 +27,7 @@
 #include "Event/eventinterface/EventChannelInterface.hpp"
 #include "eventsupportEventChannelUtils_ORBacusCPP.hpp"
 
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Foundation/common/Locations.hpp"
 #include "Foundation/common/Assert.hpp"
@@ -202,7 +202,8 @@ EventChannelFactory_impl::EventChannelFactory_impl(
      const std::string &                      name_domain_name,
      const std::string &                      factory_name,
      Cdmw::OrbSupport::POAThreadingPolicy &   threading_policy,
-     int & argc, char** argv)
+     int & argc, char** argv,
+     bool use_profile_manager)
      throw(Cdmw::BadParameterException,
      Cdmw::InternalErrorException,
      CORBA::SystemException)
@@ -210,7 +211,8 @@ EventChannelFactory_impl::EventChannelFactory_impl(
      m_poa(PortableServer::POA::_duplicate(parent)),
      m_domain(CdmwLifeCycle::ObjectRegistration::_duplicate(name_domain)),
      m_domain_name(name_domain_name),
-     m_factory_name(factory_name)
+     m_factory_name(factory_name),
+     m_use_profile_manager(use_profile_manager)
 {
     // Create policy list for simple persistence
     CORBA::PolicyList pl;

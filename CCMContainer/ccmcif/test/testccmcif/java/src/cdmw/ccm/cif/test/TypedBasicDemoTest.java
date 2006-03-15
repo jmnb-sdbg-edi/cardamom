@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -61,18 +61,33 @@ public class TypedBasicDemoTest extends Testable {
 
     private org.omg.CORBA.ORB orb;
 
-    private org.omg.Components.Deployment.Container container;
+    private org.omg.Components.Deployment.Container clientContainer;
+    private org.omg.Components.Deployment.Container serverContainer;
 
-    public TypedBasicDemoTest(org.omg.CORBA.ORB orb, String containerIOR) {
+    public TypedBasicDemoTest(org.omg.CORBA.ORB orb, String containerIORClient, String containerIORServer) {
         this.name = "cdmw.ccm.cif.TypedBasicDemoTest";
         this.out= System.out;
         this.orb = orb;
         try {
-            org.omg.CORBA.Object obj = this.orb.string_to_object(containerIOR);
+            org.omg.CORBA.Object obj = this.orb.string_to_object(containerIORClient);
             if (obj == null) {
                 println("TEST FAILED : exception raised during test initialisation!");
             } else {
-                this.container = 
+                this.clientContainer = 
+                    org.omg.Components.Deployment.ContainerHelper.narrow(obj);
+            }
+        } catch (org.omg.CORBA.SystemException se) {
+            println("TEST FAILED : system exception raised during test initialisation!");
+            throw se;
+        } catch (Exception e) {
+            println("TEST FAILED : unexpected exception raised during test initialisation!");
+        }
+        try {
+            org.omg.CORBA.Object obj = this.orb.string_to_object(containerIORServer);
+            if (obj == null) {
+                println("TEST FAILED : exception raised during test initialisation!");
+            } else {
+                this.serverContainer = 
                     org.omg.Components.Deployment.ContainerHelper.narrow(obj);
             }
         } catch (org.omg.CORBA.SystemException se) {
@@ -150,7 +165,7 @@ public class TypedBasicDemoTest extends Testable {
                     com.thalesgroup.CdmwDeployment.HOME_SERVANT_CLASSNAME.value, 
                     value);
 
-                serverHome = this.container.install_home(
+                serverHome = this.serverContainer.install_home(
                     SERVER_HOME_UID,
                     SERVER_HOME_ENTRY_POINT,
                     configValues);
@@ -225,7 +240,7 @@ public class TypedBasicDemoTest extends Testable {
                     com.thalesgroup.CdmwDeployment.VALUETYPE_FACTORY_DEPENDENCIES.value, 
                     value);
 
-                clientHome = this.container.install_home(
+                clientHome = this.clientContainer.install_home(
                     CLIENT_HOME_UID,
                     CLIENT_HOME_ENTRY_POINT,
                     configValues);
@@ -425,7 +440,7 @@ public class TypedBasicDemoTest extends Testable {
             println("Get_connections operation on Client component...");
             testOk = false;
             try {
-                com.acme.BasicDemo.Registration registrationConx
+                com.acme.CommonDemo.Registration registrationConx
                     = basicClientComp.get_connection_to_register();
     
                 if (!registrationConx._is_equivalent(basicServerComp)) {
@@ -551,7 +566,7 @@ public class TypedBasicDemoTest extends Testable {
             println("Remove operation on the Server home...");
             testOk = false;
             try {
-                this.container.remove_home(basicServerHome);
+                this.serverContainer.remove_home(basicServerHome);
                 testOk = true;
             } catch (org.omg.Components.RemoveFailure rf) {
                 println("Unexpected exception raised: NoKeyAvailable");
@@ -564,7 +579,7 @@ public class TypedBasicDemoTest extends Testable {
             println("Remove operation on the Client home...");
             testOk = false;
             try {
-                this.container.remove_home(clientHome);
+                this.clientContainer.remove_home(clientHome);
                 testOk = true;
             } catch (org.omg.Components.RemoveFailure rf) {
                 println("Unexpected exception raised: NoKeyAvailable");

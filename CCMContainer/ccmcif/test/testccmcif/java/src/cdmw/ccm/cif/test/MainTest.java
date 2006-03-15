@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -28,11 +28,13 @@ package cdmw.ccm.cif.test;
 import java.io.File;
 import java.util.Vector;
 import java.util.StringTokenizer;
+import java.io.IOException;
 
 import cdmw.testutils.Testable;
 import cdmw.common.Options;
 import cdmw.ossupport.OS;
 import cdmw.ossupport.FileUtilities;
+import cdmw.ossupport.ThreadedProcess;
 
 import cdmw.orbsupport.ORBSupport;
 import cdmw.orbsupport.StrategyList;
@@ -40,6 +42,9 @@ import cdmw.orbsupport.ExceptionMinorCodes;
 
 import cdmw.ccm.container.HomeAllocator;
 import cdmw.ccm.container.HomeAllocatorRegistry;
+import cdmw.ccm.componentserver.ComponentServerImpl;
+import com.thalesgroup.CdmwDeployment.ComponentKindValue;
+import com.thalesgroup.CdmwDeployment.ComponentKindValueHelper;
 
 public class MainTest {
 
@@ -163,8 +168,38 @@ public class MainTest {
             poaStrategies);
     }
     
-    public static int run(org.omg.CORBA.ORB orb, String containerIOR) {
-        ClientThread client = new ClientThread(orb, containerIOR);
+    public static void writeToFile(String ior,String filename) {
+        System.out.println(ior + " " + filename);
+        java.io.File file = new java.io.File(filename);
+        String s;
+        try {
+            java.io.PrintWriter out = new java.io.PrintWriter(
+                new java.io.BufferedWriter( new java.io.FileWriter(file) ) );
+            out.println(ior);
+            out.close();
+        } catch(java.io.IOException e) {System.err.println("---" + e.toString());}
+        
+    }
+
+    public static String readFromFile(String file) {
+
+        try {
+            java.io.BufferedReader in = new java.io.BufferedReader(
+                new java.io.FileReader(file) );
+            String result = in.readLine();
+            //in.close();
+            return result;
+        }
+        catch(IOException ioe) {
+            return null;
+        }
+    }
+
+    public static int run(org.omg.CORBA.ORB orb, 
+                          String containerIORClient, 
+                          String containerIORServer, 
+                          ThreadedProcess serverp) {
+        ClientThread client = new ClientThread(orb, containerIORClient, containerIORServer);
     
         client.start();
         orb.run();
@@ -172,9 +207,12 @@ public class MainTest {
             client.join();
         } catch(InterruptedException ie) {}
     
+        OS.killProcess( serverp );
         return SUCCESS;
     }
-    
+
+
+
     
     public static void main(String[] args) {
 
@@ -182,6 +220,14 @@ public class MainTest {
         org.omg.CORBA.ORB orb = null;
     
         try {
+
+            boolean client = false;
+            if ( OS.getOptionValue( args, "--client").equals("yes") ) 
+                client = true;
+            else
+                client = false;
+                
+
             StrategyList orbStrategies = new StrategyList();
             orbStrategies.addORBThreaded();
             orbStrategies.addPOAThreadPool(POA_THREAD_POOL_SIZE);
@@ -246,18 +292,40 @@ public class MainTest {
             ((org.omg.CORBA_2_3.ORB)orb).register_value_factory(
                 "IDL:omg.org/Components/ConfigValue:1.0", vf);
     
-            // Register HomeAllocator
-            HomeAllocator allocator  = new HomeAllocator(
-                "Cdmw.CCM.CIF.CdmwBasicDemo.SessionServerHome_impl");
-            HomeAllocatorRegistry.register(
-                "Cdmw.CCM.CIF.CdmwBasicDemo.SessionServerHome_impl", 
-                allocator);
-            allocator  = new HomeAllocator(
-                "Cdmw.CCM.CIF.CdmwBasicDemo.SessionClientHome_impl");
-            HomeAllocatorRegistry.register(
-                "Cdmw.CCM.CIF.CdmwBasicDemo.SessionClientHome_impl", 
-                allocator);
-    
+            ThreadedProcess serverp = null;
+            if (!client)
+                {
+                    String classname = "cdmw.ccm.cif.test.MainTest --client";
+                    try {
+                        serverp = OS.createJavaProcess(classname);
+                        OS.sleep(3000);
+                    } catch(IOException ioe) {
+                        throw new InterruptedException("Unable to create server process.");
+                    }    
+                    
+                }
+            
+            HomeAllocator allocator = null;
+            if(!client)
+                {
+                    // Register HomeAllocator
+                    allocator  = new HomeAllocator(
+                                                   "Cdmw.CCM.CIF.CdmwBasicDemo.SessionServerHome_impl");
+                    HomeAllocatorRegistry.register(
+                                                   "Cdmw.CCM.CIF.CdmwBasicDemo.SessionServerHome_impl", 
+                                                   allocator);
+                }
+            else
+                {
+                    allocator  = new HomeAllocator(
+                                                   "Cdmw.CCM.CIF.CdmwBasicDemo.SessionClientHome_impl");
+                    HomeAllocatorRegistry.register(
+                                                   "Cdmw.CCM.CIF.CdmwBasicDemo.SessionClientHome_impl", 
+                                                   allocator);
+                }
+
+
+
             ComponentInstallationPlugImpl compInstallPlug
                 = new ComponentInstallationPlugImpl(rootPOA);
             com.thalesgroup.CdmwDeployment.ComponentInstallation compInstall
@@ -274,100 +342,74 @@ public class MainTest {
                 com.thalesgroup.CdmwDeployment.COMPONENT_KIND.value, 
                 value);
     
-            org.omg.PortableServer.POA homesSerializePOA = null;
-            org.omg.PortableServer.POA homesMultithreadPOA = null;
             org.omg.PortableServer.POA containerPOA = createContainerPOA(rootPOA);
-            // Create a SingleThread POA for single threaded homes and 
-            // a Multithread POA for multithread homes.
-            try {
-                org.omg.PortableServer.POAManager poaManager = 
-                    containerPOA.the_POAManager();
-                org.omg.CORBA.Policy[] policies = new org.omg.CORBA.Policy[7];
-                policies[0] = containerPOA.create_id_assignment_policy(
-                    org.omg.PortableServer.IdAssignmentPolicyValue.USER_ID);
-                policies[1] = containerPOA.create_lifespan_policy(
-                    org.omg.PortableServer.LifespanPolicyValue.PERSISTENT);
-                policies[2] = containerPOA.create_servant_retention_policy(
-                    org.omg.PortableServer.ServantRetentionPolicyValue.RETAIN);
-                policies[3] = containerPOA.create_id_uniqueness_policy(
-                    org.omg.PortableServer.IdUniquenessPolicyValue.UNIQUE_ID);
-                policies[4] = containerPOA.create_request_processing_policy(
-                    org.omg.PortableServer.RequestProcessingPolicyValue.USE_SERVANT_MANAGER);
-                policies[5] = containerPOA.create_implicit_activation_policy(
-                    org.omg.PortableServer.ImplicitActivationPolicyValue.NO_IMPLICIT_ACTIVATION);
-                // Create a single thread poa
-                policies[6] = containerPOA.create_thread_policy(
-                    org.omg.PortableServer.ThreadPolicyValue.SINGLE_THREAD_MODEL);
-                
-                StrategyList poaStrategies = new StrategyList();
-                
-                String SINGLE_THREAD_HOMES_POA_NAME = "HomeSerializePOA";
-                String MULTI_THREAD_HOMES_POA_NAME  = "HomeMultithreadPOA";
-                
-                homesSerializePOA = ORBSupport.createPOA(
-                    containerPOA,
-                    SINGLE_THREAD_HOMES_POA_NAME,
-                    poaManager, 
-                    policies,
-                    poaStrategies);
 
-                //
-                // Create and install servant activator
-                //
-                homesSerializePOA.set_servant_manager(
-                    new cdmw.ccm.container.HomesServantActivator());
-                
-                // Create a multi thread poa
-                policies[6] = rootPOA.create_thread_policy(
-                    org.omg.PortableServer.ThreadPolicyValue.ORB_CTRL_MODEL);
-                
-                homesMultithreadPOA = ORBSupport.createPOA(
-                    containerPOA,
-                    MULTI_THREAD_HOMES_POA_NAME,
-                    poaManager,
-                    policies,
-                    poaStrategies);
+            
+            org.omg.Components.HomeRegistration homeRegistration = null;
+            com.thalesgroup.CdmwEvent.EventChannelFactory noECF = null;
+            org.omg.Components.ConfigValue[] cfgCompserver =
+                new org.omg.Components.ConfigValue[0];
+            ComponentServerImpl cs = null;
+            if (client)
+                {
+                    cs = new ComponentServerImpl(orb,
+                                                 containerPOA,
+                                                 homeRegistration,
+                                                 noECF,
+                                                 PROCESS_NAME + "1",
+                                                 APPLICATION_NAME,
+                                                 cfgCompserver);
+                }
+            else
+                {
+                    cs = new ComponentServerImpl(orb,
+                                                 containerPOA,
+                                                 homeRegistration,
+                                                 noECF,
+                                                 PROCESS_NAME + "2",
+                                                 APPLICATION_NAME,
+                                                 cfgCompserver);
+                }
 
-                //
-                // Create and install servant activator
-                //
-                homesMultithreadPOA.set_servant_manager(
-                    new cdmw.ccm.container.HomesServantActivator());
-                
-            } catch (org.omg.PortableServer.POAPackage.AdapterAlreadyExists aae) {
-                throw new org.omg.CORBA.INTERNAL(
-                    ExceptionMinorCodes.INTERNALLifeCycleFrameworkError,
-                    org.omg.CORBA.CompletionStatus.COMPLETED_YES);
-            } catch (org.omg.PortableServer.POAPackage.InvalidPolicy ip) {
-                throw new org.omg.CORBA.INTERNAL(
-                    ExceptionMinorCodes.INTERNALLifeCycleFrameworkError,
-                    org.omg.CORBA.CompletionStatus.COMPLETED_YES);
-            } catch (org.omg.CORBA.SystemException se) {
-                throw se; // rethrow
-            } 
+
+
+            org.omg.PortableServer.Servant serv = cs;
+            org.omg.Components.Deployment.ComponentServer theComponentServer = cs._this(orb);
+            cs.set_component_installation(compInstall);
+
+//             // Create a container instance
+            org.omg.Components.Deployment.Container container = 
+                theComponentServer.create_container(configValues);
             
-            // Create a container instance
-            cdmw.ccm.container.ContainerImpl container 
-                = new cdmw.ccm.container.ContainerImpl(
-                    orb,
-                    containerPOA,
-                    homesSerializePOA,
-                    homesMultithreadPOA,
-                    compInstall,
-                    null,
-                    null,
-                    null,
-                    PROCESS_NAME,
-                    APPLICATION_NAME,
-                    configValues);
-            
-            String containerIOR = orb.object_to_string(container._this(orb));
+            String containerIORClient = new String();
+            String containerIORServer = new String();
+            if (client)
+                {
+                    writeToFile(orb.object_to_string(container), "Client.ior");
+                }
+            else
+                {
+                    containerIORClient = readFromFile("Client.ior");
+                    OS.unlink("Client.ior");
+                    containerIORServer = orb.object_to_string(container);
+                    System.out.println("client: " + containerIORClient);
+                    System.out.println("server: " + containerIORServer);
+                }
             
             int timescale = Testable.getTimescale();
             OS.sleep(timescale * 1000);
-            System.out.println("Server initialised");
-            
-            status = run(orb, containerIOR);
+            if (client)
+                {
+                    System.out.println("Client initialised");
+                    orb.run();
+                }
+            else
+                {
+                    System.out.println("Server initialised");
+                    status = run(orb, containerIORClient, containerIORServer, serverp);
+
+                }
+
             OS.sleep(timescale * 2000);
             
         } catch(Exception e) {

@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -27,6 +27,7 @@
 // Cdmw files
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
 #include <Foundation/orbsupport/CORBA.hpp>
+#include <Foundation/common/Assert.hpp>
 
 // Cdmw CCM files
 #include <CCMContainer/ccmcif/CCMObject_impl.hpp>
@@ -61,19 +62,19 @@ namespace
 
 namespace Cdmw {
 
-    namespace CCM {
+namespace CCM {
 
-        namespace CIF {
+namespace CIF {
 
 //
 // IDL:CCMObject:1.0
 //
-CCMObject_impl::CCMObject_impl(const std::string comp_oid,
-                               CdmwCcmContainer::CCM2Context_ptr ctx,
-                               const std::string                 rep_id,
-                               CORBA::Object_ptr                 comp_ref,
-                               bool                              is_monolithic)
-  : m_context(CdmwCcmContainer::CCM2Context::_duplicate(ctx)),
+CCMObject_impl::CCMObject_impl(const std::string& comp_oid,
+                               Context*           ctx,
+                               const std::string& rep_id,
+                               CORBA::Object_ptr  comp_ref,
+                               bool               is_monolithic)
+  : m_context(ctx),
     m_rep_id(rep_id),
     m_comp_ref(CORBA::Object::_duplicate(comp_ref)),
     m_configured(false),
@@ -81,35 +82,7 @@ CCMObject_impl::CCMObject_impl(const std::string comp_oid,
     m_is_removed(false),
     m_is_monolithic(is_monolithic)
 {
-#ifdef CDMW_USE_FAULTTOLERANCE  
-    try
-    {
-        CORBA::Object_var ft_current_obj = 
-           m_context->resolve_initial_references("FTCurrent");
-
-        m_ft_current = CdmwFT::Current::_narrow(ft_current_obj.in());
-
-        CORBA::Object_var ft_group_rep_obj =
-           m_context->resolve_initial_references("FTGroupRepository");
-    
-        m_ft_group_rep = 
-           CdmwFT::Location::GroupRepository::_narrow(ft_group_rep_obj.in());
-
-        CORBA::Object_var ft_rep_mng_obj = 
-           m_context->resolve_initial_references("ReplicationManager");
-
-        m_ft_rep_mng = CdmwFT::ReplicationManager::_narrow(ft_rep_mng_obj.in());
-    }
-    catch (const CdmwCcmContainer::CCM2Context::InvalidName& )
-    {
-        // FTCurrent/FTGroupRepository not defined, we are not in FT process, 
-        // Nothing to do!
-    }
-    catch (const CORBA::SystemException& e)
-    {
-        PRINT_ERROR("CORBA::SystemException raised : " << e);
-    }
-#endif
+    CDMW_ASSERT(ctx);
 }
 
 CCMObject_impl::~CCMObject_impl()
@@ -124,7 +97,6 @@ CCMObject_impl::_get_component()
 }
 
 
-
 //
 // IDL:omg.org/Components/CCMObject/get_component_def:1.0
 //
@@ -132,11 +104,7 @@ CORBA::IRObject_ptr
 CCMObject_impl::get_component_def()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
     Components::CCMHome_var home = m_context->get_CCM_home();
     return home->get_component_def();
 }
@@ -148,11 +116,7 @@ Components::CCMHome_ptr
 CCMObject_impl::get_ccm_home()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
     return m_context->get_CCM_home();
 }
 
@@ -164,33 +128,30 @@ CCMObject_impl::get_primary_key()
     throw(Components::NoKeyAvailable,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
+    // THIS CODE shall be moved when an EntityContext class will be created
     // Check that there is an associated primary key.
     // If so, context is an entity context
-    Components::EntityContext_var ectx = Components::EntityContext::_narrow(m_context.in());
+    //Components::EntityContext_var ectx = 
+    //   Components::EntityContext::_narrow(m_context.in());
+    //
+    //if (CORBA::is_nil(ectx.in()))
+    //{
+    //    throw Components::NoKeyAvailable();
+    //}
+    //
+    //Components::PrimaryKeyBase* primary_key;
+    //try
+    //{
+    //    primary_key = ectx->get_primary_key();
+    //}
+    //catch (Components::IllegalState &)
+    //{
+    //    throw Components::NoKeyAvailable();
+    //}
 
-    if (CORBA::is_nil(ectx.in()))
-    {
-        throw Components::NoKeyAvailable();
-    }
-
-    Components::PrimaryKeyBase* primary_key;
-    try
-    {
-        primary_key = ectx->get_primary_key();
-     
-    }
-    catch (Components::IllegalState &)
-    {
-        throw Components::NoKeyAvailable();
-    }
-
-    return primary_key;
+    return m_context->get_primary_key();;
 }
 
 //
@@ -201,11 +162,7 @@ CCMObject_impl::configuration_complete()
     throw(Components::InvalidConfiguration,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     // Check receptacle are connected
     ReceptacleMap::iterator iter = m_receptacles.begin();
@@ -234,20 +191,10 @@ CCMObject_impl::remove()
     throw(Components::RemoveFailure,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     try 
     {
-        Components::Session2Context_var s2ctx 
-            = Components::Session2Context::_narrow(m_context.in());
-        
-        // check component context is a Session2Context one
-        if (!CORBA::is_nil(s2ctx.in()))
-        {                   
             // advise executor of its remove
             PRINT_INFO("advise_executor_of_remove_component...");
             this->advise_executor_of_remove_component();
@@ -341,14 +288,6 @@ CCMObject_impl::remove()
             // deactivate servant
             PRINT_INFO("ask to the context req_passivate...");
             m_context->req_passivate();
-            
-        }
-        else
-        {
-            PRINT_ERROR("Context is not a Session2Context!");
-            throw Components::RemoveFailure(CdmwDeployment::WRONG_CONTEXT_KIND);
-        }
-
     } catch (const CORBA::SystemException & e) {
         PRINT_ERROR("CORBA::SystemException raised : " << e);
         // rethrow
@@ -364,11 +303,7 @@ Components::ComponentPortDescription*
 CCMObject_impl::get_all_ports()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO); 
-    }
+    check_is_removed();
 
     Components::FacetDescriptions_var facet_desc = get_all_facets ();
     Components::ReceptacleDescriptions_var recep_desc = get_all_receptacles ();
@@ -396,11 +331,7 @@ CCMObject_impl::provide_facet(const char* name)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     if (!name)
     {
@@ -418,7 +349,7 @@ CCMObject_impl::provide_facet(const char* name)
         throw Components::InvalidName();
     }
 
-    return CORBA::Object::_duplicate(f_desc->operator[](0)->facet_ref());
+    return CORBA::Object::_duplicate(f_desc[0L]->facet_ref());
 }
 
 //
@@ -428,11 +359,7 @@ Components::FacetDescriptions*
 CCMObject_impl::get_all_facets()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::NameList name_list;
     
@@ -456,7 +383,7 @@ CCMObject_impl::get_all_facets()
     }
     catch (const Components::InvalidName &)
     {
-        throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+        throw CORBA::INTERNAL(OrbSupport::INTERNALComponentInvalidName, CORBA::COMPLETED_NO);
     }
 }
 
@@ -468,18 +395,14 @@ CCMObject_impl::get_named_facets(const Components::NameList& names)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::FacetDescriptions_var f_desc = new Components::FacetDescriptions;
     f_desc->length(names.length());
     
     for (CORBA::ULong i_name=0; i_name<names.length(); i_name++) 
     {
-        std::string f_name = (const char*) names[i_name];
+        std::string f_name(names[i_name]);
         FacetMap::iterator f_iter = m_facets.find(f_name);
 
         if (f_iter != m_facets.end())
@@ -492,8 +415,7 @@ CCMObject_impl::get_named_facets(const Components::NameList& names)
             f_desc[i_name]->name(f_name.c_str());
             f_desc[i_name]->type_id(f_info.rep_id.c_str());
 
-            CORBA::Object_var facet_ref = 
-               get_group_object_ref_if_FTrequest(f_info.obj_ref.in());
+            CORBA::Object_var facet_ref = get_object_ref(f_info.obj_ref.in());
             f_desc[i_name]->facet_ref(facet_ref.in());
         }
         else
@@ -513,11 +435,7 @@ CORBA::Boolean
 CCMObject_impl::same_component(CORBA::Object_ptr object_ref)
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     if (CORBA::is_nil(object_ref))
         throw CORBA::BAD_PARAM(OrbSupport::BAD_PARAMNilObjectReference, CORBA::COMPLETED_NO);
@@ -583,15 +501,8 @@ CCMObject_impl::same_component(CORBA::Object_ptr object_ref)
 
     try
     {
-        // check component context is a Session2Context one
-        Components::SessionContext_var s_ctx 
-            = Components::Session2Context::_narrow(m_context.in());
-        
-        if (!CORBA::is_nil(s_ctx.in()))
-        {                   
-            CORBA::Object_var comp_ref = s_ctx->get_CCM_object();
-            return comp_ref->_is_equivalent(object_ref);
-        }
+        CORBA::Object_var comp_ref = m_context->get_CCM_object();
+        return comp_ref->_is_equivalent(object_ref);
     }
     catch (const CORBA::Exception&)
     {
@@ -614,11 +525,7 @@ CCMObject_impl::connect(const char* name,
           Components::ExceededConnectionLimit,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::Cookie_var cookie_value;
 
@@ -692,11 +599,7 @@ CCMObject_impl::disconnect(const char* name,
           Components::NoConnection,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     if (!name)
     {
@@ -753,11 +656,7 @@ CCMObject_impl::get_connections(const char* name)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     if (!name)
     {
@@ -769,7 +668,7 @@ CCMObject_impl::get_connections(const char* name)
     name_list[0] = name;
 
     Components::ReceptacleDescriptions_var r_desc = get_named_receptacles(name_list);
-    return new Components::ConnectionDescriptions (r_desc->operator[](0)->connections());
+    return new Components::ConnectionDescriptions (r_desc[0L]->connections());
 }
 
 //
@@ -779,11 +678,7 @@ Components::ReceptacleDescriptions*
 CCMObject_impl::get_all_receptacles()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::NameList name_list;
     
@@ -808,7 +703,7 @@ CCMObject_impl::get_all_receptacles()
     }
     catch (const Components::InvalidName &)
     {
-        throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+        throw CORBA::INTERNAL(OrbSupport::INTERNALComponentInvalidName, CORBA::COMPLETED_NO);
     }
 
 }
@@ -821,18 +716,14 @@ CCMObject_impl::get_named_receptacles(const Components::NameList& names)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::ReceptacleDescriptions_var r_desc = new Components::ReceptacleDescriptions;
     r_desc->length(names.length());
     
     for (CORBA::ULong i_name=0; i_name<names.length(); i_name++) 
     {
-        std::string r_name = (const char*) names[i_name];
+        std::string r_name(names[i_name]);
         ReceptacleMap::iterator r_iter = m_receptacles.find(r_name);
 
         if (r_iter != m_receptacles.end())
@@ -881,12 +772,7 @@ CCMObject_impl::get_consumer(const char* sink_name)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
-
+    check_is_removed();
 
     Components::EventConsumerBase_var result = Components::EventConsumerBase::_nil();
 
@@ -902,8 +788,7 @@ CCMObject_impl::get_consumer(const char* sink_name)
     {
         // sink exist
         ConsumerInfo c_info = m_consumers[s_name];
-        CORBA::Object_var c_obj = 
-           get_group_object_ref_if_FTrequest(c_info.consumer.in());
+        CORBA::Object_var c_obj = get_object_ref(c_info.consumer.in());
         result = Components::EventConsumerBase::_narrow(c_obj.in());
     }
     else
@@ -925,11 +810,7 @@ CCMObject_impl::subscribe(const char* publisher_name,
           Components::ExceededConnectionLimit,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::Cookie_var cookie_value;
 
@@ -942,16 +823,16 @@ CCMObject_impl::subscribe(const char* publisher_name,
         throw CORBA::BAD_PARAM(OrbSupport::BAD_PARAMNilObjectReference, CORBA::COMPLETED_NO);
 
     // find publisher
-    std::string p_name(publisher_name);
-    PublisherMap::iterator p_iter = m_publishers.find(p_name);
+    std::string pub_name(publisher_name);
+    PublisherMap::iterator pub_iter = m_publishers.find(pub_name);
     
-    if (p_iter != m_publishers.end())
+    if (pub_iter != m_publishers.end())
     {
         // publisher_name exists
-        PublisherInfo& p_info = m_publishers[p_name];
+        PublisherInfo& pub_info = m_publishers[pub_name];
 
         // Check connection supports the interface declared in uses statement
-        if (!subscriber->_is_a(p_info.rep_id.c_str()))
+        if (!subscriber->_is_a(pub_info.rep_id.c_str()))
         {
             throw Components::InvalidConnection();
         }
@@ -967,58 +848,47 @@ CCMObject_impl::subscribe(const char* publisher_name,
         s_info.ccm_consumer 
             = Components::EventConsumerBase::_duplicate(subscriber);
         
-        // test if subscriber is a cdmw subscriber or not (that is implement CosEventComm::PushConsumer)
+        // test if subscriber is a cdmw subscriber or not (that is implement 
+        // CosEventComm::PushConsumer)
         s_info.push_consumer  
             = CosEventComm::PushConsumer::_narrow(subscriber);
  
         // insert subscription now because we need to find it in lookup-servant
         // when narrow operation is called!
-        p_info.subscriptions.insert(SubscriberMap::value_type(cookie_value, s_info));
+        pub_info.subscriptions.insert(SubscriberMap::value_type(cookie_value, 
+                                                              s_info));
                
-        SubscriberInfo& s_info_ref = p_info.subscriptions[cookie_value];
+        SubscriberInfo& s_info_ref = pub_info.subscriptions[cookie_value];
 
         if (CORBA::is_nil(s_info_ref.push_consumer.in()))
         {
             // event_sink is not a CDMW one
             // Create my local push consumer to receive event 
             // this consumer will send to the EventConsumerBase.
-            // check component context is a Session2Context one
-            Components::Session2Context_var s2ctx 
-                = Components::Session2Context::_narrow(m_context.in());
-            
-            s_info_ref.push_consumer_servant = new PushConsumer_impl(m_context.in(), subscriber);
+            s_info_ref.push_consumer_servant 
+               = new PushConsumer_impl(m_context, subscriber);
 
-            if (!CORBA::is_nil(s2ctx.in()))
-            {
-                std::string cookie_str = cookie->get_cookie_string();
-                PRINT_INFO("cookie_str=" << cookie_str);
-                std::string push_consumer_oid_str = create_oid(m_component_oid, p_name, cookie_str);
+            std::string cookie_str = cookie->get_cookie_string();
+            PRINT_INFO("cookie_str=" << cookie_str);
+            std::string push_consumer_oid_str 
+                = create_oid(m_component_oid, pub_name, cookie_str);
                 
-                CORBA::OctetSeq_var push_consumer_oid 
-                    = Cdmw::CCM::Common::string_to_OctetSeq(push_consumer_oid_str.c_str());
+            CORBA::Object_var obj
+                = m_context->create_ref_from_oid_str(push_consumer_oid_str, 
+                                                     PUSH_CONSUMER_ID);
                 
-                CORBA::Object_var obj
-                    = s2ctx->create_ref_from_oid(push_consumer_oid.in(), PUSH_CONSUMER_ID);
-                
-                s_info_ref.push_consumer = CosEventComm::PushConsumer::_narrow(obj.in());
-            }
-            else
-            {
-                p_info.subscriptions.erase(cookie_value);
-                PRINT_ERROR("Context is not a Session2Context!");
-                throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
-                                      CORBA::COMPLETED_NO);
-            }
+            s_info_ref.push_consumer 
+                = CosEventComm::PushConsumer::_narrow(obj.in());
         }
 
         try
         {
-            s_info_ref.proxy_supplier 
-                = p_info.channel->connect_pushConsumer(s_info_ref.push_consumer.in());
+            s_info_ref.proxy_supplier = pub_info.channel->connect_pushConsumer
+               (s_info_ref.push_consumer.in());
         }
         catch (const CORBA::SystemException& )
         {
-            p_info.subscriptions.erase(cookie_value);
+            pub_info.subscriptions.erase(cookie_value);
             PRINT_ERROR("Exception raised when connecting consumer to channel");
             throw;
         }
@@ -1042,11 +912,7 @@ CCMObject_impl::unsubscribe(const char* publisher_name,
           Components::InvalidConnection,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     if (!publisher_name)
     {
@@ -1114,11 +980,7 @@ CCMObject_impl::connect_consumer(const char* emitter_name,
           Components::InvalidConnection,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     if (!emitter_name)
     {
@@ -1159,37 +1021,26 @@ CCMObject_impl::connect_consumer(const char* emitter_name,
                 // event_sink is not a CDMW one
                 // Create my local push consumer to receive event 
                 // this consumer will send to the EventConsumerBase.
+                e_info.push_consumer_servant = new PushConsumer_impl(m_context,
+                                                                     consumer);
 
-                // check component context is a Session2Context one
-                Components::Session2Context_var s2ctx 
-                    = Components::Session2Context::_narrow(m_context.in());
- 
-                e_info.push_consumer_servant  = new PushConsumer_impl(m_context.in(), consumer);
-
-                if (!CORBA::is_nil(s2ctx.in()))
-                {
-                    std::string push_consumer_oid_str = create_oid(m_component_oid, e_name, PSEUDO_EMITTER_CK_VALUE);
+                std::string push_consumer_oid_str 
+                    = create_oid(m_component_oid, 
+                                 e_name, 
+                                 PSEUDO_EMITTER_CK_VALUE);
                     
-                    CORBA::OctetSeq_var push_consumer_oid 
-                        = Cdmw::CCM::Common::string_to_OctetSeq(push_consumer_oid_str.c_str());
-                    
-                    CORBA::Object_var obj
-                        = s2ctx->create_ref_from_oid(push_consumer_oid.in(), PUSH_CONSUMER_ID);
+                CORBA::Object_var obj
+                    = m_context->create_ref_from_oid_str(push_consumer_oid_str, 
+                                                         PUSH_CONSUMER_ID);
                 
-                    e_info.push_consumer = CosEventComm::PushConsumer::_narrow(obj.in());
-                }
-                else
-                {
-                    PRINT_ERROR("Context is not a Session2Context!");
-                    throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
-                        CORBA::COMPLETED_NO);
-                }                
+                e_info.push_consumer 
+                   = CosEventComm::PushConsumer::_narrow(obj.in());
             }
                           
             try
             {
-                e_info.proxy_supplier 
-                    = e_info.channel->connect_pushConsumer(e_info.push_consumer.in());
+                e_info.proxy_supplier = e_info.channel->connect_pushConsumer
+                   (e_info.push_consumer.in());
             }
             catch (const CORBA::SystemException& )
             {
@@ -1218,11 +1069,7 @@ CCMObject_impl::disconnect_consumer(const char* source_name)
           Components::NoConnection,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::EventConsumerBase_var result = Components::EventConsumerBase::_nil();
 
@@ -1283,11 +1130,7 @@ Components::ConsumerDescriptions*
 CCMObject_impl::get_all_consumers()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::NameList name_list;
     
@@ -1312,7 +1155,7 @@ CCMObject_impl::get_all_consumers()
     }
     catch (const Components::InvalidName &)
     {
-        throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+        throw CORBA::INTERNAL(OrbSupport::INTERNALComponentInvalidName, CORBA::COMPLETED_NO);
     }
 }
 
@@ -1324,18 +1167,14 @@ CCMObject_impl::get_named_consumers(const Components::NameList& names)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::ConsumerDescriptions_var c_desc = new Components::ConsumerDescriptions;
     c_desc->length(names.length());
     
     for (CORBA::ULong i_name=0; i_name<names.length(); i_name++) 
     {
-        std::string c_name = (const char*) names[i_name];
+        std::string c_name(names[i_name]);
         ConsumerMap::iterator c_iter = m_consumers.find(c_name);
 
         if (c_iter != m_consumers.end())
@@ -1347,8 +1186,7 @@ CCMObject_impl::get_named_consumers(const Components::NameList& names)
 
             c_desc[i_name]->name(c_name.c_str());
             c_desc[i_name]->type_id(c_info.rep_id.c_str());
-            CORBA::Object_var c_obj = 
-               get_group_object_ref_if_FTrequest(c_info.consumer.in());
+            CORBA::Object_var c_obj = get_object_ref(c_info.consumer.in());
             c_desc[i_name]->consumer(Components::EventConsumerBase::_narrow(c_obj.in()));
         }
         else
@@ -1368,11 +1206,7 @@ Components::EmitterDescriptions*
 CCMObject_impl::get_all_emitters()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::NameList name_list;
     
@@ -1397,7 +1231,7 @@ CCMObject_impl::get_all_emitters()
     }
     catch (const Components::InvalidName &)
     {
-        throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+        throw CORBA::INTERNAL(OrbSupport::INTERNALComponentInvalidName, CORBA::COMPLETED_NO);
     }
 }
 
@@ -1409,18 +1243,14 @@ CCMObject_impl::get_named_emitters(const Components::NameList& names)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::EmitterDescriptions_var e_desc = new Components::EmitterDescriptions;
     e_desc->length(names.length());
     
     for (CORBA::ULong i_name=0; i_name<names.length(); i_name++) 
     {
-        std::string e_name = (const char*) names[i_name];
+        std::string e_name(names[i_name]);
         EmitterMap::iterator e_iter = m_emitters.find(e_name);
 
         if (e_iter != m_emitters.end())
@@ -1451,11 +1281,7 @@ Components::PublisherDescriptions*
 CCMObject_impl::get_all_publishers()
     throw(CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::NameList name_list;
     
@@ -1480,7 +1306,7 @@ CCMObject_impl::get_all_publishers()
     }
     catch (const Components::InvalidName &)
     {
-        throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+        throw CORBA::INTERNAL(OrbSupport::INTERNALComponentInvalidName, CORBA::COMPLETED_NO);
     }
 }
 
@@ -1492,18 +1318,14 @@ CCMObject_impl::get_named_publishers(const Components::NameList& names)
     throw(Components::InvalidName,
           CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     Components::PublisherDescriptions_var p_desc = new Components::PublisherDescriptions;
     p_desc->length(names.length());
     
     for (CORBA::ULong i_name=0; i_name<names.length(); i_name++) 
     {
-        std::string p_name = (const char*) names[i_name];
+        std::string p_name(names[i_name]);
         PublisherMap::iterator p_iter = m_publishers.find(p_name);
 
         if (p_iter != m_publishers.end())
@@ -1565,9 +1387,9 @@ CCMObject_impl::get_named_publishers(const Components::NameList& names)
 */ 
 
 CORBA::Object_ptr 
-CCMObject_impl::declare_facet(const char*  comp_oid,
-                              const char*  facet_name,
-                              const char*  rep_id)
+CCMObject_impl::declare_facet(const std::string&  comp_oid,
+                              const std::string&  facet_name,
+                              const std::string&  rep_id)
     throw (AlreadyDoneException, InternalErrorException)
 {
     FacetInfo facet_info;
@@ -1578,41 +1400,24 @@ CCMObject_impl::declare_facet(const char*  comp_oid,
     try 
     {      
         // check a facet with a same name has not been already declared
-        if (m_facets.find(std::string(facet_name)) == m_facets.end())
+        if (m_facets.find(facet_name) == m_facets.end())
         {
-            // check component context is a Session2Context one
-            Components::Session2Context_var s2ctx 
-                = Components::Session2Context::_narrow(m_context.in());
-            
-            if (!CORBA::is_nil(s2ctx.in()))
+            if (m_is_monolithic)
             {
-                if (m_is_monolithic)
-                {
-                    CORBA::OctetSeq_var facet_oid 
-                        = Cdmw::CCM::Common::string_to_OctetSeq(comp_oid);
-                
-                    facet_info.obj_ref 
-                        = s2ctx->create_ref_from_oid(facet_oid.in(), m_rep_id.c_str());
-                }
-                else
-                {
-                  std::string facet_oid_str 
-                     = create_oid(std::string(comp_oid), facet_name);
-                
-                  CORBA::OctetSeq_var facet_oid 
-                     = Cdmw::CCM::Common::string_to_OctetSeq(facet_oid_str.c_str());
-                
-                  facet_info.obj_ref 
-                     = s2ctx->create_ref_from_oid(facet_oid.in(), rep_id);
-                }
+                facet_info.obj_ref 
+                   = m_context->create_ref_from_oid_str(comp_oid, 
+                                                        m_rep_id);
             }
             else
             {
-                PRINT_ERROR("Context is not a Session2Context!");
-                CDMW_THROW(InternalErrorException);
+                std::string facet_oid_str 
+                    = create_oid(comp_oid, facet_name);
+                
+                facet_info.obj_ref 
+                    = m_context->create_ref_from_oid_str(facet_oid_str, rep_id);
             }
 
-            m_facets.insert(FacetMap::value_type(std::string(facet_name), facet_info));
+            m_facets.insert(FacetMap::value_type(facet_name, facet_info));
         }
         else
         {
@@ -1652,8 +1457,8 @@ CCMObject_impl::declare_facet(const char*  comp_oid,
 *@exception AlreadyDoneException
 */ 
 void 
-CCMObject_impl::declare_receptacle(const char*  receptacle_name,
-                                   const char*  rep_id,
+CCMObject_impl::declare_receptacle(const std::string&  receptacle_name,
+                                   const std::string&  rep_id,
                                    bool         is_multiplex)
     throw (AlreadyDoneException)
 {
@@ -1663,9 +1468,9 @@ CCMObject_impl::declare_receptacle(const char*  receptacle_name,
     receptacle_info.is_multiplex = is_multiplex;
 
     // check a receptacle with a same name has not been already declared
-    if (m_receptacles.find(std::string(receptacle_name)) == m_receptacles.end())
+    if (m_receptacles.find(receptacle_name) == m_receptacles.end())
     {
-        m_receptacles.insert(ReceptacleMap::value_type(std::string(receptacle_name), receptacle_info));
+        m_receptacles.insert(ReceptacleMap::value_type(receptacle_name, receptacle_info));
     }
     else
     {
@@ -1689,9 +1494,9 @@ CCMObject_impl::declare_receptacle(const char*  receptacle_name,
 */ 
 
 CORBA::Object_ptr 
-CCMObject_impl::declare_consumer(const char*  comp_oid,
-                                 const char*  consumer_name,
-                                 const char*  rep_id)
+CCMObject_impl::declare_consumer(const std::string&  comp_oid,
+                                 const std::string&  consumer_name,
+                                 const std::string&  rep_id)
     throw (AlreadyDoneException, InternalErrorException)
 {
     ConsumerInfo consumer_info;
@@ -1702,41 +1507,23 @@ CCMObject_impl::declare_consumer(const char*  comp_oid,
     try 
     {      
         // check a consumer with a same name has not been already declared
-        if (m_consumers.find(std::string(consumer_name)) == m_consumers.end())
+        if (m_consumers.find(consumer_name) == m_consumers.end())
         {
-            // check component context is a Session2Context one
-            Components::Session2Context_var s2ctx 
-                = Components::Session2Context::_narrow(m_context.in());
-            
-            if (!CORBA::is_nil(s2ctx.in()))
+            if (m_is_monolithic)
             {
-                if (m_is_monolithic)
-                {
-                    CORBA::OctetSeq_var consumer_oid 
-                        = Cdmw::CCM::Common::string_to_OctetSeq(comp_oid);
-                
-                    consumer_info.consumer 
-                        = s2ctx->create_ref_from_oid(consumer_oid.in(), m_rep_id.c_str());
-                }
-                else
-                {
-                  std::string consumer_oid_str 
-                     = create_oid(std::string(comp_oid), consumer_name);
-                
-                  CORBA::OctetSeq_var consumer_oid 
-                     = Cdmw::CCM::Common::string_to_OctetSeq(consumer_oid_str.c_str());
-                
-                  consumer_info.consumer
-                     = s2ctx->create_ref_from_oid(consumer_oid.in(), rep_id);
-                }
+                consumer_info.consumer 
+                    = m_context->create_ref_from_oid_str(comp_oid, m_rep_id);
             }
             else
             {
-                PRINT_ERROR("Context is not a Session2Context!");
-                CDMW_THROW(InternalErrorException);
+                std::string consumer_oid_str 
+                    = create_oid(comp_oid, consumer_name);
+                
+                consumer_info.consumer
+                    = m_context->create_ref_from_oid_str(consumer_oid_str, rep_id);
             }
 
-            m_consumers.insert(ConsumerMap::value_type(std::string(consumer_name), 
+            m_consumers.insert(ConsumerMap::value_type(consumer_name, 
                                                        consumer_info));
         }
         else
@@ -1777,18 +1564,14 @@ CCMObject_impl::declare_consumer(const char*  comp_oid,
 *@exception AlreadyDoneException
 */ 
 void 
-CCMObject_impl::declare_emitter(const char*  emitter_name,
-                                const char*  rep_id)
+CCMObject_impl::declare_emitter(const std::string&  emitter_name,
+                                const std::string&  rep_id)
     throw (AlreadyDoneException, CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     // check a emitter with a same name has not been already declared
-    if (m_emitters.find(std::string(emitter_name)) == m_emitters.end())
+    if (m_emitters.find(emitter_name) == m_emitters.end())
     {
         // store information concerning the emitter
         EmitterInfo   emitter_info;
@@ -1801,8 +1584,8 @@ CCMObject_impl::declare_emitter(const char*  emitter_name,
         {
             Components::PortDescription_var port_desc 
                 = new PortDescription_impl();
-            port_desc->name(emitter_name);
-            port_desc->type_id(rep_id);
+            port_desc->name(emitter_name.c_str());
+            port_desc->type_id(rep_id.c_str());
             
             CosEventChannelAdmin::EventChannel_var event_channel =
                 m_context->obtain_event_channel_for_emitter(port_desc.in());
@@ -1812,7 +1595,7 @@ CCMObject_impl::declare_emitter(const char*  emitter_name,
         catch (const CdmwCcmContainer::NoChannel& )
         {
             PRINT_ERROR2(emitter_name, " event channel doesn't exist!");
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+            throw CORBA::INTERNAL(OrbSupport::INTERNALNoChannel, CORBA::COMPLETED_NO);
         }
         catch (const CORBA::SystemException& )
         {
@@ -1831,7 +1614,7 @@ CCMObject_impl::declare_emitter(const char*  emitter_name,
         }
         
         // emitter info completed, store it in map
-        m_emitters.insert(EmitterMap::value_type(std::string(emitter_name), emitter_info));
+        m_emitters.insert(EmitterMap::value_type(emitter_name, emitter_info));
     }
     else
     {
@@ -1852,18 +1635,14 @@ CCMObject_impl::declare_emitter(const char*  emitter_name,
 *@exception AlreadyDoneException
 */ 
 void 
-CCMObject_impl::declare_publisher(const char*  publisher_name,
-                                  const char*  rep_id)
+CCMObject_impl::declare_publisher(const std::string&  publisher_name,
+                                  const std::string&  rep_id)
     throw (AlreadyDoneException, CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     // check a publisher with a same name has not been already declared
-    if (m_publishers.find(std::string(publisher_name)) == m_publishers.end())
+    if (m_publishers.find(publisher_name) == m_publishers.end())
     {    
         // store information concerning the pusblisher
         PublisherInfo   publisher_info;
@@ -1875,8 +1654,8 @@ CCMObject_impl::declare_publisher(const char*  publisher_name,
         {
             Components::PortDescription_var port_desc 
                 = new PortDescription_impl();
-            port_desc->name(publisher_name);
-            port_desc->type_id(rep_id);
+            port_desc->name(publisher_name.c_str());
+            port_desc->type_id(rep_id.c_str());
             
             CosEventChannelAdmin::EventChannel_var event_channel =
                 m_context->create_event_channel_for_publisher(port_desc.in());
@@ -1886,7 +1665,7 @@ CCMObject_impl::declare_publisher(const char*  publisher_name,
         catch (const Components::CreateFailure& )
         {
             PRINT_ERROR2(publisher_name, "event channel creation failure");
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+            throw CORBA::INTERNAL(OrbSupport::INTERNALNoChannel, CORBA::COMPLETED_NO);
         }
         catch (const CORBA::SystemException& )
         {
@@ -1905,7 +1684,7 @@ CCMObject_impl::declare_publisher(const char*  publisher_name,
         }
 
         // publisher info completed, store it in map
-        m_publishers.insert(PublisherMap::value_type(std::string(publisher_name),
+        m_publishers.insert(PublisherMap::value_type(publisher_name,
                                                      publisher_info));
     }
     else
@@ -1926,38 +1705,33 @@ CCMObject_impl::declare_publisher(const char*  publisher_name,
 * @return the proxy consumer of the event service.
 */
 CosEventComm::PushConsumer_ptr
-CCMObject_impl::get_proxy_consumer(const char* source_name)
+CCMObject_impl::get_proxy_consumer(const std::string& source_name)
 throw (CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     CosEventComm::PushConsumer_var consumer 
         = CosEventComm::PushConsumer::_nil();
     
     // find source name in publisher map and emitter map
-    std::string s_name(source_name);
-    PublisherMap::iterator p_iter = m_publishers.find(s_name);
+    PublisherMap::iterator p_iter = m_publishers.find(source_name);
     
     if (p_iter != m_publishers.end())
     {
         // publisher_name exists
-        PublisherInfo p_info = m_publishers[s_name];
+        PublisherInfo p_info = m_publishers[source_name];
         consumer = 
             CosEventComm::PushConsumer::_duplicate(p_info.proxy_consumer.in());
     }
     else
     {
         // find in emitter map
-        EmitterMap::iterator e_iter = m_emitters.find(s_name);
+        EmitterMap::iterator e_iter = m_emitters.find(source_name);
         
         if (e_iter != m_emitters.end())
         {
             // emitter_name exists
-            EmitterInfo e_info = m_emitters[s_name];
+            EmitterInfo e_info = m_emitters[source_name];
             consumer = 
                 CosEventComm::PushConsumer::_duplicate(e_info.proxy_consumer.in());
         }
@@ -1980,31 +1754,25 @@ throw (CORBA::SystemException)
 * @return the local push consumer servant.
 */
 PortableServer::Servant
-CCMObject_impl::get_local_push_consumer_servant(const char* source_name, const char* ck_value) 
+CCMObject_impl::get_local_push_consumer_servant(const std::string& source_name, 
+                                                const std::string& ck_value) 
 throw (CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     PRINT_INFO("Entering in get_local_push_consumer_servant()");
-    std::string s_name(source_name);
-    PRINT_INFO("source name = " << s_name);
-
-    std::string ck_value_str(ck_value);
+    PRINT_INFO("source name = " << source_name);
     PRINT_INFO("ck_value = " << ck_value);
 
     if (ck_value != std::string(PSEUDO_EMITTER_CK_VALUE))
     {
         // look in publisher map
-        PublisherMap::iterator p_iter = m_publishers.find(s_name);
+        PublisherMap::iterator p_iter = m_publishers.find(source_name);
         
         if (p_iter != m_publishers.end())
         {
             //  source_name is a publisher
-            PublisherInfo& p_info = m_publishers[s_name];
+            PublisherInfo& p_info = m_publishers[source_name];
             
             Components::Cookie_var ck = new Cdmw::CCM::Common::Cookie_impl(ck_value);
             SubscriberMap::iterator s_iter = p_info.subscriptions.find(ck);
@@ -2022,7 +1790,7 @@ throw (CORBA::SystemException)
                 else
                 {
                     // No local push consumer with this name exist in this component
-                    PRINT_ERROR("Local push consumer not found: do not exist for this connection.");
+                    PRINT_ERROR("Local push consumer not found: does not exist for this connection.");
                     throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
                         CORBA::COMPLETED_NO); 
                     
@@ -2047,12 +1815,12 @@ throw (CORBA::SystemException)
     else
     {
         // look in emitter map
-        EmitterMap::iterator e_iter = m_emitters.find(s_name);
+        EmitterMap::iterator e_iter = m_emitters.find(source_name);
         
         if (e_iter != m_emitters.end())
         {
             // source_name is an emitter
-            EmitterInfo e_info = m_emitters[s_name];
+            EmitterInfo e_info = m_emitters[source_name];
             
            if (e_info.push_consumer_servant.in())
            {
@@ -2091,30 +1859,25 @@ throw (CORBA::SystemException)
 *@exception Components::InvalidConnection if the connection does'nt exist
 */ 
 Components::EventConsumerBase_ptr 
-CCMObject_impl::get_consumer(const char*  publisher_name,
+CCMObject_impl::get_consumer(const std::string&  publisher_name,
                              Components::Cookie* ck)
    throw(Components::InvalidName,
          Components::InvalidConnection, 
          CORBA::SystemException)
 {
-    if (is_removed())
-    {
-        throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                      CORBA::COMPLETED_NO);
-    }
+    check_is_removed();
 
     if (!ck)
         throw CORBA::BAD_PARAM(OrbSupport::BAD_PARAMNilObjectReference, CORBA::COMPLETED_NO);
     
     // find publisher
     Components::EventConsumerBase_var result = Components::EventConsumerBase::_nil();
-    std::string p_name(publisher_name);
-    PublisherMap::iterator p_iter = m_publishers.find(p_name);
+    PublisherMap::iterator p_iter = m_publishers.find(publisher_name);
     
     if (p_iter != m_publishers.end())
     {
         // publisher_name exists
-        PublisherInfo& p_info = m_publishers[p_name];
+        PublisherInfo& p_info = m_publishers[publisher_name];
         
         // find subscription
         Components::Cookie_var ck_var = ck;
@@ -2124,7 +1887,8 @@ CCMObject_impl::get_consumer(const char*  publisher_name,
         if (s_iter != p_info.subscriptions.end())
         {
             SubscriberMap::value_type subscription = *s_iter;
-            result = Components::EventConsumerBase::_duplicate(subscription.second.ccm_consumer.in());
+            result = Components::EventConsumerBase::_duplicate(
+                          subscription.second.ccm_consumer.in());
         }
         else
         {
@@ -2139,16 +1903,6 @@ CCMObject_impl::get_consumer(const char*  publisher_name,
     return result._retn();
 }
 
-
-
-// Returns true if object with oid is removed
-bool
-CCMObject_impl::is_removed() const 
-    throw()
-{
-    return m_is_removed;
-}
-
 /**
 * Purpose:
 * <p>
@@ -2160,72 +1914,10 @@ CCMObject_impl::is_removed() const
 *@return  The reference to be exported to clients
 */ 
 CORBA::Object_ptr 
-CCMObject_impl::get_group_object_ref_if_FTrequest(const CORBA::Object_ptr obj_ref)
+CCMObject_impl::get_object_ref(const CORBA::Object_ptr obj_ref)
    throw (CORBA::SystemException)
 {
     CORBA::Object_var result = CORBA::Object::_duplicate(obj_ref);
-
-#ifdef CDMW_USE_FAULTTOLERANCE  
-    ::FT::ObjectGroupId group_id = 0;
-    try
-    {
-        if (!CORBA::is_nil(m_ft_current.in()))
-        {
-            // test if we are able to get group id: if OK it significates it is a FT 
-            // request on a group ref. Otherwise, it will raise NoContext exception.
-            group_id = m_ft_current->get_object_group_id();
-    
-            // No NoContext exception raised: this is a FT request on a group ref.
-            // Find and return the corresponding group reference of the given object ref.
-            // To do so, we use the FTGroupRepository to fing the group from the object 
-            // ref instead from the group_id on which the request is done. It may be
-            // different in segmented case.
-            if (!CORBA::is_nil(m_ft_group_rep.in()))
-            {
-                result = m_ft_group_rep->get_object_group(obj_ref);
-            }
-        }
-    }
-    catch (const CdmwFT::Current::NoContext&)
-    {
-        // This is not a FT request, return the object ref
-    }
-    catch (const FT::MemberNotFound& )
-    {
-       // Object ref is not a member of a group
-       // May be the location manager has not been advised by the replication yet
-       // We can check replciation manager.
-       // Currently, component are monolithic if FT. So the group id of the request is 
-       // the one of the specified object ref.
-       // TODO add an operation on replication manager to find the group ref from 
-       // a member ref.
-       try 
-       {
-          if (!CORBA::is_nil(m_ft_rep_mng.in())) 
-          {
-              result = m_ft_rep_mng->get_object_group_ref_from_gid(group_id);
-          }
-       }
-       catch (const ::FT::ObjectGroupNotFound&)
-       {
-           // Shall not happen: it means the group has not been created by this 
-           // replication manager.
-           PRINT_ERROR("FT::ObjectGroupNotFound raised!");
-           throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
-       }
-       catch (const CORBA::SystemException& e)
-       {
-           PRINT_ERROR("CORBA::SystemException raised : " << e);
-           throw;
-       }
-    }
-    catch (const CORBA::SystemException& e)
-    {
-        PRINT_ERROR("CORBA::SystemException raised : " << e);
-        throw;
-    }
-#endif
-
     return result._retn();
 }
 

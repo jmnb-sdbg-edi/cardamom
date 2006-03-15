@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -29,6 +29,18 @@
    xmlns:UML="org.omg/UML1.3">
 
 
+<!--
+   Main - This template fetches the necessary data from inputs
+   to generate a file when FT.
+
+   @param none
+-->
+<xsl:template name="ft_session_component_cpp">
+   <xsl:call-template name="session_component_cpp">
+      <xsl:with-param name="_hasFaultTolerance" select="'yes'"/>
+   </xsl:call-template>
+</xsl:template> <!-- end of template ft_session_home_cpp -->
+
 
 <!--
    Main - This template fetches the necessary data from inputs
@@ -37,6 +49,7 @@
    @param none
 -->
 <xsl:template name="session_component_cpp">
+   <xsl:param name="_hasFaultTolerance" select="'no'"/>
    <!--
       Parameters below are used for recursiveness.
    -->
@@ -77,7 +90,16 @@
          <xsl:variable name="managedComponentNode" select="key('classById', $managedComponentId)"/>
 
          <xsl:if test="boolean($managedComponentNode)">
-            <xsl:variable name="componentImplClassname" select="concat('Session', $managedComponentNode/@name, '_impl')"/>
+            <xsl:variable name="componentImplClassname">
+               <xsl:choose>
+                  <xsl:when test="$_hasFaultTolerance = 'yes'">
+                     <xsl:value-of select="concat('FTSession', $managedComponentNode/@name, '_impl')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                     <xsl:value-of select="concat('Session', $managedComponentNode/@name, '_impl')"/>
+                  </xsl:otherwise>
+               </xsl:choose>
+            </xsl:variable>
 
             <!--
                Get the output filename.
@@ -117,8 +139,10 @@
                         <xsl:with-param name="_homeImplNode" select="$homeImplNode"/>
                      </xsl:call-template>
                   </xsl:with-param>
+                  <xsl:with-param name="_homeName" select="$homeName" />
                   <xsl:with-param name="_componentName" select="$managedComponentNode/@name"/>
                   <xsl:with-param name="_isSegmented" select="$isSegmented"/>
+                  <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
                </xsl:call-template>
             </xsl:document>
          </xsl:if>
@@ -127,6 +151,7 @@
             Proceed to the next home impl if any.
          -->
          <xsl:call-template name="session_component_cpp">
+            <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
             <xsl:with-param name="_index" select="$_index + 1"/>
          </xsl:call-template>
       </xsl:if>
@@ -143,8 +168,10 @@
 -->
 <xsl:template name="session_component_cpp.content">
    <xsl:param name="_scopedHomeImplClassname"/>
+   <xsl:param name="_homeName"/>
    <xsl:param name="_componentName"/>
    <xsl:param name="_isSegmented"/>
+   <xsl:param name="_hasFaultTolerance"/>
    
 
    <!--
@@ -165,7 +192,22 @@
          <xsl:with-param name="_name" select="$_componentName"/>
       </xsl:call-template>
    </xsl:variable>
-   <xsl:variable name="componentImplClassname" select="concat('Session', $_componentName, '_impl')"/>
+   <xsl:variable name="cppHomeScope">
+      <xsl:call-template name="getScope">
+         <xsl:with-param name="_name" select="$_homeName"/>
+      </xsl:call-template>
+   </xsl:variable>
+   <xsl:variable name="componentImplClassname">
+      <xsl:choose>
+         <xsl:when test="$_hasFaultTolerance = 'yes'">
+            <xsl:value-of select="concat('FTSession', $_componentName, '_impl')"/>
+         </xsl:when>
+         <xsl:otherwise>
+            <xsl:value-of select="concat('Session', $_componentName, '_impl')"/>
+         </xsl:otherwise>
+      </xsl:choose>
+   </xsl:variable>
+
    <xsl:variable name="componentObjRefVar" select="concat($cppComponentScope, $cppSep, 'CCM_', $_componentName, '_var')"/>
    <xsl:variable name="componentObjRefPtr" select="concat($cppComponentScope, $cppSep, 'CCM_', $_componentName, '_ptr')"/>
    <xsl:variable name="generalizations" select="key('generalizationById', $componentNode/UML:GeneralizableElement.generalization/UML:Generalization/@xmi.idref)"/>
@@ -199,6 +241,15 @@
          <xsl:with-param name="_whatToFind" select="'CCMConsumes'"/>
       </xsl:call-template>
    </xsl:variable>
+   <xsl:variable name="idlComponentScope">
+      <xsl:call-template name="replaceCharsInString">
+         <xsl:with-param name="_stringIn" select="$cppComponentScope"/>
+         <xsl:with-param name="_charsIn" select="'::'"/>
+         <xsl:with-param name="_charsOut" select="'/'"/>
+      </xsl:call-template>
+   </xsl:variable>
+
+
 
    <!--
       The code generation starts here.
@@ -246,7 +297,7 @@
       const char* COMP_REP_ID = "<xsl:value-of select="$componentNode/UML:ModelElement.taggedValue/UML:TaggedValue[@tag = 'typeid']/@value"/>";
       </xsl:if>
       <xsl:if test="$_isSegmented = 'no'">
-      const char* COMP_REP_ID = "IDL:thalesgroup.com/Cdmw_<xsl:value-of select="concat($cppComponentScope, '/', $_componentName, ':1.0')"/>";
+      const char* COMP_REP_ID = "IDL:thalesgroup.com/Cdmw_<xsl:value-of select="concat($idlComponentScope, '/', $_componentName, ':1.0')"/>";
       </xsl:if>
       const char* COMP_NAME   = "<xsl:value-of select="$_componentName"/>";
 
@@ -488,18 +539,19 @@
    };  // end of anonymous namespace
 
    <xsl:call-template name="openNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
 
-
-#ifdef CDMW_USE_FAULTTOLERANCE
-    // FT Activation Handler for the component
-    class Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl :
+   <xsl:if test="$_hasFaultTolerance = 'yes'">
+      // FT Activation Handler for the component
+    class FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl :
          virtual public ::CdmwFT::Location::ActivationHandler,
          virtual public Cdmw::OrbSupport::RefCountLocalObject
     {
     public:
-        Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl(Session<xsl:value-of select="$_componentName"/>_impl* component_servant)
+        FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl(FTSession<xsl:value-of select="$_componentName"/>_impl* component_servant)
             : m_component_servant(component_servant)
         {
         }
@@ -548,39 +600,49 @@
         }
 
     private:
-        Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl(const Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl<![CDATA[&);]]>
-        Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl<![CDATA[&]]> operator=(const Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl<![CDATA[&);]]>
+        FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl(const FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl<![CDATA[&);]]>
+        FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl<![CDATA[&]]> operator=(const FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl<![CDATA[&);]]>
 
-        Session<xsl:value-of select="$_componentName"/>_impl* m_component_servant;
+        FTSession<xsl:value-of select="$_componentName"/>_impl* m_component_servant;
 
     };
-#endif
+   </xsl:if>
 
 
    // Constructor
-   <xsl:value-of select="concat($componentImplClassname, $cppSep, $componentImplClassname)"/>(const std::string comp_oid,
-                         CdmwCcmContainer::CCM2Context_ptr ctx,
+   <xsl:value-of select="concat($componentImplClassname, $cppSep, $componentImplClassname)"/>(const <![CDATA[std::string&]]> comp_oid,
+                         Context*                          ctx,
                          CORBA::Object_ptr                 comp_ref,
                          Components::EnterpriseComponent*  executor,
-#ifdef CDMW_USE_FAULTTOLERANCE
+      <xsl:if test="$_hasFaultTolerance = 'yes'">
                          ::FT::ObjectGroup_ptr             group_ref,
-#endif
+      </xsl:if>
                          bool is_created_by_factory_operation)
       throw (Components::CCMException,
              CORBA::SystemException)
-      <xsl:if test="$_isSegmented = 'yes'">
+      <xsl:if test="$_hasFaultTolerance = 'no'">
+         <xsl:if test="$_isSegmented = 'yes'">
       : CCMObject_impl(comp_oid, ctx, COMP_REP_ID, comp_ref),
-      </xsl:if>
-      <xsl:if test="$_isSegmented = 'no'">
+         </xsl:if>
+         <xsl:if test="$_isSegmented = 'no'">
       : CCMObject_impl(comp_oid, ctx, COMP_REP_ID, comp_ref, true),
+         </xsl:if>
+      </xsl:if>
+      <xsl:if test="$_hasFaultTolerance = 'yes'">
+         <xsl:if test="$_isSegmented = 'yes'">
+      : FTCCMObject_impl(comp_oid, ctx, COMP_REP_ID, comp_ref),
+         </xsl:if>
+         <xsl:if test="$_isSegmented = 'no'">
+      : FTCCMObject_impl(comp_oid, ctx, COMP_REP_ID, comp_ref, true),
+         </xsl:if>
       </xsl:if>
         m_is_activated(false), 
-#ifdef CDMW_USE_FAULTTOLERANCE
+      <xsl:if test="$_hasFaultTolerance = 'yes'">
         m_group_ref(::FT::ObjectGroup::_duplicate(group_ref)),
         m_activation_handler(::CdmwFT::Location::ActivationHandler::_nil()),
         m_activation_manager(::CdmwFT::Location::ActivationManager::_nil()),
         m_activation_handler_id(0L),
-#endif
+      </xsl:if>
         m_is_created_by_factory_operation(is_created_by_factory_operation)
       <xsl:call-template name="findAllInterfaceReadWriteAttributes">
          <xsl:with-param name="_interfaceName" select="$_componentName"/>
@@ -633,27 +695,22 @@
          }
       }
 
-
-#ifdef CDMW_USE_FAULTTOLERANCE
-      if (!CORBA::is_nil(m_group_ref.in()))
-      {
-         // component is replicated, it shall be activated by FT framework
-         // To do so, we shall create a FT ActivationHandler
-         m_activation_handler = new Session<xsl:value-of select="$_componentName"/>FTActivationHandler_impl(this);
+      <xsl:if test="$_hasFaultTolerance = 'yes'">
+      // component is replicated, it shall be activated by FT framework
+      // To do so, we shall create a FT ActivationHandler
+      m_activation_handler = new FTSession<xsl:value-of select="$_componentName"/>FTActivationHandler_impl(this);
 
 <![CDATA[         
-         //m_activation_handler = sctx->create_oid();
 
-         CORBA::Object_var am_ref = 
+      CORBA::Object_var am_ref = 
             m_context->resolve_initial_references("FTActivationManager");
-         m_activation_manager = 
+      m_activation_manager = 
             CdmwFT::Location::ActivationManager::_narrow(am_ref.in());
-         m_activation_handler_id = 
+      m_activation_handler_id = 
             m_activation_manager->register_activation_handler(m_group_ref.in(),
                                                               m_activation_handler.in());
 ]]>
-      }
-#endif
+      </xsl:if>
 
       m_context_executor = new CCM_<xsl:value-of select="$_componentName"/>_SessionContext_impl(ctx, this);
 
@@ -686,7 +743,7 @@
             _set_ref_count(0);
         
             PRINT_ERROR("Internal exception raised when declaring receptacle!");
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, CORBA::COMPLETED_NO);
          }
          catch (const <![CDATA[CORBA::SystemException& e]]>)
          {
@@ -695,7 +752,7 @@
             _set_ref_count(0);
         
             PRINT_ERROR("System exception raised when declaring receptacle!" <![CDATA[<< e]]>);
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, CORBA::COMPLETED_NO);
          }
       </xsl:if>
 
@@ -731,7 +788,7 @@
             _set_ref_count(0);
         
             PRINT_ERROR("System exception raised when declaring event source!" <![CDATA[<< e]]>);
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, CORBA::COMPLETED_NO);
          }
       </xsl:if>
 
@@ -759,7 +816,7 @@
             _set_ref_count(0);
         
             PRINT_ERROR("Internal exception raised when declaring consumer!");
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, CORBA::COMPLETED_NO);
          }
          catch (const <![CDATA[CORBA::SystemException& e]]>)
          {
@@ -768,7 +825,7 @@
             _set_ref_count(0);
         
             PRINT_ERROR("System exception raised when declaring consumer!" <![CDATA[<< e]]>);
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, CORBA::COMPLETED_NO);
          }
       </xsl:if>
 
@@ -778,8 +835,7 @@
    <xsl:value-of select="concat($componentImplClassname, $cppSep, '~', $componentImplClassname, '()')"/>
    {
       PRINT_INFO("<xsl:value-of select="$componentImplClassname"/> destructor called!");
-
-#ifdef CDMW_USE_FAULTTOLERANCE
+      <xsl:if test="$_hasFaultTolerance = 'yes'">
       try
       {
           <![CDATA[m_activation_manager->unregister_activation_handler(m_activation_handler_id);]]>
@@ -787,7 +843,7 @@
       catch (...)
       {
       }
-#endif
+      </xsl:if>
 
       if (m_is_activated)
       {
@@ -804,6 +860,7 @@
       <xsl:with-param name="_interfaceName" select="$_componentName"/>
       <xsl:with-param name="_type" select="'Component'"/>
       <xsl:with-param name="_template" select="'session_component_cpp.content.2'"/>
+      <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
    </xsl:call-template>
 
    /**
@@ -878,11 +935,7 @@
             CORBA::SystemException
          )
          {
-            if (is_removed())
-            {
-                throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                              CORBA::COMPLETED_NO); 
-            }
+            check_is_removed();
 
             <xsl:value-of select="$componentObjRefVar"/> comp_exec = obtain_component_executor();
             <xsl:if test="string-length($objRefVarType) > 0">
@@ -931,6 +984,7 @@
       <xsl:with-param name="_componentName" select="$_componentName"/>
       <xsl:with-param name="_template" select="'session_component_cpp.content.8'"/>
       <xsl:with-param name="_isSegmented" select="$_isSegmented"/>
+      <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
    </xsl:call-template>
 
    // Receptacles
@@ -938,6 +992,7 @@
    <xsl:call-template name="findAllComponentReceptacles">
       <xsl:with-param name="_componentName" select="$_componentName"/>
       <xsl:with-param name="_template" select="'session_component_cpp.content.12'"/>
+      <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
    </xsl:call-template>
 
    // Publishers
@@ -945,6 +1000,7 @@
    <xsl:call-template name="findAllComponentPublishers">
       <xsl:with-param name="_componentName" select="$_componentName"/>
       <xsl:with-param name="_template" select="'session_component_cpp.content.17'"/>
+      <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
    </xsl:call-template>
    
    // Emitters
@@ -952,6 +1008,7 @@
    <xsl:call-template name="findAllComponentEmitters">
       <xsl:with-param name="_componentName" select="$_componentName"/>
       <xsl:with-param name="_template" select="'session_component_cpp.content.18'"/>
+      <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
    </xsl:call-template>
    
    // Consumers
@@ -962,11 +1019,7 @@
          <xsl:value-of select="$componentImplClassname"/>::push_event(Components::EventBase * evt)
             throw (Components::BadEventType, CORBA::SystemException)
          {
-            if (is_removed())
-              {
-                throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                              CORBA::COMPLETED_NO); 
-            }
+            check_is_removed();
    
             bool bad_evt_type_found = true;
             
@@ -986,11 +1039,7 @@
             throw (CosEventComm::Disconnected, 
                    CORBA::SystemException)
          {
-            if (is_removed())
-            {
-                throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                              CORBA::COMPLETED_NO); 
-            }
+            check_is_removed();
    
             bool bad_evt_type_found = true;
             
@@ -1009,12 +1058,7 @@
          <xsl:value-of select="$componentImplClassname"/>::disconnect_push_consumer()
          throw (CORBA::SystemException)
          {
-             if (is_removed())
-             {
-                 throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                               CORBA::COMPLETED_NO); 
-             }
-   
+             check_is_removed();
          }
    
       </xsl:if>
@@ -1024,6 +1068,7 @@
       <xsl:with-param name="_componentName" select="$_componentName"/>
       <xsl:with-param name="_template" select="'session_component_cpp.content.22'"/>
       <xsl:with-param name="_isSegmented" select="$_isSegmented"/>
+      <xsl:with-param name="_hasFaultTolerance" select="$_hasFaultTolerance"/>
    </xsl:call-template>
 
    void
@@ -1031,22 +1076,15 @@
       throw(Components::InvalidConfiguration,
             CORBA::SystemException)
    {
-      if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       if (m_configured == false)
       {
-         if (!m_is_created_by_factory_operation)
-         {
             <xsl:call-template name="findAllInterfaceReadWriteAttributes">
                <xsl:with-param name="_interfaceName" select="$_componentName"/>
                <xsl:with-param name="_type" select="'Component'"/>
                <xsl:with-param name="_template" select="'session_component_cpp.content.3'"/>
             </xsl:call-template>
-         }
          
          CCMObject_impl::configuration_complete();
         
@@ -1054,33 +1092,30 @@
          {
             <![CDATA[
             m_session_locator->set_session_context(m_context_executor.in());
-            m_executor_locator->configuration_complete();
+            m_executor_locator->configuration_complete();]]>
 
-#ifdef CDMW_USE_FAULTTOLERANCE
-            if (CORBA::is_nil(m_group_ref.in()))
-            {
-               // component is not replicated
-               m_session_locator->ccm_activate();
-            
-               // no error occurs component is activated
-               m_is_activated = true;
-            }
-            // else the Component will be activated by FT framework with the help
-            // of FTActivationHandler (see above)
-#else
+            <xsl:if test="$_hasFaultTolerance = 'no'">
+            <![CDATA[
             m_session_locator->ccm_activate();
             
             // no error occurs component is activated
             m_is_activated = true;
-#endif
             ]]>
+            </xsl:if>
+            <xsl:if test="$_hasFaultTolerance = 'yes'">
+            <![CDATA[
+            // the Component will be activated by FT framework with the help
+            // of FTActivationHandler (see above)
+            ]]>
+            </xsl:if>
+            
          }
          catch (const <![CDATA[Components::CCMException& e]]>)
          {
             <![CDATA[
             PRINT_ERROR("Components::CCMException raised, reason " << e);
             ]]>
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL,
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError,
                                   CORBA::COMPLETED_NO);
          }
       }
@@ -1090,11 +1125,7 @@
    <xsl:value-of select="concat($lf, $componentImplClassname)"/>::obtain_component_executor()
       throw (CORBA::SystemException)
    {
-      if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-        }
+      check_is_removed();
 
       try
       {
@@ -1143,16 +1174,11 @@
    <xsl:choose>
       <xsl:when test="$hasFacets = 'true' or $hasConsumers = 'true'">
          PortableServer::Servant
-         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const char* facet_name) 
+         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const <![CDATA[std::string&]]> facet_name) 
             throw (CORBA::SystemException)
          {
-            if (is_removed())
-            {
-                throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                              CORBA::COMPLETED_NO); 
-            }
+            check_is_removed();
 
-            std::string facet = facet_name;
             PortableServer::ServantBase_var facet_servant;
           
             <xsl:if test="$hasFacets = 'true'">
@@ -1178,16 +1204,11 @@
       </xsl:when>
       <xsl:otherwise>
          PortableServer::Servant
-         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const char* facet_name) 
+         <xsl:value-of select="$componentImplClassname"/>::get_facet_servant(const <![CDATA[std::string&]]> facet_name) 
             throw (CORBA::SystemException)
          {
-            if (is_removed())
-            {
-                throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                              CORBA::COMPLETED_NO); 
-            }
+            check_is_removed();
 
-            std::string facet = facet_name;
             PortableServer::ServantBase_var facet_servant;
         
             // No facet with this name define for that component
@@ -1204,11 +1225,7 @@
    <xsl:value-of select="$componentImplClassname"/>::advise_executor_of_remove_component()
       throw (CORBA::SystemException)
    {
-      if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-        }
+      check_is_removed();
 
       try
       {
@@ -1226,13 +1243,15 @@
          <![CDATA[
          PRINT_ERROR("Components::CCMException raised, reason " << e);
          ]]>
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL,
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError,
                                CORBA::COMPLETED_NO);
       }
    }
 
    <xsl:call-template name="closeNamespace">
-      <xsl:with-param name="_scope" select="$_scopedHomeImplClassname"/>
+      <xsl:with-param name="_scope" select="concat('Cdmw::CCM::CIF::Cdmw',$cppHomeScope)"/>
+      <xsl:with-param name="_separator" select="$cppSep"/>
+      <xsl:with-param name="_lastTokenIsNamespace" select="true()"/>
    </xsl:call-template>
 
    <!--
@@ -1278,11 +1297,7 @@
       <xsl:value-of select="concat($lf, $_returnType, $lf, $_componentImplClassname, $cppSep, $_cppOperationName, '()', $lf)"/>
          throw(CORBA::SystemException)
       {
-         if (is_removed())
-         {
-             throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                           CORBA::COMPLETED_NO); 
-           }
+         check_is_removed();
 
          <xsl:value-of select="$_componentObjRefVar"/> comp_exec = obtain_component_executor();
          <xsl:value-of select="$_objRefVarType"/> result = <![CDATA[comp_exec->]]><xsl:value-of select="$_cppOperationName"/>();
@@ -1314,11 +1329,7 @@
          <xsl:value-of select="concat($_componentImplClassname, $cppSep, $_cppOperationName, '(', $_paramType, ' ', $_paramName, ')')"/>
             throw(CORBA::SystemException)
          {
-             if (is_removed())
-             {
-                 throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                               CORBA::COMPLETED_NO); 
-             }
+             check_is_removed();
 
              <xsl:value-of select="$_componentObjRefVar"/> comp_exec = obtain_component_executor();
              <![CDATA[comp_exec->]]><xsl:value-of select="concat($_cppOperationName, '(', $_paramName, ');')"/>
@@ -1352,6 +1363,8 @@
 
    <xsl:if test="not(boolean($_node/@stereotype)) or ($_node/@stereotype = $_readonlyEndId) or ($_node/@stereotype = $_readonlyId)">
       <xsl:if test="not($_node/@stereotype = $_readonlyEndId or $_node/@stereotype = $_readonlyId)">
+      if (!m_is_created_by_factory_operation)
+      {
          // check if the attribute have been initialised only if not created by a factory op
          if (!m_is_<xsl:value-of select="$_paramName"/>_configured)
          {
@@ -1359,6 +1372,7 @@
             PRINT_ERROR("Attribut <xsl:value-of select="$_paramName"/> not initialised!");
             throw Components::InvalidConfiguration();
          }
+      }
       </xsl:if>
    </xsl:if>
 </xsl:template> <!-- end of template session_component_cpp.content.3 -->
@@ -1424,7 +1438,7 @@
    try
    {
       CORBA::Object_var <xsl:value-of select="$_facetName"/>_facet
-         = declare_facet(comp_oid.c_str(), 
+         = declare_facet(comp_oid, 
                          FACET_<xsl:value-of select="$uppercaseFacetName"/>_NAME, 
                          FACET_<xsl:value-of select="$uppercaseFacetName"/>_REP_ID);
                          
@@ -1435,7 +1449,7 @@
          _set_ref_count(0);
 
          PRINT_ERROR("Internal exception raised when declaring facet <xsl:value-of select="$_facetName"/>!");
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, CORBA::COMPLETED_NO);
       }
    }
    catch (const <![CDATA[AlreadyDoneException&]]>)
@@ -1454,7 +1468,7 @@
       _set_ref_count(0);
 
       PRINT_ERROR("Internal exception raised when declaring facet <xsl:value-of select="$_facetTypeName"/>!");
-      throw CORBA::INTERNAL(OrbSupport::INTERNAL, CORBA::COMPLETED_NO);
+      throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, CORBA::COMPLETED_NO);
    }
 </xsl:template> <!-- end of template session_component_cpp.content.7 -->
 
@@ -1484,11 +1498,7 @@
    <xsl:value-of select="concat($lf, $_componentImplClassname, $cppSep, 'provide_', $_facetName, '()',
                                 $lf, 'throw(CORBA::SystemException)', $lf)"/>
    {
-      if (is_removed())
-       {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       CORBA::Object_var obj;
 
@@ -1589,11 +1599,7 @@
             CORBA::SystemException
          )
          {
-              if (is_removed())
-              {
-                  throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                                CORBA::COMPLETED_NO); 
-                }
+              check_is_removed();
    
               try
                {
@@ -1659,12 +1665,12 @@
    
    <xsl:variable name="uppercaseFacetName" select="translate($_facetName, $lcase, $ucase)"/>
 
-   if (facet == FACET_<xsl:value-of select="$uppercaseFacetName"/>_NAME)
+   if (facet_name == FACET_<xsl:value-of select="$uppercaseFacetName"/>_NAME)
    {
       facet_servant 
          = new <xsl:value-of select="concat($_facetTypeName, '_impl')"/>(m_executor_locator.in(), 
                    FACET_<xsl:value-of select="$uppercaseFacetName"/>_NAME,
-                   m_context.in(),
+                   m_context,
                    m_comp_ref.in(),
                    this);
    }
@@ -1719,11 +1725,7 @@
             Components::InvalidConnection,
             CORBA::SystemException)
    {
-        if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       try
       {
@@ -1759,11 +1761,7 @@
       throw(Components::NoConnection,
             CORBA::SystemException)
    {
-      if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       try
       {
@@ -1803,11 +1801,7 @@
    <xsl:value-of select="concat($lf, $scopedReturnType, '_ptr', $lf, $_componentImplClassname, $cppSep, 'get_connection_', $_receptacleName, '()', $lf)"/>
       throw(CORBA::SystemException)
    {
-      if (is_removed())
-        {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       Components::ConnectionDescriptions_var comp_desc;
 
@@ -1817,7 +1811,7 @@
       }
       catch (const <![CDATA[Components::InvalidName&]]>)
       {
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                CORBA::COMPLETED_NO);   
       }
       catch (const <![CDATA[CORBA::SystemException&]]> )
@@ -1929,11 +1923,7 @@
                                 $lf, $_componentImplClassname, $cppSep, 'subscribe_', $_publisherName, '(', $scopedReturnType, 'Consumer_ptr consumer)')"/>
       throw(Components::ExceededConnectionLimit, CORBA::SystemException)
    {
-      if (is_removed())
-       {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       Components::Cookie_var result;
       
@@ -1945,13 +1935,13 @@
       catch (const <![CDATA[Components::InvalidName &]]>)
       {
           PRINT_ERROR("Invalid name for publisher subscription!");
-          throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+          throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                 CORBA::COMPLETED_NO);   
       }
       catch (const <![CDATA[Components::InvalidConnection &]]>)
       {
           // should never appear!
-          throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+          throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                 CORBA::COMPLETED_NO);   
       }
       catch (const <![CDATA[Components::ExceededConnectionLimit &]]>)
@@ -1970,11 +1960,7 @@
                                 $lf, $_componentImplClassname, $cppSep, 'unsubscribe_', $_publisherName, '(Components::Cookie* ck)')"/>
       throw(Components::InvalidConnection, CORBA::SystemException)
    {
-      if (is_removed())
-       {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       if (!ck)
          throw CORBA::BAD_PARAM(OrbSupport::BAD_PARAMNilObjectReference, CORBA::COMPLETED_NO);
@@ -1992,7 +1978,7 @@
       catch (const <![CDATA[Components::InvalidName&]]>)
       {
          // internal error should not appear
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                CORBA::COMPLETED_NO);   
       }
       catch (const <![CDATA[Components::InvalidConnection&]]>)
@@ -2029,11 +2015,7 @@
                                 $lf, $_componentImplClassname, $cppSep, 'connect_', $_emitterName, '(', $scopedReturnType, 'Consumer_ptr consumer)')"/>
       throw(Components::AlreadyConnected, CORBA::SystemException)
    {
-      if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       try
       {
@@ -2042,13 +2024,13 @@
       catch (const <![CDATA[Components::InvalidName&]]>)
       {
          // can not appear!
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                CORBA::COMPLETED_NO);
       }
       catch (const <![CDATA[Components::InvalidConnection&]]>)
       {
          // can not appear!
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                CORBA::COMPLETED_NO);
       } 
       catch (const <![CDATA[Components::AlreadyConnected&]]>)
@@ -2065,11 +2047,7 @@
                                 $lf, $_componentImplClassname, $cppSep, 'disconnect_', $_emitterName, '()')"/>
       throw(Components::NoConnection, CORBA::SystemException)
    {
-      if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       try
       {
@@ -2082,7 +2060,7 @@
          if (CORBA::is_nil(result.in()))
          {
             // can not appear!
-            throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+            throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                   CORBA::COMPLETED_NO);
          }
 
@@ -2091,13 +2069,13 @@
       catch (const <![CDATA[Components::InvalidName&]]>)
       {
          // can not appear!
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                CORBA::COMPLETED_NO);
       }
       catch (const <![CDATA[Components::InvalidConnection&]]>)
       {
          // can not appear!
-         throw CORBA::INTERNAL(OrbSupport::INTERNAL, 
+         throw CORBA::INTERNAL(OrbSupport::INTERNALCCMCIFError, 
                                CORBA::COMPLETED_NO);
       } 
       catch (const <![CDATA[Components::AlreadyConnected&]]>)
@@ -2187,6 +2165,11 @@
          <xsl:with-param name="_name" select="$_consumerTypeName"/>
       </xsl:call-template>
    </xsl:variable>
+   <xsl:variable name="cppComponentScope">
+      <xsl:call-template name="getScope">
+         <xsl:with-param name="_name" select="$_componentName"/>
+      </xsl:call-template>
+   </xsl:variable>
    <xsl:if test="$_isSegmented = 'no'">
       <xsl:variable name="cppConsumerScope">
          <xsl:call-template name="getScope">
@@ -2203,11 +2186,7 @@
       <xsl:value-of select="concat($_componentImplClassname, $cppSep, 'push_', $_consumerTypeName, '(', $cppScopedConsumerTypeName, '* the_', $lowercaseConsumerTypeName, ')')"/>
          throw (CORBA::SystemException)
       {
-          if (is_removed())
-          {
-              throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                            CORBA::COMPLETED_NO); 
-          }
+          check_is_removed();
    
           try
           {
@@ -2219,8 +2198,8 @@
               throw CORBA::OBJECT_NOT_EXIST(OrbSupport::OBJECT_NOT_EXIST, 
                                             CORBA::COMPLETED_NO);
           }
-          <xsl:value-of select="concat($cppConsumerScope, $cppSep, 'CCM_', $_componentName, '_var ', $lowercaseComponentName, '_exec = ', 
-                                         $cppConsumerScope, $cppSep, 'CCM_', $_componentName, $cppSep, '_narrow(obj.in());')"/>
+          <xsl:value-of select="concat($cppComponentScope, $cppSep, 'CCM_', $_componentName, '_var', ' ', $lowercaseComponentName, '_exec = ', 
+                                         $cppComponentScope, $cppSep, 'CCM_', $_componentName, $cppSep, '_narrow(obj.in());')"/>
    
            if (CORBA::is_nil(<xsl:value-of select="concat($lowercaseComponentName, '_exec.in()')"/>))
            {
@@ -2258,11 +2237,7 @@
                                 $lf, $_componentImplClassname, $cppSep, 'get_consumer_', $_consumerName, '()')"/>
       throw(CORBA::SystemException)
    {
-      if (is_removed())
-      {
-          throw CORBA::OBJECT_NOT_EXIST(Cdmw::OrbSupport::OBJECT_NOT_EXIST,
-                                        CORBA::COMPLETED_NO); 
-      }
+      check_is_removed();
 
       CORBA::Object_var obj;
 
@@ -2305,12 +2280,18 @@
    
    <xsl:variable name="uppercaseConsumerName" select="translate($_consumerName, $lcase, $ucase)"/>
 
-   if (facet == CONSUMER_<xsl:value-of select="$uppercaseConsumerName"/>_NAME)
+   <xsl:variable name="cppScopedConsumerTypeName">
+      <xsl:call-template name="getScopedName">
+         <xsl:with-param name="_name" select="$_consumerTypeName"/>
+      </xsl:call-template>
+   </xsl:variable>
+
+   if (facet_name == CONSUMER_<xsl:value-of select="$uppercaseConsumerName"/>_NAME)
    {
       facet_servant 
-         = new <xsl:value-of select="concat($_consumerTypeName, 'Consumer_impl')"/>(m_executor_locator.in(), 
+         = new <xsl:value-of select="concat('Cdmw::CCM::CIF::Cdmw', $cppScopedConsumerTypeName, 'Consumer_impl')"/>(m_executor_locator.in(), 
                    CONSUMER_<xsl:value-of select="$uppercaseConsumerName"/>_NAME,
-                   m_context.in(),
+                   m_context,
                    this);
    }
    else

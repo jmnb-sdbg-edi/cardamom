@@ -1,24 +1,24 @@
 /* ===================================================================== */
 /*
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 /* ===================================================================== */
 
@@ -37,7 +37,7 @@ import cdmw.platformmngt.PlatformInterface;
  *
  */
 public class CdmwProcessImpl
-    extends com.thalesgroup.CdmwPlatformMngt.ProcessPOA {
+    extends com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePOA {
 
     /**
      * The ORB.
@@ -68,6 +68,11 @@ public class CdmwProcessImpl
      * Is CDMW init done ?
      */
     private boolean cdmwInitDone = false;
+    
+    /**
+     * The PullMonitorable object
+     */
+    private org.omg.FT.PullMonitorable pullMonitorable = null;
 
     /**
      *  Constructor.
@@ -76,12 +81,38 @@ public class CdmwProcessImpl
     public CdmwProcessImpl(org.omg.CORBA.ORB orb,
         org.omg.PortableServer.POA poa,
         org.omg.PortableServer.POA cdmwRootPOA, ProcessControl ctrl) {
+        
+        /**
+         * A default PullMonitorable object
+         */
+        class DefaultPullMonitorableImpl
+            extends org.omg.FT.PullMonitorablePOA {
+            private org.omg.CORBA.ORB orb;
+            private org.omg.PortableServer.POA poa;
+            private ProcessControl control = null;
+
+            public DefaultPullMonitorableImpl(org.omg.CORBA.ORB orb,
+                                              org.omg.PortableServer.POA poa,
+                                              ProcessControl ctrl) {
+                Assert.check(orb != null);
+                Assert.check(ctrl != null);
+                this.orb = orb;
+                this.poa = poa;
+                this.control = ctrl;
+            }
+            public boolean is_alive() {
+                return this.control.isAlive();
+            }
+            
+        };
         Assert.check(orb != null);
         Assert.check(ctrl != null);
         this.orb = orb;
         this.poa = poa;
         this.cdmwRootPOA = cdmwRootPOA;
         this.control = ctrl;
+        DefaultPullMonitorableImpl pm = new DefaultPullMonitorableImpl(orb,poa,ctrl);
+        this.pullMonitorable = pm._this(orb);
 
     }
 
@@ -97,7 +128,7 @@ public class CdmwProcessImpl
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_steps:1.0
      * attribute
      */
     public int nb_steps() {
@@ -107,7 +138,7 @@ public class CdmwProcessImpl
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_activity_points:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_activity_points:1.0
      * attribute
      */
     public int nb_activity_points() {
@@ -116,7 +147,7 @@ public class CdmwProcessImpl
 
     /**
      * implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
      * operation
      */
     public org.omg.CORBA.Object get_service() {
@@ -126,17 +157,18 @@ public class CdmwProcessImpl
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_pull_monitorable:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_pull_monitorable:1.0
      * operation
      */
-    public com.thalesgroup.CdmwPlatformMngt.PullMonitorable
+    public org.omg.FT.PullMonitorable
         get_pull_monitorable() {
-        return null;
+        Assert.check(pullMonitorable != null);
+        return pullMonitorable;
     }
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_push_monitorable:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_push_monitorable:1.0
      * operation
      */
     public com.thalesgroup.CdmwPlatformMngt.PushMonitorable
@@ -144,34 +176,10 @@ public class CdmwProcessImpl
         return null;
     }
 
-    /**
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_activity_point:1.0
-     * operation
-     */
-    public com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointInfo
-        get_activity_point(int pointIndex)
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.OutOfRange {
-        throw new com.thalesgroup.CdmwPlatformMngt.ProcessPackage.OutOfRange();
-    }
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_all_activity_points:1.0
-     * operation
-     */
-    public com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointInfo[]
-        get_all_activity_points() {
-
-        com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointInfo[] pointInfos =
-            new com.thalesgroup.CdmwPlatformMngt.ProcessPackage.ActivityPointInfo[0];
-        return pointInfos;
-
-    }
-
-    /**
-     * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     public void initialise(
@@ -214,11 +222,11 @@ public class CdmwProcessImpl
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/next_step:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/next_step:1.0
      * operation
      */
     public void next_step()
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep {
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep {
         Assert.check(control != null);
         // TODO: Add CDMW specific init if necessary
         control.onNextStep();
@@ -226,11 +234,11 @@ public class CdmwProcessImpl
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     public void run()
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun {
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun {
         Assert.check(control != null);
         // TODO: Add CDMW specific stuff if necessary
         control.onRun();
@@ -238,7 +246,7 @@ public class CdmwProcessImpl
 
     /**
      * Implements the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     public void stop() {
@@ -247,6 +255,36 @@ public class CdmwProcessImpl
         // TODO: Add CDMW specific stuff if necessary
         // then initiate ORB shutdown
         orb.shutdown(false);
+    }
+    
+    /**
+     * Implements the
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
+     * operation
+     */
+    public com.thalesgroup.CdmwPlatformMngt.CommandResponse 
+        call_command(java.lang.String command_name, 
+                     com.thalesgroup.CdmwPlatformMngt.CmdParameterValue[] command_args, 
+                     org.omg.CORBA.StringHolder result_info) 
+        throws com.thalesgroup.CdmwPlatformMngt.CommandCallBackNotFound {
+        // TODO
+        throw new org.omg.CORBA.NO_IMPLEMENT (cdmw.orbsupport.ExceptionMinorCodes.NO_IMPLEMENT, org.omg.CORBA.CompletionStatus.COMPLETED_NO);
+    }
+        
+
+    /**
+     * Implements the
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
+     * operation
+     */
+	 public com.thalesgroup.CdmwPlatformMngt.CommandResponse 
+        call_entity_command(java.lang.String entity_name, 
+                            java.lang.String command_name, 
+                            com.thalesgroup.CdmwPlatformMngt.CmdParameterValue[] command_args, 
+                            org.omg.CORBA.StringHolder result_info) 
+        throws com.thalesgroup.CdmwPlatformMngt.CommandCallBackNotFound {
+        // TODO
+        throw new org.omg.CORBA.NO_IMPLEMENT (cdmw.orbsupport.ExceptionMinorCodes.NO_IMPLEMENT, org.omg.CORBA.CompletionStatus.COMPLETED_NO);
     }
 
 }

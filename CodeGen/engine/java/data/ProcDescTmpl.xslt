@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -41,6 +41,8 @@
    <xsl:variable name="lifecycleNode" select="$servicesNode/lifecycle"/>
    <xsl:variable name="frameworkNodes" select="$lifecycleNode/framework"/>
    <xsl:variable name="datastoresNodes" select="$servicesNode/fault-tolerance/datastores/datastore"/>
+   <xsl:variable name="hasDatastoreNodes" select="boolean($servicesNode/fault-tolerance/datastores/datastore)"/>
+
 
    <!--
       Miscellaneous variables.
@@ -209,6 +211,7 @@
          <xsl:value-of select="concat($indent, 'flush-area-sz CDATA #REQUIRED', $lf)"/>
          <xsl:value-of select="concat($indent, 'flush-area-nb CDATA #REQUIRED', $lf)"/>
          <xsl:value-of select="concat($indent, 'flushing-time CDATA #REQUIRED', $lf)"/>
+         <xsl:value-of select="concat($indent, 'msg-threshold CDATA #IMPLIED', $lf)"/> 
          <xsl:value-of select="concat($indent, 'collector-name CDATA #IMPLIED', $lf)"/>
          <xsl:value-of select="concat('&gt;', $lf)"/>
       </xsl:if>
@@ -234,33 +237,14 @@
          <xsl:variable name="datastoreIdref" select="@idref"/>
 	 <xsl:variable name="DataStoreKind" select="$servicesNode/fault-tolerance/datastores/@kind"/>
 
-         <xsl:choose>
-            <xsl:when test="$DataStoreKind = 'MIOP'">
+	 <xsl:value-of select="concat($lf, '&lt;!ELEMENT ', @idref, '.datastore', ' EMPTY&gt;', $lf)"/>
+	 <xsl:value-of select="concat('&lt;!ATTLIST ', @idref, '.datastore', $lf)"/>
+	 <xsl:value-of select="concat($indent, 'datastore-id CDATA #REQUIRED ', $lf)"/>
+	 <xsl:value-of select="concat($indent, 'chunk-size CDATA #IMPLIED', $lf)"/>
+	 <xsl:value-of select="concat($indent, 'freeze-size CDATA #IMPLIED', $lf)"/>
+	 <xsl:value-of select="concat($indent, 'freeze-timeout CDATA #IMPLIED', $lf)"/>		
+	 <xsl:value-of select="concat('&gt;', $lf)"/>
 
-	       <xsl:value-of select="concat($lf, '&lt;!ELEMENT ', @idref, '.datastore', ' EMPTY&gt;', $lf)"/>
-	       <xsl:value-of select="concat('&lt;!ATTLIST ', @idref, '.datastore', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'datastore-id CDATA #REQUIRED ', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'mutlicast-port CDATA #REQUIRED ', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'multicast-domain CDATA #REQUIRED ', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'ip-address CDATA #REQUIRED ', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'chunk-size CDATA #IMPLIED', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'freeze-size CDATA #IMPLIED', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'freeze-timeout CDATA #IMPLIED', $lf)"/>		
-	       <xsl:value-of select="concat('&gt;', $lf)"/>
-
-            </xsl:when>
-            <xsl:when test="$DataStoreKind = 'IIOP'">
-
-	       <xsl:value-of select="concat($lf, '&lt;!ELEMENT ', @idref, '.datastore', ' EMPTY&gt;', $lf)"/>
-	       <xsl:value-of select="concat('&lt;!ATTLIST ', @idref, '.datastore', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'datastore-id CDATA #REQUIRED ', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'chunk-size CDATA #IMPLIED', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'freeze-size CDATA #IMPLIED', $lf)"/>
-	       <xsl:value-of select="concat($indent, 'freeze-timeout CDATA #IMPLIED', $lf)"/>		
-	       <xsl:value-of select="concat('&gt;', $lf)"/>
-
-            </xsl:when>
-         </xsl:choose>
       </xsl:for-each>
 
 
@@ -269,34 +253,61 @@
 	    <xsl:when test="$hasFaultToleranceWithDatastore">
 
 	        <xsl:value-of select="concat($lf, '&lt;!ELEMENT fault-tolerance (datastores)&gt;', $lf)"/>
-	        <xsl:value-of select="concat($lf, '&lt;!ELEMENT datastores (')"/>
 
-	        <xsl:for-each select="$datastoresNodes">
-		<xsl:variable name="multiplicity">
-                   <xsl:if test="@occurrences > 1">
-                      <xsl:text>+</xsl:text>
-                   </xsl:if>
-                </xsl:variable>
-		<xsl:variable name="datastoreIdref" select="@idref"/>
-                <xsl:choose>
-                  <!--
-                     If first position 
-                  -->
-                  <xsl:when test="position() = 1">
-                     <xsl:value-of select="concat($datastoreIdref, '.datastore',$multiplicity)"/>
-                  </xsl:when>
-                  <!--
-                     Else insert a comma before 
-                  -->
-                  <xsl:otherwise>
-                      <xsl:value-of select="concat(', ',$datastoreIdref, '.datastore',$multiplicity)"/>
-                 </xsl:otherwise>
-                </xsl:choose>
-                </xsl:for-each>
+
+		<xsl:choose>
+                  <xsl:when test="$hasDatastoreNodes='true'">
+
+		  
+	              <xsl:value-of select="concat($lf, '&lt;!ELEMENT datastores (')"/>
+
+	              <xsl:for-each select="$datastoresNodes">
+		      <xsl:variable name="multiplicity">
+                      <xsl:if test="@occurrences > 1">
+                          <xsl:text>+</xsl:text>
+                      </xsl:if>
+                      </xsl:variable>
+		      <xsl:variable name="datastoreIdref" select="@idref"/>
+                      <xsl:choose>
+                      <!--
+                          If first position 
+                       -->
+                          <xsl:when test="position() = 1">
+                               <xsl:value-of select="concat($datastoreIdref, '.datastore',$multiplicity)"/>
+                          </xsl:when>
+                      <!--
+                          Else insert a comma before 
+                      -->
+                          <xsl:otherwise>
+                              <xsl:value-of select="concat(', ',$datastoreIdref, '.datastore',$multiplicity)"/>
+                          </xsl:otherwise>
+                      </xsl:choose>
+                      </xsl:for-each>
 		<xsl:value-of select="concat(')&gt;', $lf)"/>
+		</xsl:when>
+		<xsl:otherwise>	
+		<xsl:value-of select="concat($lf, '&lt;!ELEMENT datastores EMPTY&gt;', $lf)"/>
+		</xsl:otherwise>
+		</xsl:choose>
+
 
 		<xsl:value-of select="concat('&lt;!ATTLIST datastores', $lf)"/>
-		<xsl:value-of select="concat($indent, 'max-transaction-in-progress CDATA #REQUIRED', $lf)"/>
+		<xsl:variable name="DataStoreKind" select="$servicesNode/fault-tolerance/datastores/@kind"/>
+
+		<xsl:choose>
+                    <xsl:when test="$DataStoreKind = 'MIOP'">
+
+		        <xsl:value-of select="concat($indent, 'mutlicast-port CDATA #REQUIRED ', $lf)"/>
+		        <xsl:value-of select="concat($indent, 'multicast-domain CDATA #REQUIRED ', $lf)"/>
+		        <xsl:value-of select="concat($indent, 'ip-address CDATA #REQUIRED ', $lf)"/>
+		    </xsl:when>
+                    <xsl:when test="$DataStoreKind = 'IIOP'">
+
+		    </xsl:when>
+		</xsl:choose>
+
+
+	        <xsl:value-of select="concat($indent, 'max-transaction-in-progress CDATA #REQUIRED', $lf)"/>
 		<xsl:value-of select="concat($indent, 'max-transaction-done CDATA #REQUIRED', $lf)"/>
 		<xsl:value-of select="concat($indent, 'cohort-timeout CDATA #REQUIRED', $lf)"/>
 		<xsl:value-of select="concat($indent, 'coordinator-timeout CDATA #REQUIRED', $lf)"/>

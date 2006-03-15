@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- ===================================================================== -->
 <!--
- * This file is part of CARDAMOM (R) which is jointly developed by THALES 
- * and SELEX-SI. 
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES
+ * and SELEX-SI. It is derivative work based on PERCO Copyright (C) THALES
+ * 2000-2003. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
- * All rights reserved.
+ * Copyright (C) THALES 2004-2005. All rights reserved
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under 
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your 
- * option) any later version. 
+ * CARDAMOM is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public 
- * License for more details. 
+ * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
+ * License for more details.
  * 
- * You should have received a copy of the GNU Library General 
- * Public License along with CARDAMOM; see the file COPYING. If not, write to 
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Library General Public
+ * License along with CARDAMOM; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 -->
 <!-- ===================================================================== -->
 
@@ -1033,6 +1033,25 @@
         </ant>
     </target>
 
+    <!-- =======================================================================
+        The "version" target prints the version of the product and the version
+        of each CSCI
+        It depends on the following targets:
+            + "-initialize"
+    -->
+    <target name="version" description="prints the version"
+            depends="-initialize, -load-site-properties">
+
+        <ant dir="configuration" antfile="ConfigureBuild.xml"
+             target="-version">
+
+            <property name="xml.dir"             value="${mb.xml.dir}"/>
+            <property name="xsd.dir"             value="${mb.xsd.dir}"/>
+<!--            <property name="no.site.props"       value="true"/>-->
+            <property name="config.product.name" value="CARDAMOM"/>
+        </ant>
+    </target>
+
 
     <!-- =======================================================================
         The "genpublicdoc" target generates the API documentation.
@@ -1122,13 +1141,35 @@
 
                         <echo>
 [configuration #${thecounter}]
-    date       = ${sum.config.tstamp}
-    host       = ${sum.HOSTNAME} / ${sum.config.site.csn}
-    packages   = ${sum.config.sel.packages}
-    interfaces = ${sum.sel.interfaces}
-    compilers  = ${sum.config.sel.min.compilers}
-    orbs       = ${sum.config.sel.min.orbs}
-                        </echo>
+    date        = ${sum.config.tstamp}
+    host        = ${sum.HOSTNAME} / ${sum.config.site.csn}
+    packages    = ${sum.config.sel.packages}
+    interfaces  = ${sum.sel.interfaces}
+    compilers   = ${sum.config.sel.min.compilers}
+    orbs        = ${sum.config.sel.min.orbs}</echo>
+                        
+                        <if>
+                            <not>
+                                <isset property="sum.config.product.version"/>
+                            </not>
+                            <then>
+                                <echo>    version     = Not product version available</echo>
+                            </then>
+                            <else>
+                                <echo>    version     = ${sum.config.product.version}</echo>
+                            </else>
+                        </if>
+                        <echo>    Installation directories =</echo>
+                        <echo>                  ${sum.config.install.dir}</echo>
+                        <echo>    Compilation directories  =</echo>
+                        <for list="${sum.config.sel.min.cscis}" delimiter=" " param="p">
+                            <sequential>
+                                <propertycopy property="sum.csci.location"
+                                    from="sum.config.@{p}.location"/>
+                                <echo>                  ${sum.csci.location}</echo>
+                                <xvar name="sum.csci.location"  unset="true"/>
+                            </sequential>
+                        </for>
 
                         <!-- unset properties -->
                         <propertyselector property="sum.props"
