@@ -51,7 +51,7 @@ public:
     //
     // IDL:acme.com/Dinner/Observer/push_info:1.0
     //
-    virtual void push_info(Dinner::StatusInfo* event)
+    virtual void push_info(DinnerEvents::StatusInfo* event)
         throw(CORBA::SystemException);
 };
 

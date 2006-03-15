@@ -53,7 +53,7 @@ class TestClientBehaviour
     
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     public void initialise(
@@ -91,11 +91,11 @@ class TestClientBehaviour
 
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     public void run()
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun 
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun 
     {
         client.start();
     }
@@ -103,7 +103,7 @@ class TestClientBehaviour
     
     /**
      * The behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     public void stop() 

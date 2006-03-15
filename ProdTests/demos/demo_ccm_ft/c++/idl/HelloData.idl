@@ -33,9 +33,11 @@ module DemoFTDCPS {
 	 */
 	struct ServerState
 	{
-		long    counter;
+		long    counter; // Key field.
 		string  message;
 	};
+
+        #pragma keylist ServerState counter
 
 }; // module DemoFTDCPS
 

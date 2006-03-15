@@ -64,7 +64,7 @@ int main( int argc, char* argv[] )
     {
         // Initialise FT service
         std::cout << "test_server: initialise FT service" << std::endl;
-        Cdmw::FT::FTServiceInit::init( argc, argv );
+        Cdmw::FT::FTServiceInit::Init( argc, argv );
 
         // Initialise the ORB
         std::cout << "test_server: initialise the orb" << std::endl;

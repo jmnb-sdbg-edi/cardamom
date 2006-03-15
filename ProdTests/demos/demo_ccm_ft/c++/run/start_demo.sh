@@ -74,8 +74,8 @@ fi
 
 TERM_PATH=`which $TERM`
 
-INIT_TIMEOUT=15
-FT_MANAGER_TIMEOUT=30
+INIT_TIMEOUT=10
+FT_MANAGER_TIMEOUT=15
 EXEC_TIMEOUT=160
 CLEANUP_TIMEOUT=5
 
@@ -98,23 +98,23 @@ trap '$DAEMON_COMMAND stop; exit' 2
 sleep $INIT_TIMEOUT
 
 # 1b) Start FT Manager
-$echo Starting the FT Manager...
-$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_ccm_ft/c++/data/CdmwFaultToleranceManager_conf.xml &
+$echo Starting the FT Manager... $CDMW_HOME
+$CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_ccm_ft/c++/data/CdmwFaultToleranceManager_conf.xml --groupConf=$CDMW_HOME/demos/demo_ccm_ft/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml &
+
 FT_MANAGER_PID=$!
 sleep $FT_MANAGER_TIMEOUT
 
 # 2) Start Platform Management Supervision
 $echo Starting the Platform Management Supervision...
-$CDMW_HOME/bin/cdmw_platform_supervision  --CdmwLocalisationService=21886 --FaultManagerRegistration=corbaloc::$HOSTNAME:4606/fault_manager --RequestDurationTime=20000000 --creation-timeout=20000 &
-SUPERVISION_PID=$!
+$CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=$CDMW_HOME/demos/demo_ccm_ft/c++/data/CdmwPlatformMngtSystemStart.xml --validate
 sleep $INIT_TIMEOUT
 
 # 3) Define system
 $echo Defining the System '$SCENARIO_FILE'
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21886/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
 
 # 4) Start_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21886/CdmwPlatformMngtSupervision --sys-start
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-start
 if [ $? -eq "0" ];
 then
     $echo "Waiting a while for the execution of the scenario...\c"
@@ -123,10 +123,10 @@ then
 fi
 
 # 5) Get a snapshot of the system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21886/CdmwPlatformMngtSupervision --sys-snapshot
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-snapshot
 
 # 6) stop_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21886/CdmwPlatformMngtSupervision --sys-stop
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21880/CdmwPlatformMngtSupervision --sys-stop
 sleep $CLEANUP_TIMEOUT
 
 $echo "=============================================================="

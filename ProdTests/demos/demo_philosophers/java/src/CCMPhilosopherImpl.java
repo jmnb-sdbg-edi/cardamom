@@ -82,7 +82,7 @@ public class CCMPhilosopherImpl extends org.omg.CORBA.LocalObject
         
             Assert.check(this.philosopher != null);
         
-            com.acme.Dinner.Registration registerServer = null;
+            com.acme.DinnerRegistration.Registration registerServer = null;
             com.acme.Dinner.CCM_Philosopher_Context philosopherContext = 
                 this.philosopher.get_context();
               
@@ -119,9 +119,9 @@ public class CCMPhilosopherImpl extends org.omg.CORBA.LocalObject
             println("Philo: push_config using emitter port...");
             testOk = false;
             try {
-                com.acme.Dinner.StatusInfo si = new StatusInfoImpl();
+                com.acme.DinnerEvents.StatusInfo si = new StatusInfoImpl();
                 si.name = this.philosopher.name;
-                si.state = com.acme.Dinner.PhilosopherState.THINKING;
+                si.state = com.acme.DinnerEvents.PhilosopherState.THINKING;
                 si.secs_since_last_meal = this.philosopher.state;
                 si.has_left_fork = this.philosopher.haveLeftFork;
                 si.has_right_fork = this.philosopher.haveRightFork;
@@ -423,19 +423,19 @@ public class CCMPhilosopherImpl extends org.omg.CORBA.LocalObject
      * Push status info event
      */
     public void push_state() {
-        com.acme.Dinner.StatusInfo si = new StatusInfoImpl();
+        com.acme.DinnerEvents.StatusInfo si = new StatusInfoImpl();
         si.name = this.name;
     
         if (this.haveLeftFork && this.haveRightFork) {
-            si.state = com.acme.Dinner.PhilosopherState.EATING;
+            si.state = com.acme.DinnerEvents.PhilosopherState.EATING;
         } else if (this.state < 3) {
-            si.state = com.acme.Dinner.PhilosopherState.THINKING;
+            si.state = com.acme.DinnerEvents.PhilosopherState.THINKING;
         } else if (this.state < 10) {
-            si.state = com.acme.Dinner.PhilosopherState.HUNGRY;
+            si.state = com.acme.DinnerEvents.PhilosopherState.HUNGRY;
         } else if (this.state < 40) {
-            si.state = com.acme.Dinner.PhilosopherState.STARVING;
+            si.state = com.acme.DinnerEvents.PhilosopherState.STARVING;
         } else {
-            si.state = com.acme.Dinner.PhilosopherState.DEAD;
+            si.state = com.acme.DinnerEvents.PhilosopherState.DEAD;
         }
     
         si.secs_since_last_meal = this.state;

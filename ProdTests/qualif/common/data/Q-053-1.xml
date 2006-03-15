@@ -41,7 +41,6 @@
                      Pull-interval="021" Pull-timeout="031"
                      Push-interval="041" Push-timeout="051"/>
 
-
     <!-- Entities of the system -->
 	<Entity  Name="SYSTEM_ENTITY"/>
 
@@ -49,13 +48,14 @@
     <!-- Hosts of the system -->
 	<Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent">
+        <!-- Entities of the host -->
+        <Entity  Name="HOST_ENTITY"/>
+    </Host>
 
 	<Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
 
 
@@ -77,7 +77,6 @@
 
         <!-- Entities of this application -->
 	    <Entity  Name="APPLICATION_ENTITY1"/>
-
 
         <!-- ******************* -->
         <!-- Process definitions -->

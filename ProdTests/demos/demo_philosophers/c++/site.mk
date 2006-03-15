@@ -20,6 +20,7 @@
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
+
 # BEGIN CDMW INSTALLATION DATA
 # -------------------------------------------------------------------------------
 # CDMW installation folder
@@ -31,7 +32,7 @@ CDMW_DEMO_HOME=@config.install.dir@/demos/demo_philosophers/c++
 STLPORT_INC_PATH=
 STLPORT_LIB_PATH=
 
-XERCES_INC_PATH=@config.XercesCPP.install.dir@
+XERCES_INC_PATH=@config.XercesCPP.include.dir@
 XERCES_LIB_PATH=@config.XercesCPP.lib.dir@
 
 ifeq (@config.ProdTests.cpp.orb@,TAO)
@@ -61,7 +62,7 @@ XALAN_JAR_PATH=@config.XalanJAVA.lib.dir@
 XERCES_JAR_PATH=@config.XercesJAVA.lib.dir@
 
 
-FTP_DIR=@config.FtpJAVA.ftp.dir@
+FTP_DIR=@config.Ftp.homedir@
 
 # -------------------------------------------------------------------------------
 # END CDMW INSTALLATION DATA

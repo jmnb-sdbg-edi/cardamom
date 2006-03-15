@@ -27,11 +27,17 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <FaultTolerance/idllib/FT.stub.hpp>
 
-#include <TestHelloData.h>
+//#include <TestHelloData.h>
+//#include <DemoFTDCPS.h>
+
+#include <ccpp_Basic.h>
 //DemoFTDCPS.h>
 
-#include <dds_dcps.h> 
+//#include <dds_dcps.h> 
 
+using namespace Basic;
+using namespace DDS;
+using namespace CORBA;
 
 // This Logging Mechanism dispatch a new state to registered replicas
 
@@ -42,31 +48,34 @@ class LoggingMechanism {
         // Constructor
         LoggingMechanism(int argc, char *argv[]);
 
-		  // Destructor
-		  ~LoggingMechanism();
+        // Destructor
+	~LoggingMechanism();
             
         // To dispatch a new state to registered replicas 
         void log_state(const FT::State& state);
     
     
     private:
-    
+ 
 		  // Splice DomainParticipantFactory 
-		  //DDS::SpliceDomainParticipantFactory_var m_factory;
+                  DomainId_t myDomain;
+                  DomainParticipantFactory_ptr dpf;
 
 		  // its domainParticipant
-		  DDS::DomainParticipant_var m_participant;
+                  DomainParticipant_ptr dp;
 
 		  // myTopic
-		  DDS::Topic_var m_topic;
+                  Topic_ptr t;
 		  
 		  // DCPS publisher
-		  DDS::Publisher_var m_publisher;
+                  Publisher_ptr p;
 
 		  // DCPS data writer
-		  DDS::DataWriter_ptr                  m_data_writer;
-		  DemoFTDCPS::BasicTypesDataWriter_var  m_typed_data_writer;
+                  DataWriter_ptr dw;
+                  BasicTypeDataWriter_ptr fdw;
+                  BasicTypeTypeSupport dt;
 };
+
 
 #endif // INCL_DEMO_FT_LOGGING_MECHANISM_HPP
 

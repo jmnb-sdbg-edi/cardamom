@@ -101,7 +101,7 @@ int main( int argc, char* argv[] )
         
         
         // Initialise FT service
-        Cdmw::FT::FTServiceInit::init( argc, argv, true );
+        Cdmw::FT::FTServiceInit::Init( argc, argv, true );
 
         // Initialises the ORB
         Cdmw::OrbSupport::StrategyList strategyList;
@@ -128,6 +128,11 @@ int main( int argc, char* argv[] )
 
         // Enter in the main loop
         orb->run();
+        
+        //orb->shutdown() is done by the stop() of the ProcessBehaviour
+        Cdmw::CdmwInit::CDMW_cleanup(orb.in());
+        Cdmw::OrbSupport::OrbSupport::ORB_cleanup( orb.in() );
+        orb->destroy();
     }
     catch( const CORBA::Exception &e )
     {

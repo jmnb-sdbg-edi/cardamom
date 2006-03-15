@@ -20,12 +20,14 @@
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * =========================================================================== */
 
+
 #include <iostream>
 
 #include <Foundation/common/System.hpp>
 #include <Foundation/common/Assert.hpp>
 #include <Foundation/common/Locations.hpp>
 #include <Foundation/ossupport/OS.hpp>
+#include <Foundation/orbsupport/Codec.hpp>
 #include <Foundation/orbsupport/OrbSupport.hpp>
 #include <Foundation/orbsupport/StrategyList.hpp>
 
@@ -66,6 +68,9 @@ int main(int argc, char* argv[])
         orb_strategies.add_PoaThreadPool(POA_THREAD_POOL_SIZE);
 
         orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, orb_strategies);
+
+        // PCR-0049
+        Cdmw::OrbSupport::CodecBase::init(orb.in());
         
         // ===================================================
         // Get the root POA 

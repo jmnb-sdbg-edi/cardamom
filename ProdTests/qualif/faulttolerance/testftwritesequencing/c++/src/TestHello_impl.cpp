@@ -23,6 +23,8 @@
 
 #include "testftwritesequencing/TestHello_impl.hpp"
 
+#include <iostream>
+
 using namespace std;
 
 namespace Cdmw

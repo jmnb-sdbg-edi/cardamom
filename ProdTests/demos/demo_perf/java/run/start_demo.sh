@@ -68,8 +68,9 @@ then
 fi
 
 INIT_TIMEOUT=10
+FT_MANAGER_TIMEOUT=30
 EXEC_TIMEOUT=50
-CLEANUP_TIMEOUT=9
+CLEANUP_TIMEOUT=20
 
 
 $echo "========================================================="
@@ -88,18 +89,25 @@ trap '$DAEMON_COMMAND stop; exit' 2
 
 sleep $INIT_TIMEOUT
 
+if test -x "$CDMW_HOME/bin/cdmw_ft_manager"
+then
+    $echo Starting the FT Manager...
+    $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$CDMW_HOME/demos/demo_perf/java/data/CdmwFaultToleranceManager_conf.xml --groupConf=$CDMW_HOME/demos/demo_perf/java/data/CdmwFTSystemMngtGroupCreator_conf.xml &
+    FT_MANAGER_PID=$!
+    sleep $FT_MANAGER_TIMEOUT
+fi
+
 # 2) Start Platform Management Supervision
 $echo Starting the Platform Management Supervision...
-$CDMW_HOME/bin/cdmw_platform_supervision --creation-timeout=20000 &
-SUPERVISION_PID=$!
+$CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=$CDMW_HOME/demos/demo_perf/java/data/CdmwPlatformMngtSystemStart.xml --validate
 sleep $INIT_TIMEOUT
 
 # 3) Define system
 $echo Defining the System '$SCENARIO_FILE'
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21881/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
 
 # 4) Start_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-start
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21881/CdmwPlatformMngtSupervision --sys-start
 if [ $? -eq "0" ];
 then
     $echo "Waiting a while for the execution of the scenario...\c"
@@ -108,10 +116,10 @@ then
 fi
 
 # 5) Get a snapshot of the system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-snapshot
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21881/CdmwPlatformMngtSupervision --sys-snapshot
 
 # 6) stop_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --sys-stop
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::localhost:21881/CdmwPlatformMngtSupervision --sys-stop
 sleep $CLEANUP_TIMEOUT
 
 $echo "=============================================================="
@@ -120,7 +128,11 @@ read FOO
 $echo "=============================================================="
 
 $DAEMON_COMMAND stop
-kill -9 $SUPERVISION_PID
+
+if test -x "$CDMW_HOME/bin/cdmw_ft_manager"
+then
+    kill $FT_MANAGER_PID
+fi
 $echo "done."
 
 rm -f *.ior

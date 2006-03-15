@@ -30,6 +30,6 @@ then
     TERM=xterm
 fi
 
-#exec $TERM -ls -sb -sl 1000 -e $DIRECTORY/launch.sh $PROGRAM $* 
-exec $DIRECTORY/launch.sh $PROGRAM $* 
+exec $TERM -ls -sb -sl 1000 -e $DIRECTORY/launch.sh $PROGRAM $* 
+#exec $DIRECTORY/launch.sh $PROGRAM $* 
 

@@ -1,0 +1,12 @@
+module Basic 
+{
+  typedef string<10> String10;
+
+  struct BasicType 
+  {
+    unsigned long                   myUlong;          // Key field.
+    string                          myString;
+    String10                        myString10;
+  };                                                                                                                     
+  #pragma keylist BasicType myUlong
+};

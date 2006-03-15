@@ -92,13 +92,14 @@ IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
 
 LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface \
           -lcdmwlifecycle -lcdmwrepositoryinterface \
-          -lcdmwplatforminterface -lcdmwnaminginterface \
-          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
+          -lcdmwplatforminterface -lcdmwcommonsvcsnaming \
+          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwlogging \
           -lcdmwcommon -lcdmwccmcommon -lcdmwccmcif -lcdmwccmcontainer \
           -lcdmwccmcomponentserver -lcdmwtestutils -lxerces-c1_3 \
           -lcdmwlifecycleidl -lcdmweventidl -lcdmwccmcontaineridl \
-          -lcdmwplatformvaluetypes -lcdmwplatformidl -lcdmwrepositoryidl \
-          -lcdmwcommonidl -lcdmwsystemmngtidl -lcdmwplatformlibrary
+          -lcdmwcommonidl -lcdmwrepositoryidl \
+          -lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+          -lcdmwplatformvaluetypes -lcdmwplatformlibrary
 
 #END CDMW FLAGS
 

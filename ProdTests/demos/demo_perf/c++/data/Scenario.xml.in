@@ -47,9 +47,7 @@
 	<Service Name="NamingAndRepositoryService" App-name="CdmwServices" Process-name="Repository"/>
 
 	<!-- Hosts of the system -->
-	<Host Name="@host_name@" App-exec-path="@cdmw_home@/bin/cdmw_platform_application" 
-                           Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent" 
-                           Probe-exec-path="@cdmw_home@/bin/cdmw_host_probe">
+	<Host Name="@host_name@" Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent">
 		<Host-monitoring Pull-interval="2000" 
                          Pull-timeout="2500"/>
 	</Host>

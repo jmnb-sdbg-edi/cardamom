@@ -63,6 +63,11 @@
     <MutualPushCorbaloc>corbaloc:miop:1.0@1.0-cdmwftdomain-4/@Monitoring_addr@:8559</MutualPushCorbaloc>
 
     <!--
+    Localisation service address
+    -->
+    <LocalisationServiceAddress>corbaloc:miop:1.0@1.0-cdmwftdomain-5/@Service_addr@:4560</LocalisationServiceAddress>
+
+    <!--
       Mutual monitoring : MasterInterrogationTime
       Timeout in the slave to declare that the master has not interrogated.
       After this timeout there is an election phase.

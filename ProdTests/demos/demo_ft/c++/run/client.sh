@@ -24,5 +24,4 @@
 DIRECTORY="`dirname $0`"
 PROGRAM="`basename $0 .sh`"
 
-exec $DIRECTORY/launch.sh $PROGRAM $*
-
+exec $TERM -ls -sb -sl 1000 -e $DIRECTORY/launch.sh $PROGRAM $*

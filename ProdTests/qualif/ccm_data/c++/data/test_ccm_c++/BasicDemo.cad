@@ -108,6 +108,8 @@
                         </componentproperties>                        
                     </componentinstantiation>
                     
+                    <componentinstantiation id="Client4"/>
+
                     <destination>ClientProcess@TestApplication</destination>
                 </homeplacement>
             </processcollocation> 
@@ -185,6 +187,28 @@
             <existinginterface>
                 <findby>
                     <namingservice name="UserNaming/BasicDemo/Displays/for_clients1"/>
+                </findby>
+            </existinginterface>
+        </connectinterface>
+
+        <connectinterface id="connect_client4_register">
+            <usesport>
+                <usesidentifier>to_register</usesidentifier>
+                <componentinstantiationref idref="Client4"/>
+            </usesport>
+            <componentsupportedinterface>
+                <componentinstantiationref idref="Server2"/>
+            </componentsupportedinterface>
+        </connectinterface>
+
+         <connectinterface id="connect_client4_display">
+            <usesport>
+                <usesidentifier>to_server</usesidentifier>
+                <componentinstantiationref idref="Client4"/>
+            </usesport>
+            <existinginterface>
+                <findby>
+                    <stringifiedobjectref>corbaloc::@hostname1val@:24120/LocalDisplay</stringifiedobjectref>
                 </findby>
             </existinginterface>
         </connectinterface>

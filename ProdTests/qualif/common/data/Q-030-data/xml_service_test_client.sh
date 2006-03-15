@@ -27,10 +27,10 @@ echo "*******************************"
 echo $VALIDATION_JAR_PATH
 echo "*******************************"
 
-# Copy Q-030-file.xml to @config.FtpJAVA.ftp.dir@
+# Copy Q-030-file.xml to @config.Ftp.homedir@
 # It would be deleted by TestClient.
-cp Q-030-data/Q-030-file.xml @config.FtpJAVA.ftp.dir@
-chmod a+w @config.FtpJAVA.ftp.dir@/Q-030-file.xml
+cp Q-030-data/Q-030-file.xml @config.Ftp.homedir@
+chmod a+w @config.Ftp.homedir@/Q-030-file.xml
 
 
 case @config.Event.java.orb@ in
@@ -47,7 +47,7 @@ case @config.Event.java.orb@ in
     ;;
 esac
 
-__TOOLS_CLASSPATH__=$__ORB_CLASSPATH__:@config.XercesJAVA.classpath@:@config.XercesJAVA.classpath@:@config.FtpJAVA.classpath@
+__TOOLS_CLASSPATH__=$__ORB_CLASSPATH__:@config.XercesJAVA.classpath@
 
 
 __CLASSPATH__=""
@@ -65,5 +65,5 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:@config.install.dir@/lib/c++
 LIBPATH=$LIBPATH:@config.install.dir@/lib/c++
 
 
-exec java -Xbootclasspath/p:$__CLASSPATH__ cdmw.xmlutils.test.TestClient @hostname1val@ @config.FtpJAVA.ftp.dir@ $*
+exec java -Xbootclasspath/p:$__CLASSPATH__ cdmw.xmlutils.test.TestClient @hostname1val@ @config.Ftp.homedir@ $*
 

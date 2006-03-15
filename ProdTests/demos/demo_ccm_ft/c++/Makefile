@@ -37,9 +37,12 @@ XML_CONF_FILES:=xml/Main.xml
 XML_DATA_FILES:=data/Client.xml data/Server.xml data/GroupCreator.xml \
 	data/Scenario.xml data/Cdmw_nar.xml \
 	data/CdmwPlatformMngtDaemon_conf.xml \
-        data/CdmwFaultToleranceManager_conf.xml 
+	data/CdmwPlatformMngtSystemStart.xml \
+        data/CdmwFaultToleranceManager_conf.xml \
+	data/CdmwFTSystemMngtGroupCreator_conf.xml
 
 DCPS_IDL_FILES:=idl/HelloData.idl
+DCPS_GEN_IDL:=HelloDataDcps.idl
 
 .SUFFIXES:
 .SUFFIXES: .xml  .xml.in
@@ -74,7 +77,8 @@ gencode::
 		mkdir $(PWD)/generated ; \
 	fi
 	$(CDMW_HOME)/bin/cdmw_code_generator.sh --xml=$(PWD)/xml/Main.xml --dir=$(PWD)/generated --lang=cpp --validate
-	@(cd $(PWD)/generated ; idlpp -dcps ../$(DCPS_IDL_FILES) )
+	@(cd $(PWD)/generated ; tao_idl ../$(DCPS_IDL_FILES); idlpp -l cpp ../$(DCPS_IDL_FILES) )
+	@(cd $(PWD)/generated ; tao_idl -I../idl -I$(SPLICE_INC_PATH)/C++/CCPP -Sc -Sp -Sd -Sv $(DCPS_GEN_IDL))
 	@echo "#################### Code Generation completed"
 
 # Rules to build each XML configuration file
@@ -93,6 +97,8 @@ gencode::
 	@echo s%@SystemMngt_port@%21`echo $PWD | wc -c | tail -c 2``id -u | tail -c 2``id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@Monitoring_addr@%225.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@StateTransfert_addr@%226.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Service_addr@%227.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+
 	@echo s%\<!--@IF_TAO@--\>%\<!-- ..TAO..%g >> sed_patterns
 	@echo s%\<!--@ENDIF_TAO@--\>%..TAO.. --\>%g >> sed_patterns
 	@echo s%\<!--@IF_ORBACUS@--\>%\<!-- ..ORBACUS..%g >> sed_patterns

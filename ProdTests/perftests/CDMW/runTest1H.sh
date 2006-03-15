@@ -1,10 +1,6 @@
-#!/bin/sh
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#*
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -20,7 +16,7 @@
 #* Public License along with CARDAMOM; see the file COPYING. If not, write to
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
-
+#!/bin/sh
 #
 # runTest1H.sh 
 #
@@ -99,6 +95,25 @@ function readParams(){
     echo RESTOPDIR is $RESTOPDIR
 }
 
+###############################################################################
+
+function InvocationLB_writecfg(){
+    echo writecfg $NITER_LB $1
+    local delay=$1
+    cat > $FILEPARA <<EOF
+$NITER_LB
+$delay
+EOF
+}
+
+function NotificationSMG_writecfg(){
+    echo writecfg $1
+    local niter=$1
+
+    cat > $FILEPARA <<EOF
+$niter
+EOF
+}
 
 function Invocation_writecfg(){
     echo writecfg $1 $2 $3
@@ -193,7 +208,6 @@ $FILE_PREFIX
 EOF
 }
 
-
 function TimeInvocation_writecfg(){
     echo writecfg $1
     local delay=$1
@@ -208,11 +222,11 @@ EOF
 function TimeParallelism_writecfg(){
     echo writecfg $nthread
     cat > $FILEPARA <<EOF
+$NSTART
 $NITER_PARALLELISM
 $nthread
 $FILE_PREFIX
 EOF
-
 }
 
 function TimerInvocation_writecfg(){
@@ -228,21 +242,69 @@ $FILE_PREFIX
 EOF
 }
 
-function TimerTroughput_writecfg(){
-    echo writecfg $1 $2
+function ControlledInvocation_writecfg(){
+    echo writecfg $1
     local delay=$1
-    local measuretyp=$2
 
     cat > $FILEPARA <<EOF
-$NITER_TIMER
+$NITER
 $delay
-$measuretyp
 $FILE_PREFIX
 EOF
 }
 
+function TimerPrecision_writecfg(){
+    echo writecfg $1
+    local delay=$1
 
-#####################################
+    cat > $FILEPARA <<EOF
+$NITER_TIMER
+$DELTAT_TIMER
+$delay
+$FILE_PREFIX
+EOF
+}
+
+function TimerTroughput_writecfg(){
+
+   local deltat=$1
+   cat > $FILEPARA <<EOF
+$NITER_TIMER
+$deltat
+$FILE_PREFIX
+EOF
+}
+
+###############################################################################
+
+function do_InvocationLB(){
+    for delay in $DELAYS; do
+            SUBSUBDIR="CR-${delay}"
+            #RESDIR=$RESTOPDIR
+            RESDIR=$RESTOPDIR/$SUBSUBDIR
+            mkdir -p $RESDIR
+
+            InvocationLB_writecfg ${delay}
+            start_test1H $RESDIR $mondelay
+
+            cpall1H $RESDIR
+            sleep $TEST_DELAY
+    done
+}
+
+function do_NotificationSMG(){
+            SUBSUBDIR="${smg-exec}"
+            #RESDIR=$RESTOPDIR/$SUBSUBDIR
+            RESDIR=$RESTOPDIR
+            mkdir -p $RESDIR
+
+            NotificationSMG_writecfg $NITER_SMG
+            start_test1H $RESDIR $mondelay
+
+            cpall1H $RESDIR
+            sleep $TEST_DELAY
+}
+
 function do_Invocation(){
     for delay in $DELAYS; do
 	for typ in $TYPES; do
@@ -293,8 +355,8 @@ function do_Invocation_CPU(){
 # Collocated Invocation for A-012 (CR, T = 0,10,100,500)
 function do_InvocationCollocated(){
 
-    for delay in $TIMER_DELAYS; do
-	for typ in $TYPES; do
+    for delay in $COLL_DELAYS; do
+	for typ in $COLL_TYPES; do
             SUBSUBDIR="COLLOCATED_${typ}-${delay}"
             RESDIR=$RESTOPDIR/$SUBSUBDIR
             mkdir -p $RESDIR
@@ -319,10 +381,10 @@ function do_InvocationCollocated(){
 # Simple Invocation test for A-012 (CR, T = 0,10,100,500)
 function do_InvocationCollocated_step2(){
     local CURDIR=`pwd` # current A-012 directory
-    local INVDIR=$topdir/CDMW_Invocation/c++/run #directory for invocation test A-010
+    local INVDIR=$topdir/CDMW_Marshalling/c++/run #directory for invocation test A-010
     cd $INVDIR
-    for delay in $TIMER_DELAYS; do
-	for typ in $TYPES; do
+    for delay in $COLL_DELAYS; do
+	for typ in $COLL_TYPES; do
             SUBSUBDIR="${typ}-${delay}"
             RESDIR=$RESTOPDIR/$SUBSUBDIR
             mkdir -p $RESDIR
@@ -554,7 +616,6 @@ function do_TimeInvocation(){
     done
 }
 
-
 function do_TimeParallelism(){
     for nthread in $NTHREADS; do
         echo $nthread
@@ -575,6 +636,27 @@ function do_TimeParallelism(){
 
 	cpall1H $RESDIR
 	sleep $TEST_DELAY
+    done
+}
+
+function do_ControlledInvocation(){
+    for delay in $DELAYS; do
+            SUBSUBDIR="CR-${delay}"
+            RESDIR=$RESTOPDIR/$SUBSUBDIR
+            mkdir -p $RESDIR
+
+            ControlledInvocation_writecfg $delay
+            start_test1H $RESDIR $mondelay
+
+            # test run not OK
+	    if [ $OKTEST == 129 ]; then
+		echo "Removing previous data..."
+		rm -rf $RESDIR/*
+		echo "Running the same test..."
+		start_test1H $RESDIR $mondelay
+	    fi
+            cpall1H $RESDIR
+            sleep $TEST_DELAY
     done
 }
 
@@ -599,12 +681,13 @@ function do_TimerInvocation(){
     done
 }
 
-function do_TimerThroughput(){
-            SUBSUBDIR="THR-${delay}"
-            RESDIR=$RESTOPDIR/$SUBSUBDIR
+function do_TimerPrecision(){
+            #SUBSUBDIR="CR-${delay}"
+            #RESDIR=$RESTOPDIR/$SUBSUBDIR
+	    RESDIR=$RESTOPDIR
             mkdir -p $RESDIR
 
-            TimerTroughput_writecfg 10 TIME_HR
+            TimerPrecision_writecfg $DELAY_TIMER
             start_test1H $RESDIR $mondelay
 
             # test run not OK
@@ -618,7 +701,36 @@ function do_TimerThroughput(){
             sleep $TEST_DELAY
 }
 
+function do_TimerThroughput(){
+            SUBSUBDIR="THR-${delay}"
+            RESDIR=$RESTOPDIR/$SUBSUBDIR
+            mkdir -p $RESDIR
+
+            TimerTroughput_writecfg $DELTAT_TIMER
+            start_test1H $RESDIR $mondelay
+
+            # test run not OK
+	    if [ $OKTEST == 129 ]; then
+		echo "Removing previous data..."
+		rm -rf $RESDIR/*
+		echo "Running the same test..."
+		start_test1H $RESDIR $mondelay
+	    fi
+            cpall1H $RESDIR
+            sleep $TEST_DELAY
+}
+
+###############################################################################
+
 # Script R functions
+function cpscript_InvocationLB(){
+  cp $rscriptdir/D-010.R $RESTOPDIR 
+}
+
+function cpscript_NotificationSMG(){
+  cp $rscriptdir/E-010.R $RESTOPDIR 
+}
+
 function cpscript_Invocation(){
   cp $rscriptdir/CR0-OW0_CompCore.R $RESTOPDIR
   cp $rscriptdir/A-010.R $RESTOPDIR 
@@ -658,12 +770,31 @@ function cpscript_InvocationCollocated(){
   cp $rscriptdir/A-012.R $RESTOPDIR 
 }
 
+function cpscript_TimeInvocation(){
+  cp $rscriptdir/C-010.R $RESTOPDIR 
+  cp $rscriptdir/CR0_CompCore.R $RESTOPDIR
+}
+
+function cpscript_ControlledInvocation(){
+  cp $rscriptdir/C-015.R $RESTOPDIR 
+  cp $rscriptdir/CR0_CompCore.R $RESTOPDIR
+}
+
+function cpscript_TimeParallelism(){
+  cp $rscriptdir/C-030.R $RESTOPDIR 
+  cp $rscriptdir/CR0_CompCore.R $RESTOPDIR
+}
+
+function cpscript_TimerPrecision(){
+  cp $rscriptdir/C-090.R $RESTOPDIR 
+}
+
 function cpscript_TimerTroughput(){
   cp $rscriptdir/C-100.R $RESTOPDIR 
 }
 
 function cpscript_TimerInvocation(){
-  cp $rscriptdir/C-090.R $RESTOPDIR 
+  cp $rscriptdir/C-050.R $RESTOPDIR 
 }
 
 function cpscript_InvocationCCM(){

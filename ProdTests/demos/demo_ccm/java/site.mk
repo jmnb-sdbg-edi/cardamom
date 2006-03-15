@@ -38,7 +38,7 @@ ORBACUS_JAVA_IDL_PATH=@config.ORBacusJAVA.idl.dir@
 ORBACUS_JAVA_JAR_PATH=@config.ORBacusJAVA.lib.dir@
 ORBACUS_JAVA_BIN_PATH=@config.ORBacusJAVA.bin.dir@
 
-FTP_DIR=@config.FtpJAVA.ftp.dir@
+FTP_DIR=@config.Ftp.homedir@
 ifeq (@config.ProdTests.java.orb@,JacORB)
 JACORB_IDL_PATH=@config.JacORB.idl.dir@
 JACORB_JAR_PATH=@config.JacORB.lib.dir@

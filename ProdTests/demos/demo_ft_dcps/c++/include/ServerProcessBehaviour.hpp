@@ -29,7 +29,7 @@
 #include <Foundation/ossupport/OS.hpp>
 #include <ConfAndPlug/cdmwinit/ProcessControl.hpp>
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
-#include <Repository/naminginterface/NamingUtil.hpp>
+#include <Foundation/commonsvcs/naming/NamingUtil.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 #include <FaultTolerance/idllib/CdmwFTReplicationManager.stub.hpp>
@@ -96,7 +96,7 @@ public:
         ++m_current_step;
 
         // Get process name
-        m_process_name = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+        m_process_name = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
         std::cout << "   -------- Server " << m_process_name << " on_initialise --------" << std::endl;
 
         // Get the group repository
@@ -116,7 +116,7 @@ public:
         
         // Get this process' location
         ::FT::Location_var the_location = m_group_repository->the_location();
-        m_location = Cdmw::NamingAndRepository::NamingInterface::to_string(
+        m_location = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(
             the_location.in() );
         std::cout << "       ---- Server " << m_process_name << ": location is " << m_location << std::endl;
 
@@ -179,14 +179,23 @@ public:
 		  }
 		  argv_tmp[argc_tmp] = NULL;
 
-        m_logging_mechanism = new LoggingMechanism(argc_tmp, argv_tmp);
+		  m_logging_mechanism = new LoggingMechanism(argc_tmp, argv_tmp);
         
         // Create activation handler which is also the RecoveryMechanism
         std::cout << "       ---- Server " << m_process_name << ": create activation handler" << std::endl;
-        m_activation_handler = new HelloActivationHandler(argc_tmp,
-				                                              argv_tmp,
-																			 m_process_name, 
-                                                          m_hello_impl);
+
+	std::cout << "       ---- ArgcTmp is " << argc_tmp << ": create activation handler" << std::endl;
+	for (int i=1; i<argc_tmp ; i++)
+	  {
+	    std::cout << " argv " << i << " is " << argv_tmp[i] << std::endl;
+	  }
+	//argv_tmp[argc_tmp] = NULL;
+
+        m_activation_handler = new HelloActivationHandler(argc_tmp, argv_tmp, m_process_name, m_hello_impl);
+
+	//std::cout << "       ---- create Logging ---------  " << std::endl;
+	//m_logging_mechanism = new LoggingMechanism(argc_tmp, argv_tmp);
+
 
         // create ServantLocator
         std::cout << "       ---- Server " << m_process_name << ": create ServantLocator " << std::endl;
@@ -243,7 +252,7 @@ public:
 
     
     void on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
     {
         std::cout << "   -------- Server " << m_process_name << " on_next_step --------" << std::endl;
@@ -251,7 +260,7 @@ public:
         if( m_current_step < m_nb_init_step )
             ++m_current_step;
         else
-            throw CdmwPlatformMngt::Process::InvalidStep();
+            throw CdmwPlatformMngt::ProcessDelegate::InvalidStep();
 
         // Get the object group reference
         ::FT::ObjectGroup_var group_ref = ::FT::ObjectGroup::_nil();
@@ -309,7 +318,7 @@ public:
     }
 
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
         std::cout << "   -------- Server " << m_process_name << " running --------" << std::endl;

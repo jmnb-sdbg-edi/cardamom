@@ -35,10 +35,11 @@
                         Foundation/testutils
                         Foundation/ossupport
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
+                        Foundation/pullmonitorableidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         Repository/repositoryidl
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         LifeCycle/lifecycleidl
                         LifeCycle/lifecycle          
@@ -78,10 +79,11 @@
                         Foundation/testutils
                         Foundation/ossupport
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
+                        Foundation/pullmonitorableidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         Repository/repositoryidl
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         LifeCycle/lifecycleidl
                         LifeCycle/lifecycle          

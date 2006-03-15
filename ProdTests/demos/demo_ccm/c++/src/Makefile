@@ -60,7 +60,8 @@ include ../config.mk
 
 MAINMK=	Main.mk
 
-IDL_SRCS=../generated/Cdmw_Basic_cif.idl \
+IDL_SRCS=../idl/Registration.idl \
+	../generated/Cdmw_Basic_cif.idl \
 	../generated/Basic_cif.idl \
 	../idl/UserBasicDemo.idl
 

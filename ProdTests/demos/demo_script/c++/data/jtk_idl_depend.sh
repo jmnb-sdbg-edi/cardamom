@@ -26,7 +26,6 @@
 # Tool for generating make dependencies of idl.
 # (C) Ruslan Shevchenko <Ruslan@Shevchenko.Kiev.UA>, 1998, 1999
 #     Arnaud Desitter - Nag Ltd. - arnaud@nag.co.uk, 1999
-# $Id: jtk_idl_depend.sh,v 1.1.1.1 2005-07-08 14:31:03 moghrabi Exp $
 #
 ###########################################################
 # Redistribution and use in source and binary forms, with or without
@@ -85,7 +84,6 @@ cat >&2 << __EOF__
 `basename ${0}`: makefile generator for IDL to C++ translation.
 (C) Ruslan Shevchenko <Ruslan@Shevchenko.Kiev.UA>, 1998, 1999.
     Arnaud Desitter - Nag Ltd. <arnaud@nag.co.uk>, 1999.
-\$Id: jtk_idl_depend.sh,v 1.1.1.1 2005-07-08 14:31:03 moghrabi Exp $
 __EOF__
 }
 
@@ -462,7 +460,7 @@ case "${ORB}" in
             SKEL_SUFFIX='_skel'
         fi
         ;;
-    TAO|TAOpenFusion|tao13|tao14-OF)
+    TAO|TAOOpenFusion|tao13|tao14-OF)
         jtkORB="jtkTAO"
         CL_SUFFIX="C"
         CL_SUFFIX_H="${CL_SUFFIX}"
@@ -714,7 +712,7 @@ for i in ${IDLS}; do
                     corba_target_objs="${corba_srv_objs}"
                     corba_target_hdrs="${corba_srv_hdrs}"
                     if [ "x${NO_CLIENT-}" = "x" -a "x${MK_INCLUDE-}" != x ]; then 
-                        corba_target_hdrs="${corba_target_hdrs} ${corba_cl_hdrs_mk}"
+                        corba_target_hdrs="${corba_target_hdrs} "`add_dir ${H_DIR} ${corba_cl_hdrs_mk}`
                     fi
                 elif [ "x${NO_CLIENT-}" = "x" ]; then
                     corba_target_src="${corba_cl_src}"

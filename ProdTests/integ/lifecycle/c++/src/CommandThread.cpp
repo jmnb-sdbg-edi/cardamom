@@ -74,10 +74,10 @@ CommandThread::run() throw()
 	int timescale = Cdmw::TestUtils::Testable::get_timescale();
     OS::sleep(timescale*m_wait_duration);
     try {
-        CdmwPlatformMngt::Process_var proc = CdmwPlatformMngt::Process::_nil();
+        CdmwPlatformMngt::ProcessDelegate_var proc = CdmwPlatformMngt::ProcessDelegate::_nil();
         CORBA::Object_var obj = m_orb->string_to_object(m_process_url.c_str());
         if (!CORBA::is_nil(obj.in())) {
-            proc = CdmwPlatformMngt::Process::_narrow(obj.in());
+            proc = CdmwPlatformMngt::ProcessDelegate::_narrow(obj.in());
             Cdmw::Tools::ProcessAdmin admin(m_orb.in(),proc.in());
             // send initialise order
             {

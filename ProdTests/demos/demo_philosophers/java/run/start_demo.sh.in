@@ -35,7 +35,7 @@ TESTS_FILE="CdmwIntegrationTests.output"
 RESULTS_LOG="CdmwIntegrationTests.results_log"
 EXEC_LOG="CdmwIntegrationTests.execution_log"
 
-START_TIMEOUT=50
+START_TIMEOUT=20
 CLEANUP_TIMEOUT=5
 
 if test ! -x `which $TERM`
@@ -44,8 +44,9 @@ then
 fi
 
 INIT_TIMEOUT=15
+FT_MANAGER_TIMEOUT=30
 EXEC_TIMEOUT=60
-CLEANUP_TIMEOUT=9
+CLEANUP_TIMEOUT=20
 CORE="no"
 ADMIN_ERROR="no"
 
@@ -53,7 +54,9 @@ ADMIN_ERROR="no"
 echo "========================================================================="
 echo "=                      CDMW Demo Philosophers                          ="
 echo "========================================================================="
-echo ""
+echo "Hit a key when ready."
+echo "You will have to hit a key again, when all process are running, to launch deployment"
+read FOO
 
 # We clean any previous tests check files
 rm -f $RESULTS_FILE
@@ -68,17 +71,24 @@ for scenario in $SCENARII; do
 
 # 1) Start daemon 
 echo "Starting the Platform Management Daemon..."
-DAEMON_COMMAND="@cdmw_home@/bin/cdmw_platform_daemon.sh"
+DAEMON_COMMAND="@cdmw_home@/bin/cdmw_platform_daemon.sh --CdmwXMLFile=@cdmw_home@/share/CdmwPlatformMngtDaemon_conf.xml"
 $TERM -ls -sb -sl 500 -e  $DAEMON_COMMAND &
 
 trap '$DAEMON_COMMAND stop; exit' 2
 
 sleep $INIT_TIMEOUT
 
+if test -x "@cdmw_home@/bin/cdmw_ft_manager"
+then
+    echo Starting the FT Manager...
+    @cdmw_home@/bin/cdmw_ft_manager --CdmwXMLFile=@cdmw_home@/share/CdmwFaultToleranceManager_conf.xml --groupConf=@cdmw_home@/demos/demo_philosophers/java/data/CdmwFTSystemMngtGroupCreator_conf.xml &
+    FT_MANAGER_PID=$!
+    sleep $FT_MANAGER_TIMEOUT
+fi
+
 # 2) Start Platform Management Supervision
 echo "Starting the Platform Management Supervision..."
-    $TERM -ls -sb -sl 500 -e  @cdmw_home@/bin/cdmw_platform_supervision --creation-timeout=20000 &
-SUPERVISION_PID=$!
+@cdmw_home@/bin/cdmw_platform_supervision_starter --CdmwXMLFile=@cdmw_home@/demos/demo_philosophers/java/data/CdmwPlatformMngtSystemStart.xml --validate
 sleep $INIT_TIMEOUT
 
 # 3) Define system
@@ -90,11 +100,12 @@ sleep $INIT_TIMEOUT
     echo "Start system"
     ./start_system.sh
 
+    sleep $START_TIMEOUT
+
     if [ $? -eq "0" ];
     then
 	echo ""
 	echo "========================================================================================="
-        echo "Waiting a while for the starting of the system"
 	echo "Hit a key when the cdmw_platform_daemon display \"NamingAndRepository : Run requested.\""
 	echo "========================================================================================="
 
@@ -131,7 +142,10 @@ echo "=                     end                                 ="
 echo "==========================================================="
 
 $DAEMON_COMMAND stop
-kill $SUPERVISION_PID 
+if test -x "@cdmw_home@/bin/cdmw_ft_manager"
+then
+    kill $FT_MANAGER_PID
+fi
 rm -rf @FTP_DIR@/cdmw_demo_philosophers
 echo "done."
 

@@ -61,7 +61,7 @@ XALAN_JAR_PATH=@config.XalanJAVA.lib.dir@
 XERCES_JAR_PATH=@config.XercesJAVA.lib.dir@
 
 
-FTP_DIR=@config.FtpJAVA.ftp.dir@
+FTP_DIR=@config.Ftp.homedir@
 
 
 # -------------------------------------------------------------------------------

@@ -1,0 +1,62 @@
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
+ * 
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
+ * All rights reserved.
+ * 
+ * This file and the information it contains are confidential and proprietary. 
+ * They shall not be reproduced nor disclosed to any person except to those 
+ * having a need to know them without prior written consent of the owner.
+*/
+/* ===================================================================== */
+
+
+#ifndef  TEST_HELLO_IDL_
+#define  TEST_HELLO_IDL_
+
+#pragma prefix "thalesgroup.com"
+
+
+module CdmwRequestLogging {    
+
+    struct MyStruct {
+        string val;
+        string hostname;
+    };
+
+    typedef sequence<unsigned long> TimeSeq;
+    
+  /** 
+   * Hello interface
+   */
+  interface HelloInterface {
+    /**
+     * hello  
+     */ 
+    void hello();
+    
+    /**
+     * do_something return a simple value to be recorded
+     */
+    long do_something(in long val);
+
+    /**
+     * do_something_more return a string values to be recorded
+     */
+    string do_something_more(inout string val, out MyStruct val_struct);
+
+    /**
+     * get_log_size return number of entries in reply datastore
+     */
+    long get_log_size();
+
+    TimeSeq get_recorded_durations();
+
+    boolean send_bad_context_exception();
+  };
+}; 
+
+#endif // TEST_HELLO_IDL_
+

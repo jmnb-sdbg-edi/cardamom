@@ -37,7 +37,7 @@
 #include <FaultTolerance/ftinit/FTServiceInit.hpp>
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
 #include <ConfAndPlug/cdmwinit/ProcessControl.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
 
@@ -81,7 +81,7 @@ public:
         std::cout << "   -------- Client on_initialise --------" << std::endl;
         
         // get NamingInterface to hello_servers (for reading)
-        Cdmw::NamingAndRepository::NamingInterface helloNamingInterface =
+        Cdmw::CommonSvcs::Naming::NamingInterface helloNamingInterface =
             Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("demo_ft/hello_servers");
         
         // get reference to Hello ObjectGroup from NamingInterface
@@ -120,14 +120,14 @@ public:
         
         
     void on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
     {
     }
 
     
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
         std::cout << "   -------- Client run --------" << std::endl;

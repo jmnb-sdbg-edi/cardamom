@@ -68,7 +68,7 @@ void EncoderProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void EncoderProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // 
@@ -82,7 +82,7 @@ void EncoderProcessControl::on_run()
     repository = Cdmw::NamingAndRepository::RepositoryInterface::get_repository();
      
     // Get Naming Interface of dom1 name domain
-    Cdmw::NamingAndRepository::NamingInterface ni =
+    Cdmw::CommonSvcs::Naming::NamingInterface ni =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface (
                         "dom1");
          
@@ -96,7 +96,7 @@ void EncoderProcessControl::on_run()
     {
         std::cout << "File : " << __FILE__ << " Line : " << __LINE__
                   << "could not _narrow object to type DataTransfer" << std::endl;
-        throw CdmwPlatformMngt::Process::NotReadyToRun();
+        throw CdmwPlatformMngt::ProcessDelegate::NotReadyToRun();
     }
 
     // 
@@ -119,7 +119,10 @@ void EncoderProcessControl::do_tests()
     set_nbOfRequestedTestOK(3);
     
     DataManager dataMgr(m_orb.in());
+    /* PCR-0049
     Cdmw::OrbSupport::Codec<Cdmw::TestCodec::TestStruct> codec(m_orb.in());
+    */
+    Cdmw::OrbSupport::Codec<Cdmw::TestCodec::TestStruct> codec;
     
     try {
         TEST_INFO("Sending encoded data with enum set to VAL1");

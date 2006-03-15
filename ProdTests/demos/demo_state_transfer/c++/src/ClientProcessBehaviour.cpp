@@ -22,7 +22,7 @@
 
 
 // Cdmw Files
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 // Demo Files
@@ -60,7 +60,7 @@ throw( CORBA::SystemException )
     std::cout << "   -------- Client initialisation -----------" << std::endl;
         
     // get NamingInterface to object_groups (for reading)
-    Cdmw::NamingAndRepository::NamingInterface objGroupsNamingInterface =
+    Cdmw::CommonSvcs::Naming::NamingInterface objGroupsNamingInterface =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("demo/object_groups");
         
     // get reference to Database ObjectGroup from NamingInterface
@@ -98,14 +98,14 @@ throw( CORBA::SystemException )
         
         
 void ClientProcessBehaviour::on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
 {
 }
 
     
 void ClientProcessBehaviour::on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
 {
     std::cout << "   -------- Client is runing ----------------" << std::endl;

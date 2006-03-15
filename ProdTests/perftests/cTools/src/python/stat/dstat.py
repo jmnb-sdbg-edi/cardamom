@@ -1,6 +1,4 @@
-#
-# $Id: dstat.py,v 1.1.1.1 2005-07-08 14:31:04 moghrabi Exp $
-#
+
 """
 
  This module contains a set of functions that computes the basic

@@ -29,8 +29,8 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/orbsupport/RefCountServantBase.hpp>
 #include <FaultTolerance/ftstatemanager/DataStore.hpp>
-#include <FaultTolerance/ftstatemanager/StorageHome.hpp>
-#include <FaultTolerance/ftstatemanager/StorageObject.hpp>
+#include <Foundation/commonsvcs/datastore/StorageHome.hpp>
+#include <Foundation/commonsvcs/datastore/StorageObject.hpp>
 
 // Demo Files
 #include <Database.skel.hpp>
@@ -82,18 +82,18 @@ private:
             throw();
 
     // Definition of Storage objects for DataPart1 type 
-    typedef Cdmw::FT::StorageHome< Demo::Ident, Demo::DataPart1 > DataPart1StorageHome;    
-    typedef Cdmw::FT::StorageObject< Demo::Ident, Demo::DataPart1 > DataPart1StorageObject;
+    typedef Cdmw::CommonSvcs::DataStore::StorageHome< Demo::Ident, Demo::DataPart1 > DataPart1StorageHome;    
+    typedef Cdmw::CommonSvcs::DataStore::StorageObject< Demo::Ident, Demo::DataPart1 > DataPart1StorageObject;
     typedef Cdmw::FT::DataStore< Demo::Ident, Demo::DataPart1 > DataPart1Store;
             
     // Definition of Storage objects for DataPart2 type 
-    typedef Cdmw::FT::StorageHome< Demo::Ident, Demo::DataPart2 > DataPart2StorageHome;    
-    typedef Cdmw::FT::StorageObject< Demo::Ident, Demo::DataPart2 > DataPart2StorageObject;
+    typedef Cdmw::CommonSvcs::DataStore::StorageHome< Demo::Ident, Demo::DataPart2 > DataPart2StorageHome;    
+    typedef Cdmw::CommonSvcs::DataStore::StorageObject< Demo::Ident, Demo::DataPart2 > DataPart2StorageObject;
     typedef Cdmw::FT::DataStore< Demo::Ident, Demo::DataPart2 > DataPart2Store;
 
     // Definition of Storage objects for DataPart1 type 
-    typedef Cdmw::FT::StorageHome< Demo::Ident, Demo::DataPart1 > DataPart3StorageHome;    
-    typedef Cdmw::FT::StorageObject< Demo::Ident, Demo::DataPart1 > DataPart3StorageObject;
+    typedef Cdmw::CommonSvcs::DataStore::StorageHome< Demo::Ident, Demo::DataPart1 > DataPart3StorageHome;    
+    typedef Cdmw::CommonSvcs::DataStore::StorageObject< Demo::Ident, Demo::DataPart1 > DataPart3StorageObject;
     typedef Cdmw::FT::DataStore< Demo::Ident, Demo::DataPart1 > DataPart3Store;
 
     // StorageHome for DataPart1

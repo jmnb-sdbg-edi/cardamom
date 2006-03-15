@@ -30,10 +30,6 @@
             <delivery basename="testccmphilofiles" type="data"  visibility="private">
                 <sourcefiles>
                     ccm_event.conf
-                    EventChannelConf1.xml
-                    EventChannel_Desc.dtd
-                    EventChannelManager_Desc.dtd
-                    EventChannelManager.xml
                     make_ccm_philo_assembly_package.sh
                     test_ccm_philo_c++/Dinner.cad
                     test_ccm_philo_c++/Fork.csd

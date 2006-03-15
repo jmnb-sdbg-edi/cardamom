@@ -25,7 +25,7 @@
 # CDMW installation folder
 CDMW_HOME=@config.install.dir@
 # CDMW demo installation folder
-CDMW_DEMO_HOME=@config.install.dir@/demos/demo/c++
+CDMW_DEMO_HOME=@config.install.dir@/demos/demo_state_transfer/c++
 
 XERCES_INC_PATH=@config.XercesCPP.install.dir@
 XERCES_LIB_PATH=@config.XercesCPP.lib.dir@

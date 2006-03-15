@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -88,7 +85,7 @@ CDMW_GEN_CLIENT_SRC=ClientCdmwInterface.cpp
 # User Supplied Code
 CLIENT_SRCS=$(CDMW_GEN_CLIENT_SRC) \
 	TestPing_i.cpp \
-	ClientProcessControl.cpp client.cpp
+	ClientProcessControl.cpp client.cpp ClockTime.cpp
 
 .SUFFIXES:
 .SUFFIXES: .idl .cpp .skel.cpp .stub.cpp .o .stub.hpp .skel.hpp .hpp .h

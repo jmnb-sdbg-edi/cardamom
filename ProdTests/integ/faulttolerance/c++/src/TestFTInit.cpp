@@ -28,7 +28,7 @@
 
 #include "faulttolerance/TestHello.stub.hpp"
 
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 namespace Cdmw {
 namespace FT {

@@ -101,7 +101,7 @@ void ServerProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void ServerProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // do nothing

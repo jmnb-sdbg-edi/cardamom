@@ -37,7 +37,7 @@
 #include "Foundation/orbsupport/OrbSupport.hpp"
 #include "Foundation/orbsupport/StrategyList.hpp"
 #include "Foundation/orbsupport/ExceptionMinorCodes.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
@@ -87,7 +87,7 @@ namespace {
         * Purpose:
         * <p>
         * the behaviour for the
-        * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+        * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
         * operation
         */
         virtual 
@@ -96,16 +96,16 @@ namespace {
             throw(CORBA::SystemException)
         {
             using namespace Cdmw::NamingAndRepository;
-            using namespace Cdmw::NamingAndRepository;
+            using namespace Cdmw::CommonSvcs::Naming;
             using namespace Cdmw::PlatformMngt;
             using namespace Cdmw::Common;
 
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
-                                             PlatformInterface::getProcessName(),
-                                             "Initialisation requested");
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
+                                              PlatformInterface::Get_process_name(),
+                                              "Initialisation requested");
                         
             std::string testProcName 
-                = PlatformInterface::getProcessName();
+                = PlatformInterface::Get_process_name();
             
             if (testProcName == TEST_PROC_1)
             {
@@ -145,7 +145,7 @@ namespace {
                     std::cerr << " **** TEST FAILED AT LINE " << __LINE__ 
                         << " IN FILE: " << __FILE__ << std::endl;
                     
-                    PlatformInterface::notifyFatalError(testProcName.c_str(),
+                    PlatformInterface::Notify_fatal_error(testProcName.c_str(),
                         "NamingContext is a nil object reference!");
                     return;
                 }
@@ -155,7 +155,7 @@ namespace {
                 std::cerr << ex << std::endl;
                 std::cerr << " **** TEST FAILED AT LINE " << __LINE__ 
                     << " IN FILE: " << __FILE__ << std::endl;
-                PlatformInterface::notifyFatalError(testProcName.c_str(),
+                PlatformInterface::Notify_fatal_error(testProcName.c_str(),
                         "Can not get NamingInterface!");
                 throw;
             }
@@ -166,20 +166,20 @@ namespace {
         * Purpose:
         * <p>
         * the behaviour for the
-        * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+        * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
         * operation
         */
         virtual 
             void 
             on_run()
-            throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+            throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
             CORBA::SystemException)
         {
             using namespace Cdmw::PlatformMngt;
             using namespace Cdmw::Event;
 
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
-                PlatformInterface::getProcessName(),
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
+                PlatformInterface::Get_process_name(),
                 "Run requested");
                 
             //Testing TestCdmwEventService
@@ -199,7 +199,7 @@ namespace {
         * Purpose:
         * <p>
         * the behaviour for the
-        * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+        * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
         * operation
         */
         virtual 
@@ -209,9 +209,9 @@ namespace {
         {   
             using namespace Cdmw::PlatformMngt;
 
-            PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
-                                             PlatformInterface::getProcessName(),
-                                             "Stop requested");
+            PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
+                                              PlatformInterface::Get_process_name(),
+                                              "Stop requested");
         }
         
     private:

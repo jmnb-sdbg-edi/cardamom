@@ -44,7 +44,7 @@ CDMW_CP=$(CDMW_HOME)/lib/java/libcdmwcommon.jar \
 		$(CDMW_HOME)/lib/java/libcdmworbsupport.jar \
 		$(CDMW_HOME)/lib/java/libcdmwplatforminterface.jar \
 		$(CDMW_HOME)/lib/java/libcdmwlifecycle.jar \
-		$(CDMW_HOME)/lib/java/libcdmwnaminginterface.jar \
+		$(CDMW_HOME)/lib/java/libcdmwcommonsvcsnaming.jar \
 		$(CDMW_HOME)/lib/java/libcdmwrepositoryinterface.jar \
 		$(CDMW_HOME)/lib/java/libcdmwrepositoryidl.jar \
 		$(CDMW_HOME)/lib/java/libcdmwcdmwinit.jar \
@@ -52,7 +52,8 @@ CDMW_CP=$(CDMW_HOME)/lib/java/libcdmwcommon.jar \
 		$(CDMW_HOME)/lib/java/libcdmweventsupport.jar \
 		$(CDMW_HOME)/lib/java/libcdmwtracelibrary.jar \
 		$(CDMW_HOME)/lib/java/libcdmwperformancelibrary.jar \
-		$(CDMW_HOME)/lib/java/libcdmwsystemmngtidl.jar
+		$(CDMW_HOME)/lib/java/libcdmwsmginterfaceidl.jar
+
 CDMW_LIB:=$(shell echo $(CDMW_CP) | sed 's/ /:/g')
 
 XML_LIB=$(XERCES_JAR_PATH)/xercesImpl.jar:$(XERCES_JAR_PATH)/xmlParserAPIs.jar:$(XALAN_JAR_PATH)/xalan.jar:$(XALAN_JAR_PATH)/xml-apis.jar

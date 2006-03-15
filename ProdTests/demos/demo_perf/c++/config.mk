@@ -90,11 +90,12 @@ LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
     -L$(XERCES_LIB_PATH)
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
 LIBS_CDMW=-lcdmwcdmwinit -lcdmwrepositoryinterface  \
-		-lcdmwplatforminterface -lcdmwnaminginterface \
-		-lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwcommon \
+		-lcdmwplatforminterface -lcdmwcommonsvcsnaming \
+		-lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwlogging -lcdmwcommon \
 		-lcdmwperformancelibrary -lxerces-c1_3 -lcdmwcommonidl \
-		-lcdmwsystemmngtidl -lcdmwplatformidl -lcdmwrepositoryidl \
-		-lcdmwlifecycleidl -lcdmwplatformlibrary -lcdmwplatformvaluetypes \
+		-lcdmwrepositoryidl -lcdmwlifecycleidl \
+		-lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+		-lcdmwplatformlibrary -lcdmwplatformvaluetypes \
 		-lcdmwperformanceidl
 #END CDMW FLAGS
 

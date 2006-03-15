@@ -1,29 +1,7 @@
-/* ========================================================================== *
- * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
- * License for more details.
- * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * ========================================================================= */
- 
 //
-// IDENTIFICATION   = 1000000097682
+// IDENTIFICATION   = 1000000117116
 // REVISION         = 1
-// DATE             = 03-JAN-2005 07:46:04
+// DATE             = 22-JUL-2005 05:06:12
 // DESCRIPTION      =  
 // SECURITY         = UNCLASSIFIED  
 // STATUS           = RELEASED
@@ -32,15 +10,15 @@
 //
 // Copyright THALES NEDERLAND B.V. and/or its suppliers
 //
-// THIS SOFTWARE SOURCE CODE AND ANY EXECUTABLE DIRVED THEREOF ARE PROPRIETARY
+// THIS SOFTWARE SOURCE CODE AND ANY EXECUTABLE DERIVED THEREOF ARE PROPRIETARY
 // TO THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE, AND SHALL NOT
 // BE USED IN ANY WAY OTHER THAN BEFOREHAND AGREED ON BY THALES NEDERLAND B.V.,
 // NOR BE REPRODUCED OR DISCLOSED TO THIRD PARTIES WITHOUT PRIOR WRITTEN
 // AUTHORIZATION BY THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE.
 //
 
-#include "dds_dcps.h"
-#include "pingpong.h"
+#include "ccpp_dds_dcps.h"
+#include "ccpp_pingpong.h"
 
 #include <iostream>
 
@@ -128,7 +106,7 @@ main (
     ReturnCode_t                      result;
     int                               i;
     int                               imax;
-    int                               j;
+    CORBA::ULong                      j;
     int                               jmax;
 
     //
@@ -145,7 +123,7 @@ main (
     }
 
     //
-    //   Create participant
+    // Create participant
     //
 
     dpf = DomainParticipantFactory::get_instance ();
@@ -183,11 +161,11 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_min_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_min_writer = PP_min_msgDataWriter::_narrow (dw);
+    PP_min_writer = dynamic_cast<PP_min_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_min_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_min_reader = PP_min_msgDataReader::_narrow (dr);
+    PP_min_reader = dynamic_cast<PP_min_msgDataReader_ptr> (dr);
 
     // Add datareader statuscondition to waitset
     PP_min_sc = PP_min_reader->get_statuscondition ();
@@ -204,11 +182,11 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_seq_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_seq_writer = PP_seq_msgDataWriter::_narrow (dw);
+    PP_seq_writer = dynamic_cast<PP_seq_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_seq_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_seq_reader = PP_seq_msgDataReader::_narrow (dr);
+    PP_seq_reader = dynamic_cast<PP_seq_msgDataReader_ptr> (dr);
 
     // Add datareader statuscondition to waitset
     PP_seq_sc = PP_seq_reader->get_statuscondition ();
@@ -225,11 +203,11 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_string_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_string_writer = PP_string_msgDataWriter::_narrow (dw);
+    PP_string_writer = dynamic_cast<PP_string_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_string_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_string_reader = PP_string_msgDataReader::_narrow (dr);
+    PP_string_reader = dynamic_cast<PP_string_msgDataReader_ptr> (dr);
 
     // Add datareader statuscondition to waitset
     PP_string_sc = PP_string_reader->get_statuscondition ();
@@ -246,11 +224,11 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_fixed_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_fixed_writer = PP_fixed_msgDataWriter::_narrow (dw);
+    PP_fixed_writer = dynamic_cast<PP_fixed_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_fixed_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_fixed_reader = PP_fixed_msgDataReader::_narrow (dr);
+    PP_fixed_reader = dynamic_cast<PP_fixed_msgDataReader_ptr> (dr);
 
     // Add datareader statuscondition to waitset
     PP_fixed_sc = PP_fixed_reader->get_statuscondition ();
@@ -267,11 +245,11 @@ main (
 
     // Create datawriter
     dw = p->create_datawriter (PP_array_topic, DATAWRITER_QOS_DEFAULT, NULL);
-    PP_array_writer = PP_array_msgDataWriter::_narrow (dw);
+    PP_array_writer = dynamic_cast<PP_array_msgDataWriter_ptr> (dw);
 
     // Create datareader
     dr = s->create_datareader (PP_array_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_array_reader = PP_array_msgDataReader::_narrow (dr);
+    PP_array_reader = dynamic_cast<PP_array_msgDataReader_ptr> (dr);
 
     // Add datareader statuscondition to waitset
     PP_array_sc = PP_array_reader->get_statuscondition ();
@@ -288,7 +266,7 @@ main (
 
     // Create datareader
     dr = s->create_datareader (PP_quit_topic, DATAREADER_QOS_DEFAULT, NULL);
-    PP_quit_reader = PP_quit_msgDataReader::_narrow (dr);
+    PP_quit_reader = dynamic_cast<PP_quit_msgDataReader_ptr> (dr);
 
     // Add datareader statuscondition to waitset
     PP_quit_sc = PP_quit_reader->get_statuscondition ();

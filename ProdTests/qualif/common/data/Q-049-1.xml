@@ -51,16 +51,15 @@
     <!-- Hosts of the system -->
 	<Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
 	<Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe">
+          Agent-exec-path="cdmw_platform_agent">
 	    <Host-monitoring Pull-interval="2000" Pull-timeout="2500"/>
     </Host>
-
+    
+    
     <!-- ********************** -->
     <!-- Application definition -->
     <!--                        -->
@@ -132,28 +131,43 @@
         <!-- Process definitions -->
         <!--                     -->
         <!-- ******************* -->
-		<Managed-process Name="TraceCollector"
+        <Managed-process Name="TraceCollectorGlobal"
                          Host-name="@hostname1val@"
                          Type="MANAGED-PROCESS"
                          Autoended="FALSE"
-                         Exec-path="cdmw_trace_collector"
-                         Args="--collector-name=test_collector"
+                         Exec-path="cdmw_global_trace_collector"
+                         Args="--collector-name=global_collector"
                          Port="-1">
 			<Init-step Name="initialisation" Timeout="10000"/>
 			<Run-timeout Timeout="10000"/>
 			<Stop-timeout Timeout="10000"/>
 		</Managed-process>
-
+		
+        <Managed-process Name="TraceCollectorLocal"
+                         Host-name="@hostname2val@"
+                         Type="MANAGED-PROCESS"
+                         Autoended="FALSE"
+                         Exec-path="cdmw_trace_collector"
+                         Args="--collector-name=local_collector"
+                         Port="-1">
+			<Init-step Name="initialisation" Timeout="10000"/>
+			<Run-timeout Timeout="10000"/>
+			<Stop-timeout Timeout="10000"/>
+		</Managed-process>
+		
 		<!-- ************************** -->
         <!--                            -->
         <!-- End of process definitions -->
         <!-- ************************** -->
 
         <!-- Init graph of processes of this application -->
-                <Init-graph>
-            <Graph-element Name="TraceCollector">
+        <Init-graph>
+            <Graph-element Name="TraceCollectorGlobal">
+                <Graph-element-successor Name="TraceCollectorLocal"/>
             </Graph-element>
-            <Graph-element-root Name="TraceCollector"/>
+            <Graph-element Name="TraceCollectorLocal">
+            </Graph-element>
+            <Graph-element-root Name="TraceCollectorGlobal"/>
         </Init-graph>
 
     <!-- ***************************** -->
@@ -183,12 +197,24 @@
         <!--                     -->
         <!-- ******************* -->
 
-		<Managed-process Name="TraceClient"
+		<Managed-process Name="TraceClient1"
 		                 Host-name="@hostname2val@"
 					     Type="MANAGED-PROCESS"
                          Autoended="FALSE"
                          Exec-path="cdmw_trace_client"
-					     Args="--multi-domain-level --trace-nbr=-1 --collector-name=test_collector"
+					     Args="--multi-domain-level --trace-nbr=-1 --collector-name=local_collector"
+					     Port="-1">
+			<Init-step Name="initialisation" Timeout="8000"/>
+			<Run-timeout Timeout="10000"/>
+			<Stop-timeout Timeout="2000"/>
+		</Managed-process>
+		
+		<Managed-process Name="TraceClient2"
+		                 Host-name="@hostname2val@"
+					     Type="MANAGED-PROCESS"
+                         Autoended="FALSE"
+                         Exec-path="cdmw_trace_client"
+					     Args="--multi-domain-level --trace-nbr=-1 --collector-name=local_collector"
 					     Port="-1">
 			<Init-step Name="initialisation" Timeout="8000"/>
 			<Run-timeout Timeout="10000"/>
@@ -202,9 +228,12 @@
 
 		<!-- Init graph of processes of this application -->
         <Init-graph>
-            <Graph-element Name="TraceClient">
+            <Graph-element Name="TraceClient1">
+                <Graph-element-successor Name="TraceClient2"/>
             </Graph-element>
-            <Graph-element-root Name="TraceClient"/>
+            <Graph-element Name="TraceClient2">
+            </Graph-element>
+            <Graph-element-root Name="TraceClient1"/>
         </Init-graph>
 
 

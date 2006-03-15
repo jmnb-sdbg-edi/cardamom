@@ -61,6 +61,9 @@ ADMIN_ERROR="no"
 echo "========================================================================="
 echo "=                      CDMW Demo CCM                                   ="
 echo "========================================================================="
+$echo "Hit a key when ready."
+$echo "You will have to hit a key again, when all process are running, to launch deployment"
+read FOO
 echo ""
 
 # We clean any previous tests check files
@@ -87,18 +90,21 @@ sleep $INIT_TIMEOUT
 if test -x "@cdmw_home@/bin/cdmw_ft_manager"
 then
     $echo Starting the FT Manager...
-    @cdmw_home@/bin/cdmw_ft_manager --CdmwXMLFile=@cdmw_home@/share/CdmwFaultToleranceManager_conf.xml &
+    @cdmw_home@/bin/cdmw_ft_manager --CdmwXMLFile=@cdmw_home@/share/CdmwFaultToleranceManager_conf.xml --groupConf=@cdmw_home@/demos/demo_ccm/c++/data/CdmwFTSystemMngtGroupCreator_conf.xml &
     FT_MANAGER_PID=$!
     sleep $FT_MANAGER_TIMEOUT
-    $echo Starting the Platform Management Supervision...
-    SUPERVISION_COMMAND="@cdmw_home@/bin/cdmw_platform_supervision --CdmwLocalisationService=21882 --FaultManagerRegistration=corbaloc::$HOSTNAME:@FtManager_port@/fault_manager --RequestDurationTime=20000000"
-    $TERM -ls -sb -sl 500 -e $SUPERVISION_COMMAND &
-else
-    $echo Starting the Platform Management Supervision...
-    SUPERVISION_COMMAND="@cdmw_home@/bin/cdmw_platform_supervision --CdmwLocalisationService=21882"
-    $TERM -ls -sb -sl 500 -e $SUPERVISION_COMMAND &
+#    $echo Starting the Platform Management Supervision...
+#    SUPERVISION_COMMAND="@cdmw_home@/bin/cdmw_platform_supervision --CdmwLocalisationService=21882 --FaultManagerRegistration=corbaloc::$HOSTNAME:@FtManager_port@/fault_manager --RequestDurationTime=20000000"
+#    $TERM -ls -sb -sl 500 -e $SUPERVISION_COMMAND &
+#else
+#    $echo Starting the Platform Management Supervision...
+#    SUPERVISION_COMMAND="@cdmw_home@/bin/cdmw_platform_supervision --CdmwLocalisationService=21882"
+#    $TERM -ls -sb -sl 500 -e $SUPERVISION_COMMAND &
 fi
-SUPERVISION_PID=$!
+
+$echo Starting the Platform Management Supervision...
+@cdmw_home@/bin/cdmw_platform_supervision_starter --CdmwXMLFile=@cdmw_home@/demos/demo_ccm/c++/data/CdmwPlatformMngtSystemStart.xml --validate
+
 sleep $INIT_TIMEOUT
 
 # 3) Define system
@@ -152,7 +158,6 @@ echo "==========================================================="
 
 $DAEMON_COMMAND stop
 
-kill $SUPERVISION_PID
 if test -x "@cdmw_home@/bin/cdmw_ft_manager"
 then
     kill $FT_MANAGER_PID

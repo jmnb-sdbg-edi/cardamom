@@ -30,7 +30,6 @@
             <delivery basename="testccmftfiles" type="data"  visibility="private">
                 <sourcefiles>
                     CdmwFaultToleranceManager_ccmft_conf.xml
-                    EventChannelConf_ccm_ft_datastore.xml
                     cdmw_nar_qualif_ccm_ft_datastore.xml
                     make_ccm_ft_datastore_assembly_package.sh
                     test_ccm_ft_datastore_c++/QualifCcmFt.cad

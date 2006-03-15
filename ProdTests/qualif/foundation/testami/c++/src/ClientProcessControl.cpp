@@ -80,7 +80,7 @@ void ClientProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void ClientProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // 
@@ -94,7 +94,7 @@ void ClientProcessControl::on_run()
     repository = Cdmw::NamingAndRepository::RepositoryInterface::get_repository();
      
     // Get Naming Interface of dom1 name domain
-    Cdmw::NamingAndRepository::NamingInterface ni =
+    Cdmw::CommonSvcs::Naming::NamingInterface ni =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface (
                         "dom1");
          
@@ -108,7 +108,7 @@ void ClientProcessControl::on_run()
     {
         std::cout << "File : " << __FILE__ << " Line : " << __LINE__
                   << "could not _narrow object to type Server" << std::endl;
-        throw CdmwPlatformMngt::Process::NotReadyToRun();
+        throw CdmwPlatformMngt::ProcessDelegate::NotReadyToRun();
     }
 
     // 

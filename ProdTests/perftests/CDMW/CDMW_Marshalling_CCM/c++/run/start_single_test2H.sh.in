@@ -1,10 +1,7 @@
 #!/bin/sh
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -39,8 +36,6 @@ then
     exit 1
 fi
 
-# CDMW installation folder
-###CDMW_HOME="`cat $SITE_CONFIG | grep CDMW_HOME |cut -d= -f2`"
 LD_LIBRARY_PATH=$CDMW_HOME/lib/c++:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH
 PATH=$CDMW_HOME/bin:$PATH
@@ -78,9 +73,10 @@ INIT_TIMEOUT=20
 EXEC_TIMEOUT=10
 # maximum number of check before forced timeout (42*10=720 s = 7 min)
 EXEC_STEP=42
+FT_MANAGER_TIMEOUT=30
 CLEANUP_TIMEOUT=10
-
-
+SUPERVISION_PORT=@cdmw_svs_port@
+ 
 $echo "========================================================="
 $echo "=                  CDMW PERFORMANCE TEST                ="
 $echo "========================================================="
@@ -90,7 +86,7 @@ $echo "========================================================="
 
 # 1.a) Start daemon on the remote host
 $echo Starting the Platform Management Daemon on the remote host...
-HOSTNAME2=cardamom09
+HOSTNAME2=@hostname2@
 TERM_PATH=/usr/bin/xterm
 DAEMON_COMMAND2="$CDMW_HOME/bin/cdmw_platform_daemon.sh --CdmwXMLFile=$PERFTESTS_HOME/CDMW/CDMW_Marshalling_CCM/c++/data/CdmwPlatformMngtDaemon_conf.xml"
 #rsh $HOSTNAME2 "(LD_LIBRARY_PATH=$LD_LIBRARY_PATH; export LD_LIBRARY_PATH; PATH=$PATH; export PATH; CDMW_HOME=$CDMW_HOME; export CDMW_HOME; PERFTESTS_HOME=$PERFTESTS_HOME; export PERFTESTS_HOME; $TERM_PATH -display $DISPLAY -sb -sl 5000 -e $DAEMON_COMMAND2)" &
@@ -109,22 +105,48 @@ $DAEMON_COMMAND >> daemon.log &
 
 DAEMON_PID=$!
 #trap '$DAEMON_COMMAND stop; exit' 2
-
 sleep $INIT_TIMEOUT
 
-# 2) Start Platform Management Supervision
-$echo Starting the Platform Management Supervision...
-$CDMW_HOME/bin/cdmw_platform_supervision --creation-timeout=20000 --CdmwLocalisationService=21882&
-SUPERVISION_PID=$!
+# 2) Start (eventually ft manager and) Platform Management Supervision
+if test -x "$CDMW_HOME/bin/cdmw_ft_manager"
+then
+    # FT manager conf file
+    FT_CONF_FILE=../data/CdmwFaultToleranceManager_conf.xml
+    FT_GRPCONF_FILE=../data/CdmwFTSystemMngtGroupCreator_conf.xml
+
+    if test ! -f "$FT_CONF_FILE"
+    then
+	$echo "$FT_CONF_FILE file is missing. Run 'make data' in parent directory restart $0 "
+	exit 1
+    fi
+    if test ! -f "$FT_GRPCONF_FILE"
+    then
+	$echo "$FT_GRPCONF_FILE file is missing. Run 'make data' in parent directory restart $0 "
+	exit 1
+    fi
+    $echo Starting the FT Manager...
+    $CDMW_HOME/bin/cdmw_ft_manager --CdmwXMLFile=$FT_CONF_FILE --groupConf=$FT_GRPCONF_FILE >> ft_manager.log &
+    FT_MANAGER_PID=$!
+    $echo "waiting $FT_MANAGER_TIMEOUT sec for FT Manager activations"
+    sleep $FT_MANAGER_TIMEOUT
+    SVS_CONF_FILE=../data/CdmwPlatformMngtSystemStart.xml
+    echo Starting the Platform Management Supervision...
+    $CDMW_HOME/bin/cdmw_platform_supervision_starter --CdmwXMLFile=$SVS_CONF_FILE --validate
+else
+    echo Starting the Platform Management Supervision...
+    $CDMW_HOME/bin/cdmw_platform_supervision --CdmwLocalisationService=$SUPERVISION_PORT --creation-timeout=20000 &
+fi
+$echo "waiting $INIT_TIMEOUT sec for Supervision activations"
+
 sleep $INIT_TIMEOUT
 
 # 3) Define system
 $echo Defining the System '$SCENARIO_FILE'
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:21882/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:$SUPERVISION_PORT/CdmwPlatformMngtSupervision --sys-define $SCENARIO_FILE
 
 datecmd="date +%Y-%m-%d_%H:%M:%S"
 # 4) Start_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:21882/CdmwPlatformMngtSupervision --sys-start
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:$SUPERVISION_PORT/CdmwPlatformMngtSupervision --sys-start
 if [ $? -eq "0" ];
 then
     $echo "Waiting a while for the execution of the scenario...\c"
@@ -136,7 +158,7 @@ $echo ============================
 $echo Execute deployment commands
 $echo ============================
 #./startDeploymentTool.sh
-$CDMW_HOME/bin/cdmw_deployment_tool.sh --repositoryPort=22456 < start_deployment_cmds_2hosts.txt &
+$CDMW_HOME/bin/cdmw_deployment_tool.sh --repositoryPort=@cdmw_nar@ < start_deployment_cmds_2hosts.txt &
 istep=1
 if [ $? -eq "0" ];
 then
@@ -155,13 +177,13 @@ $echo ============================
 $echo Execute deployment commands
 $echo ============================
 #./stopDeploymentTool.sh
-$CDMW_HOME/bin/cdmw_deployment_tool.sh --repositoryPort=22456 < stop_deployment_cmds.txt
+$CDMW_HOME/bin/cdmw_deployment_tool.sh --repositoryPort=@cdmw_nar@ < stop_deployment_cmds.txt
 
 # 5) Get a snapshot of the system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:21882/CdmwPlatformMngtSupervision --sys-snapshot
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:$SUPERVISION_PORT/CdmwPlatformMngtSupervision --sys-snapshot
 
 # 6) stop_system
-$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:21882/CdmwPlatformMngtSupervision --sys-stop
+$CDMW_HOME/bin/cdmw_platform_admin --system-corbaloc=corbaloc::@hostname@:$SUPERVISION_PORT/CdmwPlatformMngtSupervision --sys-stop
 sleep $CLEANUP_TIMEOUT
 
 $echo "=============================================================="

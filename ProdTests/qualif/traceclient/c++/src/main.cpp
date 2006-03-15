@@ -26,6 +26,7 @@
 #include "Foundation/common/Exception.hpp"
 #include "Foundation/common/Assert.hpp"
 #include "Foundation/common/Locations.hpp"
+#include <Foundation/logging/LogManager.hpp> // ECR-0169
 
 #include "Foundation/orbsupport/CORBA.hpp"
 
@@ -294,7 +295,7 @@ int main(int argc, char* argv[])
             std::cout << "Init PlatformInterface" << std::endl;
                       
             // initialise the platform interface
-            PlatformInterface::setup(orb.in(), argc, argv);
+            PlatformInterface::Setup(orb.in(), argc, argv);
       
             // creates the process behaviour
             std::auto_ptr<MyProcessBehaviour> procBehaviour(
@@ -305,13 +306,13 @@ int main(int argc, char* argv[])
             OS::ProcessId processId = OS::get_processId();
 
             // acknowledge the creation of the process
-            PlatformInterface::acknowledgeCreation(procBehaviour.get());
+            PlatformInterface::Acknowledge_creation(procBehaviour.get());
             MyProcessBehaviour * pProcBehaviour = procBehaviour.release();
                     
             // sample usage of the platform interface                    
-            application_name = PlatformInterface::getApplicationName();
+            application_name = PlatformInterface::Get_application_name();
 
-            process_name = PlatformInterface::getProcessName();
+            process_name = PlatformInterface::Get_process_name();
 
 
             std::cout << "Application name : "
@@ -333,7 +334,7 @@ int main(int argc, char* argv[])
     
     
 	        CORBA::Object_var obj =
-	               PlatformInterface::getService(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
+	               PlatformInterface::Get_service(ServiceNames::NAMING_AND_REPOSITORY_SERVICE);
 	        rep = CdmwNamingAndRepository::Repository::_narrow(obj.in());
 	        
 	        // ======================================================   
@@ -364,17 +365,22 @@ int main(int argc, char* argv[])
                 // Init the trace library
                 //     5000    is the time to wait before flushing the current flush area
                 //             containing the messages to trace although it is not full.      
+                //     100     message threshold
                 //     2       is the number of flush area to be used to store messages
                 //             to trace
                 //     50*1024 size of each flush area to be used to store messages to trace
                 //             must be a multiple of 1024
                 //
                 // May raise CORBA::SystemException
-            
+ 		Cdmw::Logging::LogManager::Init(argc, argv);
+           
                 Cdmw::Trace::InitUtils::init_trace_library(rootPOA.in(),
                                                            application_name,
                                                            process_name,
-                                                           5000,2,50*1024,
+                                                           5000,
+                                                           100,
+                                                           2,
+                                                           50 * 1024,
                                                            collector_name_list);
             
             
@@ -460,6 +466,11 @@ int main(int argc, char* argv[])
         // cleanup the trace library
         Cdmw::Trace::FlushAreaMngr::cleanup();
         
+        // cleanup the repository interface
+        Cdmw::NamingAndRepository::RepositoryInterface::finish();
+        
+        // cleanup the platform interface
+        PlatformInterface::Cleanup();
                 
         
 	    Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());

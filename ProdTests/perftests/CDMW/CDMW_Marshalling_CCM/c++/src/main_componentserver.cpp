@@ -1,9 +1,6 @@
 /* =========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -45,6 +42,12 @@ int main(int argc, char* argv[])
 {    
     int status = SUCCESS;
 
+	std::cerr	<< "-------------------------" << std::endl
+				<< "    Component Server" << std::endl
+				<< "-------------------------" << std::endl;
+	for (int n=0; n < argc; n++)
+		std::cerr << "argv[" << n <<"]: " << argv[n] << std::endl;  
+	std::cerr 	<< "-------------------------" << std::endl;
     CORBA::ORB_var orb;    
    
     try 

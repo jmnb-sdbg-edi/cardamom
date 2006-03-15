@@ -32,6 +32,7 @@ void HelloActivationHandler::activate()
 {
     std::cout << "____________ Activate " << m_name << " ____________" << std::endl;
     
+
     // update state of servant from Recovery Mechanism
     this->update_state(m_hello_impl);
 

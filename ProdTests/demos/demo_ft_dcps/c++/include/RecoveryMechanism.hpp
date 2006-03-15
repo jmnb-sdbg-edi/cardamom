@@ -29,9 +29,17 @@
 
 #include <FaultTolerance/idllib/FT.skel.hpp>
 
-#include <TestHelloData.h>
+//#include <TestHelloData.h>
+#include <ccpp_Basic.h>
 
 #include "HelloInterface_impl.hpp"
+
+//#include <dds_dcps.h> 
+
+using namespace std;
+using namespace DDS;
+using namespace CORBA;
+using namespace Basic;
 
 
 // This Recovery Mechanism implements the FT::Checkpointable interface
@@ -40,38 +48,35 @@
 
 class RecoveryMechanism 
 {
-
     public:
     
         // Constructor
         RecoveryMechanism(int argc, char *argv[]);
 
-		  // Destructor
-		  virtual ~RecoveryMechanism();
+	// Destructor
+        virtual ~RecoveryMechanism();
         
         // update the state of a HelloInterface servant
         virtual void update_state(HelloInterface_impl* hello) 
-            throw (CORBA::SystemException,
-                   FT::InvalidState);
-
+           throw (CORBA::SystemException,
+                  FT::InvalidState);
         
     private:
-        
+                  DomainId_t myDomain;
 		  // Splice DomainParticipantFactory
-		  //DDS::SpliceDomainParticipantFactory_var m_factory;
-
+                  DomainParticipantFactory_ptr dpf;
 		  // Splice domainParticipant
-		  DDS::DomainParticipant_var m_participant;
-
+                  DomainParticipant_ptr dp;
 		  // Splice Topic
-		  DDS::Topic_var m_topic;
-        
+                  Topic_ptr t;
 		  // DCPS Subscriber
-		  DDS::Subscriber_var m_subscriber;
-
+                  Subscriber_ptr s;
 		  // DCPS Data Reader
-		  DDS::DataReader_var                  m_data_reader;
-		  DemoFTDCPS::BasicTypesDataReader_ptr  m_typed_data_reader;
+                  DataReader_ptr dr;
+                  BasicTypeDataReader_ptr fdr;
+                  BasicTypeTypeSupport dt;
+                  BasicTypeSeq_var dataList;
+                  SampleInfoSeq_var infoList;
 };
 
 

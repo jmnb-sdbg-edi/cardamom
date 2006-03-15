@@ -22,222 +22,107 @@
 
 
 #include "RecoveryMechanism.hpp"
-
+#include <iostream>
 #include <Foundation/orbsupport/ExceptionMinorCodes.hpp>
 #include <Foundation/common/Assert.hpp>
 
-RecoveryMechanism::RecoveryMechanism(int argc, char *argv[]) {
+using namespace std;
+using namespace DDS;
+using namespace CORBA;
+using namespace Basic;
 
-	     // Create a DomainParticipantFactory.
-//    m_factory = new SpliceDomainParticipantFactory(argc, argv);
-    
-    // Create a domainParticipant with it.
-//	DCPS::DomainParticipantQos dp_qos;
-    m_participant = TheParticipantFactory->create_participant(NULL, PARTICIPANT_QOS_DEFAULT, NULL);
-    if (!m_participant.in()) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to create a DomainParticipant" << std::endl;
-		CDMW_ASSERT(false);		 
-	 }
-	 std::cout << " RecoveryMechanism => DomainParticipant created."  << std::endl;
-
-    /*// Enable the DomainParticipant.
-	 DCPS::ReturnCode_t status = m_participant->enable();
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to enable the DomainParticipant" << std::endl;
-		CDMW_ASSERT(false);		 
-	 }
-	 std::cout << " RecoveryMechanism => DomainParticipant enabled." << std::endl;*/
-    
-    // Register the 'BasicTypes' type inside my DomainParticipant.
-    const char *type_name = "BasicTypes";
-	 DemoFTDCPS::BasicTypesTypeSupport myDataType;
-    
-    DDS::ReturnCode_t status;
+RecoveryMechanism::RecoveryMechanism(int argc, char *argv[]) 
+{
+  dataList = new BasicTypeSeq;
+  infoList = new SampleInfoSeq;
   
+  dpf = DomainParticipantFactory::get_instance();
 
-    status = myDataType.register_type(m_participant.in(), type_name);
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to register the 'BasicTypes' type inside the DomainParticipant" << std::endl;
-		CDMW_ASSERT(false);		 
-	 }
-	 std::cout << " RecoveryMechanism => BasicTypesDataType registered." << std::endl;
-    
-    /*// Create a new Topic for the BasicTypes type.
-	 DCPS::TopicQos tp_qos;
-    tp_qos.durability.kind = VOLATILE_DURABILITY_QOS;
-    tp_qos.reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
-    tp_qos.delay_laxity.duration.sec = 0;
-    tp_qos.delay_laxity.duration.nanosec = 0;*/
-    
-    m_topic = m_participant->create_topic("myBasicTypes", type_name, TOPIC_QOS_DEFAULT, NULL);
-    if (!m_topic.in()) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to create a new Topic for the BasicTypes type." << std::endl;
-		 CDMW_ASSERT(false);		 
-	 }
-	 std::cout << " RecoveryMechanism => Topic for BasicTypes created." << std::endl;
-    
-    /*// Enable the Topic.
-    status = m_topic->enable();
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to enable Topic" << std::endl;
-		 CDMW_ASSERT(false);		 
-	 }
-	 std::cout << " RecoveryMechanism => Topic enabled." << std::endl;*/
-
-    // Create a Subscriber QoS.
-	 DDS::SubscriberQos sub_qos;
-
-    // Use a default Partition.
-    m_participant->get_default_subscriber_qos(sub_qos);
-    sub_qos.partition.name.length(1);    
-    sub_qos.partition.name[0] = "myPartition";
-    std::cout << " RecoveryMechanism => Current Partition: '" << sub_qos.partition.name[0] << "'" << std::endl;
-    
-    m_subscriber = m_participant->create_subscriber(sub_qos, NULL);
-    if (!m_subscriber.in()) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to create Subscriber" << std::endl;
-	    CDMW_ASSERT(false);		 
-	 }
-	 std::cout << " RecoveryMechanism => Subscriber created for above mentioned Partition." << std::endl;
-    
-    /*// Enable the Subscriber.
-    status = m_subscriber->enable();
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to enable the Subscriber" << std::endl;
-		 CDMW_ASSERT(false);		 
-	 }
-	 std::cout << " RecoveryMechanism => Subscriber enabled." << std::endl;*/
-
-    // Create a BasicTypesDataReader.
-	 //DCPS::DataReaderQos dr_qos;
-    
-    m_data_reader = m_subscriber->create_datareader(m_topic.in(), DATAREADER_QOS_DEFAULT, NULL);
-    if (!m_data_reader.in()) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to create DataReader!" << std::endl;
-	    CDMW_ASSERT(false);
-	 }
-	 std::cout << " RecoveryMechanism => DataReader created for type 'BasicTypes'." << std::endl;
-    
-    // Cast it to its original (typed) format.
-    m_typed_data_reader = dynamic_cast<DemoFTDCPS::BasicTypesDataReader_ptr>(m_data_reader.in());
-    if (m_typed_data_reader == NULL)
-    {
-		 std::cerr << "RecoveryMechanism => DataReader handle could not be casted back to its original type!!" << std::endl;
-	    CDMW_ASSERT(false);
-    }
-    else
-    {
-		 std::cout << "RecoveryMechanism => DataReader handle successfuly casted to a BasicTypesDataReader handle." << std::endl;
-    }
-    
-    /*// Enable the DataReader.
-    status = m_typed_data_reader->enable();
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism => impossible to create DataReader!" << std::endl;
-	    CDMW_ASSERT(false);
-	 }
-	 std::cout << " RecoveryMechanism => DataReader enabled." << std::endl;*/
+  //  dp = dpf->create_participant(myDomain, PARTICIPANT_QOS_DEFAULT, NULL);
+  dp = dpf->create_participant(NULL, PARTICIPANT_QOS_DEFAULT, NULL);
+  cout << " RecoveryMechanism => DomainParticipant created."  << endl;
+  
+  dt.register_type(dp, "Basic::BasicType");
+  cout << " RecoveryMechanism => BasicTypesDataType registered." << endl;
+  
+  t = dp->create_topic("BasicTypeTopic", "Basic::BasicType", TOPIC_QOS_DEFAULT, NULL);
+  cout << " RecoveryMechanism => Topic for BasicTypes created." << endl;
+  
+  SubscriberQos sQos = SUBSCRIBER_QOS_DEFAULT;
+  sQos.partition.name.length(1);
+  sQos.partition.name[0] = string_dup("BasicTypeSpace");
+  cout << " RecoveryMechanism => Current Partition: '" << sQos.partition.name[0] << "'" << endl;
+  
+  s = dp->create_subscriber(sQos, NULL);
+  cout << " RecoveryMechanism => Subscriber created for above mentioned Partition." << endl;
+  
+  dr = s->create_datareader(t, DATAREADER_QOS_DEFAULT, NULL);
+  cout << " RecoveryMechanism => DataReader created for type 'BasicTypes'." << endl;
+  
+  fdr = BasicTypeDataReader::_narrow(dr);
+  sleep(1); //wait for a message...
 }
         
-RecoveryMechanism::~RecoveryMechanism() {
-
-    DDS::ReturnCode_t status = m_subscriber->delete_datareader(m_typed_data_reader);
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism destructor => impossible to delete BasicTypesDataReader!" << std::endl;
-	    CDMW_ASSERT(false);
-	 }
-	 std::cout << " RecoveryMechanism destructor => BasicTypesDataReader deleted!! " << std::endl;
-    
-    status = m_participant->delete_subscriber(m_subscriber.in());
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism destructor => impossible to delete Subscriber!" << std::endl;
-	    CDMW_ASSERT(false);
-	 }
-    std::cout << " RecoveryMechanism destructor => Subscriber deleted !! " << status << std::endl;
-    
-    status = m_participant->delete_topic(m_topic.in());
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism destructor => impossible to delete Topic!" << std::endl;
-	    CDMW_ASSERT(false);
-	 }
-    std::cout << "Topic deleted !!" << std::endl;
-    
-    status = TheParticipantFactory->delete_participant(m_participant.in());
-    std::cout << "DomainParticipant deleted !!" << std::endl;
-    if (status) 
-	 {
-		 std::cerr << " RecoveryMechanism destructor => impossible to delete Participant!" << std::endl;
-	    CDMW_ASSERT(false);
-	 }
-    
-    std::cout << " RecoveryMechanism destructor => DomainParticipantFactory deletes itself!!" << std::endl;
-   
+RecoveryMechanism::~RecoveryMechanism() 
+{
+    s?s->delete_datareader(dr):0;
+    CORBA::release(fdr);
+    dp?dp->delete_subscriber(s):0;
+    dp?dp->delete_topic(t):0;
+    dpf?dpf->delete_participant(dp):0;
 }
 
-void 
-RecoveryMechanism::update_state(HelloInterface_impl* hello) 
+
+void
+RecoveryMechanism::update_state(HelloInterface_impl* hello)
     throw (CORBA::SystemException,
            FT::InvalidState)
 {
-	 // Allocate holders for read results.
-	 DemoFTDCPS::BasicTypesSeq_var samples = new DemoFTDCPS::BasicTypesSeq();
-	 DDS::SampleInfoSeq_var sampleInfo = new DDS::SampleInfoSeq();
-	 DDS::SampleStateMask ssm = DDS::NOT_READ_SAMPLE_STATE;
-	 DDS::ViewStateMask vsm = DDS::ANY_VIEW_STATE;
-	 DDS::InstanceStateMask ism = DDS::ALIVE_INSTANCE_STATE;
-
-	 std::cout << " RecoveryMechanism => update_state try to read samples" << std::endl;
-	 m_typed_data_reader->read(samples, sampleInfo, DDS::LENGTH_UNLIMITED, ssm, vsm, ism);
-	 std::cout << " RecoveryMechanism => update_state samples read : samples length = "
-		        << samples->length() << std::endl;
-
-	 for (CORBA::ULong k = 0; k < samples->length(); ++k)
+         // Allocate holders for read results.
+         Basic::BasicTypeSeq_var samples = new Basic::BasicTypeSeq();
+         DDS::SampleInfoSeq_var sampleInfo = new DDS::SampleInfoSeq();
+         DDS::SampleStateMask ssm = DDS::NOT_READ_SAMPLE_STATE;
+         DDS::ViewStateMask vsm = DDS::ANY_VIEW_STATE;
+         DDS::InstanceStateMask ism = DDS::ALIVE_INSTANCE_STATE;
+         
+         cout << " RecoveryMechanism => update_state try to read samples" << endl;
+         fdr->read(samples, sampleInfo, DDS::LENGTH_UNLIMITED, ssm, vsm, ism);
+         cout << " RecoveryMechanism => update_state samples read : samples length = "
+                        << samples->length() << endl;
+         
+         for (CORBA::ULong k = 0; k < samples->length(); ++k)
     {
-		  std::cout << "    Read BasicTypes value nr " << k << " :" << std::endl;
-        std::cout << "        myUlong     = " << samples[k].myUlong << std::endl;
-		  std::cout << "        myString    = " << samples[k].myString << std::endl;
-        std::cout << "        myString10  = " << samples[k].myString10 << std::endl;
-
+                  cout << "    Read BasicTypes value nr " << k << " :" << endl;
+        cout << "        myUlong     = " << samples[k].myUlong << endl;
+                  cout << "        myString    = " << samples[k].myString << endl;
+        cout << "        myString10  = " << samples[k].myString10 << endl;
+                                                                                                                                                                                                         
     }
-
-	 if (samples->length())
-	 {
-		  size_t state_size = sizeof(samples[samples->length()-1].myUlong) + ::strlen(samples[samples->length()-1].myString) + 1 + 10;
-	     FT::State state(state_size);
-        state.length(state_size);
-		  std::cout << "sizeof ulong = " << sizeof(samples[samples->length()-1].myUlong) << std::endl;
-	     state[0] = samples[samples->length()-1].myUlong;
-		  memcpy(state.get_buffer(), &(samples[samples->length()-1].myUlong), sizeof(samples[samples->length()-1].myUlong));
-		  memcpy(state.get_buffer() + sizeof(samples[samples->length()-1].myUlong), 
-				   samples[samples->length()-1].myString,
-					::strlen(samples[samples->length()-1].myString) + 1 );
-		  memcpy(state.get_buffer() + sizeof(samples[samples->length()-1].myUlong) + ::strlen(samples[samples->length()-1].myString) + 1,
-				  samples[samples->length()-1].myString10,
-				  10);
-
+                                                                                                                                                                                                         
+         if (samples->length())
+         {
+           size_t state_size = sizeof(samples[samples->length()-1].myUlong) + ::strlen(samples[samples->length()-1].myString) + 1 + 10;
+           FT::State state(state_size);
+           state.length(state_size); 
+           cout << "sizeof ulong = " << sizeof(samples[samples->length()-1].myUlong) << endl;
+           state[0] = samples[samples->length()-1].myUlong;
+           memcpy(state.get_buffer(), &(samples[samples->length()-1].myUlong), sizeof(samples[samples->length()-1].myUlong));
+           memcpy(state.get_buffer() + sizeof(samples[samples->length()-1].myUlong),
+                                      samples[samples->length()-1].myString,
+                                      ::strlen(samples[samples->length()-1].myString) + 1 );
+                                      memcpy(state.get_buffer() + sizeof(samples[samples->length()-1].myUlong) + ::strlen(samples[samples->length()-1].myString) + 1,
+                                  samples[samples->length()-1].myString10,
+                                  10);
+                                                                                                                                                                                                         
         // set current state to Hello servant
         hello->set_state(state);
-	 }
-	 else
-	 {
-        std::cout << "     . . . . RecoveryMechanism: no state to update ! " << std::endl;
-	 }
-
-	// Release the Samples and SampleInfo
-	m_typed_data_reader->return_loan(samples, sampleInfo);
-};
-
-
+         }
+         else
+         {
+        cout << "     . . . . RecoveryMechanism: no state to update ! " << endl;
+         }
+                                                                                                                                                                                                         
+        // Release the Samples and SampleInfo
+         fdr->return_loan(dataList.inout(), infoList.inout());
+}
 

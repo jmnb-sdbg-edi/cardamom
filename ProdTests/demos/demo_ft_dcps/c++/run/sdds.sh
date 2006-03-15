@@ -34,6 +34,14 @@ SITE_CONFIG="$DIRECTORY/../site.mk"
 # SPLICE installation folder
 SPLICE_BIN_PATH="`cat $SITE_CONFIG | grep SPLICE_BIN_PATH | cut -d= -f2`"
 
+if test "`echo -e xxx`" = "xxx"
+then
+    echo="echo -e"
+else
+    echo=echo
+fi
+$echo "the splice bin path is $SPLICE_BIN_PATH"
+
 . $SPLICE_BIN_PATH/../release.com
 . $DIRECTORY/sddsSetup
 echo $LD_ASSUME_KERNEL

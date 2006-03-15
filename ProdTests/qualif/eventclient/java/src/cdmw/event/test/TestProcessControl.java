@@ -28,7 +28,7 @@ import cdmw.common.BadParameterException;
 
 import cdmw.cdmwinit.ProcessControl;
 
-import cdmw.namingandrepository.NamingInterface;
+import cdmw.commonsvcs.naming.NamingInterface;
 import cdmw.namingandrepository.RepositoryInterface;
 import cdmw.platformmngt.PlatformInterface;
 
@@ -60,7 +60,7 @@ public class TestProcessControl extends ProcessControl {
             
     /**
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     public void onInitialise(
@@ -128,11 +128,11 @@ public class TestProcessControl extends ProcessControl {
 
     /**
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/next_step:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/next_step:1.0
      * operation
      */
     public void onNextStep() 
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.InvalidStep {
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.InvalidStep {
         try {
             PlatformInterface.notifyMessage(INF.value,
                 PlatformInterface.getProcessName(),
@@ -143,11 +143,11 @@ public class TestProcessControl extends ProcessControl {
 
     /**
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     public void onRun() 
-        throws com.thalesgroup.CdmwPlatformMngt.ProcessPackage.NotReadyToRun, 
+        throws com.thalesgroup.CdmwPlatformMngt.ProcessDelegatePackage.NotReadyToRun, 
         org.omg.CORBA.SystemException {
 
         try {
@@ -171,7 +171,7 @@ public class TestProcessControl extends ProcessControl {
 
     /**
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     public void onStop() throws org.omg.CORBA.SystemException {   

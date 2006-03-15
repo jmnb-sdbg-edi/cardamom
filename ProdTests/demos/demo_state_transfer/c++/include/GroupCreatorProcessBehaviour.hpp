@@ -53,7 +53,7 @@ public:
         throw( CORBA::SystemException );
     
     virtual void on_run()
-        throw( CdmwPlatformMngt::Process::NotReadyToRun,
+        throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
                CORBA::SystemException );
     
     virtual void on_stop()

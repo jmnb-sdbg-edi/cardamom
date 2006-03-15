@@ -49,13 +49,11 @@
     <!-- Hosts of the system -->
 	<Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
 	<Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe">
+          Agent-exec-path="cdmw_platform_agent">
 	    <Host-monitoring Pull-interval="2000" Pull-timeout="2500"/>
     </Host>
 
@@ -108,21 +106,20 @@
                          Host-name="@hostname2val@"
                          Autoended="TRUE"
                          Exec-path="cdmw_test_lb_strategy"
-                         Args="--CdmwXMLFile=LoadBalancingTest.xml
+                         Args="--CdmwXMLFile=LoadBalancingTest.xml --CdmwLBStateTransferPort=19888 --CdmwLBXMLFile=CdmwLBGroupManager_conf_host1.xml
                          --validateXML"
-                                                                 Port="-1">
+                                                                 Port="-1"/>
 
-           </Unmanaged-process>
-
+       
             <Unmanaged-process Name="LoadBalancingStrategyTest2"
                          Host-name="@hostname1val@"
                          Autoended="TRUE"
                          Exec-path="cdmw_test_lb_strategy"
-                         Args="--CdmwXMLFile=LoadBalancingTest.xml
+                         Args="--CdmwXMLFile=LoadBalancingTest.xml --CdmwLBStateTransferPort=19777 --CdmwLBXMLFile=CdmwLBGroupManager_conf_host2.xml
                          --validateXML"
-                                                                 Port="-1">
+                                                                 Port="-1"/>
 
-           </Unmanaged-process>
+    
 
         <!-- ************************** -->
         <!--                            -->

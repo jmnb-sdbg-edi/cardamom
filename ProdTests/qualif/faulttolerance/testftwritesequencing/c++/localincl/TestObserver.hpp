@@ -24,8 +24,8 @@
 #ifndef INCL_TEST_OBSERVER_IMPL_HPP 
 #define INCL_TEST_OBSERVER_IMPL_HPP
 
-#include <FaultTolerance/ftstatemanager/DataStoreObserver.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/datastore/DataStoreObserver.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 #include "testftwritesequencing/TestSequenceRecorder.skel.hpp"
@@ -34,7 +34,7 @@
 
 namespace Cdmw
 {
-    class Observer_impl : public Cdmw::FT::DataStoreObserver<int, std::string>
+    class Observer_impl : public Cdmw::CommonSvcs::DataStore::DataStoreObserver<int, std::string>
     {
 
     public:
@@ -106,7 +106,7 @@ namespace Cdmw
                 CdmwNamingAndRepository::Repository_var repository
                     = Cdmw::NamingAndRepository::RepositoryInterface::get_repository();
 
-                Cdmw::NamingAndRepository::NamingInterface ni =
+                Cdmw::CommonSvcs::Naming::NamingInterface ni =
                     Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2/dom3");
                 CORBA::Object_var obj;
 

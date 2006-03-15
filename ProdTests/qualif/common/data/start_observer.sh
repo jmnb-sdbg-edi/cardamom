@@ -21,5 +21,5 @@
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
-cdmw_platform_supervision_observer --register --system-corbaloc=corbaloc::localhost:21871/CdmwPlatformMngtSupervision --observer-name=observer
+cdmw_platform_supervision_observer --register --system-corbaloc=corbaloc::localhost:21869/CdmwPlatformMngtSupervision --observer-name=observer
 

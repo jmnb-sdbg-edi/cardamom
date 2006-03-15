@@ -37,6 +37,8 @@ XML_CONF_FILES:=xml/Main.xml
 XML_DATA_FILES:=data/Client.xml data/Server.xml \
 	data/Scenario.xml data/Cdmw_nar.xml \
 	data/CdmwPlatformMngtDaemon_conf.xml \
+	data/CdmwPlatformMngtSystemStart.xml \
+        data/CdmwFTSystemMngtGroupCreator_conf.xml \
         data/CdmwFaultToleranceManager_conf.xml
 
 .SUFFIXES:
@@ -86,6 +88,7 @@ gencode::
 	@echo s%@SystemMngt_port@%21`echo $PWD | wc -c | tail -c 2``id -u | tail -c 2``id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@Monitoring_addr@%225.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@echo s%@StateTransfert_addr@%226.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Service_addr@%227.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
 	@cat  $< | sed -f sed_patterns > $@
 	@rm -f sed_patterns
 

@@ -37,7 +37,7 @@
 #include "FaultTolerance/ftinit/FTServiceInit.hpp"
 #include "SystemMngt/platforminterface/PlatformInterface.hpp"
 #include "ConfAndPlug/cdmwinit/ProcessControl.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
 
@@ -84,7 +84,7 @@ public:
    
     
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
         std::cout << "   -------- GroupCreator run --------" << std::endl;

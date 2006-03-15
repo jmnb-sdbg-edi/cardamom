@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,7 +16,7 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -36,151 +33,158 @@
 #include "ConfAndPlug/cdmwinit/InitUtils.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
+#include "Time/clockservice/CdmwCosClock.hpp"
 
 #include "ClientProcessControl.hpp"
 
-namespace 
+namespace
 {
-    const int SUCCESS = 0;
-    const int FAILURE = 1;
+const int SUCCESS = 0;
+const int FAILURE = 1;
 
-    const int POA_THREAD_POOL_SIZE = 2;
- 
+const int POA_THREAD_POOL_SIZE = 5;
+
 }; // End anonymous namespace
 
 int main(int argc, char* argv[])
-{    
-    int status = SUCCESS;
-    
-    std::cout << "Start ClockService Client" << std::endl;
-    
-    
-    //number of start-up ping
-    int nstart = 10;
+{
+	int status = SUCCESS;
 
-    //number of test
-    int niter = 1000;
+	std::cerr	<< "-------------------------" << std::endl
+			<< "      Start Client" << std::endl
+			<< "-------------------------" << std::endl;
+	for (int n=0; n < argc; n++)
+		std::cerr << "argv[" << n <<"]: " << argv[n] << std::endl;
+	std::cerr 	<< "-------------------------" << std::endl;
 
-    //delay between calls
-    int delay = 0;
+	//number of test
+	int niter = 1000;
 
-    std::cout << "Reading Configuration File..." << std::endl;
-    //read configuration file
-    
-    FILE * fd = fopen("client.cfg", "r");
-    fscanf(fd,"%d",&nstart);
-    fscanf(fd,"%d",&niter);
-    fscanf(fd,"%d",&delay);
-    
-    fclose(fd);
+	//delay between calls
+	int delay = 0;
 
-    std::cout << "Startup invocation= " << nstart << std::endl;            
-    std::cout << "Sample invocation= " << niter << std::endl;            
-    std::cout << "Delay (ms)= " << delay << std::endl;            
-    
+	std::cout << "Reading Configuration File..." << std::endl;
+	//read configuration file
 
-    CORBA::ORB_var orb;                        // orb reference
-   
-    try 
-    {
-        // ===================================================
-        // Initialize the ORB
-        // ===================================================
-        printf("*** client: Initialise The ORB\n");
-        Cdmw::OrbSupport::StrategyList orb_strategies;
-        orb_strategies.add_OrbThreaded();
-        orb_strategies.add_PoaThreadPool(POA_THREAD_POOL_SIZE);
+	FILE * fd;
+	if ((fd = fopen("client.cfg", "r"))!=NULL)
+	{
+		fscanf(fd,"%d",&niter);
+		fscanf(fd,"%d",&delay);
+		if (ferror(fd))
+		{
+			std::cerr << "Error in reading file client.cfg\n";
+			exit(-1);
+		}
+		fclose(fd);
+	}
+	else
+	{
+		std::cerr << "Error: client.cfg don't exist!\n";
+		//exit(-1);
+	}
 
-        orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, orb_strategies);
-        printf("*** client: Get Root POA\n");
-        
-        // ===================================================
-        // Get the root POA 
-        // ===================================================
-        CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-        PortableServer::POA_var rootPOA = PortableServer::POA::_narrow(obj.in());
+	std::cout << "Sample invocation= " << niter << std::endl;
+	std::cout << "Delay (ms)= " << delay << std::endl;
+                           
+	CORBA::ORB_var orb;                        // orb reference
 
-        // ===================================================
-        // Activate the root POA manager
-        // ===================================================
-        PortableServer::POAManager_var poaManager = rootPOA->the_POAManager();
-        poaManager->activate();
-        printf("*** client: Activate the ORB\n");
+	try
+	{
+		// ===================================================
+		// Initialize the ORB
+		// ===================================================
+		printf("*** client: Initialise The ORB\n");
+		Cdmw::OrbSupport::StrategyList orb_strategies;
+		orb_strategies.add_OrbThreaded();
+		orb_strategies.add_PoaThreadPool(POA_THREAD_POOL_SIZE);
 
-        // ===================================================
-        // create the process control for platform management
-        // ===================================================
-            Cdmw::CdmwInit::ProcessControl_var process_ctrl =
-              new TimeInvocation::ClientProcessControl(orb.in(),
-                                                 nstart,
-                                                 niter);
+		printf("*** client: ORB_init\n");
+		orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, orb_strategies);
 
-        // ===================================================
-        // Call generated CdmwInit
-        // ===================================================
-        printf("*** client: Call generated CDMW_Init\n");
-        Cdmw::CdmwInit::CDMW_init(orb.in(), argc, argv, process_ctrl.in());
-        
-        
-        // ===================================================
-        // wait for CORBA message
-        // ===================================================
-        printf("*** client: ORB run\n");
-        orb->run();
+		// ===================================================
+ 		// Initialise Clock Service
+		// ===================================================
+		Cdmw::clock::CosClock::init(orb.in(),argc,argv);
 
-    } 
-    catch (const Cdmw::OrbSupport::CORBASystemExceptionWrapper & ex)
-    {
-        std::cerr << ex.what() << std::endl;
-        status = FAILURE;
-    }
-    catch (const Cdmw::Exception & ex)
-    {
-        std::cerr << ex.what() << std::endl;
-        status = FAILURE;
-    } 
-    catch(const CORBA::Exception& ex)  
-    {        
-        std::cerr << ex << std::endl;
-        status = FAILURE;
-    }
-    catch(...)  
-    {        
-        std::cerr << "unexpected exception" << std::endl;
-        status = FAILURE;
-    }
+		// ===================================================
+		// create the process control for platform management
+		// ===================================================
+		Cdmw::CdmwInit::ProcessControl_var process_ctrl =
+		    new TimeInvocation::ClientProcessControl(orb.in(),
+		            niter,
+			    delay);
+
+		// ===================================================
+		// Call generated CdmwInit
+		// ===================================================
+		printf("*** client: Call generated CDMW_Init\n");
+		Cdmw::CdmwInit::CDMW_init(orb.in(), argc, argv, process_ctrl.in());
 
 
-    // ========================================================
-    // program stopping
-    // ========================================================
-    
-    // ===================================================
-    // Call generated Cdmw cleanup
-    // ===================================================
-    Cdmw::CdmwInit::CDMW_cleanup(orb.in());
-    
-    // ===================================================
-    // Call ORB cleanup
-    // ===================================================
-    Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
-            
-    // ===================================================
-    // destroy orb
-    // ===================================================
-    
-    if (!CORBA::is_nil(orb.in()))
-    {
-        try 
-        {
-            orb -> destroy();
-        }
-        catch(const CORBA::Exception& ex)
-        {           
-            std::cerr << ex << std::endl;
-            status = FAILURE;
-        }
-    }        
+		// ===================================================
+		// wait for CORBA message
+		// ===================================================
+		printf("*** client: ORB run\n");
+		orb->run();
+	}
+	catch (const Cdmw::OrbSupport::CORBASystemExceptionWrapper & ex)
+	{
+		std::cerr << ex.what() << std::endl;
+		status = FAILURE;
+	}
+	catch (const Cdmw::Exception & ex)
+	{
+		std::cerr << ex.what() << std::endl;
+		status = FAILURE;
+	}
+	catch(const CORBA::Exception& ex)
+	{
+		std::cerr << ex << std::endl;
+		status = FAILURE;
+	}
+	catch(...)
+	{
+		std::cerr << "unexpected exception" << std::endl;
+		status = FAILURE;
+	}
 
-    return status;    
+
+	// ========================================================
+	// program stopping
+	// ========================================================
+
+	// ===================================================
+	// Call generated Cdmw cleanup
+	// ===================================================
+	Cdmw::CdmwInit::CDMW_cleanup(orb.in());
+
+	// ===================================================
+	// stop Clock Service
+	// ===================================================
+	Cdmw::clock::CosClock::close();
+
+	// ===================================================
+	// Call ORB cleanup
+	// ===================================================
+	Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+
+	// ===================================================
+	// destroy orb
+	// ===================================================
+
+	if (!CORBA::is_nil(orb.in()))
+	{
+		try
+		{
+			orb -> destroy();
+		}
+		catch(const CORBA::Exception& ex)
+		{
+			std::cerr << ex << std::endl;
+			status = FAILURE;
+		}
+	}
+
+	return status;
 }

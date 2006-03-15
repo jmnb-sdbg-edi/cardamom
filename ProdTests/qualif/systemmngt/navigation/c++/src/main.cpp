@@ -87,18 +87,22 @@ int main(int argc, char* argv[])
             Cdmw::OsSupport::OS::get_option_value(argc, argv, "--host2");
 
             // initialise the platform interface
-            PlatformInterface::setup(orb.in(), argc, argv);
+            PlatformInterface::Setup(orb.in(), argc, argv);
                 
             
             // creates the process behaviour
             std::auto_ptr<MyProcessBehaviour> pMyProcess(new MyProcessBehaviour(orb.in(), poa.in(), "Navigation", supervision, host1, host2));
             // acknowledge the creation of the process
-            PlatformInterface::acknowledgeCreation(pMyProcess.get());
+            PlatformInterface::Acknowledge_creation(pMyProcess.get());
             pMyProcess.release();
             
             
             // start orb
             orb->run();
+            
+            // cleanup the platform interface
+            PlatformInterface::Cleanup();
+
         }
         
         catch(...)

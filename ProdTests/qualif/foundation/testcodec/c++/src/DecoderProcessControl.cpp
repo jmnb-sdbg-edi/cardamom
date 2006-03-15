@@ -101,7 +101,7 @@ void DecoderProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void DecoderProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // do nothing

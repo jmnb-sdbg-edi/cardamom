@@ -19,7 +19,7 @@ AUTHORIZATION BY THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE.
 -->
 
 <Splice>
-    <Domain name="dds_shm_a02">
+    <Domain name="cardamom_domain">
       <Database size="29000000"/>
     </Domain>
     <SpliceService>
@@ -27,7 +27,7 @@ AUTHORIZATION BY THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE.
         <LeaseRenewalPeriod>1.25</LeaseRenewalPeriod>
         <Service name="networking">
             <Command>networking</Command>
-            <Args>file:///home/tnnl01/splice_default_domain.xml</Args>
+            <Args>file:///home/Perco/NotSaved/saheb/cdmwV20/demos/demo_ft_dcps/c++/run/splice_default_domain.xml</Args>
             <Restart>kill</Restart>
         </Service>
     </SpliceService>
@@ -52,7 +52,7 @@ AUTHORIZATION BY THALES NEDERLAND B.V. AND/OR ITS SUPPLIERS, AS APPLICABLE.
     <PersistentService>
         <LeasePeriod>2.5</LeasePeriod> <!-- After A01 -->
         <LeaseRenewalPeriod>1.25</LeaseRenewalPeriod>
-        <PersistentStoreDirectory>/home/di787/Store</PersistentStoreDirectory>
+        <PersistentStoreDirectory>/home/Perco/NotSaved/saheb/Store</PersistentStoreDirectory>
         <PersistentQueueSize>1000</PersistentQueueSize>
     </PersistentService>
     <TransientService name="first">

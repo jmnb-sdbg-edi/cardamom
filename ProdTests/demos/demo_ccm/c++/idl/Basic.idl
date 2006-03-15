@@ -26,16 +26,13 @@
 
 #pragma prefix "acme.com"
 
+#ifdef INCLUDE_REGISTRATION
+#include <Registration.idl>
+#endif
+
 module BasicDemo
 {
     
-    /*
-     * hands out name for Client
-     */
-    interface Registration {
-        string register ();
-    };
-
     /**
      **  The Event struct, attribute of Client
      **  and argument of Display::print_event().
@@ -79,7 +76,7 @@ module BasicDemo
          **  The receptable to_server to connect the Client component
          **  to a Registration object or facet reference.
          **/ 
-        uses Registration to_register;
+        uses CommonDemo::Registration to_register;
     };
     
     /**
@@ -114,7 +111,7 @@ module BasicDemo
     /**
      **  The Server component type.
      **/
-    component Server : NamedComponent supports Registration 
+    component Server : NamedComponent supports CommonDemo::Registration 
     {
         /**
          **  The facet for Clients components.

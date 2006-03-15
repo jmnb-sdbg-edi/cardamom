@@ -57,17 +57,15 @@
              Process-name="XML"/>
 
     <!-- Hosts of the system -->
-	<Host Name="localhost"
-          App-exec-path="./cdmw_platform_application"
-          Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-          Probe-exec-path="./cdmw_host_probe"/>
+	<Host Name="@host_name@"
+          />
 
     <!-- ********************** -->
     <!-- Application definition -->
     <!--                        -->
     <!-- ********************** -->
 	<Application Name="CdmwServices"
-                 Host-name="localhost"
+                 Host-name="@host_name@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -84,7 +82,7 @@
         <!--                     -->
         <!-- ******************* -->
 		<Managed-process Name="Repository"
-                         Host-name="localhost"
+                         Host-name="@host_name@"
                          Type="SERVICE-PROVIDER"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_naming_and_repository" 
@@ -96,7 +94,7 @@
 		</Managed-process>
 
 		<Managed-process Name="XML"
-                         Host-name="localhost"
+                         Host-name="@host_name@"
                          Type="SERVICE-PROVIDER"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_xml_server.sh"
@@ -108,23 +106,22 @@
 		</Managed-process>
 		
 		<Unmanaged-process Name="InterfaceRepository"
-                         Host-name="localhost"
+                         Host-name="@host_name@"
 		                 Autoended="FALSE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_service.sh"
 		                 Port="-1"
-                         Args="--ifr-port 22789">
-		</Unmanaged-process>
+                         Args="--ifr-port 22789"/>
 		
 		<Unmanaged-process Name="IfrFeed"
-                         Host-name="localhost"
+                         Host-name="@host_name@"
 		                 Autoended="TRUE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_feed.sh"
 		                 Port="-1"
-                         Args="@cdmw_home@/demos/demo_philosophers/java/idl/Philo.idl">
-		</Unmanaged-process>
+                         Args="-I@cdmw_home@/demos/demo_philosophers/java/idl/
+                               @cdmw_home@/demos/demo_philosophers/java/idl/Philo.idl"/>
 		
                 <Managed-process Name="EventChannelManager"
-                         Host-name="localhost"
+                         Host-name="@host_name@"
                          Type="MANAGED-PROCESS"
                          Autoended="TRUE"
                          Exec-path="@cdmw_home@/bin/cdmw_event_channel_manager"
@@ -175,7 +172,7 @@
     </Application>
 
 	<Application Name="CdmwCcmTools"
-                 Host-name="localhost"
+                 Host-name="@host_name@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -186,7 +183,7 @@
     	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
 
         <Managed-process Name="PackageManager"
-                         Host-name="localhost"
+                         Host-name="@host_name@"
                          Type="MANAGED-PROCESS"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/bin/cdmw_package_manager.sh"
@@ -200,7 +197,7 @@
 		</Managed-process>
                           
         <Managed-process Name="ServerActivator"
-                          Host-name="localhost"
+                          Host-name="@host_name@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_server_activator.sh"
@@ -212,7 +209,7 @@
 		</Managed-process>
 
         <Managed-process Name="ComponentInstallation"
-                          Host-name="localhost"
+                          Host-name="@host_name@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_component_installation.sh"
@@ -225,13 +222,13 @@
 		</Managed-process>
                           
         <Managed-process Name="AssemblyFactory"
-                          Host-name="localhost"
+                          Host-name="@host_name@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/bin/cdmw_assembly_factory.sh"
                           Port="24040"
-                          Args="-ORBInitRef InterfaceRepository=corbaloc::localhost:22789/DefaultRepository
-                                -ORBInitRef NameService=corbaloc::localhost:22456/NameService">
+                          Args="-ORBInitRef InterfaceRepository=corbaloc::@host_name@:22789/DefaultRepository
+                                -ORBInitRef NameService=corbaloc::@host_name@:22456/NameService">
 			<Init-step Name="initialisation" Timeout="30000"/>
 		<!--	<Run-timeout Timeout="1000"/>
 			<Stop-timeout Timeout="2000"/> -->
@@ -276,7 +273,7 @@
 	</Application>
 
 	<Application Name="DinnerApplication"
-                 Host-name="localhost"
+                 Host-name="@host_name@"
                  Agent-port="-1"
                  App-port="-1">
 
@@ -287,7 +284,7 @@
     	<App-monitoring Pull-interval="021" Pull-timeout="031"/> 
 
         <Managed-process Name="GreekSchoolProcess"
-                         Host-name="localhost"
+                         Host-name="@host_name@"
                          Type="MANAGED-PROCESS"
                          Autoended="FALSE"
                          Exec-path="@cdmw_home@/demos/demo_philosophers/java/run/greek_school_component_server.sh"
@@ -300,7 +297,7 @@
 		</Managed-process>
                           
         <Managed-process Name="FrenchSchoolProcess"
-                          Host-name="localhost"
+                          Host-name="@host_name@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/demos/demo_philosophers/java/run/french_school_component_server.sh"
@@ -313,7 +310,7 @@
 		</Managed-process>
 
 		<Managed-process Name="ObserverProcess"
-                          Host-name="localhost"
+                          Host-name="@host_name@"
                           Type="MANAGED-PROCESS"
                           Autoended="FALSE"
                           Exec-path="@cdmw_home@/demos/demo_philosophers/java/run/observer_component_server.sh"

@@ -29,7 +29,7 @@
 #include <Foundation/ossupport/OS.hpp>
 #include <ConfAndPlug/cdmwinit/ProcessControl.hpp>
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
-#include <Repository/naminginterface/NamingUtil.hpp>
+#include <Foundation/commonsvcs/naming/NamingUtil.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 
 #include <FaultTolerance/idllib/CdmwFTReplicationManager.stub.hpp>
@@ -97,7 +97,7 @@ public:
         ++m_current_step;
 
         // Get process name
-        m_process_name = Cdmw::PlatformMngt::PlatformInterface::getProcessName();
+        m_process_name = Cdmw::PlatformMngt::PlatformInterface::Get_process_name();
         std::cout << "   -------- Server " << m_process_name << " on_initialise --------" << std::endl;
 
         // Get the group repository
@@ -117,7 +117,7 @@ public:
         
         // Get this process' location
         ::FT::Location_var the_location = m_group_repository->the_location();
-        m_location = Cdmw::NamingAndRepository::NamingInterface::to_string(
+        m_location = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(
             the_location.in() );
         std::cout << "       ---- Server " << m_process_name << ": location is " << m_location << std::endl;
 
@@ -234,7 +234,7 @@ public:
         // reserve the name "RecoveryMechanism" in the domain
         CdmwNamingAndRepository::NameDomain_var recoveryDomain;
         try {
-            recoveryDomain = helloDomain->resolve_name_domain("recovery");
+            recoveryDomain = helloDomain->resolve_sub_domain("recovery");
         } catch (const CdmwNamingAndRepository::NoNameDomain&) {
             std::cerr << "Can't find NameDomain demo_ft/hello_servers/recovery" << std::endl;
             CDMW_ASSERT(false);
@@ -247,7 +247,7 @@ public:
         name.length(1);
         name[0].id = CORBA::string_dup(m_location.c_str());
         name[0].kind = "RecoveryMechanism";
-        std::string recovery_name = Cdmw::NamingAndRepository::NamingInterface::to_string(name);
+        std::string recovery_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(name);
         try {
             // reserve name
             CdmwNamingAndRepository::NameDomain::RegistrationId_var regId = 
@@ -272,7 +272,7 @@ public:
 
     
     void on_next_step()
-    throw( CdmwPlatformMngt::Process::InvalidStep,
+    throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
            CORBA::SystemException )
     {
         std::cout << "   -------- Server " << m_process_name << " on_next_step --------" << std::endl;
@@ -280,7 +280,7 @@ public:
         if( m_current_step < m_nb_init_step )
             ++m_current_step;
         else
-            throw CdmwPlatformMngt::Process::InvalidStep();
+            throw CdmwPlatformMngt::ProcessDelegate::InvalidStep();
 
         // Get the object group reference
         ::FT::ObjectGroup_var group_ref = ::FT::ObjectGroup::_nil();
@@ -297,7 +297,7 @@ public:
         }
         
         // Get NamingInterface to hello_servers/recovery
-        Cdmw::NamingAndRepository::NamingInterface recoveryNamingInterface =
+        Cdmw::CommonSvcs::Naming::NamingInterface recoveryNamingInterface =
             Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("demo_ft/hello_servers/recovery");
             
         // Get locations of other replicas
@@ -316,13 +316,13 @@ public:
         for (unsigned int i=0; i<memberInfos->length(); ++i) {
             // retrieve Receovery object reference from repository
             std::string location =
-                Cdmw::NamingAndRepository::NamingInterface::to_string(memberInfos[i].the_location);
+                Cdmw::CommonSvcs::Naming::NamingInterface::to_string(memberInfos[i].the_location);
 
             CosNaming::Name name;
             name.length(1);
             name[0].id = CORBA::string_dup(location.c_str());
             name[0].kind = "RecoveryMechanism";
-            std::string recovery_name = Cdmw::NamingAndRepository::NamingInterface::to_string(name);
+            std::string recovery_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(name);
                 
             CORBA::Object_var obj = 
                 recoveryNamingInterface.resolve(recovery_name);
@@ -375,7 +375,7 @@ public:
     }
 
     virtual void on_run()
-    throw( CdmwPlatformMngt::Process::NotReadyToRun,
+    throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
            CORBA::SystemException )
     {
         std::cout << "   -------- Server " << m_process_name << " running --------" << std::endl;

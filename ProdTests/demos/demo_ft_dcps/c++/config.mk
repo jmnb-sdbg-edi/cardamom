@@ -89,20 +89,24 @@ LIBS_ORB:= $(LIBS_$(ORB))
 CPPFLAGS_CDMW=-I$(CDMW_HOME)/include/c++ \
 	-I$(CDMW_HOME)/include/c++/cdmwidl \
 	-I$(XERCES_INC_PATH) \
-	-I$(SPLICE_INC_PATH) \
-	-D_REENTRANT -DCDMW_ASSERT_NO_THROW
+	-I$(SPLICE_INC_PATH)/C++/CCPP/OpenFusion -I$(SPLICE_INC_PATH)/C++/CCPP \
+	-I$(TAO_ROOT)/include \
+	-D_REENTRANT -DCDMW_ASSERT_NO_THROW -DDDS_OpenFusion_1_4_1
 CXXFLAGS_CDMW=
 LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
 	-L$(XERCES_LIB_PATH) -L$(SPLICE_LIB_PATH) 
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
-LIBS_CDMW=-lcdmwcommon -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
-	-lcdmwnaminginterface -lcdmwrepositoryinterface -lcdmwplatforminterface \
+LIBS_CDMW=-lcdmwcommon -lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwlogging \
+	-lcdmwcommonsvcsnaming -lcdmwrepositoryinterface -lcdmwplatforminterface \
 	-lcdmwcdmwinit -lcdmwlifecycle -lcdmwtestutils -lcdmwftinit \
-	-lcdmwftlocationmanager -lcdmwftcommon -lcdmwftstatemanager -lcdmwmonitoringidl \
+	-lcdmwftlocationmanager  -lcdmwcommonsvcsdatastore -lcdmwftcommon \
+	-lcdmwftstatemanager -lcdmwmonitoringidl \
 	-lxerces-c1_3 -lcdmwlifecycleidl \
-	-lcdmwplatformlibrary -lcdmwplatformvaluetypes \
-	-lcdmwplatformidl -lcdmwfaulttoleranceidl -lcdmwrepositoryidl \
-	-lcdmwsystemmngtidl -lcdmwcommonidl -ldcpscorbac++ 
+	-lcdmwplatformvaluetypes -lcdmwplatformlibrary \
+	-lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+	-lcdmwfaulttoleranceidl -lcdmwrepositoryidl \
+	-lcdmwsystemmngtidl -lcdmwcommonidl  \
+	-ldcpsccpp -lstdc++
 
 #END CDMW FLAGS
 
@@ -110,9 +114,9 @@ RM=rm -f
 CXX=g++
 CXXLD=g++
 
-CPPFLAGS=$(CPPFLAGS_$(HOST_SUFFIX)) $(CPPFLAGS_ORB) $(CPPFLAGS_CDMW)
-CXXFLAGS=$(CXXFLAGS_$(HOST_SUFFIX)) $(CXXFLAGS_ORB) $(CXXFLAGS_CDMW)
-LDFLAGS=$(LDFLAGS_$(HOST_SUFFIX)) $(LDFLAGS_ORB) $(LDFLAGS_CDMW)
+CPPFLAGS=$(CPPFLAGS_$(HOST_SUFFIX)) $(CPPFLAGS_CDMW) $(CPPFLAGS_ORB)
+CXXFLAGS=$(CXXFLAGS_$(HOST_SUFFIX)) $(CXXFLAGS_CDMW) $(CXXFLAGS_ORB) 
+LDFLAGS=$(LDFLAGS_$(HOST_SUFFIX)) $(LDFLAGS_CDMW) $(LDFLAGS_ORB)
 IDLFLAGS=$(IDLFLAGS_$(HOST_SUFFIX)) $(IDLFLAGS_CDMW) $(IDLFLAGS_ORB) 
-LIBS=$(LIBS_$(HOST_SUFFIX)) $(LIBS_ORB) $(LIBS_CDMW)
+LIBS=$(LIBS_$(HOST_SUFFIX)) $(LIBS_CDMW) $(LIBS_ORB)
 

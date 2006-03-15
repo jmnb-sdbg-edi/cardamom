@@ -1,24 +1,16 @@
-/* =========================================================================== *
- * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
  * All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
- * License for more details.
- * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * This file and the information it contains are confidential and proprietary. 
+ * They shall not be reproduced nor disclosed to any person except to those 
+ * having a need to know them without prior written consent of the owner.
+*/
+/* ===================================================================== */
 
 
 #ifndef INCL_ONINIT_INTERFACE_IMPL_HPP 
@@ -74,11 +66,19 @@ namespace Cdmw
                 ++it;
             }
 
-            time = Cdmw::OsSupport::OS::get_time();
-            std::cout << "End of Initialisation " << time.seconds << " secs "
-                      << time.microseconds << " usecs" << std::endl
+            OsSupport::OS::sleep(10000);
+
+            m_end_time = Cdmw::OsSupport::OS::get_time();
+            std::cout << "End of Initialisation " << m_end_time.seconds << " secs "
+                      << m_end_time.microseconds << " usecs" << std::endl
                       << std::flush;
         }
+
+        Cdmw::OsSupport::OS::Timeval time_end_on_init()
+        {
+            return m_end_time;
+        }
+        
 
     private:
 
@@ -90,7 +90,8 @@ namespace Cdmw
         operator=(const OnInit_impl& rhs)
             throw();
         
-
+        Cdmw::OsSupport::OS::Timeval m_end_time;
+        
 
     }; // End class OnInit_impl
 

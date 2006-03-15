@@ -24,5 +24,9 @@
 DIRECTORY="`dirname $0`"
 PROGRAM="`basename $0 .sh`"
 
-exec $DIRECTORY/launch.sh $PROGRAM $*
+if test ! -x `which $TERM`
+then
+    TERM=xterm
+fi
 
+exec $TERM -ls -sb -sl 1000 -e $DIRECTORY/launch.sh $PROGRAM $* 

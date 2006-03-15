@@ -71,7 +71,7 @@ void ClientProcessControl::on_initialise (
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Initialisation requested by supervision");
                                      
@@ -85,7 +85,7 @@ void ClientProcessControl::on_initialise (
     // retrieve Tester object from Repository
     // =========================================
     // get NamingInterface to demo_perf
-    Cdmw::NamingAndRepository::NamingInterface demoPerfNamingInterface =
+    Cdmw::CommonSvcs::Naming::NamingInterface demoPerfNamingInterface =
         Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("demo_perf");
     
      // Retrieve Tester from NamingInterface
@@ -143,13 +143,13 @@ void ClientProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void ClientProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Run requested by supervision");
 
@@ -170,7 +170,7 @@ void ClientProcessControl::on_stop()
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                      m_processName.c_str(), 
                                      ">>>>>>>>>>>>>> Stop requested by supervision");
                                      

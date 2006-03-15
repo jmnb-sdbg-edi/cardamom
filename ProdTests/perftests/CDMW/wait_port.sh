@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#*
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -19,11 +16,12 @@
 #* Public License along with CARDAMOM; see the file COPYING. If not, write to
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
-
+istep=0
 A=` netstat | grep $HOSTNAME | grep TIME_WAIT | grep -v grep | wc -l | cut -c0-7`
 while [ ! $A -eq 0 ];
 do
-  echo "waiting for PORT..."
+  echo "waiting for PORT...$istep sec"
   sleep 1
+  istep=$(($istep+1))
   A=` netstat | grep $HOSTNAME | grep TIME_WAIT | grep -v grep | wc -l | cut -c0-7`
 done  

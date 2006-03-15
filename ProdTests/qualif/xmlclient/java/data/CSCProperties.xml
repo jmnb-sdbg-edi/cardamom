@@ -34,7 +34,8 @@
                         Foundation/testutils
                         Foundation/ossupport
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
+                        Foundation/pullmonitorableidl
+                        SystemMngt/smginterfaceidl
                         SystemMngt/platforminterface
                         XMLServer/xmlserveridl
                         XMLServer/xmllibrary

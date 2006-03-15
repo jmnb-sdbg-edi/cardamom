@@ -46,13 +46,11 @@
     <!-- Hosts of the system -->
 	<Host Name="@hostname1val@"
           App-exec-path="Ap1.exe"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="H1.exe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
 	<Host Name="@hostname2val@"
           App-exec-path="Ap1.exe"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="H2.exe">
+          Agent-exec-path="cdmw_platform_agent">
     </Host>
 
     <!-- ************************************* -->

@@ -31,16 +31,18 @@
                     <libraries>
                         Foundation/common
                         Foundation/commonidl
+                        Foundation/pullmonitorableidl
                         Foundation/ossupport
                         Foundation/osthreads
                         Foundation/orbsupport
-                        SystemMngt/systemmngtidl
+                        Foundation/logging
+                        SystemMngt/smgcommonidl
                         SystemMngt/platforminterface
                         SystemMngt/platformvaluetypes
                         SystemMngt/platformlibrary
-                        SystemMngt/platformidl
+                        SystemMngt/smginterfaceidl
                         Repository/repositoryidl
-                        Repository/naminginterface
+                        Foundation/commonsvcsnaming
                         Repository/repositoryinterface
                         LifeCycle/lifecycleidl
                         TraceAndPerf/traceidl

@@ -1,5 +1,4 @@
 #!/usr/local/bin/python -t
-# $Id: grace_np.py,v 1.1.1.1 2005-07-08 14:31:04 moghrabi Exp $
 
 """A python replacement for grace_np.c, a pipe-based interface to xmgrace.
 
@@ -63,7 +62,6 @@ pipe).]
 """
 
 __version__ = '1.0'
-__cvs_version__ = 'CVS version $Revision: 1.1.1.1 $'
 
 import sys, os, signal, errno
 

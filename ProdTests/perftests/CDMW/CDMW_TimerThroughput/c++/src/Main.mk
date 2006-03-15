@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -78,20 +75,26 @@ vpath %.cpp ../src:../generated
 vpath %.hpp ../include:../generated
 
 CLIENT_NAME=client
+SERVER_NAME=server
 
 
 # CDMW Generated Code
 CDMW_GEN_CLIENT_SRC=ClientCdmwInterface.cpp
+CDMW_GEN_SERVER_SRC=ServerCdmwInterface.cpp
 
 # User Supplied Code
 CLIENT_SRCS=$(CDMW_GEN_CLIENT_SRC) \
 	ClientProcessControl.cpp Periodic.cpp client.cpp 
+
+SERVER_SRCS=$(CDMW_GEN_SERVER_SRC) \
+	ServerProcessControl.cpp server.cpp
 
 .SUFFIXES:
 .SUFFIXES: .idl .cpp .skel.cpp .stub.cpp .o .stub.hpp .skel.hpp .hpp .h
 
 
 CLIENT_OBJ = $(CLIENT_SRCS:.cpp=.o) $(CORBA_SRV_ALL_OBJS)
+SERVER_OBJ = $(SERVER_SRCS:.cpp=.o) $(CORBA_SRV_ALL_OBJS)
 
 # Rules to build the dependency of each source file
 %.d: %.cpp
@@ -101,23 +104,28 @@ CLIENT_OBJ = $(CLIENT_SRCS:.cpp=.o) $(CORBA_SRV_ALL_OBJS)
 	[ -s $@ ] || rm -f $@
 
 
-SRCS=$(CLIENT_SRCS) $(CORBA_SRV_ALL_SRC)
+SRCS=$(CLIENT_SRCS) $(SERVER_SRCS) $(CORBA_SRV_ALL_SRC)
 DEPENDS=$(SRCS:.cpp=.d)
 
 
 
 .PHONY: all
-all: depend $(CLIENT_NAME) 
+all: depend $(SERVER_NAME) $(CLIENT_NAME) 
 
 
 .PHONY: depend
 depend: $(DEPENDS)
 
+.PHONY: $(SERVER_NAME)
 .PHONY: $(CLIENT_NAME)
 
 
 .cpp.o:
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
+
+$(SERVER_NAME): $(SERVER_OBJ)
+	$(PURIFY) $(CXXLD) $(CXXFLAGS) $(LDFLAGS) -o $@ \
+	$(SERVER_OBJ)  $(ALL_LIBS) $(CTOOLS_LIBS)
 
 $(CLIENT_NAME): $(CLIENT_OBJ)
 	$(PURIFY) $(CXXLD) $(CXXFLAGS) $(LDFLAGS) -o $@ \
@@ -139,7 +147,7 @@ clean::
 	-$(RM) $(DEPENDS)
 
 cleanall: clean
-	-$(RM) $(CLIENT_NAME)
+	-$(RM) $(SERVER_NAME) $(CLIENT_NAME)
 
 # -----------------------------------------------
 

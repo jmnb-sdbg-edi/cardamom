@@ -21,9 +21,10 @@
  * =========================================================================== */
 
 
+#include <iostream>
 #include <ClientExecutor_impl.hpp>
 
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 
 
 namespace Hello

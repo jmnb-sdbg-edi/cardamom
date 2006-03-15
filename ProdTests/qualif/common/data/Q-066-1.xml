@@ -59,16 +59,13 @@
     <!-- Hosts of the system -->
 	<Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 	<Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 	<Host Name="@hostname3val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -120,37 +117,21 @@
 		                 Autoended="FALSE"
 		                 Exec-path="cdmw_start_ifr_service.sh"
 		                 Port="-1"
-                         Args="--ifr-port 22789">
-		</Unmanaged-process>
+                         Args="--ifr-port 22789"/>
 		
 		<Unmanaged-process Name="IfrFeed"
                          Host-name="@hostname2val@"
 		                 Autoended="TRUE"
 		                 Exec-path="cdmw_start_ifr_feed.sh"
 		                 Port="-1"
-                         Args="../idl/ccm_ft_ds.idl">
-		</Unmanaged-process>
-
-		<Managed-process Name="EventChannelManager"
-                         Host-name="@hostname2val@"
-                         Type="MANAGED-PROCESS"
-                         Autoended="TRUE"
-                         Exec-path="cdmw_event_channel_manager"
-                         Args=" --ProfileXMLFile=EventChannelConf_ccm_ft_datastore.xml
-                               --CdmwXMLFile=EventChannelManager.xml 
-                               --validateXML"
-                         Port="-1">
-			<Init-step Name="step0" Timeout="10000"/>
-		</Managed-process>
+                         Args="../idl/ccm_ft_ds.idl"/>
 
 		<Init-graph>
             <Graph-element Name="Repository">
                 <Graph-element-successor Name="XML"/>
             </Graph-element>
             
-		    <Graph-element Name="XML">
-                <Graph-element-successor Name="EventChannelManager"/>
-            </Graph-element>
+		    <Graph-element Name="XML"/>
 		    		    
             <Graph-element Name="InterfaceRepository">
                 <Graph-element-successor Name="IfrFeed"/>
@@ -158,16 +139,11 @@
             
             <Graph-element Name="IfrFeed"/>
             
-            <Graph-element Name="EventChannelManager"/>
-                        
 			<Graph-element-root Name="Repository"/>
 			<Graph-element-root Name="InterfaceRepository"/>
     	</Init-graph>
  
 		<Stop-graph>
-            <Graph-element Name="EventChannelManager">
-                <Graph-element-successor Name="XML"/>
-            </Graph-element>
 		    <Graph-element Name="XML">
                 <Graph-element-successor Name="Repository"/>
                 <Graph-element-successor Name="InterfaceRepository"/>
@@ -177,7 +153,7 @@
             
             <Graph-element Name="InterfaceRepository"/>
                         
-			<Graph-element-root Name="EventChannelManager"/>
+			<Graph-element-root Name="XML"/>
     	</Stop-graph>
     	
     </Application>
@@ -201,8 +177,8 @@
                          Autoended="FALSE"
                          Exec-path="cdmw_package_manager.sh"
                          Port="24010"
-                         Args="--installDir=@config.FtpJAVA.ftp.dir@/cdmw_qualif_ccm_ft_datastore
-                               --ftpHomeDir=@config.FtpJAVA.ftp.dir@ 
+                         Args="--installDir=@config.Ftp.homedir@/cdmw_qualif_ccm_ft_datastore
+                               --ftpHomeDir=@config.Ftp.homedir@ 
                                --saveFile=workDir/PackageManager.save">
 			<Init-step Name="initialisation" Timeout="300000"/>
 		<!--	<Run-timeout Timeout="1000"/>

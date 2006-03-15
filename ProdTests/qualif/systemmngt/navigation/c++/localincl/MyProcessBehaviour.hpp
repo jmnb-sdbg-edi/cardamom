@@ -86,7 +86,7 @@ public:
     * Purpose:
     * <p>
     * the behaviour for the
-    * IDL:thalesgroup.com/CdmwPlatformMngt/Process/nb_steps:1.0
+    * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/nb_steps:1.0
     * attribute
     */
     virtual CORBA::ULong nb_steps() throw(CORBA::SystemException)
@@ -99,14 +99,14 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/get_service:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/get_service:1.0
 	* operation
 	*/
     virtual CORBA::Object_ptr get_service() throw(CORBA::SystemException)
     {
         // example of using the PlatformInterface for notifying a message
-        PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
-            m_processName.c_str(), "Service requested->NIL returned");
+        PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
+                        m_processName.c_str(), "Service requested->NIL returned");
             
         return CORBA::Object::_nil();
     }
@@ -116,19 +116,19 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
 	* operation
 	*/
     virtual void initialise(const CdmwPlatformMngtBase::StartupKind& startup_kind)
-        throw(CdmwPlatformMngt::Process::BadOrder, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::BadOrder, CORBA::SystemException)
     {
         // get application and process names                    
-        m_applicationName = PlatformInterface::getApplicationName();
-        m_processName = PlatformInterface::getProcessName();
+        m_applicationName = PlatformInterface::Get_application_name();
+        m_processName = PlatformInterface::Get_process_name();
         
         // example of using the PlatformInterface for notifying a message
-        PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
-                                         m_processName.c_str(), "Initialisation requested");
+        PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
+                        m_processName.c_str(), "Initialisation requested");
         
         
         // init current step    
@@ -141,11 +141,11 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/next_step:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/next_step:1.0
 	* operation
 	*/
     virtual void next_step()
-        throw(CdmwPlatformMngt::Process::InvalidStep, CORBA::SystemException)
+        throw(CdmwPlatformMngt::ProcessDelegate::InvalidStep, CORBA::SystemException)
     {   
     }
     
@@ -154,15 +154,16 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
 	* operation
 	*/
     virtual void run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun,
-              CdmwPlatformMngt::Process::AlreadyDone,
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
+              CdmwPlatformMngt::ProcessDelegate::AlreadyDone,
               CORBA::SystemException)
     {
 
+        /****
         if (!strcmp("NavigationProcess1",m_processName.c_str()))
         {
             PlatformInterface::setSystemEntityStatus ("SYSTEM_ENTITY",
@@ -185,6 +186,7 @@ public:
                                                        CdmwPlatformMngtEntity::ENTITY_FAILED_NO_RESPONSE,
                                                        "process2_failed_no_response");
         }
+        ****/
         
         if (m_supervision != "no")
         {
@@ -197,7 +199,7 @@ public:
 	* Purpose:
 	* <p>
 	* the behaviour for the
-	* IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+	* IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
 	* operation
 	*/
     virtual void stop() throw(CORBA::SystemException)

@@ -38,14 +38,15 @@
 #include "testftstatetransfer2/TestInterceptors.hpp"
 #include "testftstatetransfer2/MyProcessBehaviour.hpp"
 #include <ConfAndPlug/cdmwinit/CdmwInterface.hpp>
+#include <iostream>
 
 #if CDMW_ORB_VDR == tao && CDMW_ORB_VER > 13
-#include "tao/ORBInitializer_Registry.h"
+#include <tao/ORBInitializer_Registry.h>
 #endif
 
+using namespace std;
 using namespace Cdmw;
 using Cdmw::OsSupport::OS;
-using namespace std;
 
 // ---------------------------------------------------------------------------
 //
@@ -259,7 +260,7 @@ private:
             try
             {
                 // Initialise FT service
-                Cdmw::FT::FTServiceInit::init( argc, argv );
+                Cdmw::FT::FTServiceInit::Init( argc, argv );
 
                 std::cout << "[**** " << host_name << "::main] starting with args:" << std::endl;
                 for (int i=1; i<argc; ++i) {

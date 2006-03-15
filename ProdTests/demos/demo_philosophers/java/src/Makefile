@@ -49,7 +49,7 @@ LIB_FORK_MANAGER_NAME=libForkManager
 LIB_OBSERVER_NAME=libObserver
 LIB_REGISTRATOR_NAME=libRegistrator
 
-SRCS_IDL_SVR=UserPhilo.idl
+SRCS_IDL_SVR=UserPhilo.idl PhiloRegistration.idl
 SRCS_IDL_CLT=
 SRCS_IDL_TIE= $(shell find $(CODE_GEN_DIR_RELATIV_PROD)/generated -name '*.idl' -exec basename {} \;)
 

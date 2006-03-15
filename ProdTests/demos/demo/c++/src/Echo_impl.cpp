@@ -28,7 +28,7 @@
 #include "Foundation/ossupport/OS.hpp"
 
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
-#include "Repository/naminginterface/NamingInterface.hpp"
+#include "Foundation/commonsvcs/naming/NamingInterface.hpp"
 #include <iostream>
 
 #include "Event/idllib/CosEventComm.stub.hpp"
@@ -69,6 +69,7 @@ Echo_impl::echo_string(const char* str)
     
     if (m_nbRcvdMsg == 1) {
         // Get NamingInterface object from RepositoryInterface
+        using namespace Cdmw::CommonSvcs::Naming;
         using namespace Cdmw::NamingAndRepository;
         NamingInterface ni = RepositoryInterface::get_domain_naming_interface
             (Cdmw::Common::Locations::CDMW_SERVICES_NAME_DOMAIN);
@@ -147,6 +148,7 @@ Echo_impl::push(const CORBA::Any& data)
     
     if (m_nbRcvdMsg == 1) {
         // Get NamingInterface object from RepositoryInterface
+        using namespace Cdmw::CommonSvcs::Naming;
         using namespace Cdmw::NamingAndRepository;
         NamingInterface ni = RepositoryInterface::get_domain_naming_interface
             (Cdmw::Common::Locations::CDMW_SERVICES_NAME_DOMAIN);

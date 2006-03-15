@@ -50,7 +50,7 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     virtual  
@@ -62,19 +62,19 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     virtual 
     void on_run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
 	          CORBA::SystemException);
     
     /**
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     virtual 

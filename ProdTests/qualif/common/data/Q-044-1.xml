@@ -51,16 +51,10 @@
     <!-- Hosts of the system -->
     <Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
     <Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
-    <Host Name="@hostname3val@"
-          App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -108,7 +102,7 @@
                  App-port="-1">
 
         <!-- Default timeouts for processes of the entire system -->
-        <Timeout Init="20000" Run="20000" Stop="20000"/>
+        <Timeout Init="400000" Run="400000" Stop="400000"/>
 
         <Managed-process
                          Name="P11"
@@ -138,7 +132,7 @@
                  App-port="-1">
 
         <!-- Default timeouts for processes of the entire system -->
-        <Timeout Init="20000" Run="20000" Stop="20000"/>
+        <Timeout Init="400000" Run="400000" Stop="400000"/>
 
         <Managed-process
                          Name="P21"
@@ -175,8 +169,7 @@
                          Host-name="@hostname1val@"
                          Autoended="TRUE"
                          Exec-path="testftinitsequencing"
-                         Args=" --faultmanager=corbaloc::@hostname1val@:4555/fault_manager --host1=@hostname1val@ --host2=@hostname2val@">
-        </Unmanaged-process>
+                         Args=" --faultmanager=corbaloc::@hostname1val@:4555/fault_manager --host1=@hostname1val@ --host2=@hostname2val@"/>
 
         <!-- Init graph of processes of this application -->
         <Init-graph>
@@ -197,16 +190,10 @@
         <Graph-element Name="CdmwServices"> 
             <Graph-element-successor Name="APPL3"/>
         </Graph-element>
-        <Graph-element Name="APPL3"> 
-            <Graph-element-successor Name="APPL1"/>
-        </Graph-element>
-        <Graph-element Name="APPL1"> 
-            <Graph-element-successor Name="APPL2"/>
-        </Graph-element>
-        <Graph-element Name="APPL2"> 
-        </Graph-element>
+        <Graph-element Name="APPL3"/>
         <Graph-element-root Name="CdmwServices"/>
     </Init-graph>
+
 
     
     <!-- ************************ -->

@@ -27,7 +27,7 @@
 #include <SystemMngt/platforminterface/PlatformInterface.hpp>
 #include <ConfAndPlug/cdmwinit/InitUtils.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
 
 
@@ -63,7 +63,7 @@ void ClientProcessControl::on_initialise (
   
 // process to run called by platformmngt    
 void ClientProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     // 
@@ -93,7 +93,7 @@ void ClientProcessControl::do_tests()
     // Get Naming Interface of root name domain
     CosNaming::NamingContext_var root =
         repository->resolve_root_context(CdmwNamingAndRepository::DEFAULT_ROOT_CONTEXT);
-    Cdmw::NamingAndRepository::NamingInterface ni(root.in());
+    Cdmw::CommonSvcs::Naming::NamingInterface ni(root.in());
         
     // 
     // Retrive NamedServer

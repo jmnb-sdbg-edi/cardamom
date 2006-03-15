@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,7 +16,7 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -36,44 +33,29 @@
 #include "ConfAndPlug/cdmwinit/InitUtils.hpp"
 #include "Repository/repositoryinterface/RepositoryInterface.hpp"
 #include "Repository/idllib/CdmwNamingAndRepository.stub.hpp"
+#include "Time/clockservice/CdmwCosClock.hpp"
 
 #include "ClientProcessControl.hpp"
-
-// -- Predictability Addon --
-#ifdef _PREDICTABILITY_
-#include <sys/mman.h>
-#include <sched.h>
-#include <sys/types.h>
-#include <unistd.h>
-#endif
-//--
 
 namespace 
 {
     const int SUCCESS = 0;
     const int FAILURE = 1;
 
-    const int POA_THREAD_POOL_SIZE = 2;
+    const int POA_THREAD_POOL_SIZE = 5;
  
 }; // End anonymous namespace
 
 int main(int argc, char* argv[])
 {
-#ifdef _PREDICTABILITY_
-// -- Predictability Addon --
-//      mlockall(MCL_CURRENT | MCL_FUTURE);
-      struct sched_param sp;
-      sp.sched_priority = 99;
-      int retVal =
-          sched_setscheduler(getpid(), SCHED_FIFO, &sp);
-
-      if (retVal != 0)
-          perror(">>>>> sched_setscheduler: ");
-#endif
-          // --
     int status = SUCCESS;
     
-    std::cout << "Start ClockService Client" << std::endl;
+	std::cerr	<< "-------------------------" << std::endl
+				<< "      Start Client" << std::endl
+				<< "-------------------------" << std::endl;
+	for (int n=0; n < argc; n++)
+		std::cerr << "argv[" << n <<"]: " << argv[n] << std::endl;  
+	std::cerr 	<< "-------------------------" << std::endl;
     
     //number of test
     int niter = 1000;
@@ -84,11 +66,20 @@ int main(int argc, char* argv[])
     std::cout << "Reading Configuration File..." << std::endl;
     //read configuration file
     
-    FILE * fd = fopen("client.cfg", "r");
-    fscanf(fd,"%d",&niter);                     // number of waking ups requested to the Timer
-    fscanf(fd,"%lu",&period);                   // period (msec) of the waking ups
-    
-    fclose(fd);
+	FILE * fd;
+	if ((fd = fopen("client.cfg", "r"))!=NULL) {
+		fscanf(fd,"%d",&niter);  // number of waking ups requested to the Timer
+		fscanf(fd,"%lu",&period);// period (msec) of the waking ups
+		if (ferror(fd)) { 
+			std::cerr << "Error in reading file client.cfg\n";
+			exit(-1);
+		}
+	    fclose(fd);
+	}  
+	else {
+		std::cerr << "Error: client.cfg don't exist!\n";
+		//exit(-1);
+	}
 
     std::cout << "Sample invocation= " << niter<< std::endl;            
     std::cout << "Delay (ms)= " << period<< std::endl;
@@ -111,22 +102,14 @@ int main(int argc, char* argv[])
         orb_strategies.add_OrbThreaded();
         orb_strategies.add_PoaThreadPool(POA_THREAD_POOL_SIZE);
 
+        printf("*** client: ORB_init\n");
         orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, orb_strategies);
-        printf("*** client: Get Root POA\n");
         
         // ===================================================
-        // Get the root POA 
+        // Initialise Clock Service
         // ===================================================
-        CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
-        PortableServer::POA_var rootPOA = PortableServer::POA::_narrow(obj.in());
-
-        // ===================================================
-        // Activate the root POA manager
-        // ===================================================
-        PortableServer::POAManager_var poaManager = rootPOA->the_POAManager();
-        poaManager->activate();
-        printf("*** client: Activate the ORB\n");
-
+	Cdmw::clock::CosClock::init(orb.in(),argc,argv);
+	
         // ===================================================
         // create the process control for platform management
         // ===================================================
@@ -146,7 +129,6 @@ int main(int argc, char* argv[])
         // ===================================================
         printf("*** client: ORB run\n");
         orb->run();
-
     } 
     catch (const Cdmw::OrbSupport::CORBASystemExceptionWrapper & ex)
     {
@@ -173,12 +155,17 @@ int main(int argc, char* argv[])
     // ========================================================
     // program stopping
     // ========================================================
-    
-    // ===================================================
+
+   // ===================================================
     // Call generated Cdmw cleanup
     // ===================================================
     Cdmw::CdmwInit::CDMW_cleanup(orb.in());
     
+    // ===================================================
+    // stop Clock Service
+    // ===================================================
+    Cdmw::clock::CosClock::close();
+
     // ===================================================
     // Call ORB cleanup
     // ===================================================

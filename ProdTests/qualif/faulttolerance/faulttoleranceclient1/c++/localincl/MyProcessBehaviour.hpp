@@ -80,7 +80,7 @@ public:
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     virtual void on_initialise(
@@ -94,12 +94,12 @@ public:
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     virtual void on_run()
     throw( CORBA::SystemException,
-           CdmwPlatformMngt::Process::NotReadyToRun )
+           CdmwPlatformMngt::ProcessDelegate::NotReadyToRun )
     {
         std::cout<<"resolve_initial_references( ReplicationManager )"<<std::endl;
         CORBA::Object_var replication_mgr_obj
@@ -119,7 +119,7 @@ public:
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     virtual void on_stop()

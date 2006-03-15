@@ -78,13 +78,16 @@
         Name="@hostname1val@"
         App-exec-path="cdmw_platform_application"
         Agent-exec-path="cdmw_platform_agent"
-        Probe-exec-path="cdmw_host_probe"
     />
     <Host
         Name="@hostname2val@"
         App-exec-path="cdmw_platform_application"
         Agent-exec-path="cdmw_platform_agent"
-        Probe-exec-path="cdmw_host_probe"
+    />
+    <Host
+        Name="@hostname3val@"
+        App-exec-path="cdmw_platform_application"
+        Agent-exec-path="cdmw_platform_agent"
     />
 
     <!-- description of the applications -->
@@ -191,8 +194,8 @@
             Autoended="FALSE"
             Exec-path="cdmw_package_manager.sh"
             Port="24010"
-            Args="--installDir=@config.FtpJAVA.ftp.dir@/cdmw_qualif_ccm_lb
-                  --ftpHomeDir=@config.FtpJAVA.ftp.dir@
+            Args="--installDir=@config.Ftp.homedir@/cdmw_qualif_ccm_lb
+                  --ftpHomeDir=@config.Ftp.homedir@
                   --saveFile=workDir/PackageManager.save">
 
             <Init-step Name="initialisation" Timeout="300000" />
@@ -262,11 +265,37 @@
             <Init-step Name="initialisation" Timeout="100000" />
         </Managed-process>
 
+        <Managed-process
+            Name="ServerActivator3"
+            Host-name="@hostname3val@"  
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="cdmw_server_activator.sh"
+            Port="24020"
+            Args="">
+
+            <Init-step Name="initialisation" Timeout="100000" />
+        </Managed-process>
+
+        <Managed-process
+            Name="ComponentInstallation3"
+            Host-name="@hostname3val@"
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="cdmw_component_installation.sh"
+            Port="24030"
+            Args="--installDir=workDir/ComponentInstallationDir
+                  --saveFile=workDir/ComponentInstallation.save">
+
+            <Init-step Name="initialisation" Timeout="100000" />
+        </Managed-process>
+
         <!-- init graph of CdmwCcmTools -->
         <Init-graph>
             <Graph-element Name="PackageManager">
                 <Graph-element-successor Name="ComponentInstallation1" />
                 <Graph-element-successor Name="ComponentInstallation2" />
+                <Graph-element-successor Name="ComponentInstallation3" />
             </Graph-element>
 
             <Graph-element Name="ComponentInstallation1">
@@ -274,6 +303,10 @@
             </Graph-element>
 
             <Graph-element Name="ComponentInstallation2">
+                <Graph-element-successor Name="AssemblyFactory" />
+            </Graph-element>
+
+            <Graph-element Name="ComponentInstallation3">
                 <Graph-element-successor Name="AssemblyFactory" />
             </Graph-element>
 
@@ -285,11 +318,16 @@
                 <Graph-element-successor Name="AssemblyFactory" />
             </Graph-element>
 
+            <Graph-element Name="ServerActivator3">
+                <Graph-element-successor Name="AssemblyFactory" />
+            </Graph-element>
+
             <Graph-element Name="AssemblyFactory" />
 
             <Graph-element-root Name="PackageManager" />
             <Graph-element-root Name="ServerActivator1" />
             <Graph-element-root Name="ServerActivator2" />
+            <Graph-element-root Name="ServerActivator3" />
         </Init-graph>
 
         <!-- stop graph of CdmwCcmTools -->
@@ -299,6 +337,8 @@
                 <Graph-element-successor Name="ServerActivator1" />
                 <Graph-element-successor Name="ComponentInstallation2" />
                 <Graph-element-successor Name="ServerActivator2" />
+                <Graph-element-successor Name="ComponentInstallation3" />
+                <Graph-element-successor Name="ServerActivator3" />
             </Graph-element>
 
             <Graph-element Name="ComponentInstallation1">
@@ -309,11 +349,19 @@
                 <Graph-element-successor Name="PackageManager" />
             </Graph-element>
 
+            <Graph-element Name="ComponentInstallation3">
+                <Graph-element-successor Name="PackageManager" />
+            </Graph-element>
+
             <Graph-element Name="ServerActivator1">
                 <Graph-element-successor Name="PackageManager" />
             </Graph-element>
 
             <Graph-element Name="ServerActivator2">
+                <Graph-element-successor Name="PackageManager" />
+            </Graph-element>
+
+            <Graph-element Name="ServerActivator3">
                 <Graph-element-successor Name="PackageManager" />
             </Graph-element>
 
@@ -324,7 +372,7 @@
     </Application>
 
     <Application
-        Name="CcmLbApplication"
+        Name="CcmLbApplication1"
         Host-name="@hostname1val@"
         Agent-port="-1"
         App-port="-1">
@@ -334,13 +382,13 @@
 
         <!-- description of the processes -->
         <Managed-process
-            Name="ServerProcess1"
+            Name="ServerProcess11"
             Host-name="@hostname1val@"
             Type="MANAGED-PROCESS"
             Autoended="FALSE"
             Exec-path="ccmlb_server_comp_srv"
             Port="24110"
-            Args="--CdmwXMLFile=test_ccm_lb_c++_1/server.xml
+            Args="--CdmwXMLFile=test_ccm_lb_c++/server.xml
                   --validateXML
                   --LBInterceptorSide=Server
                   -ORBInitRef LBGroupManager=corbaloc::@hostname2val@:5040/group_mgr">
@@ -349,33 +397,169 @@
         </Managed-process>
 
         <Managed-process
-            Name="ServerProcess2"
-            Host-name="@hostname2val@"
+            Name="ServerProcess12"
+            Host-name="@hostname1val@"
             Type="MANAGED-PROCESS"
             Autoended="FALSE"
             Exec-path="ccmlb_server_comp_srv"
             Port="24120"
-            Args="--CdmwXMLFile=test_ccm_lb_c++_1/server.xml
+            Args="--CdmwXMLFile=test_ccm_lb_c++/server.xml
                   --validateXML
                   --LBInterceptorSide=Server
                   -ORBInitRef LBGroupManager=corbaloc::@hostname2val@:5040/group_mgr">
 
             <Init-step Name="initialisation" Timeout="50000" />
         </Managed-process>
+        <!-- init graph of CcmLbApplication -->
+        <Init-graph>
+            <Graph-element Name="ServerProcess11">
+               <Graph-element-successor Name="ServerProcess12" />
+            </Graph-element>
+            <Graph-element-root Name="ServerProcess11" />
+        </Init-graph>
+    </Application>
+
+    <Application
+        Name="CcmLbApplication2"
+        Host-name="@hostname2val@"
+        Agent-port="-1"
+        App-port="-1">
+
+        <!-- monitoring -->
+        <App-monitoring Pull-interval="021" Pull-timeout="031" />
+
+        <!-- description of the processes -->
+        <Managed-process
+            Name="ServerProcess21"
+            Host-name="@hostname2val@"
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="ccmlb_server_comp_srv"
+            Port="24110"
+            Args="--CdmwXMLFile=test_ccm_lb_c++/server.xml
+                  --validateXML
+                  --LBInterceptorSide=Server
+                  -ORBInitRef LBGroupManager=corbaloc::@hostname2val@:5040/group_mgr">
+
+            <Init-step Name="initialisation" Timeout="50000" />
+        </Managed-process>
+
+        <Managed-process
+            Name="ServerProcess22"
+            Host-name="@hostname2val@"
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="ccmlb_server_comp_srv"
+            Port="24120"
+            Args="--CdmwXMLFile=test_ccm_lb_c++/server.xml
+                  --validateXML
+                  --LBInterceptorSide=Server
+                  -ORBInitRef LBGroupManager=corbaloc::@hostname2val@:5040/group_mgr">
+
+            <Init-step Name="initialisation" Timeout="50000" />
+        </Managed-process>
+
+        <!-- init graph of CcmLbApplication -->
+        <Init-graph>
+            <Graph-element Name="ServerProcess21">
+               <Graph-element-successor Name="ServerProcess22" />
+            </Graph-element>
+
+            <Graph-element-root Name="ServerProcess21" />
+        </Init-graph>
+    </Application>
+
+    <Application
+        Name="CcmLbApplication3"
+        Host-name="@hostname3val@"
+        Agent-port="-1"
+        App-port="-1">
+
+        <!-- monitoring -->
+        <App-monitoring Pull-interval="021" Pull-timeout="031" />
+
+        <!-- description of the processes -->
+        <Managed-process
+            Name="ServerProcess31"
+            Host-name="@hostname3val@"
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="ccmlb_server_comp_srv"
+            Port="24110"
+            Args="--CdmwXMLFile=test_ccm_lb_c++/server.xml
+                  --validateXML
+                  --LBInterceptorSide=Server
+                  -ORBInitRef LBGroupManager=corbaloc::@hostname2val@:5040/group_mgr">
+
+            <Init-step Name="initialisation" Timeout="50000" />
+        </Managed-process>
+
+        <Managed-process
+            Name="ServerProcess32"
+            Host-name="@hostname3val@"
+            Type="MANAGED-PROCESS"
+            Autoended="FALSE"
+            Exec-path="ccmlb_server_comp_srv"
+            Port="24120"
+            Args="--CdmwXMLFile=test_ccm_lb_c++/server.xml
+                  --validateXML
+                  --LBInterceptorSide=Server
+                  -ORBInitRef LBGroupManager=corbaloc::@hostname2val@:5040/group_mgr">
+
+            <Init-step Name="initialisation" Timeout="50000" />
+        </Managed-process>
+
+        <!-- init graph of CcmLbApplication -->
+        <Init-graph>
+            <Graph-element Name="ServerProcess31">
+               <Graph-element-successor Name="ServerProcess32" />
+            </Graph-element>
+
+            <Graph-element-root Name="ServerProcess31" />
+        </Init-graph>
+    </Application>
+
+    <Application
+        Name="CcmLbClientApplication"
+        Host-name="@hostname1val@"
+        Agent-port="-1"
+        App-port="-1">
+
+        <!-- monitoring -->
+        <App-monitoring Pull-interval="021" Pull-timeout="031" />
+
 
         <Managed-process
             Name="ClientProcess"
             Host-name="@hostname1val@"
             Type="MANAGED-PROCESS"
             Autoended="FALSE"
-            Exec-path="ccmlb_client_comp_srv"
+            Exec-path="launchCcmLbClient.sh"
             Port="24150"
-            Args="--CdmwXMLFile=test_ccm_lb_c++_2/client.xml
+            Args="--CdmwXMLFile=test_ccm_lb_c++/client.xml
                   --validateXML
                   --LBInterceptorSide=Client">
 
             <Init-step Name="initialisation" Timeout="50000" />
         </Managed-process>
+
+        <!-- Init graph of processes of this application -->
+        <Init-graph>
+            <Graph-element Name="ClientProcess">
+            </Graph-element>
+            <Graph-element-root Name="ClientProcess"/>
+        </Init-graph>
+       </Application>
+
+    <Application
+        Name="CcmLbGroupCreatorApplication"
+        Host-name="@hostname2val@"
+        Agent-port="-1"
+        App-port="-1">
+
+        <!-- monitoring -->
+        <App-monitoring Pull-interval="021" Pull-timeout="031" />
+
 
         <Managed-process
             Name="GroupCreator"
@@ -384,44 +568,20 @@
             Autoended="TRUE"
             Exec-path="ccmlb_group_creator"
             Port="24170"
-            Args="--CdmwXMLFile=test_ccm_lb_c++_2/GroupCreator.xml
+            Args="--CdmwXMLFile=test_ccm_lb_c++/GroupCreator.xml
                   --validateXML
                   -ORBInitRef LBGroupManager=corbaloc::@hostname2val@:5040/group_mgr">
 
             <Init-step Name="initialisation" Timeout="50000" />
         </Managed-process>
-
-        <!-- init graph of CcmLbApplication -->
+        <!-- Init graph of processes of this application -->
         <Init-graph>
-            <Graph-element Name="ServerProcess1">
-               <Graph-element-successor Name="GroupCreator" />
+            <Graph-element Name="GroupCreator">
             </Graph-element>
+            <Graph-element-root Name="GroupCreator"/>
 
-            <Graph-element Name="ServerProcess2">
-               <Graph-element-successor Name="GroupCreator" />
-            </Graph-element>
-
-            <Graph-element Name="GroupCreator" />
-            <Graph-element Name="ClientProcess" />
-
-            <Graph-element-root Name="ServerProcess1" />
-            <Graph-element-root Name="ServerProcess2" />
-            <Graph-element-root Name="ClientProcess" />
         </Init-graph>
-
-        <!-- stop graph of CcmLbApplication -->
-        <Stop-graph>
-            <Graph-element Name="ServerProcess1" />
-            <Graph-element Name="ServerProcess2" />
-            <Graph-element Name="GroupCreator" />
-            <Graph-element Name="ClientProcess" />
-
-            <Graph-element-root Name="ServerProcess1" />
-            <Graph-element-root Name="ServerProcess2" />
-            <Graph-element-root Name="GroupCreator" />
-            <Graph-element-root Name="ClientProcess" />
-        </Stop-graph>
-    </Application>
+      </Application>
 
     <!-- init graph of the applications of the system -->
     <Init-graph>
@@ -430,12 +590,34 @@
         </Graph-element>
 
         <Graph-element Name="CdmwCcmTools">
-            <Graph-element-successor Name="CcmLbApplication" />
+            <Graph-element-successor Name="CcmLbApplication1" />
+            <Graph-element-successor Name="CcmLbApplication2" />
+            <Graph-element-successor Name="CcmLbApplication3" />
         </Graph-element>
 
-        <Graph-element Name="CcmLbApplication" />
+        <Graph-element Name="CcmLbApplication1">
+            <Graph-element-successor Name="CcmLbGroupCreatorApplication" />
+            <Graph-element-successor Name="CcmLbClientApplication" />
+        </Graph-element>
 
         <Graph-element-root Name="CdmwServices" />
     </Init-graph>
+
+    <!-- Stop graph of applications of the system-->
+    <Stop-graph>
+        <Graph-element Name="CdmwServices"> 
+            <Graph-element-successor Name="CdmwCcmTools"/>
+        </Graph-element>
+        <Graph-element Name="CdmwCcmTools"> 
+            <Graph-element-successor Name="CcmLbApplication1"/>
+            <Graph-element-successor Name="CcmLbApplication2"/>
+            <Graph-element-successor Name="CcmLbApplication3"/>
+            <Graph-element-successor Name="CcmLbGroupCreatorApplication"/>
+            <Graph-element-successor Name="CcmLbClientApplication"/>
+        </Graph-element>
+
+        <Graph-element-root Name="CdmwServices"/>
+    </Stop-graph>
+    
 
 </System>

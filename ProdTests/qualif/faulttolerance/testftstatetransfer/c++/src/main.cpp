@@ -37,6 +37,7 @@
 #include "FaultTolerance/ftinit/FTServiceInit.hpp"
 #include "FaultTolerance/ftcommon/FTConfiguration.hpp"
 #include <ConfAndPlug/cdmwinit/CdmwInterface.hpp>
+#include <iostream>
 
 using namespace Cdmw;
 using Cdmw::OsSupport::OS;
@@ -63,7 +64,6 @@ public:
     shutdown() 
     {
         m_orb->shutdown(false);
-	    m_orb->destroy();
     }
 
 protected:
@@ -156,6 +156,9 @@ int main( int argc, char* argv[] )
                 // Stop the ORBThread 
                 orbThread.shutdown();
                 orbThread.join();
+                
+                Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+                orb->destroy();
             }
             catch( const CORBA::Exception &e )
             {
@@ -175,7 +178,7 @@ int main( int argc, char* argv[] )
             try
             {
                 // Initialise FT service
-                Cdmw::FT::FTServiceInit::init( argc, argv );
+                Cdmw::FT::FTServiceInit::Init( argc, argv );
 
                 std::cout << "[**** " << host_name << "::main] starting with args:" << std::endl;
                 for (int i=1; i<argc; ++i) {
@@ -222,11 +225,13 @@ int main( int argc, char* argv[] )
                 // Start the ORBThread 
                 ORBThread orbThread(argc, argv, orb.in(), rootPOA.in(), host_name);
                 orbThread.start();
-                sleep(100);
-                // Stop the thread
-                orbThread.shutdown();
+                // orbThread will be stopped by orb->shutdown performed
+                // during supervision stop command
                 orbThread.join();
 
+                Cdmw::CdmwInit::CDMW_cleanup(orb.in());
+                Cdmw::OrbSupport::OrbSupport::ORB_cleanup(orb.in());
+                orb->destroy();
             }
             catch( const CORBA::Exception &e )
             {
@@ -332,7 +337,7 @@ int main( int argc, char* argv[] )
 //         try
 //         {
 //             // Initialise FT service
-//             Cdmw::FT::FTServiceInit::init( argc, argv , true);
+//             Cdmw::FT::FTServiceInit::Init( argc, argv , true);
 
 //             Cdmw::OrbSupport::StrategyList strategyList;
 //             strategyList.add_OrbThreaded(); // Mandatory in OrbSupport::ORB_init

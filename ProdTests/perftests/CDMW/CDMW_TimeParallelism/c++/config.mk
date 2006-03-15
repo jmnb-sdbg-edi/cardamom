@@ -89,16 +89,31 @@ CXXFLAGS_CDMW=
 LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
     -L$(XERCES_LIB_PATH)
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
-LIBS_CDMW=-lcdmwcdmwinit -lcdmwrepositoryinterface  \
-		-lcdmwplatforminterface -lcdmwnaminginterface \
-		-lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwcommon \
-		-lcdmwperformancelibrary -lxerces-c1_3 -lcdmwcommonidl \
-		-lcdmwsystemmngtidl -lcdmwplatformidl -lcdmwrepositoryidl \
-		-lcdmwlifecycleidl -lcdmwplatformlibrary -lcdmwplatformvaluetypes \
-		-lcdmwperformanceidl -lcdmwclockservice -lcdmwcommonsvcs
-#		-lcdmwftcommon -lcdmwftinit -lcdmwftlocationmanager \
-#		-lcdmwftreplicationmanager -lcdmwftstatemanager \
-#		-lcdmwfaulttoleranceidl -lcdmwmonitoringidl
+LIBS_CDMW= \
+-lcdmwcdmwinit \
+-lcdmwclockservice \
+-lcdmwcommon \
+-lcdmwcommonidl \
+-lcdmwcommonsvcsfederation \
+-lcdmwcommonsvcsnaming \
+-lcdmwlifecycleidl \
+-lcdmworbsupport \
+-lcdmwossupport \
+-lcdmwosthreads \
+-lcdmwperformanceidl \
+-lcdmwperformancelibrary \
+-lcdmwplatforminterface \
+-lcdmwplatformlibrary \
+-lcdmwplatformvaluetypes \
+-lcdmwpullmonitorableidl \
+-lcdmwrepositoryidl \
+-lcdmwrepositoryinterface \
+-lcdmwsmgcommonidl \
+-lcdmwsmginterfaceidl \
+-lcdmwsystemmngtidl \
+-luuid \
+-lxerces-c1_3 \
+		 
 #END CDMW FLAGS
 
 RM=rm -f

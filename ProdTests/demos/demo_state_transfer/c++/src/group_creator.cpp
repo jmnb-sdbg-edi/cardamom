@@ -52,7 +52,7 @@ int main( int argc, char* argv[] )
     try
     {
         // Initialise FT service
-        Cdmw::FT::FTServiceInit::init( argc, argv, true );
+        Cdmw::FT::FTServiceInit::Init( argc, argv, true );
 
         // Set ORB strategies
         Cdmw::OrbSupport::StrategyList strategyList;

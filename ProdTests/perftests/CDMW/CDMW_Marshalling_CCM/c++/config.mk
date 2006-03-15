@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -93,22 +90,46 @@ CXXFLAGS_CDMW=
 LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
 	-L$(XERCES_LIB_PATH)
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
-LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface \
-          -lcdmwlifecycleinit -lcdmwlifecycle -lcdmwrepositoryinterface \
-          -lcdmwplatforminterface -lcdmwtracelibrary -lcdmwnaminginterface \
-          -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
-          -lcdmwcommon -lcdmwccmcommon -lcdmwccmcif -lcdmwccmcontainer \
-          -lcdmwccmcomponentserver -lcdmwtestutils -lxerces-c1_3 \
-          -lcdmwlifecycleidl -lcdmweventidl -lcdmwccmcontaineridl \
-          -lcdmwplatformvaluetypes -lcdmwplatformidl -lcdmwrepositoryidl \
-          -lcdmwcommonidl -lcdmwsystemmngtidl -lcdmwplatformlibrary \
-          -lcdmwtraceidl -lcdmwperformanceidl -lcdmwperformancelibrary
+LIBS_CDMW= \
+-lcdmwccmcif \
+-lcdmwccmcommon \
+-lcdmwccmcomponentserver \
+-lcdmwccmcontainer \
+-lcdmwccmcontaineridl \
+-lcdmwcdmwinit \
+-lcdmwcommon \
+-lcdmwcommonidl \
+-lcdmwcommonsvcsfederation \
+-lcdmwcommonsvcsnaming \
+-lcdmweventidl \
+-lcdmweventinterface \
+-lcdmweventsupport \
+-lcdmwlifecycle \
+-lcdmwlifecycleidl \
+-lcdmwlifecycleinit \
+-lcdmwlogging \
+-lcdmworbsupport \
+-lcdmwossupport \
+-lcdmwosthreads \
+-lcdmwperformanceidl \
+-lcdmwperformancelibrary \
+-lcdmwplatforminterface \
+-lcdmwplatformlibrary \
+-lcdmwplatformvaluetypes \
+-lcdmwpullmonitorableidl \
+-lcdmwrepositoryidl \
+-lcdmwrepositoryinterface \
+-lcdmwsmgcommonidl \
+-lcdmwsmginterfaceidl \
+-lcdmwsystemmngtidl \
+-lcdmwtestutils \
+-lcdmwtraceidl \
+-lcdmwtracelibrary \
+-luuid \
+-lxerces-c1_3
 
 "LIBS_CDMW:=$(foreach CSC,$(DEPEND_LIB),-lcdmw$(CSC))
-#LIBS_CDMW=-lcdmwcdmwinit -lcdmweventsupport -lcdmweventinterface -lcdmwlifecycle -lcdmwrepositoryinterface  \
-#	-lcdmwplatforminterface -lcdmwtracelibrary -lcdmwperformancelibrary -lcdmwidl -lcdmwnaminginterface \
-#	-lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwcommon \
-#	-lxerces-c1_3
+
 #END CARDAMOM FLAGS
 
 RM=rm -f

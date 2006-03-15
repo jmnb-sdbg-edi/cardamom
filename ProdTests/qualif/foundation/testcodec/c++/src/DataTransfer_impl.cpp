@@ -20,6 +20,7 @@
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * =========================================================================== */
 
+
 #include <string>
 
 #include <Foundation/orbsupport/OrbSupport.hpp>
@@ -40,7 +41,10 @@ DataTransfer_impl::DataTransfer_impl(CORBA::ORB_ptr orb)
     throw(CORBA::SystemException)
     : m_orb(CORBA::ORB::_duplicate(orb)),
       m_dataMgr(new DataManager(orb)),
+      /* PCR-0049
       m_codec(new Cdmw::OrbSupport::Codec<Cdmw::TestCodec::TestStruct> (orb))
+      */
+      m_codec(new Cdmw::OrbSupport::Codec<Cdmw::TestCodec::TestStruct> ())
 { 
 }
 

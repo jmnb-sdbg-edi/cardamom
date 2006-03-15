@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,7 +16,7 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 
 #include "ClientProcessControl.hpp"
 
@@ -30,7 +27,9 @@ namespace Invocation
                                               int niter,
                                               int delay,
                                               char* invocation_type,
-                                              char* fileprefix)
+                                              char* fileprefix,
+                                              ClockTime* measure_type)
+
     throw(CORBA::SystemException)
     : m_orb (CORBA::ORB::_duplicate(orb)),
       m_applicationName (""),
@@ -40,6 +39,7 @@ namespace Invocation
     m_delay = delay;
     m_invocation_type = invocation_type;
     m_fileprefix = fileprefix;
+    m_measure = measure_type;	
   }
   
   ClientProcessControl::~ClientProcessControl()
@@ -63,7 +63,7 @@ namespace Invocation
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                                          m_processName.c_str(), 
                                                          ">>>>>>>>>>>>>> Initialisation requested by supervision");
     // ===================================
@@ -84,8 +84,9 @@ namespace Invocation
         std::cerr << "NameDomain perf_test is invalid !!" << std::endl;
         CDMW_ASSERT(false);
     }
-
-
+    // Create a TestPing object
+    testping_i = new Invocation::TestPing_i();
+    m_testping = testping_i->_this();
     // Register the TestPing object in the "perf_test" name domain
     std::string registration_name = "TestPing";
     try {
@@ -106,12 +107,13 @@ namespace Invocation
         std::cerr << "Invalid Registration of TestPing reference as " << registration_name << std::endl;
         CDMW_ASSERT(false);
     }
-    
+
+   
     // =========================================
     // retrieve Tester object from Repository
     // =========================================
     // get NamingInterface to test_perf
-    Cdmw::NamingAndRepository::NamingInterface invocationNamingInterface =
+    Cdmw::CommonSvcs::Naming::NamingInterface invocationNamingInterface =
       Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("perf_test");
     
     // Retrieve TestPing from NamingInterface
@@ -144,12 +146,12 @@ namespace Invocation
 
   // process to run called by platformmngt    
   void ClientProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, CORBA::SystemException)
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, CORBA::SystemException)
   {
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                                          m_processName.c_str(), 
                                                          ">>>>>>>>>>>>>> Run requested by supervision");
 
@@ -176,9 +178,9 @@ namespace Invocation
           // call to nanosleep
           nanosleep(& t_delay, NULL);
         }
-        time1 = ctools::time::HighResClock::getTime().toMicrosec();
+        time1 = m_measure->getTime();
         m_testping->ping();
-        time2 = ctools::time::HighResClock::getTime().toMicrosec();
+        time2 = m_measure->getTime();
         //time read in micro sec.       
         tdelta[i] = time2 - time1;
       }//end for
@@ -247,9 +249,9 @@ namespace Invocation
           // call to nanosleep
           nanosleep(& t_delay, NULL);
         }
-        time1 = ctools::time::HighResClock::getTime().toMicrosec();
+        time1 = m_measure->getTime();
         m_testping->pos_ping_sdump(i);
-        time2 = ctools::time::HighResClock::getTime().toMicrosec();
+        time2 = m_measure->getTime();
         //time read in micro sec.       
         tabs[i] = time1;
         tdelta[i] = time2 - time1;
@@ -295,7 +297,7 @@ namespace Invocation
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
                                                          m_processName.c_str(), 
                                                          ">>>>>>>>>>>>>> Stop requested by supervision");
    

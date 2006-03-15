@@ -51,12 +51,10 @@
     <!-- Hosts of the system -->
     <Host Name="@hostname1val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
     <Host Name="@hostname2val@"
           App-exec-path="cdmw_platform_application"
-          Agent-exec-path="cdmw_platform_agent"
-          Probe-exec-path="cdmw_host_probe"/>
+          Agent-exec-path="cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -171,8 +169,7 @@
                          Host-name="@hostname1val@"
                          Autoended="TRUE"
                          Exec-path="testftbackupinsertionprimaryfailure"
-                         Args=" --host1=@hostname1val@ --host2=@hostname2val@ --host3=@hostname3val@ --faultmanager=corbaloc::@hostname1val@:4555/fault_manager">
-        </Unmanaged-process>
+                         Args=" --host1=@hostname1val@ --host2=@hostname2val@ --host3=@hostname3val@ --faultmanager=corbaloc::@hostname1val@:4555/fault_manager"/>
 
 
         <!-- Init graph of processes of this application -->

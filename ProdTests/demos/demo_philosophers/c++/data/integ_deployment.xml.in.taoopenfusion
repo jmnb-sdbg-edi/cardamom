@@ -57,9 +57,7 @@
 
     <!-- Hosts of the system -->
 	<Host Name="@host_name@"
-          App-exec-path="./cdmw_platform_application"
-          Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-          Probe-exec-path="./cdmw_host_probe"/>
+          />
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -111,38 +109,23 @@
 		                 Autoended="FALSE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_service.sh"
 		                 Port="-1"
-                         Args="--ifr-port 22789">
-		</Unmanaged-process>
+                         Args="--ifr-port 22789"/>
 		
 		<Unmanaged-process Name="IfrFeed"
                          Host-name="@host_name@"
 		                 Autoended="TRUE"
 		                 Exec-path="@cdmw_home@/bin/cdmw_start_ifr_feed.sh"
 		                 Port="-1"
-                         Args="@cdmw_home@/demos/demo_philosophers/c++/idl/Philo.idl">
-		</Unmanaged-process>
+                         Args="-I@cdmw_home@/demos/demo_philosophers/c++/idl
+                               @cdmw_home@/demos/demo_philosophers/c++/idl/Philo.idl"/>
 		
-		<Managed-process Name="EventChannelManager"
-                         Host-name="@host_name@"
-                         Type="MANAGED-PROCESS"
-                         Autoended="TRUE"
-                         Exec-path="@cdmw_home@/bin/cdmw_event_channel_manager"
-                         Args=" --ProfileXMLFile=@cdmw_home@/demos/demo_philosophers/c++/data/EventChannelConf1.xml
-                               --CdmwXMLFile=@cdmw_home@/share/EventChannelManager.xml 
-                               --validateXML"
-                         Port="-1">
-			<Init-step Name="step0" Timeout="10000"/>
-		</Managed-process>
-
 
 		<Init-graph>
              <Graph-element Name="Repository">
                 <Graph-element-successor Name="XML"/>
              </Graph-element>
             
-		     <Graph-element Name="XML">
-                <Graph-element-successor Name="EventChannelManager"/>
-             </Graph-element>
+		     <Graph-element Name="XML"/>
           
              <Graph-element Name="InterfaceRepository">
                 <Graph-element-successor Name="IfrFeed"/>
@@ -150,16 +133,11 @@
             
              <Graph-element Name="IfrFeed"/>
             
-             <Graph-element Name="EventChannelManager"/>
-                        
 			 <Graph-element-root Name="Repository"/>
 		  	 <Graph-element-root Name="InterfaceRepository"/>
     	</Init-graph>
  
 		<Stop-graph>
-             <Graph-element Name="EventChannelManager">
-                <Graph-element-successor Name="XML"/>
-             </Graph-element>
 		     <Graph-element Name="XML">
                 <Graph-element-successor Name="Repository"/>
                 <Graph-element-successor Name="InterfaceRepository"/>
@@ -168,7 +146,7 @@
              <Graph-element Name="Repository"/>
              <Graph-element Name="InterfaceRepository"/>
                         
-			 <Graph-element-root Name="EventChannelManager"/>
+			 <Graph-element-root Name="XML"/>
     	</Stop-graph>
     	
     </Application>

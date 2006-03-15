@@ -1,24 +1,16 @@
-/* =========================================================================== *
- * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+/* ===================================================================== */
+/*
+ * This file is part of CARDAMOM (R) which is jointly developed by THALES 
+ * and SELEX-SI. 
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
+ * It is derivative work based on PERCO Copyright (C) THALES 2000-2003. 
  * All rights reserved.
  * 
- * CARDAMOM is free software; you can redistribute it and/or modify it under
- * the terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version.
- * 
- * CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
- * License for more details.
- * 
- * You should have received a copy of the GNU Library General
- * Public License along with CARDAMOM; see the file COPYING. If not, write to
- * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * This file and the information it contains are confidential and proprietary. 
+ * They shall not be reproduced nor disclosed to any person except to those 
+ * having a need to know them without prior written consent of the owner.
+*/
+/* ===================================================================== */
 
 
 #include <string>
@@ -36,6 +28,7 @@
 #include "testftinitsequencing/TestHello_impl.hpp"
 #include "testftinitsequencing/TestInterceptors.hpp"
 #include "testftinitsequencing/MyProcessBehaviour.hpp"
+#include "testftinitsequencing/TestFTInitSequencing.hpp"
 #include <ConfAndPlug/cdmwinit/CdmwInterface.hpp>
 
 #if CDMW_ORB_VDR == tao && CDMW_ORB_VER > 13
@@ -89,7 +82,8 @@ static void create_ref(std::string the_host,
                        std::string host1,
                        std::string host2,
                        CdmwFT::ReplicationManager_ptr rm,
-                       CdmwNamingAndRepository::Repository_ptr repository)
+                       CdmwNamingAndRepository::Repository_ptr repository,
+                       CdmwReplicationManager::time_collector_ptr time_collector)
 {
     std::cout << "Creating group reference" << std::endl << std::flush;
     const char * rid1 = "IDL:thalesgroup.com/CdmwReplicationManager/HelloInterface:1.0";
@@ -108,29 +102,40 @@ static void create_ref(std::string the_host,
     prop[0].nam[0].id="org.omg.ft.MinimumNumberReplicas";
     prop[0].val <<= (CORBA::UShort)1;
     
-    
-    
-    std::vector<std::string> slocvect(2);
-    slocvect[0] =  host1 + ".hostname/APPL1.applicationname/P11.processname";
-    slocvect[1] =  host2 + ".hostname/APPL2.applicationname/P21.processname";
+    ::FT::Locations locs(2);
+    locs.length(2);
+    locs[0].length(3);
+    locs[0][0].id = host1.c_str();
+    locs[0][0].kind = "hostname";
+    locs[0][1].id = "APPL1";
+    locs[0][1].kind = "applicationname";
+    locs[0][2].id = "P11";
+    locs[0][2].kind = "processname";
 
-    
-    const CORBA::ULong MAX_LOCS=slocvect.size();
+    locs[1].length(3);
+    locs[1][0].id = host2.c_str();
+    locs[1][0].kind = "hostname";
+    locs[1][1].id = "APPL2";
+    locs[1][1].kind = "applicationname";
+    locs[1][2].id = "P21";
+    locs[1][2].kind = "processname";
+
+    const CORBA::ULong factory_infos_len = locs.length();
     ::FT::FactoryInfos factoryInfos;
-    factoryInfos.length(MAX_LOCS);
-    for (CORBA::ULong i = 0; i < MAX_LOCS; ++i) {
-        factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
-        ::FT::Location_var loc = 
-          Cdmw::NamingAndRepository::NamingInterface::to_name(slocvect[i]);
-        std::cerr << '[' << i << "] " << slocvect[i] << " --- " 
-                  << Cdmw::NamingAndRepository::NamingInterface::to_string(loc.in()) << std::endl;
-        
-        factoryInfos[i].the_location = loc.in();
-        ::FT::Criteria factoryCrit;        
-        factoryCrit.length(0);
-        factoryInfos[i].the_criteria = factoryCrit;
+    factoryInfos.length(factory_infos_len);
+    for (CORBA::ULong i = 0; i < factory_infos_len; ++i) 
+    {
+            factoryInfos[i].the_factory = ::FT::GenericFactory::_nil();
+            std::cout << '[' << i << "] " << " --- " 
+                      << Cdmw::CommonSvcs::Naming::NamingInterface::to_string
+                           (locs[i]) << std::endl;
+
+            factoryInfos[i].the_location = locs[i];
+            ::FT::Criteria factoryCrit;        
+            factoryCrit.length(0);
+            factoryInfos[i].the_criteria = factoryCrit;
     }
-    
+
     prop[1].nam.length(1);
     prop[1].nam[0].id="org.omg.ft.Factories";
     prop[1].val <<= factoryInfos;
@@ -165,6 +170,7 @@ static void create_ref(std::string the_host,
     std::cout << "After create group reference" << std::endl << std::flush;
 
     std::string full_name = "P31HelloGroup";
+    std::string time_collector_name = "TimeCollector";
 
     // ======================================================
     // Get HELLO name domain from repository
@@ -193,6 +199,27 @@ static void create_ref(std::string the_host,
         std::cerr << e << std::endl;
         abort();
     }
+
+
+    
+
+
+    try
+    {
+        CdmwNamingAndRepository::NameDomain::RegistrationId_var regId = helloDomain->new_name (time_collector_name.c_str());
+
+        // register the object
+        helloDomain->register_object (regId.in(), time_collector);
+    }
+    catch (const CORBA::SystemException& e)
+    {
+            
+        std::cerr << "ERROR: ------------------------"
+                  << std::endl;
+        std::cerr << e << std::endl;
+        abort();
+    }
+
 }
 
 
@@ -204,12 +231,9 @@ class TestORBInitializer : public PortableInterceptor::ORBInitializer,
 public:
 
     // constructor
-        TestORBInitializer(const char* method, const char* where,
-                           const char* process)
-        : m_method(method),
-          m_where(where),
-          m_process(process)
+    TestORBInitializer(PortableInterceptor::ServerRequestInterceptor_ptr server_interceptor)
     {
+        m_server_interceptor = PortableInterceptor::ServerRequestInterceptor::_duplicate(server_interceptor);
     }
 
 
@@ -237,12 +261,10 @@ public:
             //
             // Create and register the interceptors
             //
-            PortableInterceptor::ServerRequestInterceptor_var server_interceptor
-                = new Cdmw::TestServerInterceptor(m_method.in(), m_where.in(),
-                                                  m_process.in());
+
             
             try {
-                info->add_server_request_interceptor(server_interceptor.in());
+                info->add_server_request_interceptor(m_server_interceptor.in());
             }
             catch(const PortableInterceptor::ORBInitInfo::DuplicateName&) {
                 // can't happened while interceptor is not named!
@@ -251,9 +273,8 @@ public:
     }
     
 private:
-        CORBA::String_var m_method;
-        CORBA::String_var m_where;
-        CORBA::String_var m_process;
+    PortableInterceptor::ServerRequestInterceptor_var m_server_interceptor;
+    
     };
 
                                
@@ -279,7 +300,7 @@ private:
             // No option --server, we are the main test driver 
             try
             {
-                Cdmw::FT::FTServiceInit::init(argc, argv);
+                Cdmw::FT::FTServiceInit::Init(argc, argv);
 
                 Cdmw::OrbSupport::StrategyList strategyList;
                 strategyList.add_OrbThreaded(); // Mandatory in OrbSupport::ORB_init
@@ -287,10 +308,15 @@ private:
                 strategyList.add_multicast();
                 // Initialises the ORB
                 CORBA::ORB_var orb = Cdmw::OrbSupport::OrbSupport::ORB_init(argc, argv, strategyList, "main_orb");
-        
                 // Get the root POA
                 CORBA::Object_var obj = orb->resolve_initial_references("RootPOA");
                 PortableServer::POA_var rootPOA = PortableServer::POA::_narrow(obj.in());
+        
+
+                PortableServer::POAManager_var poaMgr = rootPOA->the_POAManager();
+                poaMgr->activate();
+
+
             
                 std::cout << "Get the fault manager reference" << std::endl;
                 CORBA::Object_var fm_obj =
@@ -327,11 +353,14 @@ private:
                 std::cout << "After obtain repository" << std::endl << std::flush;
 
                 std::cout << "Invoke create_ref" << std::endl << std::flush;
-                create_ref(host_name, host_name1, host_name2, rm.in(), repository.in());
 
                 // Do test
-                int timescale = Cdmw::TestUtils::Testable::get_timescale();
-                OsSupport::OS::sleep(timescale*30000);
+                Cdmw::time_collector_impl* time_collector_impl = new Cdmw::time_collector_impl();
+                CdmwReplicationManager::time_collector_var time_collector = time_collector_impl->_this();
+                
+                create_ref(host_name, host_name1, host_name2, rm.in(), repository.in(), time_collector.in());
+                Cdmw::FT::TestFTInitSequencing test(orb.in(), rootPOA.in(), "TestFTInitSequencing", rm.in(), host_name1, host_name2, time_collector.in());
+                test.start();
             
                 // Stop the ORBThread 
                 orbThread.shutdown();
@@ -355,7 +384,7 @@ private:
             try
             {
                 // Initialise FT service
-                Cdmw::FT::FTServiceInit::init( argc, argv );
+                Cdmw::FT::FTServiceInit::Init( argc, argv );
 
                 std::cout << "[**** " << host_name << "::main] starting with args:" << std::endl;
                 for (int i=1; i<argc; ++i) {
@@ -367,9 +396,11 @@ private:
                 strategyList.add_PoaThreadPerConnection();
                 strategyList.add_multicast();
 
+                Cdmw::TestServerInterceptor* server_interceptor_impl 
+                = new Cdmw::TestServerInterceptor("request", host_name.c_str());
+                
                 PortableInterceptor::ORBInitializer_var initializer
-                    = new TestORBInitializer("init_backup_data_stores",
-                                             "request", host_name.c_str());
+                = new TestORBInitializer(server_interceptor_impl);
 
                 PortableInterceptor::register_orb_initializer(initializer.in());
                 // Initialises the ORB
@@ -385,11 +416,12 @@ private:
             
                 // creates the process behaviour
                 std::auto_ptr<MyProcessBehaviour> 
-                pProcessBehaviour(new MyProcessBehaviour(orb.in(),rootPOA.in(), host_name));
+                pProcessBehaviour(new MyProcessBehaviour(orb.in(),rootPOA.in(), host_name, server_interceptor_impl));
             
                 // init Cdmw
-                std::cout << host_name << " test_server: init Cdmw"<<std::endl;
+                std::cout << host_name << " -> test_server: init Cdmw"<<std::endl;
                 Cdmw::CdmwInit::CDMW_init(orb.in(), argc, argv,  pProcessBehaviour.get());
+                std::cout << host_name << " -> test_server: end init Cdmw"<<std::endl;
 
             
                 // Start the ORBThread 

@@ -1,9 +1,7 @@
+#!/bin/sh
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#*
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -21,22 +19,40 @@
 #* =========================================================================== *
 
 #####################################################################
+# CDMW Memory Cleaner - v. 0.4 - (c) RM
 # Kill all running applications in PERFTEST_APP list for current user
+# Usage: kill_cdmw_appl.sh [ProcessName]...
 #####################################################################
 
-PERFTEST_APP="cdmw_platform_agent cdmw_naming_and_repository java "
-PERFTEST_APP="$PERFTEST_APP cdmw_platform_supervision cdmw_platform_daemon Monitor.sh"
-PERFTEST_APP="$PERFTEST_APP i686-pc-linux-gnu/server i686-pc-linux-gnu/client"
 
-for appl_running in $PERFTEST_APP; do
-	echo Scanning memory for $appl_running
-	APP_PID=`ps aux | grep $appl_running | grep $USER  | grep -v grep | cut -c10-14`
-	for app_pid in $APP_PID; do
-		echo Terminating $appl_running with PID: $app_pid
-		kill -9 $app_pid
-	done
+KILL_LIST="cdmw_ft_ cdmw_lb_ cdmw_platform_ cdmw_naming_"
+KILL_LIST="$KILL_LIST cdmw_property_ Monitor.sh Jacorb OpenCCM"
+KILL_LIST="$KILL_LIST i686-pc-linux-gnu/server i686-pc-linux-gnu/client"
+
+if test ! "$1" == ""
+then # add other process to kill list
+  KILL_LIST="$KILL_LIST $*"
+fi
+
+echo "=== CDMW memory cleaner ==="
+for appl_running in $KILL_LIST; do
+    echo "Scanning memory for $appl_running"
+    # get user id from the passwd file
+    USR_UID=`cat /etc/passwd | grep -w $USER | cut -d: -f3`
+    APP_PID=`ps aux | grep $appl_running | egrep -w "$USER|$USR_UID"  | grep -vw grep | cut -c10-14`
+    for app_pid in $APP_PID; do
+        echo -n "===> Terminating "$appl_running" with PID: $app_pid"
+        echo " <==="
+        kill -9 $app_pid 2>&1 | >/dev/null
+    done
 done
 
-echo Removing /tmp/Cdmw* directories....
-rm -rf /tmp/Cdmw*
+if test -e ../data/CdmwPlatformMngtDaemon_conf.xml
+then
+  SMG_PORT=`cat ../data/CdmwPlatformMngtDaemon_conf.xml | grep "<SystemPort>" | cut -d\> -f2 | cut -d\< -f1`
+  rm -rf /tmp/CdmwDaemon_$SMG_PORT 2>&1 | >/dev/null&
+else
+  echo Removing /tmp/Cdmw* directories....
+  rm -rf /tmp/Cdmw* 2>&1 | >/dev/null&
+fi
 echo done!

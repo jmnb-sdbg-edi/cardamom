@@ -76,7 +76,7 @@ MyProcessControl::on_initialise(const CdmwPlatformMngtBase::StartupKind& startup
     
 void 
 MyProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     ECHO_DEF  << "Starting Client Thread." << std::endl;

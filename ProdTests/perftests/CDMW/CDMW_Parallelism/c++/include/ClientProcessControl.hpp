@@ -1,9 +1,6 @@
-/* =========================================================================== *
+/* ========================================================================== * 
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
- * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
+ * and SELEX-SI. All rights reserved.
  * 
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
@@ -18,7 +15,7 @@
  * You should have received a copy of the GNU Library General
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * =========================================================================== */
+ * ========================================================================= */
 
 
 #ifndef INCL_CLIENT_PROCESS_CONTROL_HPP
@@ -57,7 +54,7 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/initialise:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/initialise:1.0
      * operation
      */
     virtual  
@@ -69,19 +66,19 @@ class ClientProcessControl : public Cdmw::CdmwInit::ProcessControl
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/run:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/run:1.0
      * operation
      */
     virtual 
     void on_run()
-        throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+        throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
 	          CORBA::SystemException);
     
     /**
      * Purpose:
      * <p>
      * the behaviour for the
-     * IDL:thalesgroup.com/CdmwPlatformMngt/Process/stop:1.0
+     * IDL:thalesgroup.com/CdmwPlatformMngt/ProcessDelegate/stop:1.0
      * operation
      */
     virtual 

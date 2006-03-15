@@ -1,9 +1,6 @@
 #* =========================================================================== *
 #* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#* 
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
+#* and SELEX-SI. All rights reserved.
 #* 
 #* CARDAMOM is free software; you can redistribute it and/or modify it under
 #* the terms of the GNU Library General Public License as published by the
@@ -30,28 +27,37 @@ PWD:=$(shell pwd)
 #   CDMW_HOME
 include site.mk
 
+# Supervision port
+CDMW_SVS_PORT:=21881
+
 BUILD_TARGET:=$(shell $(CDMW_HOME)/bin/config.guess)
 
 XML_CONF_FILES:=xml/Main.xml
 
 XML_DATA_FILES:=data/Client.xml \
-	data/Scenario1H.xml data/Scenario2H.xml \
+	data/Scenario1H.xml \
 	data/Cdmw_nar.xml \
-	data/CdmwPlatformMngtDaemon_conf.xml
+	data/CdmwPlatformMngtDaemon_conf.xml \
+	data/CdmwFTSystemMngtGroupCreator_conf.xml \
+	data/CdmwPlatformMngtSystemStart.xml \
+	data/CdmwFaultToleranceManager_conf.xml
+	
+SHELL_SCRIPT_FILES:=run/start_single_test1H.sh 
 
 .SUFFIXES:
-.SUFFIXES: .xml  .xml.in
+.SUFFIXES: .xml  .xml.in 
+.SUFFIXES: .sh .sh.in
 
-all :: conf gencode exe data
+all:: conf gencode exe data shell
 
 # We Generated Code Ceneration XML files
 .PHONY: conf
-conf: $(XML_CONF_FILES)
+conf:: $(XML_CONF_FILES)
 	@echo "#################### XML Configuration Files Generation completed"
 
 # We Generated XML data files
 .PHONY: data
-data: $(XML_DATA_FILES)
+data:: $(XML_DATA_FILES)
 	@echo "#################### XML Data Files Generation completed"
 
 # We Build executable files
@@ -74,6 +80,12 @@ gencode::
 	$(CDMW_HOME)/bin/cdmw_code_generator.sh --xml=$(PWD)/xml/Main.xml --dir=$(PWD)/generated --lang=cpp --validate
 	@echo "#################### Code Generation completed"
 
+# We Generated Shell script .sh files
+.PHONY: shell
+shell:: $(SHELL_SCRIPT_FILES)
+	@chmod +x $(PWD)/$(SHELL_SCRIPT_FILES)
+	@echo "#################### Shell script Files Generation completed"
+
 # Rules to build each XML configuration file
 %.xml: %.xml.in
 	@echo "Generating $@ from $<"
@@ -82,8 +94,32 @@ gencode::
 	@echo s%@orbacus_bin@%$(ORBACUS_BIN_PATH)%g >> sed_patterns
 	@echo s%@orbacus_idl@%$(ORBACUS_IDL_PATH)%g >> sed_patterns
 	@echo s%@ORB_IDL_PATH@%$(ORB_IDL_PATH)%g>> sed_patterns
+	@echo s%@cdmw_svs_port@%$(CDMW_SVS_PORT)%g >> sed_patterns
 	@echo s%@hostname@%`hostname`%g>> sed_patterns
-	@echo s%@hostname2@%`cat ../../Testparams.sh | grep REMOTEHOST |cut -d= -f2`%g>> sed_patterns
+	@echo s%@hostname2@%`cat ../../Testparams.sh | grep -w REMOTEHOST |head -1|cut -d= -f2`%g>> sed_patterns
+	@echo s%@SystemMngt_port@%21`echo $PWD | wc -c | tail -c 2``id -u | tail -c 2``id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Monitoring_addr@%225.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Service_addr@%227.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@StateTransfert_addr@%226.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+
+	@cat  $< | sed -f sed_patterns > $@
+	@rm -f sed_patterns
+
+%.sh: %.sh.in
+	@echo "Generating $@ from $<"
+	@echo s%@prefix@%$(PWD)%g > sed_patterns
+	@echo s%@cdmw_home@%$(CDMW_HOME)%g >> sed_patterns
+	@echo s%@orbacus_bin@%$(ORBACUS_BIN_PATH)%g >> sed_patterns
+	@echo s%@orbacus_idl@%$(ORBACUS_IDL_PATH)%g >> sed_patterns
+	@echo s%@ORB_IDL_PATH@%$(ORB_IDL_PATH)%g>> sed_patterns
+	@echo s%@cdmw_svs_port@%$(CDMW_SVS_PORT)%g >> sed_patterns
+	@echo s%@hostname@%`hostname`%g>> sed_patterns
+	@echo s%@hostname2@%`cat ../../Testparams.sh | grep -w REMOTEHOST |head -1|cut -d= -f2`%g>> sed_patterns
+	@echo s%@SystemMngt_port@%21`echo $PWD | wc -c | tail -c 2``id -u | tail -c 2``id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Monitoring_addr@%225.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@Service_addr@%227.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+	@echo s%@StateTransfert_addr@%226.`echo $PWD | wc -c | tail -c 2`.`id -u | tail -c 2`.`id -u -n | wc -c | tail -c 2`%g >> sed_patterns
+
 	@cat  $< | sed -f sed_patterns > $@
 	@rm -f sed_patterns
 
@@ -95,6 +131,8 @@ clean::
 
 cleanall: clean
 	-$(RM) $(XML_DATA_FILES)
+	-$(RM) $(XML_CONF_FILES)
+	-$(RM) $(SHELL_SCRIPT_FILES)
 	-$(RM) -r $(PWD)/generated
 	-$(RM) -r $(PWD)/$(BUILD_TARGET)
 

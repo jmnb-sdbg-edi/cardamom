@@ -75,11 +75,11 @@ MyProcessControl::on_initialise(const CdmwPlatformMngtBase::StartupKind& startup
     
 void 
 MyProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
 {
     if (m_client_thread) 
-	m_client_thread->start();
+	    m_client_thread->start();
 }
 
 void 

@@ -45,6 +45,8 @@ HOST_TYPE="`$CDMW_HOME/bin/config.guess`"
 
 shift
 
+echo $SPLICE_DDS_URI
+
 echo $DIRECTORY/../$HOST_TYPE/$PROGRAM $*
 
 exec $DIRECTORY/../$HOST_TYPE/$PROGRAM $*

@@ -25,6 +25,7 @@
 
 <!DOCTYPE System SYSTEM "@cdmw_home@/share/CdmwPlatformMngtSystem.dtd">
 
+
 <!-- ***************** -->
 <!-- System definition -->
 <!--                   -->
@@ -50,14 +51,12 @@
 	<Host
         Name="@host_name@"
         App-exec-path="./cdmw_platform_application"
-        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-        Probe-exec-path="./cdmw_host_probe"/>
+        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
 
 	<Host
         Name="@host_name2@"
         App-exec-path="./cdmw_platform_application"
-        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-        Probe-exec-path="./cdmw_host_probe"/>
+        Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"/>
 
     <!-- ********************** -->
     <!-- Application definition -->

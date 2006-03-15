@@ -63,11 +63,11 @@ public:
         throw( CORBA::SystemException );
     
     void on_next_step()
-        throw( CdmwPlatformMngt::Process::InvalidStep,
+        throw( CdmwPlatformMngt::ProcessDelegate::InvalidStep,
                CORBA::SystemException );
 
     virtual void on_run()
-        throw( CdmwPlatformMngt::Process::NotReadyToRun,
+        throw( CdmwPlatformMngt::ProcessDelegate::NotReadyToRun,
                CORBA::SystemException );
 
     virtual void on_stop()

@@ -1,10 +1,7 @@
 /* ========================================================================== *
  * This file is part of CARDAMOM (R) which is jointly developed by THALES
- * and SELEX-SI.
+ * and SELEX-SI. All rights reserved.
  * 
- * It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
- * All rights reserved.
- *
  * CARDAMOM is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Library General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -19,7 +16,7 @@
  * Public License along with CARDAMOM; see the file COPYING. If not, write to
  * the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * ========================================================================= */
- 
+
 
 #include "ClientProcessControl.hpp"
 #include "Foundation/common/Exception.hpp"
@@ -70,7 +67,7 @@ namespace Parallelism
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
 							 m_processName.c_str(), 
 							 ">>>>>>>>>>>>>> Initialisation requested by supervision");
     
@@ -78,7 +75,7 @@ namespace Parallelism
     // retrieve Tester object from Repository
     // =========================================
     // get NamingInterface to perf_test
-    Cdmw::NamingAndRepository::NamingInterface ParallelismNamingInterface =
+    Cdmw::CommonSvcs::Naming::NamingInterface ParallelismNamingInterface =
       Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("perf_test");
     
     // Retrieve Tester from NamingInterface
@@ -144,13 +141,13 @@ namespace Parallelism
   
   // process to run called by platformmngt    
   void ClientProcessControl::on_run()
-    throw(CdmwPlatformMngt::Process::NotReadyToRun, 
+    throw(CdmwPlatformMngt::ProcessDelegate::NotReadyToRun, 
           CORBA::SystemException)
   {
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
 							 m_processName.c_str(), 
 							 ">>>>>>>>>>>>>> Run requested by supervision");
     
@@ -246,7 +243,7 @@ namespace Parallelism
     // =================================================================
     // example of using the PlatformInterface for notifying a message
     // =================================================================
-    Cdmw::PlatformMngt::PlatformInterface::notifyMessage(CdmwPlatformMngtBase::INF,
+    Cdmw::PlatformMngt::PlatformInterface::Notify_message(CdmwPlatformMngtBase::INF,
 							 m_processName.c_str(), 
 							 ">>>>>>>>>>>>>> Stop requested by supervision");
     for (int i = 0; i< m_nthread; i++) {

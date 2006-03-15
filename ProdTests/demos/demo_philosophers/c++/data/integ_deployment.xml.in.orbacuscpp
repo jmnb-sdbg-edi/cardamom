@@ -58,9 +58,7 @@
 
     <!-- Hosts of the system -->
 	<Host Name="@host_name@"
-          App-exec-path="./cdmw_platform_application"
-          Agent-exec-path="@cdmw_home@/bin/cdmw_platform_agent"
-          Probe-exec-path="./cdmw_host_probe"/>
+          />
 
     <!-- ********************** -->
     <!-- Application definition -->
@@ -112,8 +110,7 @@
 		                   Autoended="FALSE"
 		                   Exec-path="@cdmw_home@/demos/demo_philosophers/c++/run/start_interface_repository.sh"
 		                   Port="-1"
-		                   Args="-IIOPport 22789 @cdmw_home@/demos/demo_philosophers/c++/generated/Philo_cif.idl">
-		</Unmanaged-process>
+		                   Args="-IIOPport 22789 @cdmw_home@/demos/demo_philosophers/c++/generated/Philo_cif.idl"/>
 		
 		<Unmanaged-process Name="OBEventService"
                  Host-name="@host_name@"

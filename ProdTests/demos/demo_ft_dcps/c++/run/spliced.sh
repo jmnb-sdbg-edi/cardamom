@@ -34,6 +34,8 @@ SITE_CONFIG="$DIRECTORY/../site.mk"
 # SPLICE installation folder
 SPLICE_BIN_PATH="`cat $SITE_CONFIG | grep SPLICE_BIN_PATH | cut -d= -f2`"
 
+SPLICE_BIN_PATH=/tools/exec/Splice-dds-1.3/install/V1.3/x86.linux2.6/bin
+
 . $SPLICE_BIN_PATH/../release.com
 
 exec $TERM -ls -sb -sl 500 -e $SPLICE_BIN_PATH/$PROGRAM $*

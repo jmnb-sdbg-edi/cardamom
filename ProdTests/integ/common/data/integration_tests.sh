@@ -161,7 +161,7 @@ elif [ "$ADMIN_ERROR" = "no" -a "$CORE" = "no" ]; then
 fi
 
 rm -fr ../workDir
-rm -fr @config.FtpJAVA.ftp.dir@/cdmw_integration
+rm -fr @config.Ftp.homedir@/cdmw_integration
 
 # Now we can display all the results
 echo "==========================================================="

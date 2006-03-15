@@ -1,75 +1,42 @@
-#* =========================================================================== *
-#* This file is part of CARDAMOM (R) which is jointly developed by THALES
-#* and SELEX-SI.
-#*
-#* It is derivative work based on PERCO Copyright (C) THALES 2000-2003.
-#* All rights reserved.
-#* 
-#* CARDAMOM is free software; you can redistribute it and/or modify it under
-#* the terms of the GNU Library General Public License as published by the
-#* Free Software Foundation; either version 2 of the License, or (at your
-#* option) any later version.
-#* 
-#* CARDAMOM is distributed in the hope that it will be useful, but WITHOUT
-#* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#* FITNESS FOR A PARTICULAR PURPOSE. See the GNU Library General Public
-#* License for more details.
-#* 
-#* You should have received a copy of the GNU Library General
-#* Public License along with CARDAMOM; see the file COPYING. If not, write to
-#* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#* =========================================================================== *
+############## function definitions ###############
+## filter: exclude outliers and/or warm up stage samples from the data set
+filter_warmup <- function(x) x[warmup:length(x)]
+filter_top <- function(x) sort(x)[0:ceiling((length(x)*(100-(threshold%%100)))/100)]
+filter <- function(x) filter_top(filter_warmup(x))
+## return numember x with dec decimal
+num_dec <- function(x,dec) x<- round(x*(10^dec))/(10^dec)
+###################################################
+
+warmup <- 2         # if warmup=N then the first N-1 samples are filtered out (warm up stage)
 
 results <- "scenario.result"
 
+## Acuisition of configuration file
+client_cfg <- scan("client.cfg")
+
+## Acquisition of DELTA_C.dat
+DATASET<-scan("DELTA_C.dat")
+
+## exclude warm up stage samples from the data set
+DS_f<-filter_warmup(DATASET);
+length(DS_f)
+
+## calculate difference from measures and required interval for timer expiration
+diff_int <- DS_f - client_cfg[2]*1000
+
+## calculate how many timer expires in advance
+lt_zero <- diff_int[diff_int < 0]
+num_lt_zero <- length(lt_zero)
+
+## calculate maximum delay of timer expiration
+max_delay <- max(diff_int)
+
 write("******** PERFORMANCE TEST C-090 ******", results)
-write("*** please note:  unit is (1 msec) ***", results, append=TRUE)
-
-
-###ACQUISITION OF DELTA_C.dat
-DC_CR_10<-scan("CR-10/DELTA_C.dat")
-DC_CR_50<-scan("CR-50/DELTA_C.dat")
-DC_CR_100<-scan("CR-100/DELTA_C.dat")
-DC_CR_500<-scan("CR-500/DELTA_C.dat")
-
-warmup <- 10        # if warmup=N then the first N samples are filtered out (warm up stage)
-threshold <- 0.5    # if threshold=N then 2N% of samples is filtered out (with the "filter_top_and_down" function)
-
-#filter: exclude outliers and/or warm up stage samples from the data set
-filter_warmup <- function(x) x[warmup:length(x)]
-filter_top <- function(x) sort(x)[0:ceiling((length(x)*(100-(threshold%%100)))/100)]
-filter_down <- function(x) sort(x)[ceiling((length(x)*(threshold%%100))/100):length(x)]
-filter_top_and_down <- function(x) sort(x)[ceiling((length(x)*(threshold%%100))/100):floor((length(x)*(100-(threshold%%100)))/100)]
-filter <- function(x) filter_top_and_down(filter_warmup(x))
-
-### DELTA_C FILTERING
-DC_CR_10f<-filter(DC_CR_10/1000);
-DC_CR_50f<-filter(DC_CR_50/1000);
-DC_CR_100f<-filter(DC_CR_100/1000);
-DC_CR_500f<-filter(DC_CR_500/1000);
-
-
 write("", results, append=TRUE)
-write("CR-10 results", results, append=TRUE)
-write("-------------", results, append=TRUE)
-T <- 10
-write(ncolumns=2, c("max|Ts-T| =", max(abs(DC_CR_10f-T))), results, append=TRUE)
-write("", results, append=TRUE)
-write("CR-50 results", results, append=TRUE)
-write("-------------", results, append=TRUE)
-T <- 50
-write(ncolumns=2, c("max|Ts-T| =", max(abs(DC_CR_50f-T))), results, append=TRUE)
-write("", results, append=TRUE)
-write("CR-100 results", results, append=TRUE)
-write("--------------", results, append=TRUE)
-T <- 100
-write(ncolumns=2, c("max|Ts-T| =", max(abs(DC_CR_100f-T))), results, append=TRUE)
-write("", results, append=TRUE)
-write("CR-500 results", results, append=TRUE)
-write("--------------", results, append=TRUE)
-T <- 500
-write(ncolumns=2, c("max|Ts-T| =", max(abs(DC_CR_500f-T))), results, append=TRUE)
-write("", results, append=TRUE)
+write("Results:", results, append=TRUE)
+write("------------------------------------------------------------------------", results, append=TRUE)
+write(ncolumns=2, c("Number of Timers expirated in advance:",num_lt_zero),results, append=TRUE)
+write(ncolumns=3, c("Maximum delay of expiration:",max_delay,"usec"),results, append=TRUE)
+write("------------------------------------------------------------------------", results, append=TRUE)
 
-
-rm(DC_CR_10,DC_CR_50,DC_CR_100,DC_CR_500,DC_CR_10f,DC_CR_50f,DC_CR_100f,DC_CR_500f, results,T)
+rm(warmup, results, client_cfg, DATASET, DS_f, diff_int, lt_zero, num_lt_zero, max_delay)

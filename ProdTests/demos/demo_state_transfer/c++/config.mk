@@ -92,13 +92,15 @@ CXXFLAGS_CDMW=
 LDFLAGS_CDMW=-L$(CDMW_HOME)/lib/c++ \
 	-L$(XERCES_LIB_PATH)
 IDLFLAGS_CDMW=-I$(CDMW_HOME)/idl
-LIBS_CDMW=-lcdmwcommon -lcdmworbsupport -lcdmwossupport -lcdmwosthreads \
-	-lcdmwnaminginterface -lcdmwrepositoryinterface -lcdmwplatforminterface \
-	-lcdmwcdmwinit -lcdmwlifecycle -lcdmwtestutils -lcdmwftcommon -lcdmwftstatemanager -lcdmwftinit \
+LIBS_CDMW=-lcdmwcommon -lcdmworbsupport -lcdmwossupport -lcdmwosthreads -lcdmwlogging \
+	-lcdmwcommonsvcsnaming -lcdmwrepositoryinterface -lcdmwplatforminterface \
+	-lcdmwcdmwinit -lcdmwlifecycle -lcdmwtestutils -lcdmwftcommon \
+	-lcdmwcommonsvcsdatastore -lcdmwftstatemanager -lcdmwftinit \
 	-lcdmwftlocationmanager -lcdmwmonitoringidl -lxerces-c1_3 -lcdmwlifecycleidl \
 	-lcdmwplatformlibrary -lcdmwplatformvaluetypes \
-	-lcdmwplatformidl -lcdmwfaulttoleranceidl -lcdmwrepositoryidl \
-	-lcdmwsystemmngtidl -lcdmwcommonidl
+	-lcdmwpullmonitorableidl -lcdmwsmgcommonidl -lcdmwsmginterfaceidl \
+	-lcdmwfaulttoleranceidl -lcdmwrepositoryidl -lcdmwcommonidl -lcdmwcosnotificationidl
+
 #END CDMW FLAGS
 
 RM=rm -f

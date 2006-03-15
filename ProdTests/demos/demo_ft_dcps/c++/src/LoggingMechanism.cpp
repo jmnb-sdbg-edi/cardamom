@@ -21,204 +21,84 @@
  * =========================================================================== */
 
 
-#include <LoggingMechanism.hpp>
-
+#include "LoggingMechanism.hpp"
 #include <iostream>
-//#include <dcps/c++/dds_string.h>
-
 #include <Foundation/common/Assert.hpp>
     
+LoggingMechanism::LoggingMechanism(int argc, char *argv[]) 
+{
+  // Create a DomainParticipantFactory.
+  BasicTypeSeq_var dataList = new BasicTypeSeq;
+  SampleInfoSeq_var infoList = new SampleInfoSeq;
+  ReturnCode_t status;
+  
+  dpf = DomainParticipantFactory::get_instance();
+  std::cout << "LoggingMechanism => create a SpliceDomainParticipantFactory" << std::endl;
+  dp = dpf->create_participant(myDomain, PARTICIPANT_QOS_DEFAULT, NULL);
 
-LoggingMechanism::LoggingMechanism(int argc, char *argv[]) {
-	// Create a DomainParticipantFactory.
-	std::cout << "LoggingMechanism => create a SpliceDomainParticipantFactory" << std::endl;
-/*	m_factory = new DCPS::SpliceDomainParticipantFactory(argc, argv);
+  if (dp == 0)
+    std::cout << "LoggingMechanism => DomainParticipant is null "  << std::endl;
+  else 
+    std::cout << "LoggingMechanism => DomainParticipantcreated!"  << std::endl;
 
-	if (!m_factory.in())
-	{
-		std::cerr << "LoggingMechanism => impossible to create a SpliceDomainParticipantFactory" << std::endl;
-		CDMW_ASSERT(false);
-	}
-	std::cout << "LoggingMechanism => SpliceDomainParticipantFactory created!" << std::endl;
-*/    
-   // Create a domainParticipant with it.
-//    DCPS::DomainParticipantQos dp_qos;
-//	m_participant = m_factory->create_participant(0, dp_qos, NULL);
-	m_participant = TheParticipantFactory->create_participant(0, PARTICIPANT_QOS_DEFAULT, NULL);
+  status = dt.register_type(dp, "Basic::BasicType");
+  std::cout << "LoggingMechanism => The Return code of register is " << status << std::endl;
+  
+  if (status)
+  {
+    std::cerr << "LoggingMechanism => impossible to register the 'BasicTypes' type inside my DomainParticipant" << std::endl;
+    CDMW_ASSERT(false);
+  }   
+  std::cout << "LoggingMechanism => BasicTypesDataType registered." << std::endl;
 
+  t = dp->create_topic("BasicTypeTopic", "Basic::BasicType", TOPIC_QOS_DEFAULT, NULL);
+  std::cout << "LoggingMechanism => Topic for BasicTypes created." << std::endl;
 
-	if (!m_participant.in())
-	{
-		std::cerr << "LoggingMechanism => impossible to create a DomainParticipant" << std::endl;
-		CDMW_ASSERT(false);
-	}
-	std::cout << "LoggingMechanism => DomainParticipantcreated!" << std::endl;
+  PublisherQos pQos = PUBLISHER_QOS_DEFAULT;
+  pQos.partition.name.length(1);
+  pQos.partition.name[0] = string_dup("BasicTypeSpace");
+  p = dp->create_publisher(pQos, NULL);
+  std::cout << "LoggingMechanism => Publisher created for Partition '" << pQos.partition.name[0] << std::endl;
 
-/*	 // Enable the DomainParticipant.
-	 std::cout << "LoggingMechanism => Th_createRegistrar ok!" << std::endl;
-	 DCPS::ReturnCode_t status = m_participant->enable();
-    if (status) 
-	 {
-		std::cerr << "LoggingMechanism => impossible to enable the DomainParticipant" << std::endl;
-		CDMW_ASSERT(false);		 
-	 }
-    std::cout << "LoggingMechanism => DomainParticipant enabled." << std::endl; */
+  dw = p->create_datawriter(t, DATAWRITER_QOS_DEFAULT, NULL);
+  
+  std::cout << "LoggingMechanism => DataWriter created for type 'BasicTypes'." << std::endl;
+  if (!dw) 
+  {
+    std::cerr << "LoggingMechanism => impossible to create a DataWriter for type 'BasicTypes" << std::endl;
+    CDMW_ASSERT(false);	
+  }
 
-	 // Register the 'BasicTypes' type inside my DomainParticipant.
-    const char *type_name = "BasicTypes";
-    //DemoFTDCPS::BasicTypesDataType myDataType;
-    DemoFTDCPS::BasicTypesTypeSupport myDataType;
-    DDS::ReturnCode_t status;
-    status = myDataType.register_type(m_participant.in(), type_name);
-    if (status)
-	 {
-		std::cerr << "LoggingMechanism => impossible to register the 'BasicTypes' type inside my DomainParticipant" << std::endl;
-		CDMW_ASSERT(false);		 
-	 }
-	 std::cout << "LoggingMechanism => BasicTypesDataType registered." << std::endl;
-
-	 // Create a new Topic for the BasicTypes type.
-/*    TopicQos tp_qos;
-    tp_qos.durability.kind = VOLATILE_DURABILITY_QOS;
-    tp_qos.reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
-    tp_qos.delay_laxity.duration.sec = 0;
-    tp_qos.delay_laxity.duration.nanosec = 0;*/
-    
-    m_topic = m_participant->create_topic("myBasicTypes", type_name, TOPIC_QOS_DEFAULT, NULL);
-    if (!m_topic.in()) 
-	 {
-		std::cerr << "LoggingMechanism => impossible to create the topic for the 'BasicTypes' type" << std::endl;
-		CDMW_ASSERT(false);		
-	 }
-	 std::cout << "LoggingMechanism => Topic for BasicTypes created." << std::endl;
-
-	 /*// Enable the Topic.
-    status = m_topic->enable();
-    if (status) 
-	 {
-		std::cerr << "LoggingMechanism => impossible to enable the topic for the 'BasicTypes' type" << std::endl;
-		CDMW_ASSERT(false);	
-	 }
-	 std::cout << "LoggingMechanism => Topic enabled." << std::endl;*/
-
-    // Create a Publisher QoS.
-    // use a default partition.
-	 DDS::PublisherQos pub_qos;
-
-    // Added:
-    m_participant->get_default_publisher_qos(pub_qos);
-    pub_qos.partition.name.length(1);
-    pub_qos.partition.name[0] = "myPartition";
-        
-    // Create a Publisher in this Partition.
-    m_publisher = m_participant->create_publisher(pub_qos, NULL);
-	 if (!m_publisher.in()) 
-	 {
-		std::cerr << "LoggingMechanism => impossible to create a Publisher in partition" << std::endl;
-		CDMW_ASSERT(false);	
-	 }
-	 std::cout << "LoggingMechanism => Publisher created for Partition '" << pub_qos.partition.name[0] << std::endl;
-
-	 /*// Enable the Publisher.
-    status = m_publisher->enable();
-    if (status) 
-	 {
-		std::cerr << "LoggingMechanism => impossible to enable the Publisher" << std::endl;
-		CDMW_ASSERT(false);	
-	 }
-	 std::cout << "LoggingMechanism => Publisher enabled." << std::endl;*/
-
-    // Create a BasicTypesDataWriter.
-	 //DCPS::DataWriterQos dw_qos;
-    
-    m_data_writer = m_publisher->create_datawriter(m_topic.in(), DATAWRITER_QOS_DEFAULT, NULL);
-	 std::cout << "LoggingMechanism => DataWriter created for type 'BasicTypes'." << std::endl;
-    if (!m_data_writer) 
-	 {
-		std::cerr << "LoggingMechanism => impossible to create a DataWriter for type 'BasicTypes" << std::endl;
-		CDMW_ASSERT(false);	
-	 }
-    
-    // Cast it to its original (typed) format.
-    
-    m_typed_data_writer = dynamic_cast<DemoFTDCPS::BasicTypesDataWriter_ptr>(m_data_writer);
-    if (m_typed_data_writer.in() == NULL)
-    {
-		 std::cerr << "LoggingMechanism => DataWriter handle could not be casted back to its original type!!" << std::endl;
-		  CDMW_ASSERT(false);	
-    }
-    else
-    {
-		 std::cout << "LoggingMechanism => DataWriter handle successfuly casted to a BasicTypesDataWriter handle." << std::endl;
-    }
-    
-    /*// Enable the DataWriter.
-    status = m_typed_data_writer->enable();
-    if (status) 
-	 {
-		  std::cerr << "LoggingMechanism => impossible to enable DataWriter !!" << std::endl;
-		  CDMW_ASSERT(false);	
-    }
-    std::cout << "LoggingMechanism => DataWriter enabled."  << std::endl;*/
-
+  fdw = BasicTypeDataWriter::_narrow(dw);
+                                                                               
 }
+
 
 LoggingMechanism::~LoggingMechanism()
 {
-	 /* Now start to destroy all entities. */
-	DDS::ReturnCode_t status = m_publisher->delete_datawriter(m_typed_data_writer.in());
-    if (status) 
-	 {
-		  std::cerr << "LoggingMechanism destructor => impossible to delete DataWriter !!" << std::endl;
-		  CDMW_ASSERT(false);	
-    }
-    std::cout << "BasicTypesDataWriter deleted!!" << std::endl;
-
-    status = m_participant->delete_publisher(m_publisher.in());
-    if (status) 
-	 {
-		  std::cerr << "LoggingMechanism destructor => impossible to delete DataWriter !!" << std::endl;
-		  CDMW_ASSERT(false);	
-    }
-    std::cout << "Publisher deleted!! " << std::endl;
-    
-    status = m_participant->delete_topic(m_topic.in());
-    if (status) 
-	 {
-		  std::cerr << "LoggingMechanism destructor => impossible to delete DataWriter !!" << std::endl;
-		  CDMW_ASSERT(false);	
-    }
-    std::cout << "Topic deleted!!" << std::endl;
-    
-    status = TheParticipantFactory->delete_participant(m_participant.in());
-    if (status) 
-	 {
-		  std::cerr << "LoggingMechanism destructor => impossible to delete DataWriter !!" << std::endl;
-		  CDMW_ASSERT(false);	
-    }
-    std::cout << "DomainParticipant deleted!!" << std::endl;
-    
-    std::cout << "DomainParticipantFactory deletes itself!! No status available...." << std::endl;
+  /* Now start to destroy all entities. */
+  p?p->delete_datawriter(dw):0;
+  CORBA::release(fdw);
+  dp?dp->delete_publisher(p):0;
+  dp?dp->delete_topic(t):0;
+  dpf?dpf->delete_participant(dp):0;
 }
+
 
 void LoggingMechanism::log_state(const FT::State& state) 
 {
-    
-    std::cout << "           . LoggingMechanism::log_state " << (unsigned long) state[0] << std::endl;
-    
-	 DemoFTDCPS::BasicTypes value;
+  std::cout << "           . LoggingMechanism::log_state " << (unsigned long) state[0] << std::endl;
+  BasicType value;
+  value.myUlong = state[0];
+  value.myString = CORBA::string_dup("hello");
+  value.myString10 = CORBA::string_dup("thales.com");
+  DDS::ReturnCode_t status = fdw->write(value, DDS::HANDLE_NIL);
+  if (status)
+  {
+    std::cerr << "LoggingMechanism log_state => impossible to write value !!" << std::endl;
+  }
+}    
 
-	 // Fill value from state
-	 value.myUlong = state[0];
-	 value.myString = CORBA::string_dup("hello");
-	 value.myString10 = CORBA::string_dup("thales.com");
-	 
-    DDS::ReturnCode_t status = m_typed_data_writer->write(value, DDS::HANDLE_NIL);
-    if (status)     
-	 {
-		  std::cerr << "LoggingMechanism log_state => impossible to write value !!" << std::endl;
-    }
 
-}
 
 

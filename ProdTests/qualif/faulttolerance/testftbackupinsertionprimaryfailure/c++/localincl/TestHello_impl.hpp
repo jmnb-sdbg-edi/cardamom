@@ -27,8 +27,8 @@
 #include <Foundation/orbsupport/CORBA.hpp>
 #include <Foundation/ossupport/OS.hpp>
 #include <FaultTolerance/ftstatemanager/DataStore.hpp>
-#include <FaultTolerance/ftstatemanager/StorageHome.hpp>
-#include <FaultTolerance/ftstatemanager/StorageObject.hpp>
+#include <Foundation/commonsvcs/datastore/StorageHome.hpp>
+#include <Foundation/commonsvcs/datastore/StorageObject.hpp>
 
 #include "testftbackupinsertionprimaryfailure/TestHello.skel.hpp"
 
@@ -37,8 +37,8 @@
 namespace Cdmw
 {
     typedef Cdmw::FT::DataStore<CORBA::Long, std::string, std::less<CORBA::Long> > TestDataStore;
-    typedef Cdmw::FT::StorageHome<CORBA::Long, std::string, std::less<CORBA::Long> > TestStorageHome;
-    typedef Cdmw::FT::StorageObject<CORBA::Long, std::string, std::less<CORBA::Long> > TestStorageObject;
+    typedef Cdmw::CommonSvcs::DataStore::StorageHome<CORBA::Long, std::string, std::less<CORBA::Long> > TestStorageHome;
+    typedef Cdmw::CommonSvcs::DataStore::StorageObject<CORBA::Long, std::string, std::less<CORBA::Long> > TestStorageObject;
 
     class HelloInterface_impl :public virtual POA_CdmwReplicationManager::HelloInterface,
                                virtual public PortableServer::RefCountServantBase

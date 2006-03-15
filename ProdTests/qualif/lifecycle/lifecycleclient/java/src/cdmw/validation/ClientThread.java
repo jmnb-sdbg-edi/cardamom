@@ -192,8 +192,8 @@ public class ClientThread extends Thread {
             if (arg.length() == 0) {
                 out.println("Factory name needed.");
             } else {
-                cdmw.namingandrepository.NamingInterface ni =
-                    new cdmw.namingandrepository.NamingInterface(nc);
+                cdmw.commonsvcs.naming.NamingInterface ni =
+                    new cdmw.commonsvcs.naming.NamingInterface(nc);
 
                 com.thalesgroup.Validation.ProcessAgentFactory factory
                     = com.thalesgroup.Validation.ProcessAgentFactoryHelper.narrow(

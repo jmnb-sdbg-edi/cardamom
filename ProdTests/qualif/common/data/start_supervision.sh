@@ -21,5 +21,14 @@
 #* the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #* =========================================================================== *
 
-cdmw_platform_supervision --creation-timeout=20000 --event-timeout=6000  $*
 
+if test -x "../bin/cdmw_ft_manager"
+then
+# start supervision with FaultTolerance
+echo "cdmw_platform_supervision_starter --CdmwXMLFile=CdmwPlatformMngtSystemStart.xml --validate $*"
+cdmw_platform_supervision_starter --CdmwXMLFile=CdmwPlatformMngtSystemStart.xml --validate $*
+else
+# start supervision without FaultTolerance
+echo "cdmw_platform_supervision --creation-timeout=20000 --event-timeout=6000  $*"
+cdmw_platform_supervision --creation-timeout=20000 --event-timeout=6000  $*
+fi

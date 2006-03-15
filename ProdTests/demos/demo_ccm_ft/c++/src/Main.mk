@@ -113,21 +113,25 @@ LIB_CLIENT_SRCS= ClientHomeExecutor_impl.cpp \
 	ClientExecutor_impl.cpp \
 	ClientThread.cpp
 
+DCPS_HEADER= HelloDataDcps_impl.cpp \
+	HelloDataSplDcps.cpp \
+	HelloDataC.cpp  \
+	HelloDataDcpsC.cpp
+
 GRP_CREATOR_SRCS=$(CDMW_GEN_GRP_CREATOR_SRC) \
 	group_creator.cpp
 
-
 .SUFFIXES:
-.SUFFIXES: .idl .cpp .skel.cpp .stub.cpp .o .stub.hpp .skel.hpp .hpp .h
+.SUFFIXES: .idl .cpp .skel.cpp .stub.cpp .o .stub.hpp .skel.hpp .hpp .h .c
 
 
 SERVER_OBJ = $(SERVER_SRCS:.cpp=.o) $(CORBA_SRV_ALL_OBJS)
 CLIENT_OBJ = $(CLIENT_SRCS:.cpp=.o) $(CORBA_SRV_ALL_OBJS)
-LIB_SERVER_OBJ = $(LIB_SERVER_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
+LIB_SERVER_OBJ = $(LIB_SERVER_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS) $(DCPS_HEADER:.cpp=.o)
 LIB_CLIENT_OBJ = $(LIB_CLIENT_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
 MANUAL_ASSEMBLY_OBJ = $(MANUAL_ASSEMBLY_SRCS:.cpp=.o) $(CORBA_SRV_ALL_OBJS)
 GRP_CREATOR_OBJ = $(GRP_CREATOR_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
-
+#DCPS_OBJ = $(DCPS_HEADER:.cpp=.o) 
 
 # Rules to build the dependency of each source file
 %.d: %.cpp
@@ -136,15 +140,15 @@ GRP_CREATOR_OBJ = $(GRP_CREATOR_SRCS:.cpp=.o) $(CORBA_CL_ALL_OBJS)
 	| sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
 	[ -s $@ ] || rm -f $@
 
-DCPS_SRCS= ../idl/TestHelloData.idl
+DCPS_SRCS= ../idl/HelloData.idl
 
-SRCS=$(CLIENT_SRCS) $(SERVER_SRCS) $(LIB_CLIENT_SRCS)  $(LIB_SERVER_SRCS) $(MANUAL_ASSEMBLY_SRCS) $(GRP_CREATOR_SRCS) $(CORBA_SRV_ALL_SRC)
+SRCS=${DCPS_HEADER} $(CLIENT_SRCS) $(SERVER_SRCS) $(LIB_CLIENT_SRCS)  $(LIB_SERVER_SRCS) $(MANUAL_ASSEMBLY_SRCS) $(GRP_CREATOR_SRCS) $(CORBA_SRV_ALL_SRC)
 DEPENDS=$(SRCS:.cpp=.d)
 
 
 
 .PHONY: all
-all: depend $(SERVER_NAME) $(CLIENT_NAME) $(MANUAL_ASSEMBLY_NAME) $(LIB_CLIENT_NAME) $(LIB_SERVER_NAME) $(GRP_CREATOR_NAME)
+all: depend $(DCPS_HEADER) $(SERVER_NAME) $(CLIENT_NAME) $(MANUAL_ASSEMBLY_NAME) $(LIB_CLIENT_NAME) $(LIB_SERVER_NAME) $(GRP_CREATOR_NAME)
 
 .PHONY: depend
 depend: $(DEPENDS)
@@ -157,13 +161,12 @@ depend: $(DEPENDS)
 .PHONY: $(GRP_CREATOR_NAME)
 
 
-
 .cpp.o:
 	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<
 
 
-#$(DCPS_HEADER): $(DCPS_SRCS)
-#   idlpp -dcps $(DCPS_SRCS) 
+$(DCPS_HEADER): $(DCPS_SRCS)
+	idlpp -l cpp $(DCPS_SRCS) 
 
 $(SERVER_NAME): $(SERVER_OBJ)
 	$(PURIFY) $(CXXLD) $(CXXFLAGS) $(LDFLAGS) -o $@ \
@@ -183,7 +186,7 @@ $(LIB_CLIENT_NAME): $(LIB_CLIENT_OBJ)
 
 $(LIB_SERVER_NAME): $(LIB_SERVER_OBJ)
 	$(PURIFY) $(CXXLD) $(CXXFLAGS) -shared $(LDFLAGS) -o $@ \
-	$(LIB_SERVER_OBJ)  $(ALL_LIBS)
+	$(LIB_SERVER_OBJ)  $(DCPS_OBJ) $(ALL_LIBS)
 
 $(GRP_CREATOR_NAME): $(GRP_CREATOR_OBJ)
 	$(PURIFY) $(CXXLD) $(CXXFLAGS) $(LDFLAGS) -o $@ \

@@ -27,7 +27,7 @@
 
 #include <faulttoleranceclient2/TestHello.stub.hpp>
 #include <Foundation/ossupport/OS.hpp>
-#include <Repository/naminginterface/NamingInterface.hpp>
+#include <Foundation/commonsvcs/naming/NamingInterface.hpp>
 #include <FaultTolerance/idllib/FT.stub.hpp>
 #include <Repository/repositoryinterface/RepositoryInterface.hpp>
 #include <Repository/idllib/CdmwNamingAndRepository.stub.hpp>
@@ -68,7 +68,7 @@ TestFTInit::~TestFTInit()
 // do_tests
 void TestFTInit::do_tests()
 {
-    set_nbOfRequestedTestOK (27);
+    set_nbOfRequestedTestOK (28);
 
     const char * rep_id_HelloInterface1 = "IDL:thalesgroup.com/Cdmw/Test/HelloInterface1:1.0";
     const char * rep_id_HelloInterface2 = "IDL:thalesgroup.com/Cdmw/Test/HelloInterface2:1.0";
@@ -161,7 +161,7 @@ void TestFTInit::do_tests()
     Cdmw::NamingAndRepository::RepositoryInterface::init ("CDMW",
                                                            repository.in());
 
-    Cdmw::NamingAndRepository::NamingInterface ni =
+    Cdmw::CommonSvcs::Naming::NamingInterface ni =
     Cdmw::NamingAndRepository::RepositoryInterface::get_domain_naming_interface ("dom1/dom2");
 
 
@@ -174,7 +174,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P11";
     loc[2].kind = "processname";
 
-    std::string s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    std::string s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     std::string full_name = "dom3/P11HelloInterface1";
     CORBA::Object_var obj;
@@ -236,7 +236,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P21";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P21HelloInterface1";
 
@@ -337,7 +337,7 @@ void TestFTInit::do_tests()
     loc[2].kind = "processname";
 
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P31HelloInterface1";
 
@@ -389,9 +389,6 @@ void TestFTInit::do_tests()
         TEST_FAILED();
     }
 
-    // this part has been change because,  when the new object is added in a empty object group, the 
-    // set_primary is realised in the same time. So, when we realise a set primary with the same location as primary,
-    // the replication return the reference without any changes => the version of the object group has not changed
     if (Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1_bis.in()) <
         Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), obj_group_HelloInterface1.in()))
         TEST_SUCCEED();
@@ -408,6 +405,12 @@ void TestFTInit::do_tests()
         TEST_SUCCEED();
 
         if (temp->processID == hello_APPL3_PROC31_INTER1_info->processID)
+            TEST_SUCCEED();
+        else
+            TEST_FAILED();
+        // Test REQ-SRS-FLT-120
+        if (Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), hello_group_HelloInterface1_bis.in()) ==
+            Cdmw::FT::TestUtils::get_object_group_version(m_orb.in(), obj_group_HelloInterface1.in()))
             TEST_SUCCEED();
         else
             TEST_FAILED();
@@ -439,7 +442,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P11";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P11HelloInterface1";
 
@@ -515,7 +518,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P21";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P21HelloInterface1";
 
@@ -697,7 +700,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P22";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P22HelloInterface2";
 
@@ -762,7 +765,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P32";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P32HelloInterface2";
 
@@ -825,7 +828,7 @@ void TestFTInit::do_tests()
     loc[2].id = "P12";
     loc[2].kind = "processname";
 
-    s_name = Cdmw::NamingAndRepository::NamingInterface::to_string(loc);
+    s_name = Cdmw::CommonSvcs::Naming::NamingInterface::to_string(loc);
     
     full_name = "dom3/P12HelloInterface2";
 
@@ -911,7 +914,7 @@ void TestFTInit::do_tests()
     try
     {
         obj_group_HelloInterface2 = m_replication_manager->remove_member(hello_group_HelloInterface2.in(), loc);
-        hello_group_HelloInterface2 = Cdmw::Test::HelloInterface2::_narrow(obj_group_HelloInterface2.in());
+        //hello_group_HelloInterface2 = Cdmw::Test::HelloInterface2::_narrow(obj_group_HelloInterface2.in());
         TEST_SUCCEED();
     }
     catch( const CORBA::Exception& e )
